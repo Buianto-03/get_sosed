@@ -23,22 +23,30 @@ class AdvertService {
     return advertWithUserAndLocation;
   }
 
-  getAdverts() {
-    return this.advert.findAll({
+  async getAdverts() {
+    let adverts = await this.advert.findAll({
       order: [['id', 'ASC']],
       include: ['User', 'Location'],
+    })
+
+    adverts = adverts.map((el) => {
+      const advert = JSON.parse(JSON.stringify(el));
+      delete advert.User.hashpass;
+      return advert;
     });
+
+    return adverts;
   }
 
-    async deletePost(id) {
-      try {
-        await this.advert.destroy({ where: { id } });
-        return true;
-      } catch (error) {
-        console.log(error);
-        return false;
-      }
+  async deletePost(id) {
+    try {
+      await this.advert.destroy({ where: { id } });
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
+  }
 
   //   async editPost(newData, id) {
   //     const post = await this.model.findByPk(id);
