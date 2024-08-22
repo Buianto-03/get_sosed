@@ -1,11 +1,11 @@
 import { Box } from '@chakra-ui/react';
 import React from 'react';
-import MainList from '../../ui/main/MainList';
+import AdvertList from '../../ui/main/AdvertList';
 
 export default function MainPage(): JSX.Element {
   return (
     <Box>
-      <MainList />
+      <AdvertList />
     </Box>
   );
 }

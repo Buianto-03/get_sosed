@@ -6,8 +6,8 @@ export const advertSchema = z.object({
   body: z.string(),
   price: z.number(),
   userId: z.number(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  // createdAt: z.string(),
+  // updatedAt: z.string(),
   User: z.object({
     id: z.number(),
     name: z.string(),
