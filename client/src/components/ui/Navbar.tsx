@@ -4,7 +4,6 @@ import {
   Flex,
   Avatar,
   HStack,
-  Text,
   IconButton,
   Button,
   Menu,
@@ -24,7 +23,7 @@ type Props = {
 
 const Links = ['Dashboard', 'Projects', 'Team'];
 
-export function NavLink(props: Props) {
+export function NavLink(props: Props): JSX.Element {
   const { children } = props;
 
   return (
@@ -44,11 +43,11 @@ export function NavLink(props: Props) {
   );
 }
 
-export default function Navbar() {
+export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
+    <Box bg="#EDEDFF" px={4}>
       <Flex h={16} alignItems="center" justifyContent="space-between">
         <IconButton
           size="md"
@@ -58,8 +57,8 @@ export default function Navbar() {
           onClick={isOpen ? onClose : onOpen}
         />
         <HStack spacing={8} alignItems="center">
-          <Box style={{width: '40px', marginLeft: '20px'}}>
-            <img src="./public/logo.png" />
+          <Box style={{ width: '40px', marginLeft: '20px' }}>
+            <img src="./public/logo.png" alt='logo'/>
           </Box>
           <HStack as="nav" spacing={4} display={{ base: 'none', md: 'flex' }}>
             {Links.map((link) => (
@@ -72,7 +71,7 @@ export default function Navbar() {
             <MenuButton as={Button} rounded="full" variant="link" cursor="pointer" minW={0}>
               <Avatar
                 size="sm"
-                src="https://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9"
+                src="https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png"
               />
             </MenuButton>
             <MenuList>
