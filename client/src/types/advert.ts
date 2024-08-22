@@ -25,3 +25,6 @@ export const advertSchema = z.object({
 });
 
 export type AdvertType = z.infer<typeof advertSchema>;
+export type AdvertSliceT = {
+  adverts: AdvertType[]
+}
