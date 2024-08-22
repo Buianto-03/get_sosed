@@ -16,7 +16,7 @@ module.exports = {
         email: 'sosed@2.com',
         hashpass:
           '$2a$10$lB7UxnUAIPxd0wCxJM4Hs.be.gha36fFFvKQs3Bu/.V4dkhpkB/re',
-        roleId: 3,
+        roleId: 2,
       },
     ]);
   },
