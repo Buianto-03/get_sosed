@@ -1,7 +1,10 @@
 import React from 'react';
+import { RouterProvider } from 'react-router-dom';
+import useAppRouter from './components/hooks/useAppRouter';
 
 function App(): JSX.Element {
-  return <div className="App">123</div>;
+  const router = useAppRouter();
+  return <RouterProvider router={router} />;
 }
 
 export default App;
