@@ -5,4 +5,4 @@ export const getAdvertsThunk = createAsyncThunk('adverts/getAdvertsThunk', () =>
   advertService.getAdverts(),
 );
 
-
+export const a = 1;
