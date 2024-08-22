@@ -7,11 +7,11 @@ const advertRouter = express.Router();
 advertRouter
   .route('/')
   .get(advertController.getAdverts)
-//   .post(verifyAccessToken, advertController.createPost);
+  .post(advertController.createPost);
 
-// advertRouter
-//   .route('/:postId')
-//   .delete(verifyAccessToken, advertController.deletePost)
+advertRouter
+  .route('/:postId')
+  .delete(advertController.deletePost)
 //   .patch(verifyAccessToken, advertController.patchPost);
 
 module.exports = advertRouter;
