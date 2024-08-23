@@ -6,26 +6,6 @@ type ChatListProps = {
 }
 
 export default function ChatList({online}: ChatListProps): JSX.Element {
-    console.log(online);
-    
-  const users = [
-    {
-      name: 'User1',
-    },
-    {
-      name: 'User2',
-    },
-    {
-      name: 'User3',
-    },
-    {
-      name: 'User4',
-    },
-    {
-      name: 'User5',
-    },
-  ];
-
 
   return (
     <Box bg="tomato" w="100%" p={4} color="white" borderRadius="20px">

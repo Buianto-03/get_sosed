@@ -18,9 +18,9 @@ export default function ChatComponent({ messages }: ChatComponentProps): JSX.Ele
   return (
     <Box w="100%" h="90%" p={4} overflowY="auto">
       <VStack align="start" spacing={3}>
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <Flex
-            key={index}
+            key={message.senderId}
             justify={message.senderId === user?.id ? 'flex-end' : 'flex-start'}
             w="100%"
           >
