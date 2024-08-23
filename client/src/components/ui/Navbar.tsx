@@ -16,8 +16,9 @@ import {
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../../redux/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
+import { logoutThunk } from '../../redux/slices/auth/thunks';
 
 type Props = {
   children: React.ReactNode;
@@ -49,7 +50,7 @@ export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const user = useAppSelector((store) => store.auth.user);
-  console.log(user);
+  const dispatch = useAppDispatch()
   
 
   return (
@@ -89,9 +90,9 @@ export default function Navbar(): JSX.Element {
                 {user.status === UserStatus.Logged ? `Аккаунт ${user.name}` : 'Гость'}
               </MenuItem>
               <MenuItem onClick={() => navigate('/signin')}>Войти</MenuItem>
-              <MenuItem>Зарегистрироваться</MenuItem>
+              <MenuItem onClick={() => navigate('/signup')}>Зарегистрироваться</MenuItem>
               <MenuDivider />
-              <MenuItem>Выйти</MenuItem>
+              <MenuItem onClick={() => void dispatch(logoutThunk())}>Выйти</MenuItem>
             </MenuList>
           </Menu>
         </Flex>

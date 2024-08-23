@@ -60,7 +60,7 @@ export default function SignInPage(): JSX.Element {
             </Button>
             <Text textAlign="center">
               Нет аккаунта?{' '}
-              <Button variant="link" color="#00CEC9">
+              <Button onClick={() => navigate('/signup')} variant="link" color="#00CEC9">
                 Зарегистрироваться
               </Button>
             </Text>

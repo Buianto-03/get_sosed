@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../Layout';
 import AccountPage from '../pages/Account/AccountPage';
 import SignInPage from '../pages/SignInPage/SignInPage';
+import SignUpPage from '../pages/SignUpPage/SignUpPage';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
   const router = createBrowserRouter([
@@ -17,6 +18,10 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         {
           path: '/signin',
           element: <SignInPage />,
+        },
+        {
+          path: '/signup',
+          element: <SignUpPage />,
         },
       ],
     },

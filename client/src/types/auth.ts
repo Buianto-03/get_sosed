@@ -1,17 +1,20 @@
 import { z } from 'zod';
 
+export const userPorfileSchema = z.object({
+  about: z.string().nullable(),
+  age: z.number().nullable(),
+  gender: z.string().nullable(),
+  photo: z.string().nullable(),
+  phoneNumber: z.string().nullable(),
+});
+
 export const userSchema = z.object({
   name: z.string(),
   email: z.string(),
   id: z.number(),
   roleId: z.number(),
-  UserProfile: z.object({
-    about: z.string(),
-    age: z.string(),
-    gender: z.string(),
-    photo: z.string(),
-    phoneNumber: z.string(),
-  }),
+  UserProfile: userPorfileSchema.optional(),
+  // UserProfile: schema.optional()
 });
 
 export type BackendUserT = z.infer<typeof userSchema>;
@@ -42,13 +45,14 @@ export type AuthSchemaT = z.infer<typeof authSchema>;
 export type AuthState = {
   accessToken: string;
   user: UserT;
+  // userProfile: BackendUserT['UserProfile']
 };
 
 export const signUpSchema = z.object({
   name: z.string(),
   email: z.string(),
   password: z.string(),
-  roleId: z.number(),
+  gender: z.string(),
 });
 
 export type SignUpSchemaT = z.infer<typeof signUpSchema>;
