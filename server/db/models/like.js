@@ -5,7 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Like extends Model {
 
-    static associate({ Advert, User }) {
+    static associate({ Advert, User, UserProfile }) {
       this.belongsTo(Advert, { foreignKey: 'advertId' });
       this.belongsTo(User, { foreignKey: 'userId' });
     }

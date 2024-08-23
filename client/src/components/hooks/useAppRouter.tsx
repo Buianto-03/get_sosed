@@ -4,6 +4,8 @@ import Layout from '../Layout';
 import AccountPage from '../pages/Account/AccountPage';
 import SignInPage from '../pages/SignInPage/SignInPage';
 import SignUpPage from '../pages/SignUpPage/SignUpPage';
+import MainPage from '../pages/main/MainPage';
+import AdvertPage from '../pages/AdvertPage/AdvertPage';
 import { useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 
@@ -27,6 +29,11 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
           path: '/signup',
           element: <SignUpPage />,
         },
+        { path: '/', element: <MainPage /> },
+        {
+          path: '/advert/:id',
+          element: <AdvertPage />,
+        }
       ],
     },
   ]);

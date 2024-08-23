@@ -1,4 +1,5 @@
 'use strict';
+const { hashSync } = require('bcrypt');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -14,10 +15,34 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        name: 'Sosed',
-        email: 'sosed@2.com',
+        name: 'Sosed1',
+        email: 'sosed@1.com',
         hashpass:
           '$2a$10$lB7UxnUAIPxd0wCxJM4Hs.be.gha36fFFvKQs3Bu/.V4dkhpkB/re',
+        roleId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Sosed2',
+        email: 'sosed@2.com',
+        hashpass: hashSync('123', 10),
+        roleId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Sosed3',
+        email: 'sosed@3.com',
+        hashpass: hashSync('123', 10),
+        roleId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'Sosed4',
+        email: 'sosed@4.com',
+        hashpass: hashSync('123', 10),
         roleId: 2,
         createdAt: new Date(),
         updatedAt: new Date(),

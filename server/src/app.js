@@ -9,6 +9,7 @@ const userRouter = require('./router/userRouter');
 const upgradeCb = require('./ws/upgrade');
 const wsServer = require('./ws/wsServer');
 const connection = require('./ws/connection');
+const likeRouter = require('./router/likeRouter');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/adverts', advertRouter);
 app.use('/api/users', userRouter);
 app.use('/api/tokens', tokensRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/likes', likeRouter);
 
 const server = createServer(app);
 
