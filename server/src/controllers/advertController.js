@@ -33,6 +33,15 @@ class AdvertController {
   //     const updatedPost = await this.service.editPost(req.body, postId);
   //     res.json(updatedPost);
   //   };
+  getFilteredAdverts = async (req, res) => {
+    try {
+      const filters = req.query;
+      const filteredAdverts = await advertService.getFilteredAdverts(filters);
+      res.json(filteredAdverts);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 }
 
 const advertController = new AdvertController(advertService);

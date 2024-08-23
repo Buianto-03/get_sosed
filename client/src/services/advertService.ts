@@ -1,5 +1,6 @@
 import type { AxiosInstance } from 'axios';
-import { advertSchema, type AdvertType } from '../types/advert';
+import { advertSchema } from '../types/advert';
+import type { AdvertType } from '../types/advert';
 import axiosInstance from './client';
 
 class AdvertService {
@@ -19,6 +20,16 @@ class AdvertService {
     try {
       const response = await this.client.post('/adverts', advert);
       return advertSchema.parse(response.data);
+    } catch (error) {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  }
+
+  async getFilteredAdverts(filters: AdvertType): Promise<AdvertType[]> {
+    try {
+      const response = await this.client.get('/adverts', { data: filters });
+      return advertSchema.array().parse(response.data);
     } catch (error) {
       console.log(error);
       return Promise.reject(error);

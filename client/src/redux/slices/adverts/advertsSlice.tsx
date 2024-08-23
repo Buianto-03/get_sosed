@@ -1,13 +1,21 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import type { AdvertSliceT, AdvertType } from '../../../types/advert';
 import { getAdvertsThunk } from './advertsThunk';
+import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
 
 const initialState: AdvertSliceT = {
   adverts: [],
   visitableCards: 8,
   query: '',
   chosenAdvert: null,
+  filters: {
+    priceFrom: 0,
+    priceTo: 400000,
+    city: '',
+    district: '',
+    metro: '',
+    category: '',
+  },
 };
 
 export const advertSlice = createSlice({
@@ -25,6 +33,9 @@ export const advertSlice = createSlice({
     },
     setChosenAdvert: (state, action: PayloadAction<AdvertType>) => {
       state.chosenAdvert = action.payload;
+    },
+    setFilters: (state, action: PayloadAction<FilterType>) => {
+      state.filters = action.payload;
     },
   },
   extraReducers: (builder) => {
