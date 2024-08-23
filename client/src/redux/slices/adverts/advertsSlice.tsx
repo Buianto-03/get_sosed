@@ -5,6 +5,8 @@ import { getAdvertsThunk } from './advertsThunk';
 
 const initialState: AdvertSliceT = {
   adverts: [],
+  visitableCards: 8,
+  query: '',
   chosenAdvert: null,
 };
 
@@ -12,6 +14,15 @@ export const advertSlice = createSlice({
   name: 'advert',
   initialState,
   reducers: {
+    loadCards: (state) => {
+      state.visitableCards += 8;
+    },
+    setAdverts: (state, action: PayloadAction<AdvertType[]>) => {
+      state.adverts = action.payload;
+    },
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.query = action.payload;
+    },
     setChosenAdvert: (state, action: PayloadAction<AdvertType>) => {
       state.chosenAdvert = action.payload;
     },
@@ -22,8 +33,8 @@ export const advertSlice = createSlice({
     });
   },
 });
+export const { loadCards, setAdverts, setSearchQuery } = advertSlice.actions;
 
 export const { setChosenAdvert } = advertSlice.actions;
 
-// Action creators are generated for each case reducer function
 export default advertSlice.reducer;

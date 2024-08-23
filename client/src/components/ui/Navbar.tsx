@@ -12,16 +12,19 @@ import {
   MenuItem,
   MenuDivider,
   useDisclosure,
-  useColorModeValue,
   Stack,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
+import { UserStatus } from '../../types/auth';
+import { logoutThunk } from '../../redux/slices/auth/thunks';
 
 type Props = {
   children: React.ReactNode;
 };
 
-const Links = ['Dashboard', 'Projects', 'Team'];
+const Links = ['Главная', 'Поиск', 'О нас'];
 
 export function NavLink(props: Props): JSX.Element {
   const { children } = props;
@@ -34,7 +37,7 @@ export function NavLink(props: Props): JSX.Element {
       rounded="md"
       _hover={{
         textDecoration: 'none',
-        bg: useColorModeValue('gray.200', 'gray.700'),
+        bg: '#D6D6FF', // чуть темнее, чем #EDEDFF
       }}
       href="#"
     >
@@ -45,6 +48,10 @@ export function NavLink(props: Props): JSX.Element {
 
 export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
+  const user = useAppSelector((store) => store.auth.user);
+  const dispatch = useAppDispatch()
+  
 
   return (
     <Box bg="#EDEDFF" px={4}>
@@ -55,6 +62,10 @@ export default function Navbar(): JSX.Element {
           aria-label="Open Menu"
           display={{ md: 'none' }}
           onClick={isOpen ? onClose : onOpen}
+          bg="#EDEDFF"
+          _hover={{
+            bg: '#D6D6FF', // чуть темнее, чем #EDEDFF
+          }}
         />
         <HStack spacing={8} alignItems="center">
           <Box style={{ width: '40px', marginLeft: '20px' }}>
@@ -75,10 +86,13 @@ export default function Navbar(): JSX.Element {
               />
             </MenuButton>
             <MenuList>
-              <MenuItem>Link 1</MenuItem>
-              <MenuItem>Link 2</MenuItem>
+              <MenuItem>
+                {user.status === UserStatus.Logged ? `Аккаунт ${user.name}` : 'Гость'}
+              </MenuItem>
+              <MenuItem onClick={() => navigate('/signin')}>Войти</MenuItem>
+              <MenuItem onClick={() => navigate('/signup')}>Зарегистрироваться</MenuItem>
               <MenuDivider />
-              <MenuItem>Link 3</MenuItem>
+              <MenuItem onClick={() => void dispatch(logoutThunk())}>Выйти</MenuItem>
             </MenuList>
           </Menu>
         </Flex>

@@ -33,4 +33,6 @@ export type AdvertType = z.infer<typeof advertSchema>;
 export type AdvertSliceT = {
   adverts: AdvertType[];
   chosenAdvert: AdvertType | null;
-};
+  visitableCards: number
+  query: string
+}
