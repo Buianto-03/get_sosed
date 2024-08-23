@@ -19,7 +19,7 @@ module.exports = {
 
         {
           userId: 2,
-          about: 'Sosed',
+          about: 'Sose2',
           age: 20,
           gender: 'male',
           photo: 'photo',
@@ -29,7 +29,27 @@ module.exports = {
         },
         {
           userId: 3,
-          about: 'Sosedi',
+          about: 'Sosed3',
+          age: 20,
+          gender: 'sobaka',
+          photo: 'photo',
+          phoneNumber: 123456789,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          userId: 4,
+          about: 'Sosed4',
+          age: 20,
+          gender: 'sobaka',
+          photo: 'photo',
+          phoneNumber: 123456789,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          userId: 5,
+          about: 'Sosed5',
           age: 20,
           gender: 'sobaka',
           photo: 'photo',

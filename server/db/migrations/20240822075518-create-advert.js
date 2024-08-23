@@ -15,6 +15,15 @@ module.exports = {
       body: {
         type: Sequelize.TEXT,
       },
+      rooms: {
+        type: Sequelize.INTEGER,
+      },
+      floor: {
+        type: Sequelize.INTEGER,
+      },
+      square: {
+        type: Sequelize.INTEGER,
+      },
       userId: {
         type: Sequelize.INTEGER,
         references: {

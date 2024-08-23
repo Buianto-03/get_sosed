@@ -58,7 +58,7 @@ export default function Navbar(): JSX.Element {
         />
         <HStack spacing={8} alignItems="center">
           <Box style={{ width: '40px', marginLeft: '20px' }}>
-            <img src="./public/logo.png" alt='logo'/>
+            <img src="/public/logo.png" alt='logo'/>
           </Box>
           <HStack as="nav" spacing={4} display={{ base: 'none', md: 'flex' }}>
             {Links.map((link) => (
