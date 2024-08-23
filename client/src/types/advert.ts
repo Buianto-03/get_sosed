@@ -6,8 +6,8 @@ export const advertSchema = z.object({
   body: z.string(),
   price: z.number(),
   userId: z.number(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  // createdAt: z.string(),
+  // updatedAt: z.string(),
   User: z.object({
     id: z.number(),
     name: z.string(),
@@ -27,4 +27,6 @@ export const advertSchema = z.object({
 export type AdvertType = z.infer<typeof advertSchema>;
 export type AdvertSliceT = {
   adverts: AdvertType[]
+  visitableCards: number
+  query: string
 }

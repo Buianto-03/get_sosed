@@ -4,6 +4,7 @@ import Layout from '../Layout';
 import AccountPage from '../pages/Account/AccountPage';
 import SignInPage from '../pages/SignInPage/SignInPage';
 import SignUpPage from '../pages/SignUpPage/SignUpPage';
+import MainPage from '../pages/main/MainPage';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
   const router = createBrowserRouter([
@@ -23,6 +24,7 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
           path: '/signup',
           element: <SignUpPage />,
         },
+        { path: '/', element: <MainPage /> },
       ],
     },
   ]);
