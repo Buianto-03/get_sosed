@@ -30,9 +30,19 @@ export const advertSchema = z.object({
 
 export type AdvertType = z.infer<typeof advertSchema>;
 
+export type FilterType = {
+  priceFrom: number;
+  priceTo: number;
+  city: string;
+  district: string;
+  metro: string;
+  category: string;
+};
+
 export type AdvertSliceT = {
   adverts: AdvertType[];
   chosenAdvert: AdvertType | null;
-  visitableCards: number
-  query: string
-}
+  visitableCards: number;
+  query: string;
+  filters: FilterType;
+};
