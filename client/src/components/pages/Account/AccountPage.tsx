@@ -1,10 +1,63 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Grid, GridItem, Container, Image, Box, Text, VStack } from '@chakra-ui/react';
 import { useAppSelector } from '../../../redux/hooks';
+import ChatComponent from '../../ui/chat/ChatComponent';
+import ChatList from '../../ui/chat/ChatList';
+import ChatInput from '../../ui/chat/ChatInput';
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
-  console.log(user);
+  const [online, setOnline] = useState([]);
+  const [messages, setMessages] = useState<string[]>([]);
+  const soketRef = useRef(null);
+
+  useEffect(() => {
+    const soket = new WebSocket('http://localhost:3000');
+    soketRef.current = soket;
+    soket.onopen = () => console.log('CONNECTED');
+    soket.onclose = () => console.log('DISCONNECTED');
+    soket.onerror = (err) => console.log('ERROR', err);
+    soket.onmessage = (event) => {
+      const action = JSON.parse(event.data);
+      const { type, payload } = action;
+      switch (type) {
+        case 'SET_USERS':
+          setOnline(payload);
+          break;
+
+        case 'SET_MESSAGES':
+          setMessages(payload);
+          break;
+        case 'NEW_MESSAGES':
+          setMessages(payload);
+          break;
+        case 'ADD_MESSAGE':
+          setMessages((prevMessages) => [...prevMessages, payload]);
+          break;
+        default:
+          break;
+      }
+    };
+    return () => {
+      soketRef.current.close();
+    };
+  }, []);
+
+  console.log(messages);
+  
+
+  const sendNewMessage = (message: string) => {
+    const action = {
+      type: 'ADD_MESSAGE',
+      payload: message,
+    };
+    soketRef.current.send(JSON.stringify(action));
+  };
+
+  const handleSendMessage = (message: string) => {
+    setMessages((prevMessages) => [...prevMessages, message]);
+  };
+  console.log(messages);
 
   return (
     <Container p={4} maxW="container.xl" display="flex" justifyContent="center" height="100vh">
@@ -51,14 +104,21 @@ export default function AccountPage(): JSX.Element {
             </Text>
           </VStack>
         </GridItem>
-        <GridItem colSpan={{ base: 1, md: 2 }} bg="papayawhip" borderRadius="md" boxShadow="lg" />
+        <GridItem colSpan={{ base: 1, md: 2 }} bg="papayawhip" borderRadius="md" boxShadow="lg">
+          <ChatList online={online} />
+        </GridItem>
         <GridItem
           rowSpan={{ base: 1, md: 2 }}
           colSpan={{ base: 1, md: 2 }}
-          bg="papayawhip"
+          bg="#EDEDFF"
           borderRadius="md"
           boxShadow="lg"
-        />
+          display="flex"
+          flexDirection="column"
+        >
+          <ChatComponent online={online} messages={messages} />
+          <ChatInput onSendMessage={sendNewMessage} />
+        </GridItem>
         <GridItem colSpan={{ base: 1, md: 2 }} bg="tomato" borderRadius="md" boxShadow="lg" />
       </Grid>
     </Container>
