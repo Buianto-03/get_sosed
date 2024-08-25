@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Grid, GridItem, Container, Image, Box, Text, VStack } from '@chakra-ui/react';
+import { Grid, GridItem, Container, Image, Text, VStack } from '@chakra-ui/react';
 import { useAppSelector } from '../../../redux/hooks';
 import ChatComponent from '../../ui/chat/ChatComponent';
 import ChatList from '../../ui/chat/ChatList';
@@ -54,10 +54,10 @@ export default function AccountPage(): JSX.Element {
     soketRef.current.send(JSON.stringify(action));
   };
 
-  const handleSendMessage = (message: string) => {
-    setMessages((prevMessages) => [...prevMessages, message]);
-  };
-  console.log(messages);
+  // const handleSendMessage = (message: string) => {
+  //   setMessages((prevMessages) => [...prevMessages, message]);
+  // };
+  // console.log(messages);
 
   return (
     <Container p={4} maxW="container.xl" display="flex" justifyContent="center" height="100vh">

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Box, Input, Button, HStack } from '@chakra-ui/react';
 
-interface ChatInputProps {
+type ChatInputProps = {
   onSendMessage: (message: string) => void;
 }
 
 export default function ChatInput({ onSendMessage }: ChatInputProps): JSX.Element {
   const [inputValue, setInputValue] = useState('');
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (): void => {
     if (inputValue.trim() !== '') {
       onSendMessage(inputValue);
       setInputValue('');
