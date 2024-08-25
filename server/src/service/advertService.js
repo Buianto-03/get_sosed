@@ -55,28 +55,41 @@ class AdvertService {
   //     const updatedPost = await this.model.findByPk(id, { include: 'User' });
   //     return updatedPost;
   //   }
-  async getFilteredAdverts() {
-    const { metro, city, district, priceFrom, priceTo } = req.query;
+  async getFilteredAdverts(filters) {
+    const whereClause = {};
+    const locationClause = {};
+
+    if (filters.city) locationClause.city = filters.city;
+    if (filters.district) locationClause.district = filters.district;
+    if (filters.metro) locationClause.metro = filters.metro;
+
+    if (filters.priceFrom || filters.priceTo) {
+      whereClause.price = {};
+      if (filters.priceFrom)
+        whereClause.price[Op.gte] = Number(filters.priceFrom);
+      if (filters.priceTo) whereClause.price[Op.lte] = Number(filters.priceTo);
+    }
+
+    if (filters.rooms) {
+      whereClause.rooms = Number(filters.rooms);
+    }
+
     try {
-      const whereClause = {}; // Инициализация пустого объекта
-
-      if (metro) whereClause.metro = metro; // Если есть параметр metro, добавляем его в whereClause
-      if (city) whereClause.city = city; // Если есть параметр city, добавляем его в whereClause
-
-      // Для диапазона цен используем операторы больше или равно (>=) и меньше или равно (<=)
-      if (priceFrom || priceTo) {
-        whereClause.price = {};
-        if (priceFrom) whereClause.price[Op.gte] = Number(priceFrom); // price >= priceFrom
-        if (priceTo) whereClause.price[Op.lte] = Number(priceTo); // price <= priceTo
-      }
-
-      // Теперь whereClause содержит все условия фильтрации, и мы можем использовать его в запросе
-      const filteredAdverts = await Advert.findAll({
+      const adverts = await this.advert.findAll({
         where: whereClause,
+        include: [
+          {
+            model: this.location,
+            as: 'Location',
+            where: locationClause, // Фильтрация по местоположению
+          },
+          'User',
+        ],
       });
+      return adverts;
     } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: 'press F to pay respect' });
+      console.error('Ошибка при фильтрации объявлений:', error);
+      throw error;
     }
   }
 }

@@ -1,6 +1,7 @@
 import { Box, Image, Text, IconButton, Flex, Badge, Icon } from '@chakra-ui/react';
 import { BiHeart, BiCamera, BiUser } from 'react-icons/bi';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { AdvertType } from '../../../types/advert';
 
 type AdverProps = {
@@ -8,6 +9,10 @@ type AdverProps = {
 };
 
 export default function AdvertCard({ advert }: AdverProps): JSX.Element {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(`/advert/${advert.id}`);
+  };
   return (
     <Box
       width="300px"
@@ -17,6 +22,8 @@ export default function AdvertCard({ advert }: AdverProps): JSX.Element {
       overflow="hidden"
       position="relative"
       boxShadow="md"
+      onClick={handleClick}
+      cursor="pointer"
     >
       {/* Image Section */}
       <Box position="relative" height="140px">

@@ -35,11 +35,14 @@ class AdvertController {
   //   };
   getFilteredAdverts = async (req, res) => {
     try {
-      const filters = req.query;
-      const filteredAdverts = await advertService.getFilteredAdverts(filters);
+      const filters = req.query; // Получаем фильтры из query-параметров запроса
+      const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Ошибка при фильтрации объявлений:', error);
+      res
+        .status(500)
+        .json({ error: 'Ошибка на сервере при фильтрации объявлений' });
     }
   };
 }

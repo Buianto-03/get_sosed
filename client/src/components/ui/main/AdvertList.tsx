@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Flex, Button, Text } from '@chakra-ui/react';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import AdvertCard from './AdvertCard';
+import { getFilteredAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
 import { loadCards } from '../../../redux/slices/adverts/advertsSlice';
 
 export default function AdvertList(): JSX.Element {
-  const adverts = useAppSelector((state) => state.advert.adverts);
-  const visitableCards = useAppSelector((state) => state.advert.visitableCards);
-
+  const { adverts, visitableCards, filters } = useAppSelector((state) => state.advert);
   const dispatch = useAppDispatch();
 
-  const handleLoadMore = () => {
+  useEffect(() => {
+    // Отправляем запрос с фильтрами, когда они изменяются
+    void dispatch(getFilteredAdvertsThunk(filters));
+  }, [filters, dispatch]);
+
+  const handleLoadMore = (): void => {
     dispatch(loadCards());
   };
 
