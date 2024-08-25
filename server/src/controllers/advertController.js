@@ -9,6 +9,12 @@ class AdvertController {
     this.service.getAdverts().then((data) => res.json(data));
   };
 
+  getAdvertById = async (req, res) => {
+    const { advertId } = req.params;
+    const advert = await this.service.getAdvertById(advertId);
+    res.status(201).json(advert);
+  };
+
   createPost = async (req, res) => {
     try {
       const newPost = await this.service.addAdvert({

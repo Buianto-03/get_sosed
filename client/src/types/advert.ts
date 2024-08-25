@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { userSchema } from './auth';
 
 export const advertSchema = z.object({
   id: z.number(),
@@ -11,12 +12,7 @@ export const advertSchema = z.object({
   square: z.number(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  User: z.object({
-    id: z.number(),
-    name: z.string(),
-    email: z.string(),
-    roleId: z.number(),
-  }),
+  User: userSchema,
   Location: z.object({
     id: z.number(),
     city: z.string(),
@@ -33,6 +29,6 @@ export type AdvertType = z.infer<typeof advertSchema>;
 export type AdvertSliceT = {
   adverts: AdvertType[];
   chosenAdvert: AdvertType | null;
-  visitableCards: number
-  query: string
-}
+  visitableCards: number;
+  query: string;
+};

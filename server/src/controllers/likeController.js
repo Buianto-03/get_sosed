@@ -14,6 +14,17 @@ class LikeController {
       res.status(500).json({ error: error.message });
     }
   };
+
+  postLike = async (req, res) => {
+    try {
+      const { advertId } = req.params;
+      const { userId } = req.body;
+      const like = await this.service.createLike(advertId, userId);
+      res.status(201).json(like);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 }
 
 const likeController = new LikeController(likeService);

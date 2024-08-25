@@ -1,21 +1,34 @@
 const { Like, User, UserProfile } = require('../../db/models');
 
 class LikeService {
-  constructor(like, user) {
-    (this.like = like), (this.user = user);
+  constructor(like) {
+    this.like = like;
   }
 
   async getLikesByAdvertId(advertId) {
-    const likes = await this.like.findAll({
+    let likes = await this.like.findAll({
       where: { advertId },
       include: {
-        model: this.user,
+        model: User,
         include: {
           model: UserProfile,
         },
       },
     });
+    likes = likes.map((el) => {
+      const like = JSON.parse(JSON.stringify(el));
+      delete like.User.hashpass;
+      return like;
+    });
     return likes;
+  }
+
+  async postLike(advertId, userId) {
+    const like = await this.like.create({
+      advertId,
+      userId,
+    });
+    return like;
   }
 }
 

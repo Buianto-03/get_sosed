@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+
 const tokensRouter = require('./router/tokensRouter');
 const authRouter = require('./router/authRouter');
 const advertRouter = require('./router/advertRouter');
@@ -9,11 +11,12 @@ const likeRouter = require('./router/likeRouter');
 
 const app = express();
 
+app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/adverts', advertRouter)
+app.use('/api/adverts', advertRouter);
 app.use('/api/users', userRouter);
 app.use('/api/tokens', tokensRouter);
 app.use('/api/auth', authRouter);

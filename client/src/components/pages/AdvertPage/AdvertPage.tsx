@@ -9,13 +9,19 @@ import {
   Divider,
   VStack,
   Button,
-  ButtonGroup,
+  IconButton,
+  useBreakpointValue,
 } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Slider from 'react-slick';
+import { BiLeftArrowAlt, BiRightArrowAlt } from 'react-icons/bi';
+import { PlusSquareIcon } from '@chakra-ui/icons';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import type { AdvertType } from '../../../types/advert';
 import { setChosenAdvert } from '../../../redux/slices/adverts/advertsSlice';
+import { getLikesThunk } from '../../../redux/slices/likes/likesThunk';
+import LikeProfile from '../../ui/LikeProfile';
 
 const mock: AdvertType = {
   id: 1,
@@ -45,28 +51,112 @@ const mock: AdvertType = {
   },
 };
 
+const settings = {
+  dots: true,
+  arrows: false,
+  fade: true,
+  infinite: true,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+};
+
+const images = [
+  'https://images.cdn-cian.ru/images/2199178038-1.jpg',
+  'https://images.cdn-cian.ru/images/2199178106-1.jpg',
+  'https://images.cdn-cian.ru/images/2199178140-1.jpg',
+];
+
 export default function AdvertPage(): JSX.Element {
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    dispatch(setChosenAdvert(mock));
-  }, [dispatch]);
-  const advert = useAppSelector((store) => store.advert.chosenAdvert);
+  const [slider, setSlider] = useState<Slider | null>(null);
+  const top = useBreakpointValue({ base: '90%', md: '50%' });
+  const side = useBreakpointValue({ base: '30%', md: '10px' });
+
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const advert = useAppSelector((store) => store.advert.chosenAdvert);
+  const likes = useAppSelector((store) => store.likes.likes);
 
-  if (!advert) {
-    return (
-      <Container p={6} maxW="container.xl" display="flex" justifyContent="center" height="100svh">
-        <Text>Объявление не найдено</Text>
-      </Container>
-    );
-  }
+  useEffect(() => {
+    void dispatch(setChosenAdvert(mock));
+    if (advert) {
+      void dispatch(getLikesThunk(advert.id));
+    }
+  }, [advert, dispatch]);
 
-  return (
+  return advert ? (
     <Container p={6} maxW="container.xl" display="flex" justifyContent="center" height="100svh">
       <Grid h="auto" w="100%" templateColumns="repeat(5, 1fr)" gap={6}>
         <GridItem colSpan={3}>
           <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
-            <Image src="https://via.placeholder.com/600" alt={advert.title} />
+            <Box position="relative" height="600px" width="full" overflow="hidden">
+              {/* CSS files for react-slick */}
+              <link
+                rel="stylesheet"
+                type="text/css"
+                href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick.min.css"
+              />
+              <link
+                rel="stylesheet"
+                type="text/css"
+                href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css"
+              />
+              {/* Left Icon */}
+              <IconButton
+                aria-label="left-arrow"
+                colorScheme="messenger"
+                borderRadius="full"
+                position="absolute"
+                left={side}
+                top={top}
+                transform="translate(0%, -50%)"
+                zIndex={2}
+                onClick={() => slider?.slickPrev()}
+              >
+                <BiLeftArrowAlt />
+              </IconButton>
+              {/* Right Icon */}
+              <IconButton
+                aria-label="right-arrow"
+                colorScheme="messenger"
+                borderRadius="full"
+                position="absolute"
+                right={side}
+                top={top}
+                transform="translate(0%, -50%)"
+                zIndex={2}
+                onClick={() => slider?.slickNext()}
+              >
+                <BiRightArrowAlt />
+              </IconButton>
+              {/* Slider */}
+              <Slider
+                dots={settings.dots}
+                arrows={settings.arrows}
+                fade={settings.fade}
+                infinite={settings.infinite}
+                autoplay={settings.autoplay}
+                speed={settings.speed}
+                autoplaySpeed={settings.autoplaySpeed}
+                slidesToShow={settings.slidesToShow}
+                slidesToScroll={settings.slidesToScroll}
+                ref={(slider) => setSlider(slider)}
+              >
+                {images.map((url, index) => (
+                  <Box
+                    key={index}
+                    height="600px"
+                    position="relative"
+                    backgroundPosition="center"
+                    backgroundRepeat="no-repeat"
+                    backgroundSize="cover"
+                    backgroundImage={`url(${url})`}
+                  />
+                ))}
+              </Slider>
+            </Box>
+
+            {/* <Image src="/images/1pic.jpg" alt="/assets/images/1pic.jpg" /> */}
             <Heading as="h2" size="lg" mb={4} pt={5}>
               О квартире
             </Heading>
@@ -101,13 +191,32 @@ export default function AdvertPage(): JSX.Element {
               <Text>Имя: {advert.User.name}</Text>
               <Text>Email: {advert.User.email}</Text>
             </VStack>
-            <Button colorScheme="teal" size="lg" onClick={() => navigate('/')}>
+            <Button
+              colorScheme="teal"
+              // bgColor="00CEC9"
+              size="lg"
+              onClick={() => navigate('/')}
+              mr={5}
+            >
               Написать соседу
             </Button>
+            <Button colorScheme="teal" size="lg">
+              <PlusSquareIcon />
+            </Button>
             <Divider my={4} />
+            <Heading as="h3" mb={3} size="md">
+              Нравится:
+            </Heading>
+            {likes.map((like) => (
+              <LikeProfile key={like.id} like={like} />
+            ))}
           </Box>
         </GridItem>
       </Grid>
+    </Container>
+  ) : (
+    <Container p={6} maxW="container.xl" display="flex" justifyContent="center" height="100svh">
+      <Text>Объявление не найдено</Text>
     </Container>
   );
 }

@@ -38,16 +38,22 @@ class AdvertService {
     return adverts;
   }
 
-  async deletePost(id) {
-    try {
-      await this.advert.destroy({ where: { id } });
-      return true;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
+  async getAdvertById(id) {
+    const advert = await this.advert.findByPk(id, {
+      include: ['User', 'Location'],
+    });
+    return advert;
   }
-
+  
+  // async deletePost(id) {
+  //   try {
+  //     await this.advert.destroy({ where: { id } });
+  //     return true;
+  //   } catch (error) {
+  //     console.log(error);
+  //     return false;
+  //   }
+  // }
   //   async editPost(newData, id) {
   //     const post = await this.model.findByPk(id);
   //     await post.update(newData);

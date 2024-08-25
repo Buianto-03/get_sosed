@@ -10,7 +10,8 @@ advertRouter
   .post(advertController.createPost);
 
 advertRouter
-  .route('/:postId')
+  .route('/:advertId')
+  .get(advertController.getAdvertById)
   .delete(advertController.deletePost)
 //   .patch(verifyAccessToken, advertController.patchPost);
 
