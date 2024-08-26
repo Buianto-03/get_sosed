@@ -31,9 +31,6 @@ export const advertSlice = createSlice({
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.query = action.payload;
     },
-    setChosenAdvert: (state, action: PayloadAction<AdvertType>) => {
-      state.chosenAdvert = action.payload;
-    },
     setFilters: (state, action: PayloadAction<FilterType>) => {
       state.filters = action.payload;
     },
@@ -51,7 +48,7 @@ export const advertSlice = createSlice({
       });
   },
 });
-export const { loadCards, setAdverts, setSearchQuery, setChosenAdvert, setFilters } =
+export const { loadCards, setAdverts, setSearchQuery, setFilters } =
   advertSlice.actions;
 
 export default advertSlice.reducer;

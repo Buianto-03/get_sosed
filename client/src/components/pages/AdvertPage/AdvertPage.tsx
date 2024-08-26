@@ -16,7 +16,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import type { AdvertType } from '../../../types/advert';
-import { setChosenAdvert } from '../../../redux/slices/adverts/advertsSlice';
 import {
   deleteLikeThunk,
   getLikesThunk,
@@ -28,50 +27,20 @@ import { UserStatus } from '../../../types/auth';
 import YMap from '../../ui/advertPageUI/YMap';
 import { getAdvertByIdThunk } from '../../../redux/slices/adverts/advertsThunk';
 
-const mock: AdvertType = {
-  id: 1,
-  title: 'Уютная квартира в центре',
-  body: 'Современная квартира с одной спальней и балконом.',
-  userId: 1,
-  price: 50000,
-  rooms: 2,
-  floor: 4,
-  square: 70,
-  createdAt: '2024-08-22T08:47:48.162Z',
-  updatedAt: '2024-08-22T08:47:48.162Z',
-  User: {
-    id: 1,
-    name: 'Admin',
-    email: 'admin@1.com',
-    roleId: 1,
-  },
-  Location: {
-    id: 1,
-    city: 'Москва',
-    district: 'Центральный',
-    address: 'Тверская улица, 10',
-    metro: 'Театральная',
-    coordinates: '55.7585, 37.6219',
-    advertId: 1,
-  },
-};
-
 export default function AdvertPage(): JSX.Element {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const advert = useAppSelector((store) => store.advert.chosenAdvert);
   const likes = useAppSelector((store) => store.likes.likes);
   const user = useAppSelector((store) => store.auth.user);
-
   const { id } = useParams();
+
   useEffect(() => {
     if (id) {
-      void dispatch(getAdvertByIdThunk(+id));
-    }
-
-    if (advert) {
-      void dispatch(getLikesThunk(advert.id));
-      // void initMap();
+      void dispatch(getAdvertByIdThunk(+id)).then((res) => {
+        const advertId = res.payload as AdvertType;
+        void dispatch(getLikesThunk(advertId.id));
+      });
     }
   }, [dispatch, id]);
 
