@@ -1,8 +1,13 @@
-const { Router } = require("express");
-const likeController = require('../controllers/likeController')
+const { Router } = require('express');
+const verifyAccessToken = require('../middlewares/verifyAccessToken');
+const likeController = require('../controllers/likeController');
 
 const router = Router();
 
-router.get("/:advertId", likeController.getLikes);
+router
+  .route('/:advertId')
+  .get(likeController.getLikes)
+  .post(verifyAccessToken, likeController.setLike)
+  .delete(verifyAccessToken, likeController.deleteLike);
 
 module.exports = router;

@@ -86,7 +86,7 @@ export default function Navbar(): JSX.Element {
               />
             </MenuButton>
             <MenuList>
-              <MenuItem>
+              <MenuItem onClick={() => navigate('/account')}>
                 {user.status === UserStatus.Logged ? `Аккаунт ${user.name}` : 'Гость'}
               </MenuItem>
               <MenuItem onClick={() => navigate('/signin')}>Войти</MenuItem>

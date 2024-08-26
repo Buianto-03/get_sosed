@@ -16,9 +16,19 @@ class LikeService {
     }
   }
 
-  async setLike(advertId: AdvertType['id']): Promise<void> {
+  async setLike(advertId: AdvertType['id']): Promise<LikeType> {
     try {
-      await this.client.post(`/likes/${advertId}`);
+      const response = await this.client.post(`/likes/${advertId}`);
+      return likeSchema.parse(response.data);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async deleteLike(advertId: AdvertType['id']): Promise<LikeType> {
+    try {
+      const response = await this.client.delete(`/likes/${advertId}`);
+      return likeSchema.parse(response.data);
     } catch (error) {
       return Promise.reject(error);
     }

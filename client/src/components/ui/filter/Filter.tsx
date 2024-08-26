@@ -39,7 +39,7 @@ import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useDispatch } from 'react-redux';
 import { setSearchQuery } from '../../../redux/slices/adverts/advertsSlice';
 
-export default function Filtr(): JSX.Element {
+export default function Filter(): JSX.Element {
   const [inputValue, setInputValue] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [rooms, setRooms] = useState<number>(1); // Количество комнат
@@ -58,7 +58,6 @@ export default function Filtr(): JSX.Element {
       query: inputValue,
       priceFrom: priceRange[0],
       priceTo: priceRange[1],
-      rooms,
       city,
       district,
       metro,
@@ -108,7 +107,7 @@ export default function Filtr(): JSX.Element {
                 <Tab>Фильтр</Tab>
               </TabList>
               <TabPanels>
-                {/* Вкладка Категории */}
+                Вкладка Категории
                 <TabPanel>
                   <Box>
                     <Flex align="center" mt={2} onClick={() => setCategory('Квартиры')}>
@@ -119,17 +118,8 @@ export default function Filtr(): JSX.Element {
                       <Text flex="1">Дома</Text>
                       <Icon as={ChevronRightIcon} />
                     </Flex>
-                    <Flex align="center" mt={2} onClick={() => setCategory('Вторичка')}>
-                      <Text flex="1">Вторичка</Text>
-                      <Icon as={ChevronRightIcon} />
-                    </Flex>
-                    <Flex align="center" mt={2} onClick={() => setCategory('Новостройка')}>
-                      <Text flex="1">Новостройка</Text>
-                      <Icon as={ChevronRightIcon} />
-                    </Flex>
                   </Box>
                 </TabPanel>
-
                 {/* Вкладка Фильтр */}
                 <TabPanel>
                   <VStack spacing={4}>
@@ -139,8 +129,8 @@ export default function Filtr(): JSX.Element {
                         aria-label={['min', 'max']}
                         value={priceRange}
                         min={0}
-                        max={1000000}
-                        step={10000}
+                        max={400000}
+                        step={1000}
                         onChange={(val) => setPriceRange(val)}
                       >
                         <RangeSliderTrack>
@@ -166,7 +156,7 @@ export default function Filtr(): JSX.Element {
                           value={priceRange[1]}
                           onChange={(value) => handlePriceInputChange(value, 1)}
                           min={priceRange[0]}
-                          max={1000000}
+                          max={400000}
                         >
                           <NumberInputField />
                         </NumberInput>

@@ -13,7 +13,7 @@ import {
   TagLabel,
   Text,
 } from '@chakra-ui/react';
-import type { LikeType } from '../../types/like';
+import type { LikeType } from '../../../types/like';
 
 type LikeProfileProp = {
   like: LikeType;
@@ -56,7 +56,7 @@ export default function LikeProfile({ like }: LikeProfileProp): JSX.Element {
         <PopoverBody>
           <Box>
             <Text>{like.User.UserProfile.age} лет</Text>
-            <Text>{like.User.UserProfile.about.slice(0, 20)}</Text>
+            <Text>{like.User.UserProfile.about}</Text>
           </Box>
         </PopoverBody>
         <Button>Написать соседу</Button>

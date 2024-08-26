@@ -6,8 +6,12 @@ import SignInPage from '../pages/SignInPage/SignInPage';
 import SignUpPage from '../pages/SignUpPage/SignUpPage';
 import MainPage from '../pages/main/MainPage';
 import AdvertPage from '../pages/AdvertPage/AdvertPage';
+import { useAppSelector } from '../../redux/hooks';
+import { UserStatus } from '../../types/auth';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
+  const status = useAppSelector((store) => store.auth.user.status);
+  console.log(status);
   const router = createBrowserRouter([
     {
       path: '/',
@@ -15,7 +19,7 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
       children: [
         {
           path: '/account',
-          element: <AccountPage />,
+          element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
         },
         {
           path: '/signin',
