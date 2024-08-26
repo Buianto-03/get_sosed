@@ -12,8 +12,9 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 import type { YMapLocationRequest } from 'ymaps3';
+
+import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import type { AdvertType } from '../../../types/advert';
 import { setChosenAdvert } from '../../../redux/slices/adverts/advertsSlice';
@@ -25,6 +26,7 @@ import {
 import LikeProfile from '../../ui/advertPageUI/LikeProfile';
 import PhotosCarousel from '../../ui/advertPageUI/PhotosCarousel';
 import { UserStatus } from '../../../types/auth';
+import YMap from '../../ui/advertPageUI/YMap';
 
 const mock: AdvertType = {
   id: 1,
@@ -60,26 +62,32 @@ export default function AdvertPage(): JSX.Element {
   const advert = useAppSelector((store) => store.advert.chosenAdvert);
   const likes = useAppSelector((store) => store.likes.likes);
   const user = useAppSelector((store) => store.auth.user);
-  async function initMap(): Promise<void> {
-    await ymaps3.ready;
 
-    const LOCATION: YMapLocationRequest = {
-      center: [37.623082, 55.75254],
-      zoom: 9,
-    };
+  // async function initMap(): Promise<void> {
+  //   console.log('asd');
 
-    const { YMap, YMapDefaultSchemeLayer } = ymaps3;
+  //   await ymaps3.ready;
 
-    const map = new YMap(document.getElementById('map'), { location: LOCATION });
-    map.addChild(new YMapDefaultSchemeLayer({}));
-  }
+  //   const LOCATION: YMapLocationRequest = {
+  //     center: [37.623082, 55.75254],
+  //     zoom: 9,
+  //   };
+
+  //   const { YMap, YMapDefaultSchemeLayer } = ymaps3;
+  //   const mapContainer = document.getElementById('map');
+  //   if (!mapContainer) {
+  //     return;
+  //   }
+  //   const map = new YMap(mapContainer, { location: LOCATION });
+  //   map.addChild(new YMapDefaultSchemeLayer({}));
+  // }
 
   useEffect(() => {
     void dispatch(setChosenAdvert(mock));
     if (advert) {
       void dispatch(getLikesThunk(advert.id));
+      // void initMap();
     }
-    void initMap();
   }, [advert, dispatch]);
 
   const isLiked = (): boolean =>
@@ -103,7 +111,6 @@ export default function AdvertPage(): JSX.Element {
           <GridItem colSpan={3}>
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
               <PhotosCarousel />
-              {/* <Image src="/images/1pic.jpg" alt="/assets/images/1pic.jpg" /> */}
               <Heading as="h2" size="lg" mb={4} pt={5}>
                 О квартире
               </Heading>
@@ -138,13 +145,7 @@ export default function AdvertPage(): JSX.Element {
                 <Text>Имя: {advert.User.name}</Text>
                 <Text>Email: {advert.User.email}</Text>
               </VStack>
-              <Button
-                colorScheme="teal"
-                // bgColor="00CEC9"
-                size="lg"
-                onClick={() => navigate('/')}
-                mr={5}
-              >
+              <Button colorScheme="teal" size="lg" onClick={() => navigate('/')} mr={5}>
                 Написать соседу
               </Button>
               <Button variant="ghost" colorScheme="blue" mr={2} onClick={(e) => likeHandler(e)}>
@@ -167,7 +168,8 @@ export default function AdvertPage(): JSX.Element {
         </Grid>
       </Container>
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
-        <div id="map" style={{ width: '100%', height: '600px' }} />
+        {/* <div id="map" style={{ width: '100%', height: '600px' }} /> */}
+        <YMap location={advert.Location.coordinates} />
       </Container>
     </>
   ) : (
