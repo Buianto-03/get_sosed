@@ -1,9 +1,10 @@
 const { Chat, User } = require('../../db/models');
+const { Op } = require('sequelize');
 
 const connections = new Map(); // in-memory DB
 
 const connectionCb = async (socket, request, user) => {
-  connections.set(user.id, { ws: socket, user });
+  connections.set(user.id, { ws: socket, user, receiverId: null });
 
   connections.forEach(async (connection) => {
     const { ws } = connection;
@@ -15,15 +16,37 @@ const connectionCb = async (socket, request, user) => {
     };
     ws.send(JSON.stringify(action));
   });
-  const allMessages = await Chat.findAll({
-    include: [
-      { model: User, as: 'sender' },
-      { model: User, as: 'receiver' },
-    ],
-  });
-  //   console.log(allMessages);
 
-  socket.send(JSON.stringify({ type: 'SET_MESSAGES', payload: allMessages }));
+  // Получаем receiverId из запроса
+
+  // Поиск сообщений только между текущим пользователем и получателем
+
+  socket.on('message', async (data) => {
+    const { type, payload } = JSON.parse(data);
+
+    switch (type) {
+      case 'INITIALIZE':
+        connections.get(user.id).receiverId = payload.receiverId;
+        // Выполняем запрос на получение сообщений между пользователями
+        const allMessages = await Chat.findAll({
+          where: {
+            [Op.or]: [
+              { senderId: user.id, receiverId: payload.receiverId },
+              { senderId: payload.receiverId, receiverId: user.id },
+            ],
+          },
+          include: [
+            { model: User, as: 'sender' },
+            { model: User, as: 'receiver' },
+          ],
+        });
+
+        socket.send(
+          JSON.stringify({ type: 'SET_MESSAGES', payload: allMessages }),
+        );
+        break;
+    }
+  });
 
   socket.on('close', () => {
     connections.delete(user.id);
