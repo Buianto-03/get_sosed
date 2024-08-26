@@ -39,9 +39,10 @@ class AdvertController {
   //     const updatedPost = await this.service.editPost(req.body, postId);
   //     res.json(updatedPost);
   //   };
-  getFilteredAdverts = async (req, res) => {
+  getFilteredAdverts = async (req, res) => { 
     try {
-      const filters = req.query; // Получаем фильтры из query-параметров запроса
+      // const filters = req.body;// post 
+      const filters = req.query;  // get
       const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);
     } catch (error) {

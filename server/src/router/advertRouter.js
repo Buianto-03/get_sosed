@@ -7,9 +7,14 @@ const advertRouter = express.Router();
 advertRouter
   .route('/')
   .get(advertController.getAdverts)
-  .post(advertController.createPost)
+  .post(advertController.createPost);
+
+advertRouter
+  .route('/filters')
+  // .post(advertController.getFilteredAdverts);
   .get(advertController.getFilteredAdverts);
 
+advertRouter.route('/:postId').delete(advertController.deletePost);
 advertRouter
   .route('/:advertId')
   .get(advertController.getAdvertById)
