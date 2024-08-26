@@ -15,7 +15,8 @@ import {
   Stack,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Nav } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 import { logoutThunk } from '../../redux/slices/auth/thunks';
@@ -50,8 +51,7 @@ export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
   const user = useAppSelector((store) => store.auth.user);
-  const dispatch = useAppDispatch()
-  
+  const dispatch = useAppDispatch();
 
   return (
     <Box bg="#EDEDFF" px={4}>
@@ -69,12 +69,17 @@ export default function Navbar(): JSX.Element {
         />
         <HStack spacing={8} alignItems="center">
           <Box style={{ width: '40px', marginLeft: '20px' }}>
-            <img src="/public/logo.png" alt='logo'/>
+            <img src="/public/logo.png" alt="logo" />
           </Box>
           <HStack as="nav" spacing={4} display={{ base: 'none', md: 'flex' }}>
-            {Links.map((link) => (
+            {/* {Links.map((link) => (
               <NavLink key={link}>{link}</NavLink>
-            ))}
+            ))} */}
+            <Nav.Link as={Link} to="/">
+              Главная
+            </Nav.Link>
+            <Nav.Link>Поиск</Nav.Link>
+            <Nav.Link>О нас</Nav.Link>
           </HStack>
         </HStack>
         <Flex alignItems="center">
@@ -101,9 +106,10 @@ export default function Navbar(): JSX.Element {
       {isOpen ? (
         <Box pb={4} display={{ md: 'none' }}>
           <Stack as="nav" spacing={4}>
-            {Links.map((link) => (
+            {/* {Links.map((link) => (
               <NavLink key={link}>{link}</NavLink>
-            ))}
+            ))} */}
+            <NavLink key={link}>{link}</NavLink>
           </Stack>
         </Box>
       ) : null}

@@ -3,15 +3,23 @@ import { Box, Input, Button, HStack } from '@chakra-ui/react';
 
 type ChatInputProps = {
   onSendMessage: (message: string) => void;
-}
+  borderRadius: string;
+  boxShadow: string;
+  _focus: object;
+};
 
-export default function ChatInput({ onSendMessage }: ChatInputProps): JSX.Element {
-  const [inputValue, setInputValue] = useState('');
+export default function ChatInput({
+  onSendMessage,
+  boxShadow,
+  borderRadius,
+  _focus
+}: ChatInputProps): JSX.Element {
+  const [message, setMessage] = useState('');
 
   const handleSendMessage = (): void => {
-    if (inputValue.trim() !== '') {
-      onSendMessage(inputValue);
-      setInputValue('');
+    if (message.trim() !== '') {
+      onSendMessage(message);
+      setMessage('');
     }
   };
 
@@ -19,8 +27,16 @@ export default function ChatInput({ onSendMessage }: ChatInputProps): JSX.Elemen
     <Box w="100%" p={2}>
       <HStack spacing={2}>
         <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          boxShadow="md"
+          borderRadius="md"
+          _focus={{ boxShadow: 'outline' }}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSendMessage();
+            }
+          }}
           placeholder="Type your message..."
         />
         <Button onClick={handleSendMessage} colorScheme="teal">

@@ -4,14 +4,12 @@ const userController = require('../controllers/userController');
 
 const userRouter = express.Router();
 
-userRouter
-  .route('/')
-  .get(userController.getUsers)
+userRouter.route('/').get(userController.getUsers);
 //   .post(verifyAccessToken, userController.createPost);
 
-// userRouter
-//   .route('/:postId')
-//   .delete(verifyAccessToken, userController.deletePost)
-//   .patch(verifyAccessToken, userController.patchPost);
+userRouter
+  .route('/:userId')
+  //   .delete(verifyAccessToken, userController.deletePost)
+  .patch(verifyAccessToken, userController.patchUser);
 
 module.exports = userRouter;

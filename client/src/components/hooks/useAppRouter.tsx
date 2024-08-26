@@ -8,6 +8,7 @@ import MainPage from '../pages/main/MainPage';
 import AdvertPage from '../pages/AdvertPage/AdvertPage';
 import { useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
+import ChatPage from '../pages/Account/ChatPage';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
   const status = useAppSelector((store) => store.auth.user.status);
@@ -20,6 +21,10 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         {
           path: '/account',
           element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
+        },
+        {
+          path: '/chat/:receiverId',
+          element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
         },
         {
           path: '/signin',

@@ -1,4 +1,5 @@
 const userService = require('../service/userService');
+const verifyAccessToken = require('../middlewares/verifyAccessToken');
 
 class UserController {
   constructor(service) {
@@ -28,11 +29,11 @@ class UserController {
   //     res.sendStatus(success ? 204 : 500);
   //   };
 
-  //   patchPost = async (req, res) => {
-  //     const { postId } = req.params;
-  //     const updatedPost = await this.service.editPost(req.body, postId);
-  //     res.json(updatedPost);
-  //   };
+  patchUser = async (req, res) => {
+    const { id } = res.locals.user;
+    const updatedUser = await this.service.editUser(req.body, id);
+    res.json(updatedUser);
+  };
 }
 
 const userContrller = new UserController(userService);

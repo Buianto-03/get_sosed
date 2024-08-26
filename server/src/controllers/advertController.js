@@ -28,11 +28,11 @@ class AdvertController {
     res.sendStatus(success ? 204 : 500);
   };
 
-  //   patchPost = async (req, res) => {
-  //     const { postId } = req.params;
-  //     const updatedPost = await this.service.editPost(req.body, postId);
-  //     res.json(updatedPost);
-  //   };
+  patchUser = async (req, res) => {
+    const { userId } = req.params;
+    const updatedUser = await this.service.editUser(req.body, userId);
+    res.json(updatedUser);
+  };
   getFilteredAdverts = async (req, res) => {
     try {
       const filters = req.query;

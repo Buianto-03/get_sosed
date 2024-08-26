@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 const { createServer } = require('http');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 const tokensRouter = require('./router/tokensRouter');
 const authRouter = require('./router/authRouter');
 const advertRouter = require('./router/advertRouter');
@@ -14,6 +15,7 @@ const likeRouter = require('./router/likeRouter');
 const app = express();
 
 app.use(morgan('dev'));
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 

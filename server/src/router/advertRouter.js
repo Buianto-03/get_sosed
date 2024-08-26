@@ -6,8 +6,8 @@ const advertRouter = express.Router();
 
 advertRouter
   .route('/')
-  .get(advertController.getAdverts);
-  .post(advertController.createPost);
+  .get(advertController.getAdverts)
+  .post(advertController.createPost)
   .get(advertController.getFilteredAdverts)
 
 advertRouter

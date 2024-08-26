@@ -1,8 +1,9 @@
-const { User } = require('../../db/models');
+const { User, UserProfile } = require('../../db/models');
 
 class UserService {
-  constructor(model) {
-    this.model = model;
+  constructor(user, userProfile) {
+    this.user = user;
+    this.userProfile = userProfile;
   }
 
   // async addPost(formData) {
@@ -14,7 +15,7 @@ class UserService {
   // }
 
   getUsers() {
-    return this.model.findAll({
+    return this.user.findAll({
       order: [['id', 'ASC']],
       include: 'UserProfile',
     });
@@ -30,14 +31,22 @@ class UserService {
   //     }
   //   }
 
-  //   async editPost(newData, id) {
-  //     const post = await this.model.findByPk(id);
-  //     await post.update(newData);
-  //     const updatedPost = await this.model.findByPk(id, { include: 'User' });
-  //     return updatedPost;
-  //   }
+  async editUser(newData, id) {
+    console.log('data --->', newData, 'id --->', id);
+
+    const user = await this.userProfile.findOne({
+      where: {
+        userId: id,
+      },
+    });
+    await user.update(newData);
+    const updatedUser = await this.user.findByPk(id, {
+      include: 'UserProfile',
+    });
+    return updatedUser;
+  }
 }
 
-const userService = new UserService(User);
+const userService = new UserService(User, UserProfile);
 
 module.exports = userService;

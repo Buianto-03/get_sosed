@@ -16,10 +16,13 @@ const connectionCb = async (socket, request, user) => {
     ws.send(JSON.stringify(action));
   });
   const allMessages = await Chat.findAll({
-    include: [{model: User, as: 'sender'}, {model: User, as: 'receiver'}],
+    include: [
+      { model: User, as: 'sender' },
+      { model: User, as: 'receiver' },
+    ],
   });
-//   console.log(allMessages);
-  
+  //   console.log(allMessages);
+
   socket.send(JSON.stringify({ type: 'SET_MESSAGES', payload: allMessages }));
 
   socket.on('close', () => {
@@ -52,24 +55,45 @@ const connectionCb = async (socket, request, user) => {
     const actionFromFront = JSON.parse(message);
     const { type, payload } = actionFromFront;
     switch (type) {
-      case 'NEW_MESSAGE':
+      case 'ADD_MESSAGE':
         {
+          console.log('receiver ====>', typeof Number(payload.receiverId));
+
           const newMessage = await Chat.create({
             message: payload.text,
-            userId: user.id,
+            senderId: user.id,
+            receiverId: Number(payload.receiverId),
           });
+
           const newMessageWithUser = await Chat.findOne({
             where: { id: newMessage.id },
-            include: User,
+            include: [
+              { model: User, as: 'sender' },
+              { model: User, as: 'receiver' },
+            ],
           });
+
           const action = {
             type: 'ADD_MESSAGE',
             payload: newMessageWithUser,
           };
-          connections.forEach((connection) => {
-            const { ws } = connection;
-            ws.send(JSON.stringify(action));
-          });
+
+          console.log('Sending to sender:', connections.get(user.id));
+          connections.get(user.id).ws.send(JSON.stringify(action)); // Отправка сообщения отправителю
+
+          console.log(
+            'Sending to receiver:',
+            connections.get(Number(payload.receiverId)),
+          );
+          if (connections.has(Number(payload.receiverId))) {
+            connections
+              .get(Number(payload.receiverId))
+              .ws.send(JSON.stringify(action)); // Отправка сообщения получателю
+          } else {
+            console.error(
+              `Receiver with ID ${payload.receiverId} is not connected`,
+            );
+          }
         }
         break;
 
