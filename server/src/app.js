@@ -2,7 +2,9 @@ const express = require('express');
 const morgan = require('morgan');
 const { createServer } = require('http');
 const cookieParser = require('cookie-parser');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
+
 const tokensRouter = require('./router/tokensRouter');
 const authRouter = require('./router/authRouter');
 const advertRouter = require('./router/advertRouter');
@@ -14,6 +16,7 @@ const likeRouter = require('./router/likeRouter');
 
 const app = express();
 
+app.use(cors());
 app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
@@ -24,6 +27,16 @@ app.use('/api/users', userRouter);
 app.use('/api/tokens', tokensRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/likes', likeRouter);
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: 'https://api-maps.yandex.ru',
+    changeOrigin: true,
+    pathRewrite: {
+      '/api': '', // remove base path
+    },
+  }),
+);
 
 const server = createServer(app);
 

@@ -14,7 +14,6 @@ export const userSchema = z.object({
   id: z.number(),
   roleId: z.number(),
   UserProfile: userPorfileSchema.optional(),
-  // UserProfile: schema.optional()
 });
 
 export type BackendUserT = z.infer<typeof userSchema>;

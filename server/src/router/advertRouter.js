@@ -11,8 +11,15 @@ advertRouter
   .get(advertController.getFilteredAdverts)
 
 advertRouter
-  .route('/:postId')
-  .delete(advertController.deletePost)
+  .route('/filters')
+  // .post(advertController.getFilteredAdverts);
+  .get(advertController.getFilteredAdverts);
+
+advertRouter.route('/:postId').delete(advertController.deletePost);
+advertRouter
+  .route('/:advertId')
+  .get(advertController.getAdvertById)
+  .delete(advertController.deletePost);
 //   .patch(verifyAccessToken, advertController.patchPost);
 
 module.exports = advertRouter;
