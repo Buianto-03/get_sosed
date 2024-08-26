@@ -32,7 +32,7 @@ app.use(
     target: 'https://api-maps.yandex.ru',
     changeOrigin: true,
     pathRewrite: {
-      '^/api': '', // remove base path
+      '/api': '', // remove base path
     },
   }),
 );

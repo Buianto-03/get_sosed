@@ -10,7 +10,7 @@ type AdverProps = {
 
 export default function AdvertCard({ advert }: AdverProps): JSX.Element {
   const navigate = useNavigate();
-  const handleClick = () => {
+  const handleClick = ():void => {
     navigate(`/advert/${advert.id}`);
   };
   return (

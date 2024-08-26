@@ -10,9 +10,15 @@ class AdvertController {
   };
 
   getAdvertById = async (req, res) => {
-    const { advertId } = req.params;
-    const advert = await this.service.getAdvertById(advertId);
-    res.status(201).json(advert);
+    try {
+      const { advertId } = req.params;
+      const advert = await this.service.getAdvertById(advertId);
+      console.log(advert);
+
+      res.status(201).json(advert);
+    } catch (error) {
+      res.sendStatus(500);
+    }
   };
 
   createPost = async (req, res) => {
@@ -39,10 +45,10 @@ class AdvertController {
   //     const updatedPost = await this.service.editPost(req.body, postId);
   //     res.json(updatedPost);
   //   };
-  getFilteredAdverts = async (req, res) => { 
+  getFilteredAdverts = async (req, res) => {
     try {
-      // const filters = req.body;// post 
-      const filters = req.query;  // get
+      // const filters = req.body;// post
+      const filters = req.query; // get
       const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);
     } catch (error) {

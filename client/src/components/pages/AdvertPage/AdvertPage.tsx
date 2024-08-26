@@ -11,9 +11,8 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { YMapLocationRequest } from 'ymaps3';
-
+import { useNavigate, useParams } from 'react-router-dom';
+// import type { YMapLocationRequest } from 'ymaps3';
 import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import type { AdvertType } from '../../../types/advert';
@@ -27,6 +26,7 @@ import LikeProfile from '../../ui/advertPageUI/LikeProfile';
 import PhotosCarousel from '../../ui/advertPageUI/PhotosCarousel';
 import { UserStatus } from '../../../types/auth';
 import YMap from '../../ui/advertPageUI/YMap';
+import { getAdvertByIdThunk } from '../../../redux/slices/adverts/advertsThunk';
 
 const mock: AdvertType = {
   id: 1,
@@ -63,32 +63,17 @@ export default function AdvertPage(): JSX.Element {
   const likes = useAppSelector((store) => store.likes.likes);
   const user = useAppSelector((store) => store.auth.user);
 
-  // async function initMap(): Promise<void> {
-  //   console.log('asd');
-
-  //   await ymaps3.ready;
-
-  //   const LOCATION: YMapLocationRequest = {
-  //     center: [37.623082, 55.75254],
-  //     zoom: 9,
-  //   };
-
-  //   const { YMap, YMapDefaultSchemeLayer } = ymaps3;
-  //   const mapContainer = document.getElementById('map');
-  //   if (!mapContainer) {
-  //     return;
-  //   }
-  //   const map = new YMap(mapContainer, { location: LOCATION });
-  //   map.addChild(new YMapDefaultSchemeLayer({}));
-  // }
-
+  const { id } = useParams();
   useEffect(() => {
-    void dispatch(setChosenAdvert(mock));
+    if (id) {
+      void dispatch(getAdvertByIdThunk(+id));
+    }
+
     if (advert) {
       void dispatch(getLikesThunk(advert.id));
       // void initMap();
     }
-  }, [advert, dispatch]);
+  }, [dispatch, id]);
 
   const isLiked = (): boolean =>
     user.status === UserStatus.Logged && advert

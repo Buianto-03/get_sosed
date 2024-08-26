@@ -1,6 +1,6 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import { getAdvertsThunk, getFilteredAdvertsThunk } from './advertsThunk';
+import { getAdvertByIdThunk, getAdvertsThunk, getFilteredAdvertsThunk } from './advertsThunk';
 import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
 
 const initialState: AdvertSliceT = {
@@ -45,6 +45,9 @@ export const advertSlice = createSlice({
       })
       .addCase(getFilteredAdvertsThunk.fulfilled, (state, action) => {
         state.adverts = action.payload;
+      })
+      .addCase(getAdvertByIdThunk.fulfilled, (state, action) => {
+        state.chosenAdvert = action.payload;
       });
   },
 });
