@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   InputGroup, Input, InputRightElement, Button, Box, Flex, Popover,
   PopoverTrigger, PopoverContent, PopoverArrow, PopoverCloseButton, PopoverBody,
@@ -21,6 +21,10 @@ export default function Filter(): JSX.Element {
   const dispatch = useDispatch();
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
+
+  // useEffect(() => {
+
+  // }, [priceRange])
 
   const handleSearch = () => {
     // Собираем параметры фильтрации и отправляем в Redux
