@@ -14,36 +14,36 @@ export default function ChatList({ online, receivers }: ChatListProps): JSX.Elem
   const navigate = useNavigate();
 
   const handleUserClick = (userId: number) => {
-    // console.log('User clicked:', userId);
     navigate(`/chat/${userId}`);
-    // Здесь можно добавить логику обработки клика по пользователю
   };
 
   return (
     <Box w="100%" p={2}>
-      {receivers.map((user) => (
-        <Box
-          key={user.id}
-          bg="#cacae2"
-          p={2}
-          color="white"
-          borderRadius="10px"
-          mb={1} // добавляет отступ между боксами
-          cursor="pointer" // меняет курсор на указатель при наведении
-          _hover={{ bg: '#b0b0d6' }} // изменяет цвет фона при наведении
-          _active={{ bg: '#9898c2' }} // изменяет цвет фона при клике
-          onClick={() => handleUserClick(user.receiver.id)}
-        >
-          <Stack direction="row" alignItems="center" spacing={3}>
-            <Avatar width="40px" height="40px">
-              <AvatarBadge boxSize="1rem" bg="green.500" />
-            </Avatar>
-            <Text fontSize="md">{user.receiver.name}</Text>
-          </Stack>
-        </Box>
-      ))}
+      {receivers
+        .filter(
+          (chat) => chat.receiverId !== authorizedUser.id || chat.senderId === authorizedUser.id,
+        )
+        .map((chat) => (
+          <Box
+            key={chat.id}
+            bg="#cacae2"
+            p={2}
+            color="white"
+            borderRadius="10px"
+            mb={1}
+            cursor="pointer"
+            _hover={{ bg: '#b0b0d6' }}
+            _active={{ bg: '#9898c2' }}
+            onClick={() => handleUserClick(chat.receiver.id)}
+          >
+            <Stack direction="row" alignItems="center" spacing={3}>
+              <Avatar width="40px" height="40px">
+                <AvatarBadge boxSize="1rem" bg="green.500" />
+              </Avatar>
+              <Text fontSize="md">{chat.receiver.name}</Text>
+            </Stack>
+          </Box>
+        ))}
     </Box>
   );
 }
-
-// receivers

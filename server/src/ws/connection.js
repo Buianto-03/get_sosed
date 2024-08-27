@@ -15,6 +15,8 @@ const connectionCb = async (socket, request, user) => {
       payload: allUsers,
     };
     ws.send(JSON.stringify(action));
+
+    console.log(connections);
   });
 
   // Получаем receiverId из запроса
@@ -26,7 +28,9 @@ const connectionCb = async (socket, request, user) => {
 
     switch (type) {
       case 'INITIALIZE':
+        // Устанавливаем receiverId для текущего пользователя
         connections.get(user.id).receiverId = payload.receiverId;
+
         // Выполняем запрос на получение сообщений между пользователями
         const allMessages = await Chat.findAll({
           where: {
@@ -41,9 +45,42 @@ const connectionCb = async (socket, request, user) => {
           ],
         });
 
+        const senderConnection = connections.get(user.id);
+
+        // Отправляем сообщения только текущему пользователю
         socket.send(
           JSON.stringify({ type: 'SET_MESSAGES', payload: allMessages }),
         );
+        break;
+
+      case 'SEND_MESSAGE':
+        // Отправляем сообщение конкретному пользователю
+        const receiverConnection = connections.get(payload.receiverId);
+        if (receiverConnection) {
+          // Сохраните сообщение в базе данных
+          const newMessage = await Chat.create({
+            senderId: user.id,
+            receiverId: payload.receiverId,
+            message: payload.message,
+          });
+
+          // Отправляем сообщение как отправителю, так и получателю
+          const messagePayload = JSON.stringify({
+            type: 'NEW_MESSAGE',
+            payload: newMessage,
+          });
+
+          // Отправка отправителю
+          socket.send(messagePayload);
+
+          // Отправка получателю
+          receiverConnection.ws.send(messagePayload);
+        } else {
+          console.log('Пользователь не в сети');
+        }
+        break;
+
+      default:
         break;
     }
   });
@@ -80,7 +117,7 @@ const connectionCb = async (socket, request, user) => {
     switch (type) {
       case 'ADD_MESSAGE':
         {
-          console.log('receiver ====>', typeof Number(payload.receiverId));
+          // console.log('receiver ====>', typeof Number(payload.receiverId));
 
           const newMessage = await Chat.create({
             message: payload.text,

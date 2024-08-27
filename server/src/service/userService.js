@@ -1,4 +1,5 @@
 const { User, UserProfile, Chat } = require('../../db/models');
+const Sequelize = require('sequelize');
 
 class UserService {
   constructor(user, userProfile, chat) {
@@ -24,12 +25,21 @@ class UserService {
 
   async getReceiverUsers(id) {
     const allChats = await this.chat.findAll({
-      where: { senderId: id },
-      include: {
-        model: this.user,
-        as: 'receiver',
-        attributes: ['id', 'name', 'email'],
+      where: {
+        [Sequelize.Op.or]: [{ senderId: id }, { receiverId: id }],
       },
+      include: [
+        {
+          model: this.user,
+          as: 'receiver',
+          attributes: ['id', 'name', 'email'],
+        },
+        {
+          model: this.user,
+          as: 'sender',
+          attributes: ['id', 'name', 'email'],
+        },
+      ],
     });
 
     // Фильтрация уникальных пар отправитель-получатель
