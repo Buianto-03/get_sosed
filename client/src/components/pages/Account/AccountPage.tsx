@@ -17,6 +17,7 @@ import type { ChatType } from '../../../types/chat';
 import { editUserProfileThunk } from '../../../redux/slices/userProfile/thunks';
 import type { UserProfileT } from '../../../types/userProfile';
 import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
+import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 
 type Action = {
   type: string;
@@ -44,7 +45,10 @@ export default function AccountPage(): JSX.Element {
     const soket = new WebSocket('ws://localhost:3000');
     soketRef.current = soket;
 
-    soket.onopen = () => console.log('CONNECTED');
+    soket.onopen = () => {
+      console.log('CONNECTED');
+      dispatch(getReceiverListThunk(user.id));
+    };
     soket.onclose = () => console.log('DISCONNECTED');
     soket.onerror = (err) => console.log('ERROR', err);
 
@@ -72,6 +76,8 @@ export default function AccountPage(): JSX.Element {
     };
   }, []);
 
+  const receivers = useAppSelector((store) => store.chatList.chatList)
+
   const handleEditProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditProfile((prevProfile) => ({
@@ -82,7 +88,9 @@ export default function AccountPage(): JSX.Element {
 
   const handleSaveProfile = (formData: UserProfileT): void => {
     if (user.status === UserStatus.Logged) {
-      void dispatch(editUserProfileThunk({ formData, id: user.id })).then(() => dispatch(checkAuthThunk()));
+      void dispatch(editUserProfileThunk({ formData, id: user.id })).then(() =>
+        dispatch(checkAuthThunk()),
+      );
       console.log('Profile updated:', editProfile);
       setIsEditing(false);
     }
@@ -193,7 +201,7 @@ export default function AccountPage(): JSX.Element {
           </VStack>
         </GridItem>
         <GridItem colSpan={{ base: 1, md: 2 }} bg="#cacae2" borderRadius="md" boxShadow="lg">
-          <ChatList online={online} />
+          <ChatList receivers={receivers} online={online} />
         </GridItem>
         <GridItem
           rowSpan={{ base: 1, md: 2 }}

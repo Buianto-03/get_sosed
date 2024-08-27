@@ -22,17 +22,25 @@ class UserService {
     });
   }
 
-  getReceiverUsers(id) {
-    console.log(id);
-    
-    return this.chat.findAll({
+  async getReceiverUsers(id) {
+    const allChats = await this.chat.findAll({
       where: { senderId: id },
       include: {
         model: this.user,
         as: 'receiver',
-        attributes: ['id', 'name', 'email'], // Укажите нужные поля
+        attributes: ['id', 'name', 'email'],
       },
     });
+
+    // Фильтрация уникальных пар отправитель-получатель
+    const seen = new Set();
+    const uniqueChats = allChats.filter((chat) => {
+      const duplicate = seen.has(chat.receiverId);
+      seen.add(chat.receiverId);
+      return !duplicate;
+    });
+
+    return uniqueChats;
   }
 
   //   async deletePost(id) {

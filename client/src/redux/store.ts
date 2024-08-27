@@ -3,6 +3,7 @@ import authReducer from './slices/auth/authSlice';
 import advertReducer from './slices/adverts/advertsSlice';
 import likeReducer from './slices/likes/likesSlice';
 import userProfileReducer from './slices/userProfile/userProfileSlice';
+import chatListReducer from './slices/chat/chatListSlice'
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     advert: advertReducer,
     likes: likeReducer,
     userProfile: userProfileReducer,
+    chatList: chatListReducer
 
   },
 });

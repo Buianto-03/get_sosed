@@ -23,7 +23,15 @@ export default function ChatPage(): JSX.Element {
     const soket = new WebSocket(`ws://localhost:3000?receiverId=${receiverId}`);
     soketRef.current = soket;
 
-    soket.onopen = () => console.log('CONNECTED');
+    soket.onopen = () => {
+      console.log('CONNECTED');
+      // Отправляем receiverId сразу после открытия соединения
+      const initialMessage = JSON.stringify({
+        type: 'INITIALIZE',
+        payload: { receiverId },
+      });
+      soket.send(initialMessage);
+    };
     soket.onclose = () => console.log('DISCONNECTED');
     soket.onerror = (err) => console.log('ERROR', err);
 

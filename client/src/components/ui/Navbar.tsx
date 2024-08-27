@@ -87,7 +87,11 @@ export default function Navbar(): JSX.Element {
             <MenuButton as={Button} rounded="full" variant="link" cursor="pointer" minW={0}>
               <Avatar
                 size="sm"
-                src="https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png"
+                src={
+                  user?.UserProfile?.photo
+                    ? user?.UserProfile?.photo
+                    : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
+                }
               />
             </MenuButton>
             <MenuList>
