@@ -9,6 +9,7 @@ userRouter.route('/').get(userController.getUsers);
 
 userRouter
   .route('/:userId')
+  .get(userController.getReceiverUsers)
   //   .delete(verifyAccessToken, userController.deletePost)
   .patch(verifyAccessToken, userController.patchUser);
 

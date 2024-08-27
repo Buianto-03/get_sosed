@@ -13,6 +13,7 @@ import {
   TagLabel,
   Text,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import type { LikeType } from '../../../types/like';
 
 type LikeProfileProp = {
@@ -21,6 +22,7 @@ type LikeProfileProp = {
 
 export default function LikeProfile({ like }: LikeProfileProp): JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <Popover placement="top" isOpen={isOpen}>
@@ -59,7 +61,7 @@ export default function LikeProfile({ like }: LikeProfileProp): JSX.Element {
             <Text>{like.User.UserProfile.about}</Text>
           </Box>
         </PopoverBody>
-        <Button>Написать соседу</Button>
+        <Button onClick={() => navigate(`/chat/${like.User?.id}`)}>Написать соседу</Button>
       </PopoverContent>
     </Popover>
   );

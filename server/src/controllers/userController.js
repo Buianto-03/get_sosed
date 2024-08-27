@@ -10,6 +10,15 @@ class UserController {
     this.service.getUsers().then((data) => res.json(data));
   };
 
+  getReceiverUsers = async (req, res) => {
+    // const { id } = res.locals.user;
+    const { userId } = req.params;
+    console.log(req.params);
+    
+    const receiversList = await this.service.getReceiverUsers(userId);
+    res.json(receiversList);
+  };
+
   //   createPost = async (req, res) => {
   //     try {
   //       const newPost = await this.service.addPost({

@@ -1,9 +1,10 @@
-const { User, UserProfile } = require('../../db/models');
+const { User, UserProfile, Chat } = require('../../db/models');
 
 class UserService {
-  constructor(user, userProfile) {
+  constructor(user, userProfile, chat) {
     this.user = user;
     this.userProfile = userProfile;
+    this.chat = chat;
   }
 
   // async addPost(formData) {
@@ -18,6 +19,19 @@ class UserService {
     return this.user.findAll({
       order: [['id', 'ASC']],
       include: 'UserProfile',
+    });
+  }
+
+  getReceiverUsers(id) {
+    console.log(id);
+    
+    return this.chat.findAll({
+      where: { senderId: id },
+      include: {
+        model: this.user,
+        as: 'receiver',
+        attributes: ['id', 'name', 'email'], // Укажите нужные поля
+      },
     });
   }
 
@@ -47,6 +61,6 @@ class UserService {
   }
 }
 
-const userService = new UserService(User, UserProfile);
+const userService = new UserService(User, UserProfile, Chat);
 
 module.exports = userService;
