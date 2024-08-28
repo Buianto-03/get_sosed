@@ -1,6 +1,12 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import { getAdvertByIdThunk, getAdvertsThunk, getFilteredAdvertsThunk, getTagsBySearchThunk } from './advertsThunk';
+import {
+  getAdvertByIdThunk,
+  getAdvertsThunk,
+  getFilteredAdvertsThunk,
+  getLikedAdvertsThunk,
+  getTagsBySearchThunk,
+} from './advertsThunk';
 import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
 
 const initialState: AdvertSliceT = {
@@ -17,6 +23,7 @@ const initialState: AdvertSliceT = {
     category: '',
   },
   tags: [],
+  liked: [],
 };
 
 export const advertSlice = createSlice({
@@ -52,6 +59,9 @@ export const advertSlice = createSlice({
       })
       .addCase(getTagsBySearchThunk.fulfilled, (state, action) => {
         state.tags = action.payload;
+      })
+      .addCase(getLikedAdvertsThunk.fulfilled, (state, action) => {
+        state.liked = action.payload;
       });
   },
 });
