@@ -2,6 +2,7 @@ import type { AxiosInstance } from 'axios';
 import { advertSchema } from '../types/advert';
 import type { AdvertType, FilterType, PostAdvertType } from '../types/advert';
 import axiosInstance from './client';
+import { likedAdvertsSchema, type LikedAdvertsType } from '../types/like';
 
 class AdvertService {
   constructor(private client: AxiosInstance) {}
@@ -56,17 +57,17 @@ class AdvertService {
       const response = await this.client.get('/adverts/tags', {
         params: { query },
       });
-      return response.data as string[]; 
+      return response.data as string[];
     } catch (error) {
       console.log(error);
       return Promise.reject(error);
     }
   }
 
-  async getLikedAdverts(): Promise<AdvertType[]> {
+  async getLikedAdverts(): Promise<LikedAdvertsType[]> {
     try {
       const response = await this.client.get('/adverts/liked');
-      return advertSchema.array().parse(response.data);
+      return likedAdvertsSchema.array().parse(response.data);
     } catch (error) {
       console.log(error);
       return Promise.reject(error);

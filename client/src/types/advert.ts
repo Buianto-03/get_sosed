@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { userSchema } from './auth';
+import { LikedAdvertsType } from './like';
 
 export const advertSchema = z.object({
   id: z.number(),
@@ -43,7 +44,7 @@ export type AdvertSliceT = {
   query: string;
   filters: FilterType;
   tags: string[];
-  liked: AdvertType[]
+  liked: LikedAdvertsType[]
 };
 
 export type PostAdvertType = {
@@ -61,3 +62,4 @@ export type PostAdvertType = {
   // title, body, price, floor, square, rooms, city, district, address, metro
   coordinates: string;
 };
+

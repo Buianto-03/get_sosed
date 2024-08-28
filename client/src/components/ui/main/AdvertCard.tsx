@@ -24,6 +24,7 @@ export default function AdvertCard({ advert }: AdverProps): JSX.Element {
       boxShadow="md"
       onClick={handleClick}
       cursor="pointer"
+      bg='#fff'
     >
       {/* Image Section */}
       <Box position="relative" height="140px">

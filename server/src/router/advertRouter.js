@@ -28,7 +28,10 @@ advertRouter
   .route('/filters')
   // .post(advertController.getFilteredAdverts);
   .get(advertController.getFilteredAdverts);
-
+  
+  advertRouter
+    .route('/liked')
+    .get(verifyAccessToken, advertController.likedAdvertsHandler);
 advertRouter.route('/tags').get(advertController.getTagsBySearch);
 advertRouter.route('/:postId').delete(advertController.deletePost);
 advertRouter
@@ -37,9 +40,6 @@ advertRouter
   .delete(advertController.deletePost);
 //   .patch(verifyAccessToken, advertController.patchPost);
 
-advertRouter
-  .route('/liked')
-  .get(verifyAccessToken, advertController.likedAdvertsHandler);
 
 // advertRouter.route('/search').get(advertController.searchAdverts);
 module.exports = advertRouter;

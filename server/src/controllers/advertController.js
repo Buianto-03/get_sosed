@@ -38,7 +38,10 @@ class AdvertController {
       req.files.forEach(async (file, i) => {
         const name = `advert${newAdvert.id}-${i}.webp`;
         const outputBuffer = await sharp(file.buffer).webp().toBuffer();
-        await fs.writeFile(`./public/images/advert-${newAdvert.id}/${name}`, outputBuffer);
+        await fs.writeFile(
+          `./public/images/advert-${newAdvert.id}/${name}`,
+          outputBuffer,
+        );
       });
 
       res.status(201).json(newAdvert);
@@ -88,10 +91,12 @@ class AdvertController {
   likedAdvertsHandler = async (req, res) => {
     const { id } = res.locals.user;
     // const {id} = req.params
-    console.log('res.locals ---->', res.locals);
+    // console.log('res.locals ---->', res.locals);
 
     try {
       const likedAdverts = await this.service.likedAdverts(id);
+      console.log(JSON.parse(JSON.stringify(likedAdverts)));
+
       res.status(200).json(likedAdverts);
     } catch (error) {
       console.log(error);

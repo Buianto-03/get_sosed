@@ -66,7 +66,7 @@ class UserService {
   //   }
 
   async editUser(newData, id) {
-    console.log('data --->', newData, 'id --->', id);
+    // console.log('data --->', newData, 'id --->', id);
 
     const user = await this.userProfile.findOne({
       where: {

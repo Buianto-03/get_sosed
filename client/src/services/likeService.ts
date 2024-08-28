@@ -25,9 +25,11 @@ class LikeService {
     }
   }
 
-  async deleteLike(advertId: AdvertType['id']): Promise<LikeType> {
+  async deleteLike(advertId: AdvertType['id']): Promise<LikeType> {    
     try {
       const response = await this.client.delete(`/likes/${advertId}`);
+      console.log(response);
+      
       return likeSchema.parse(response.data);
     } catch (error) {
       return Promise.reject(error);

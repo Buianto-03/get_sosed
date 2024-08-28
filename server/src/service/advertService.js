@@ -6,7 +6,8 @@ class AdvertService {
     this.advert = advert;
     this.location = location;
     this.tags = tags;
-    (this.user = user), (this.like = like);
+    this.user = user;
+    this.like = like;
   }
 
   async addAdvert(formData) {
@@ -72,6 +73,8 @@ class AdvertService {
   }
 
   async likedAdverts(id) {
+    console.log('id ------------->', id);
+
     const likedAdverts = await this.like.findAll({
       where: { userId: id },
       include: [
@@ -81,6 +84,8 @@ class AdvertService {
         },
       ],
     });
+    // console.log(likedAdverts);
+    
     return likedAdverts;
   }
 
