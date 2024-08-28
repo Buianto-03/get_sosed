@@ -52,10 +52,10 @@ export default function PostAdvertPage(): JSX.Element {
         formData.append('coordinates', coordinates);
         dispatch(postAdvertThunk(formData))
           .then(() => {
-            // setValue('success');
-            // setTimeout(() => {
-            //   navigate('/');
-            // }, 2000);
+            setValue('success');
+            setTimeout(() => {
+              navigate('/');
+            }, 2000);
           })
           .catch(() => setValue('error'));
       })

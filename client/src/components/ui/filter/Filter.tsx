@@ -36,7 +36,7 @@ import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { debounce } from 'lodash';
-import { setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
+import { addTag, removeTag, setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { getTagsBySearchThunk } from '../../../redux/slices/adverts/advertsThunk';
 
@@ -48,12 +48,11 @@ export default function Filter(): JSX.Element {
   const [district, setDistrict] = useState<string>('');
   const [metro, setMetro] = useState<string>('');
   const [category, setCategory] = useState<string>(''); // Категория (Квартиры, Дома, Вторичка, Новостройка)
-  // const [selectedTag, setSelectedTag] = useState<string | null>(null); // Состояние для выбранного тега
   //  // Состояние для хранения предложенных тегов на основе ввода
 
   const dispatch = useAppDispatch();
   const tags = useAppSelector((store) => store.advert.tags);
-  // const [searchParams, setSearchParams] = useSearchParams();
+  const pickedTags = useAppSelector((store) => store.advert.pickedTags);
   console.log(tags);
 
   const debouncedSearch = useCallback(
@@ -71,6 +70,10 @@ export default function Filter(): JSX.Element {
     debouncedSearch(inputValue);
   }, [inputValue, debouncedSearch]);
 
+  // useEffect(() => {
+  //   dispatch(loadTagsFromStorage());
+  // }, [dispatch]);
+
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
   const handleFilter = () => {
@@ -83,13 +86,17 @@ export default function Filter(): JSX.Element {
       district,
       metro,
       category,
+      // tags: pickedTags
     };
     dispatch(setFilters(filters)); // Отправляем параметры фильтрации в Redux
   };
-  // const handleTagClick = (tagId: string) => {
-  //   setSelectedTag(tagId);
-  //   setInputValue(''); // Очистить поле ввода после выбора тега
-  // };
+  const handleTagClick = (tag: string) => {
+    dispatch(addTag(tag));
+    setInputValue('');
+  };
+  const handleRemoveTag = (tag: { id: string; name: string }) => {
+    dispatch(removeTag(tag.id)); // Передаем только идентификатор тега
+  };
   return (
     <Flex
       p={4}
@@ -226,72 +233,69 @@ export default function Filter(): JSX.Element {
 
       {/* Поле поиска */}
       <Box width="100%" maxW={popoverWidth}>
-      <InputGroup>
-        <Input
-          placeholder="Поиск по объявлениям"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          size="lg"
-          borderRadius="md"
-        />
-        <InputRightElement>
-          <Button onClick={handleFilter} colorScheme="blue" borderRadius="md">
-            <SearchIcon />
-          </Button>
-        </InputRightElement>
-      </InputGroup>
-      {/* Список предложенных тегов
-      <Box mt={4} w="100%" maxW={popoverWidth}>
-        <Select
-          placeholder="Выберите тег"
-          variant="outline"
-          size="lg"
-          borderRadius="md"
-          borderColor="blue.300"
-          _focus={{ borderColor: 'blue.500', boxShadow: 'outline' }}
-          _hover={{ borderColor: 'blue.400' }}
-          color="blue.700"
-        >
-          {tags.map((tag) => (
-            <option key={tag.id} value={tag.id}>
+        <InputGroup>
+          <Input
+            placeholder="Поиск по объявлениям"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            size="lg"
+            borderRadius="md"
+          />
+          <InputRightElement>
+            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md">
+              <SearchIcon />
+            </Button>
+          </InputRightElement>
+        </InputGroup>
+        {/**
+         * Выбранные теги {pickedTags.map(tag => <Button >tag.name</Button>)}
+         */}
+        <Box mt={4}>
+          {pickedTags.map((tag) => (
+            <Button
+              key={tag.id}
+              variant="outline"
+              colorScheme="blue"
+              mr={2}
+              mb={2}
+              onClick={() => handleRemoveTag(tag)} // Удаление тега при клике
+            >
               {tag.name}
-            </option>
+            </Button>
           ))}
-        </Select>
-      </Box> */}
-
-      {/* Список предложенных тегов */}
-      {inputValue && (
-        <Box
-          mt={2}
-          borderRadius="md"
-          boxShadow="md"
-          bg="white"
-          borderWidth="1px"
-          borderColor="gray.200"
-          zIndex={1}
-          position="absolute"
-          width="100%"
-          maxW={popoverWidth}
-        >
-          {tags.length > 0 ? (
-            tags.map((tag) => (
-              <Flex
-                key={tag.id}
-                p={2}
-                align="center"
-                cursor="pointer"
-                _hover={{ bg: 'gray.100' }}
-                // onClick={() => handleTagClick(tag.id)}
-              >
-                <Text>{tag.name}</Text>
-              </Flex>
-            ))
-          ) : (
-            <Text p={2}>Нет подходящих тегов</Text>
-          )}
         </Box>
-      )}
+        {/* Список предложенных тегов */}
+        {inputValue && (
+          <Box
+            mt={2}
+            borderRadius="md"
+            boxShadow="md"
+            bg="white"
+            borderWidth="1px"
+            borderColor="gray.200"
+            zIndex={1}
+            position="absolute"
+            width="100%"
+            maxW={popoverWidth}
+          >
+            {tags.length > 0 ? (
+              tags.map((tag) => (
+                <Flex
+                  key={tag.id}
+                  p={2}
+                  align="center"
+                  cursor="pointer"
+                  _hover={{ bg: 'gray.100' }}
+                  onClick={() => handleTagClick(tag)} // dispatch(addTag(tag???))
+                >
+                  <Text>{tag.name}</Text>
+                </Flex>
+              ))
+            ) : (
+              <Text p={2}>Нет подходящих тегов</Text>
+            )}
+          </Box>
+        )}
       </Box>
     </Flex>
   );
