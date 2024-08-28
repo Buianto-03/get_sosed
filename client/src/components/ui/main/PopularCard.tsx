@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Flex, Button, Box, Text } from '@chakra-ui/react';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import AdvertCard from './AdvertCard';
 import { loadCards } from '../../../redux/slices/adverts/advertsSlice';
 import type { AdvertType } from '../../../types/advert';
+import { getTopAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
 
 // Пример данных с залайканными квартирами
 const popularAdverts: AdvertType[] = [
@@ -130,10 +131,13 @@ const popularAdverts: AdvertType[] = [
 ];
 
 export default function PopularCard(): JSX.Element {
-  const adverts = popularAdverts; // Используем моковые данные
+  const adverts = useAppSelector(store => store.advert.populars)
   const visitableCards = 4; // Ограничиваем показ карточек
-
   const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    void dispatch(getTopAdvertsThunk())
+  }, [dispatch])
 
   const handleLoadMore = () => {
     // Здесь может быть логика для загрузки дополнительных карточек

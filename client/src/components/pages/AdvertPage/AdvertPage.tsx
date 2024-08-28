@@ -9,7 +9,6 @@ import {
   VStack,
   Button,
   Icon,
-  Image,
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -38,7 +37,6 @@ export default function AdvertPage(): JSX.Element {
   useEffect(() => {
     if (id) {
       void dispatch(getAdvertByIdThunk(+id)).then((res) => {
-        
         const advertId = res.payload as AdvertType;
         void dispatch(getLikesThunk(advertId.id));
       });
@@ -59,7 +57,8 @@ export default function AdvertPage(): JSX.Element {
     }
     return false;
   };
-
+  console.log(advert);
+  
   return advert ? (
     <>
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
@@ -67,7 +66,7 @@ export default function AdvertPage(): JSX.Element {
           <GridItem colSpan={3}>
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
               {/* <Image src="/images/1.jpg" /> */}
-              <PhotosCarousel />
+              <PhotosCarousel photos={advert.AdvertPhotos}/>
               <Heading as="h2" size="lg" mb={4} pt={5}>
                 О квартире
               </Heading>

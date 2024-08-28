@@ -77,7 +77,7 @@ export default function AccountPage(): JSX.Element {
       }
     };
 
-      void dispatch(checkAuthThunk()).then(() => void dispatch(getLikedAdvertsThunk()));
+    void dispatch(checkAuthThunk()).then(() => void dispatch(getLikedAdvertsThunk()));
 
     return () => {
       soketRef.current?.close();
@@ -128,7 +128,7 @@ export default function AccountPage(): JSX.Element {
             {isEditing ? (
               <Box
                 as="form"
-                onSubmit={(e) => {
+                onSubmit={(e: React.FormEvent<HTMLDivElement>) => {
                   e.preventDefault();
                   const formData = Object.fromEntries(new FormData(e.currentTarget));
                   handleSaveProfile(formData);

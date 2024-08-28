@@ -56,7 +56,7 @@ class AdvertService {
       const response = await this.client.get('/adverts/tags', {
         params: { query },
       });
-      return response.data as string[]; 
+      return response.data as string[];
     } catch (error) {
       console.log(error);
       return Promise.reject(error);
@@ -66,6 +66,16 @@ class AdvertService {
   async getLikedAdverts(): Promise<AdvertType[]> {
     try {
       const response = await this.client.get('/adverts/liked');
+      return advertSchema.array().parse(response.data);
+    } catch (error) {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  }
+
+  async getTopAdverts(): Promise<AdvertType[]> {
+    try {
+      const response = await this.client.get('/adverts/top');
       return advertSchema.array().parse(response.data);
     } catch (error) {
       console.log(error);

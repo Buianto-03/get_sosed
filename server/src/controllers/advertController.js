@@ -38,7 +38,11 @@ class AdvertController {
       req.files.forEach(async (file, i) => {
         const name = `advert${newAdvert.id}-${i}.webp`;
         const outputBuffer = await sharp(file.buffer).webp().toBuffer();
-        await fs.writeFile(`./public/images/advert-${newAdvert.id}/${name}`, outputBuffer);
+        await fs.writeFile(
+          `./public/images/advert-${newAdvert.id}/${name}`,
+          outputBuffer,
+        );
+        await this.service.newAdvertPhotos(newAdvert.id, `/images/advert-${newAdvert.id}/${name}`)
       });
 
       res.status(201).json(newAdvert);
@@ -87,8 +91,6 @@ class AdvertController {
 
   likedAdvertsHandler = async (req, res) => {
     const { id } = res.locals.user;
-    // const {id} = req.params
-    console.log('res.locals ---->', res.locals);
 
     try {
       const likedAdverts = await this.service.likedAdverts(id);
@@ -98,6 +100,17 @@ class AdvertController {
       res
         .status(500)
         .json({ error: 'Ошибка при получении избранных объявлений' });
+    }
+  };
+
+  getTopAdvertsByLikes = async (req, res) => {
+    try {
+      const topAdverts = await this.service.getTopAdvertsByLikes();
+      res.status(200).json(topAdverts);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: 'Ошибка при получении топ-объявлений' });
     }
   };
 
