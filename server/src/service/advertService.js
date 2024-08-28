@@ -1,11 +1,12 @@
 const { Op } = require('sequelize');
-const { Advert, Location, Tags } = require('../../db/models');
+const { Advert, Location, Tags, AdvertPhoto } = require('../../db/models');
 
 class AdvertService {
-  constructor(advert, location, tags) {
+  constructor(advert, location, tags, advertPhoto) {
     this.advert = advert;
     this.location = location;
     this.tags = tags;
+    this.advertPhoto = advertPhoto;
   }
 
   async addAdvert(formData) {
@@ -49,7 +50,7 @@ class AdvertService {
   async getAdverts() {
     let adverts = await this.advert.findAll({
       order: [['id', 'ASC']],
-      include: ['User', 'Location'],
+      include: ['User', 'Location', 'AdvertPhotos'],
     });
 
     adverts = adverts.map((el) => {
@@ -65,7 +66,7 @@ class AdvertService {
     console.log('id-----', id);
 
     const advert = await this.advert.findByPk(id, {
-      include: ['User', 'Location'],
+      include: ['User', 'Location', 'AdvertPhotos'],
     });
     return advert;
   }
@@ -149,7 +150,7 @@ class AdvertService {
     console.log(str); // приходит объект
     try {
       const tags = await this.tags.findAll({
-        where: {  
+        where: {
           name: {
             [Op.iLike]: `%${str.query}%`, // нужно сделать валидцию на регистр символа <--- str не строка
           },
@@ -163,6 +164,6 @@ class AdvertService {
   }
 }
 
-const advertService = new AdvertService(Advert, Location, Tags);
+const advertService = new AdvertService(Advert, Location, Tags, AdvertPhoto);
 
 module.exports = advertService;

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { userSchema } from './auth';
+import { photoSchema } from './photo';
 
 export const advertSchema = z.object({
   id: z.number(),
@@ -22,6 +23,7 @@ export const advertSchema = z.object({
     coordinates: z.string(),
     advertId: z.number(),
   }),
+  AdvertPhotos: z.array(photoSchema).nullable().optional(),
 });
 
 export type AdvertType = z.infer<typeof advertSchema>;
@@ -34,7 +36,6 @@ export type FilterType = {
   metro: string;
   category: string;
 };
-
 
 export type AdvertSliceT = {
   adverts: AdvertType[];

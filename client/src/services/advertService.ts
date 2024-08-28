@@ -56,7 +56,7 @@ class AdvertService {
       const response = await this.client.get('/adverts/tags', {
         params: { query },
       });
-      return response.data as string[]; 
+      return response.data as string[];
     } catch (error) {
       console.log(error);
       return Promise.reject(error);

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, IconButton, useBreakpointValue } from '@chakra-ui/react';
 import Slider from 'react-slick';
 import { BiLeftArrowAlt, BiRightArrowAlt } from 'react-icons/bi';
+import type { PhotoType } from '../../../types/photo';
 
 const settings = {
   dots: true,
@@ -14,7 +15,11 @@ const settings = {
 };
 const images = ['/images/1.jpg', '/images/2.jpg'];
 
-export default function PhotosCarousel(): JSX.Element {
+type SliderProp = {
+  photos: PhotoType[];
+};
+
+export default function PhotosCarousel({ photos }: SliderProp): JSX.Element {
   const [slider, setSlider] = useState<Slider | null>(null);
   const top = useBreakpointValue({ base: '90%', md: '50%' });
   const side = useBreakpointValue({ base: '30%', md: '10px' });
@@ -71,15 +76,16 @@ export default function PhotosCarousel(): JSX.Element {
         slidesToScroll={settings.slidesToScroll}
         ref={(slide) => setSlider(slide)}
       >
-        {images.map((url) => (
+        {console.log(photos)}
+        {photos.map((photo) => (
           <Box
-            key={url}
+            key={photo.id}
             height="600px"
             position="relative"
             backgroundPosition="center"
             backgroundRepeat="no-repeat"
             backgroundSize="cover"
-            backgroundImage={`url(${url})`}
+            backgroundImage={`url(${photo.photo})`}
             // backgroundImage={`url(${url})`}
           />
         ))}
