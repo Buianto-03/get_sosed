@@ -44,3 +44,19 @@ export type AdvertSliceT = {
   filters: FilterType;
   tags: string[];
 };
+
+export type PostAdvertType = {
+  title: string;
+  body: string;
+  price: string;
+  userId: string;
+  floor: string;
+  rooms: string;
+  square: string;
+  city: string;
+  district: string;
+  metro: string;
+  address: string;
+  // title, body, price, floor, square, rooms, city, district, address, metro
+  coordinates: string;
+};

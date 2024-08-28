@@ -80,6 +80,7 @@ export default function Navbar(): JSX.Element {
             </Nav.Link>
             <Nav.Link>Поиск</Nav.Link>
             <Nav.Link>О нас</Nav.Link>
+            <Nav.Link as={Link} to='/post'>Добавить объявление</Nav.Link>
           </HStack>
         </HStack>
         <Flex alignItems="center">
@@ -110,10 +111,9 @@ export default function Navbar(): JSX.Element {
       {isOpen ? (
         <Box pb={4} display={{ md: 'none' }}>
           <Stack as="nav" spacing={4}>
-            {/* {Links.map((link) => (
+            {Links.map((link) => (
               <NavLink key={link}>{link}</NavLink>
-            ))} */}
-            <NavLink key={link}>{link}</NavLink>
+            ))}
           </Stack>
         </Box>
       ) : null}

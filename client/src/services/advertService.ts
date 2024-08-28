@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
 import { advertSchema } from '../types/advert';
-import type { AdvertType, FilterType } from '../types/advert';
+import type { AdvertType, FilterType, PostAdvertType } from '../types/advert';
 import axiosInstance from './client';
 
 class AdvertService {
@@ -16,9 +16,13 @@ class AdvertService {
     }
   }
 
-  async createAdvert(advert: AdvertType): Promise<AdvertType> {
+  async createAdvert(advert: FormData): Promise<AdvertType> {
     try {
-      const response = await this.client.post('/adverts', advert);
+      const response = await this.client.post('/adverts', advert, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return advertSchema.parse(response.data);
     } catch (error) {
       console.log(error);

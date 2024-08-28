@@ -9,10 +9,10 @@ import {
   VStack,
   Button,
   Icon,
+  Image,
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-// import type { YMapLocationRequest } from 'ymaps3';
 import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import type { AdvertType } from '../../../types/advert';
@@ -38,10 +38,12 @@ export default function AdvertPage(): JSX.Element {
   useEffect(() => {
     if (id) {
       void dispatch(getAdvertByIdThunk(+id)).then((res) => {
+        
         const advertId = res.payload as AdvertType;
         void dispatch(getLikesThunk(advertId.id));
       });
     }
+    window.scrollTo(0, 0);
   }, [dispatch, id]);
 
   const isLiked = (): boolean =>
@@ -49,7 +51,7 @@ export default function AdvertPage(): JSX.Element {
       ? likes.some((like) => like.userId === user.id && like.advertId === advert.id)
       : false;
 
-  const likeHandler: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+  const likeHandler: React.MouseEventHandler<HTMLButtonElement> = () => {
     if (user.status === UserStatus.Logged && advert) {
       return !isLiked()
         ? void dispatch(setLikeThunk(advert.id))
@@ -64,6 +66,7 @@ export default function AdvertPage(): JSX.Element {
         <Grid h="auto" w="100%" templateColumns="repeat(5, 1fr)" gap={6}>
           <GridItem colSpan={3}>
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
+              {/* <Image src="/images/1.jpg" /> */}
               <PhotosCarousel />
               <Heading as="h2" size="lg" mb={4} pt={5}>
                 О квартире
@@ -122,7 +125,6 @@ export default function AdvertPage(): JSX.Element {
         </Grid>
       </Container>
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
-        {/* <div id="map" style={{ width: '100%', height: '600px' }} /> */}
         <YMap location={advert.Location.coordinates} />
       </Container>
     </>

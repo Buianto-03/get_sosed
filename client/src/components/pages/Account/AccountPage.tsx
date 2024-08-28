@@ -202,6 +202,9 @@ export default function AccountPage(): JSX.Element {
                 </Button>
               </Box>
             )}
+            <Button mt={4} colorScheme="teal">
+              Разместить объявление
+            </Button>
           </VStack>
         </GridItem>
         <GridItem colSpan={{ base: 1, md: 2 }} bg="#cacae2" borderRadius="md" boxShadow="lg">

@@ -5,7 +5,6 @@ import {
   PopoverBody,
   PopoverHeader,
   Button,
-  PopoverFooter,
   Tag,
   Popover,
   PopoverTrigger,
@@ -33,12 +32,12 @@ export default function LikeProfile({ like }: LikeProfileProp): JSX.Element {
             onMouseLeave={() => setIsOpen(false)}
             // src={like.User.photo}
             size="xs"
-            name={like.User.name}
+            name={like.User?.name}
             ml={-1}
             mr={2}
           />
         </PopoverTrigger>
-        <TagLabel>{like.User.name}</TagLabel>
+        <TagLabel>{like.User?.name}</TagLabel>
       </Tag>
       <PopoverContent
         width="auto"
@@ -49,16 +48,16 @@ export default function LikeProfile({ like }: LikeProfileProp): JSX.Element {
           <Avatar
             // src={like.User.photo}
             size="md"
-            name={like.User.name}
+            name={like.User?.name}
             // ml={-1}
             mr={2}
           />
-          {like.User.name}
+          {like.User?.name}
         </PopoverHeader>
         <PopoverBody>
           <Box>
-            <Text>{like.User.UserProfile.age} лет</Text>
-            <Text>{like.User.UserProfile.about}</Text>
+            <Text>{like.User?.UserProfile.age} лет</Text>
+            <Text>{like.User?.UserProfile.about}</Text>
           </Box>
         </PopoverBody>
         <Button onClick={() => navigate(`/chat/${like.User?.id}`)}>Написать соседу</Button>

@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const path = require('path');
 const { createServer } = require('http');
 const cookieParser = require('cookie-parser');
 const { createProxyMiddleware } = require('http-proxy-middleware');
@@ -17,8 +18,13 @@ const likeRouter = require('./router/likeRouter');
 const app = express();
 
 app.use(cors());
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
 app.use(morgan('dev'));
-app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
