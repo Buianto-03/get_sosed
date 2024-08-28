@@ -14,17 +14,15 @@ import {
   FormErrorMessage,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
+import { FaThumbsUp } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ChatList from '../../ui/chat/ChatList';
 import { UserStatus, type BackendUserT } from '../../../types/auth';
 import type { ChatType } from '../../../types/chat';
 import { editUserProfileThunk } from '../../../redux/slices/userProfile/thunks';
-import type { UserProfileT } from '../../../types/userProfile';
 import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
 import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 import { getLikedAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
-import AdvertCard from '../../ui/main/AdvertCard';
 import { deleteLikeThunk } from '../../../redux/slices/likes/likesThunk';
 
 export default function AccountPage(): JSX.Element {
@@ -91,15 +89,6 @@ export default function AccountPage(): JSX.Element {
   }, []);
 
   const receivers = useAppSelector((store) => store.chatList.chatList);
-
-  // const validateUrl = (url: string): void => {
-  //   try {
-  //     new URL(url); // Проверяем, что URL имеет корректный формат
-  //     return true;
-  //   } catch {
-  //     return false;
-  //   }
-  // };
 
   const handleEditProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

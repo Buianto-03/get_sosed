@@ -66,9 +66,7 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         },
         {
           path: '/advert/:id',
-          element: (
-              <AdvertPage />
-          ),
+          element: <AdvertPage />,
           // element: <AdvertPage />,
         },
         {

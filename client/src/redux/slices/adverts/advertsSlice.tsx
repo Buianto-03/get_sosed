@@ -81,7 +81,7 @@ export const advertSlice = createSlice({
         state.liked = action.payload;
       })
       .addCase(deleteLikeThunk.fulfilled, (state, action) => {
-        state.liked.filter((el) => el.id !== action.payload.id);
+        state.liked.filter((el) => el.id !== action.payload.id)
       })
       .addCase(getTopAdvertsThunk.fulfilled, (state, action) => {
         state.populars = action.payload;
@@ -97,7 +97,6 @@ export const {
   setTags,
   addTag,
   removeTag,
-  clearPickedTags,
 } = advertSlice.actions;
 
 export default advertSlice.reducer;
