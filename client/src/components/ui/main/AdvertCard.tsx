@@ -10,7 +10,7 @@ type AdverProps = {
 
 export default function AdvertCard({ advert }: AdverProps): JSX.Element {
   const navigate = useNavigate();
-  const handleClick = ():void => {
+  const handleClick = (): void => {
     navigate(`/advert/${advert.id}`);
   };
   return (
@@ -27,13 +27,18 @@ export default function AdvertCard({ advert }: AdverProps): JSX.Element {
     >
       {/* Image Section */}
       <Box position="relative" height="140px">
-        <Image
-          src={advert.Location.coordinates} // Предположим, что coordinates содержит URL изображения
-          alt="Apartment"
-          objectFit="cover"
-          width="100%"
-          height="100%"
-        />
+        {advert &&
+          advert.AdvertPhotos &&
+          advert.AdvertPhotos[0] &&
+          advert.AdvertPhotos[0].photo && (
+            <Image
+              src={advert.AdvertPhotos[0].photo}
+              alt="Apartment"
+              objectFit="cover"
+              width="100%"
+              height="100%"
+            />
+          )}
 
         {/* Like Icon */}
         <IconButton

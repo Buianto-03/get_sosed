@@ -1,5 +1,13 @@
 const { Op } = require('sequelize');
-const { Advert, Location, Tags, User, Like, AdvertPhoto } = require('../../db/models');
+const Sequelize = require('sequelize');
+const {
+  Advert,
+  Location,
+  Tags,
+  User,
+  Like,
+  AdvertPhoto,
+} = require('../../db/models');
 
 class AdvertService {
   constructor(advert, location, tags, user, like, advertPhoto) {
@@ -26,6 +34,7 @@ class AdvertService {
       userId,
       coordinates,
     } = formData;
+
     const advert = await this.advert.create({
       title,
       body,
@@ -84,6 +93,14 @@ class AdvertService {
       ],
     });
     return likedAdverts;
+  }
+
+  async newAdvertPhotos(adverId, photo) {
+    const newAdvertPhotos = await this.advertPhoto.create({
+      photo: photo,
+      advertId: adverId,
+    });
+    return newAdvertPhotos
   }
 
   // async deletePost(id) {
@@ -174,6 +191,44 @@ class AdvertService {
       return tags;
     } catch (error) {
       console.error('Ошибка при поиске тегов:', error);
+      throw error;
+    }
+  }
+
+  async getTopAdvertsByLikes() {
+    try {
+      const topAdverts = await Advert.findAll({
+        attributes: [
+          'id',
+          'title',
+          'body',
+          'price',
+          'floor',
+          'square',
+          'rooms',
+          'userId',
+          'createdAt',
+          'updatedAt',
+          [
+            Sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM "Likes"
+            WHERE "Likes"."advertId" = "Advert"."id"
+          )`),
+            'likeCount',
+          ],
+        ],
+        order: [[Sequelize.literal('"likeCount"'), 'DESC']],
+        limit: 4,
+        include: [
+          'Location',
+          'User',
+          { model: AdvertPhoto, as: 'AdvertPhotos' },
+        ],
+      });
+      return topAdverts;
+    } catch (error) {
+      console.error('Error fetching top adverts by likes:', error);
       throw error;
     }
   }

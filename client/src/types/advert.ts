@@ -44,7 +44,8 @@ export type AdvertSliceT = {
   query: string;
   filters: FilterType;
   tags: string[];
-  liked: AdvertType[]
+  liked: AdvertType[],
+  populars: AdvertType[]
 };
 
 export type PostAdvertType = {

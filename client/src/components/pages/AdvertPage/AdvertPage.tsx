@@ -35,8 +35,6 @@ export default function AdvertPage(): JSX.Element {
   const { id } = useParams();
 
   useEffect(() => {
-    console.log(id);
-
     if (id) {
       void dispatch(getAdvertByIdThunk(+id)).then((res) => {
         const advertId = res.payload as AdvertType;
@@ -59,7 +57,8 @@ export default function AdvertPage(): JSX.Element {
     }
     return false;
   };
-
+  console.log(advert);
+  
   return advert ? (
     <>
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">

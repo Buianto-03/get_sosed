@@ -6,6 +6,7 @@ import {
   getFilteredAdvertsThunk,
   getLikedAdvertsThunk,
   getTagsBySearchThunk,
+  getTopAdvertsThunk,
 } from './advertsThunk';
 import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
 
@@ -24,6 +25,7 @@ const initialState: AdvertSliceT = {
   },
   tags: [],
   liked: [],
+  populars: []
 };
 
 export const advertSlice = createSlice({
@@ -62,6 +64,9 @@ export const advertSlice = createSlice({
       })
       .addCase(getLikedAdvertsThunk.fulfilled, (state, action) => {
         state.liked = action.payload;
+      })
+      .addCase(getTopAdvertsThunk.fulfilled, (state, action) => {
+        state.populars = action.payload;
       });
   },
 });

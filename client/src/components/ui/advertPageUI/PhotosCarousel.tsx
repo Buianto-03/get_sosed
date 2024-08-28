@@ -13,7 +13,6 @@ const settings = {
   slidesToShow: 1,
   slidesToScroll: 1,
 };
-const images = ['/images/1.jpg', '/images/2.jpg'];
 
 type SliderProp = {
   photos: PhotoType[];
@@ -76,7 +75,6 @@ export default function PhotosCarousel({ photos }: SliderProp): JSX.Element {
         slidesToScroll={settings.slidesToScroll}
         ref={(slide) => setSlider(slide)}
       >
-        {console.log(photos)}
         {photos.map((photo) => (
           <Box
             key={photo.id}
