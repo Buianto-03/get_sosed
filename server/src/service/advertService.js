@@ -1,11 +1,13 @@
 const { Op } = require('sequelize');
-const { Advert, Location, Tags, AdvertPhoto } = require('../../db/models');
+const { Advert, Location, Tags, User, Like, AdvertPhoto } = require('../../db/models');
 
 class AdvertService {
-  constructor(advert, location, tags, advertPhoto) {
+  constructor(advert, location, tags, user, like, advertPhoto) {
     this.advert = advert;
     this.location = location;
     this.tags = tags;
+    this.user = user;
+    this.like = like;
     this.advertPhoto = advertPhoto;
   }
 
@@ -69,6 +71,19 @@ class AdvertService {
       include: ['User', 'Location', 'AdvertPhotos'],
     });
     return advert;
+  }
+
+  async likedAdverts(id) {
+    const likedAdverts = await this.like.findAll({
+      where: { userId: id },
+      include: [
+        {
+          model: this.advert,
+          include: ['User', 'Location'],
+        },
+      ],
+    });
+    return likedAdverts;
   }
 
   // async deletePost(id) {
@@ -164,6 +179,13 @@ class AdvertService {
   }
 }
 
-const advertService = new AdvertService(Advert, Location, Tags, AdvertPhoto);
+const advertService = new AdvertService(
+  Advert,
+  Location,
+  Tags,
+  User,
+  Like,
+  AdvertPhoto,
+);
 
 module.exports = advertService;
