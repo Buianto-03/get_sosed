@@ -30,6 +30,7 @@ import {
   NumberInput,
   NumberInputField,
   useBreakpointValue,
+  Select,
 } from '@chakra-ui/react';
 import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useDispatch } from 'react-redux';
@@ -47,19 +48,13 @@ export default function Filter(): JSX.Element {
   const [district, setDistrict] = useState<string>('');
   const [metro, setMetro] = useState<string>('');
   const [category, setCategory] = useState<string>(''); // Категория (Квартиры, Дома, Вторичка, Новостройка)
-
-   // Состояние для хранения предложенных тегов на основе ввода
-   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-
-   // Состояние для хранения выбранных тегов
-   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
+  // const [selectedTag, setSelectedTag] = useState<string | null>(null); // Состояние для выбранного тега
+  //  // Состояние для хранения предложенных тегов на основе ввода
 
   const dispatch = useAppDispatch();
-  // const appFilters = useAppSelector(store => store.advert.filters)
+  const tags = useAppSelector((store) => store.advert.tags);
   // const [searchParams, setSearchParams] = useSearchParams();
-
-  // нужно использовать debounce, чтобы сервер не падал
+  console.log(tags);
 
   const debouncedSearch = useCallback(
     debounce((query: string): void => {
@@ -67,25 +62,14 @@ export default function Filter(): JSX.Element {
         dispatch(setTags([]));
         return;
       }
-      dispatch(getTagsBySearchThunk(query)) .then((tags) => setSuggestedTags(tags.map((tag) => tag.name)))
-      .catch(console.log);
+      dispatch(getTagsBySearchThunk(query)).catch(console.log);
     }, 300),
     [],
   );
+
   useEffect(() => {
     debouncedSearch(inputValue);
   }, [inputValue, debouncedSearch]);
-
-
-  // Функция для удаления тега из списка выбранных
-  const handleRemoveTag = (tag: string) => {
-    setSelectedTags((prevTags) => prevTags.filter((t) => t !== tag));
-  };
-
-  // Обработчик изменения значения в поле ввода
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
@@ -102,7 +86,10 @@ export default function Filter(): JSX.Element {
     };
     dispatch(setFilters(filters)); // Отправляем параметры фильтрации в Redux
   };
-
+  // const handleTagClick = (tagId: string) => {
+  //   setSelectedTag(tagId);
+  //   setInputValue(''); // Очистить поле ввода после выбора тега
+  // };
   return (
     <Flex
       p={4}
@@ -238,12 +225,12 @@ export default function Filter(): JSX.Element {
       </Popover>
 
       {/* Поле поиска */}
+      <Box width="100%" maxW={popoverWidth}>
       <InputGroup>
         <Input
           placeholder="Поиск по объявлениям"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)} // Как буд-то бы нужно сюда повесить хэндлер
-          // onClick={handleSearch}
+          onChange={(e) => setInputValue(e.target.value)}
           size="lg"
           borderRadius="md"
         />
@@ -253,6 +240,59 @@ export default function Filter(): JSX.Element {
           </Button>
         </InputRightElement>
       </InputGroup>
+      {/* Список предложенных тегов
+      <Box mt={4} w="100%" maxW={popoverWidth}>
+        <Select
+          placeholder="Выберите тег"
+          variant="outline"
+          size="lg"
+          borderRadius="md"
+          borderColor="blue.300"
+          _focus={{ borderColor: 'blue.500', boxShadow: 'outline' }}
+          _hover={{ borderColor: 'blue.400' }}
+          color="blue.700"
+        >
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
+            </option>
+          ))}
+        </Select>
+      </Box> */}
+
+      {/* Список предложенных тегов */}
+      {inputValue && (
+        <Box
+          mt={2}
+          borderRadius="md"
+          boxShadow="md"
+          bg="white"
+          borderWidth="1px"
+          borderColor="gray.200"
+          zIndex={1}
+          position="absolute"
+          width="100%"
+          maxW={popoverWidth}
+        >
+          {tags.length > 0 ? (
+            tags.map((tag) => (
+              <Flex
+                key={tag.id}
+                p={2}
+                align="center"
+                cursor="pointer"
+                _hover={{ bg: 'gray.100' }}
+                // onClick={() => handleTagClick(tag.id)}
+              >
+                <Text>{tag.name}</Text>
+              </Flex>
+            ))
+          ) : (
+            <Text p={2}>Нет подходящих тегов</Text>
+          )}
+        </Box>
+      )}
+      </Box>
     </Flex>
   );
 }
