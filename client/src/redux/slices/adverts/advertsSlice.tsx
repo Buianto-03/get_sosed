@@ -1,6 +1,6 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import { getAdvertByIdThunk, getAdvertsThunk, getFilteredAdvertsThunk } from './advertsThunk';
+import { getAdvertByIdThunk, getAdvertsThunk, getFilteredAdvertsThunk, getTagsBySearchThunk } from './advertsThunk';
 import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
 
 const initialState: AdvertSliceT = {
@@ -16,6 +16,7 @@ const initialState: AdvertSliceT = {
     metro: '',
     category: '',
   },
+  tags: [],
 };
 
 export const advertSlice = createSlice({
@@ -34,6 +35,9 @@ export const advertSlice = createSlice({
     setFilters: (state, action: PayloadAction<FilterType>) => {
       state.filters = action.payload;
     },
+    setTags: (state, action: PayloadAction<string[]>) => {
+      state.tags = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -45,10 +49,12 @@ export const advertSlice = createSlice({
       })
       .addCase(getAdvertByIdThunk.fulfilled, (state, action) => {
         state.chosenAdvert = action.payload;
+      })
+      .addCase(getTagsBySearchThunk.fulfilled, (state, action) => {
+        state.tags = action.payload;
       });
   },
 });
-export const { loadCards, setAdverts, setSearchQuery, setFilters } =
-  advertSlice.actions;
+export const { loadCards, setAdverts, setSearchQuery, setFilters, setTags } = advertSlice.actions;
 
 export default advertSlice.reducer;

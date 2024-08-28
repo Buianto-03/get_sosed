@@ -1,25 +1,46 @@
 import React, { useEffect } from 'react';
 import { Flex, Button, Text } from '@chakra-ui/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import AdvertCard from './AdvertCard';
 import { getFilteredAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
-import { loadCards } from '../../../redux/slices/adverts/advertsSlice';
+import { loadCards, setFilters } from '../../../redux/slices/adverts/advertsSlice';
+import type { FilterType } from '../../../types/advert';
 
 export default function AdvertList(): JSX.Element {
   const { adverts, visitableCards, filters } = useAppSelector((state) => state.advert);
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
+  const [querySearchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    dispatch(
+      setFilters({
+        city: querySearchParams.get('city') || '',
+        category: querySearchParams.get('category') || '',
+        district: querySearchParams.get('district') || '',
+        metro: querySearchParams.get('metro') || '',
+        priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
+        priceTo: Number(querySearchParams.get('priceTo') || '0'),
+      } as FilterType),
+    );
+  }, [querySearchParams]);
 
   useEffect(() => {
     // Отправляем запрос с фильтрами, когда они изменяются
     void dispatch(getFilteredAdvertsThunk(filters));
     const searchParams = new URLSearchParams(location.search);
-    searchParams.forEach((_, key) => searchParams.delete(key));
-    searchParams.set('priceFrom', filters.priceFrom);
-    searchParams.set('priceTo', filters.priceTo);
-    navigate(`${location.pathname}?${searchParams.toString()}`);
+    // searchParams.forEach((_, key) => searchParams.delete(key));
+    searchParams.set('priceFrom', filters.priceFrom.toString());
+    searchParams.set('priceTo', filters.priceTo.toString());
+    searchParams.set('city', filters.city);
+    searchParams.set('category', filters.category);
+    searchParams.set('district', filters.district);
+    searchParams.set('metro', filters.metro);
+    setSearchParams(searchParams);
+
+    // navigate(`${location.pathname}?${searchParams.toString()}`);
   }, [filters, dispatch]);
 
   const handleLoadMore = (): void => {

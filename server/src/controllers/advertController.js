@@ -52,12 +52,38 @@ class AdvertController {
       const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);
     } catch (error) {
-      console.error('Ошибка при фильтрации объявлений:', error);
+      console.log('Ошибка при фильтрации объявлений:', error);
       res
         .status(500)
         .json({ error: 'Ошибка на сервере при фильтрации объявлений' });
     }
   };
+
+  getTagsBySearch = async (req, res) => {
+    // inputValue <- req.body/query
+    try {
+      const inputValue = req.query;
+      const tags = await this.service.getTagsLikeStr(inputValue);
+      res.json(tags);
+    } catch (error) {
+      console.log('Ломай меня полностью:', error);
+      res.status(500).json({ error: 'Ошибка при поиске тегов' });
+    }
+  };
+
+  // searchAdverts = async (req, res) => {
+  //   try {
+  //     const { filter } = req.query;
+  //     const searchAdverts = await this.service.searchAdverts(filter);
+  //     res.json(searchAdverts);
+  //   } catch (error) {
+  //     console.error('Ошибка при поиске объявлений:', error);
+  //     res
+  //       .status(500)
+  //       .json({ error: 'Ошибка на сервере при поиске объявлений' });
+  //   }
+  // };
+  // get m
 }
 
 const advertController = new AdvertController(advertService);
