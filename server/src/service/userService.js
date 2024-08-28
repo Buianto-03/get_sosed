@@ -41,16 +41,16 @@ class UserService {
         },
       ],
     });
-    console.log('allchats', JSON.parse(JSON.stringify(allChats)));
 
-    // Фильтрация уникальных пар отправитель-получатель
     const seen = new Set();
     const uniqueChats = allChats.filter((chat) => {
-      const duplicate = seen.has(chat.receiverId);
-      seen.add(chat.receiverId);
-      return !duplicate;
+      const chatKey = `${chat.senderId}-${chat.receiverId}`;
+      const reverseChatKey = `${chat.receiverId}-${chat.senderId}`;
+      const isDuplicate = seen.has(chatKey) || seen.has(reverseChatKey);
+      seen.add(chatKey);
+      seen.add(reverseChatKey);
+      return !isDuplicate;
     });
-    console.log('uniqe', JSON.parse(JSON.stringify(allChats)));
 
     return uniqueChats;
   }
