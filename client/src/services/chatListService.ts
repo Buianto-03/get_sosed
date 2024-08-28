@@ -7,7 +7,7 @@ class ChatListService {
 
   async getChatList(id: ChatListType['senderId']): Promise<ChatListType[]> {
     try {
-      const res = await this.client.get<ChatListType[]>(`users/${id}`);
+      const res = await this.client.get<ChatListType[]>(`/users/${id}`);
       if (res.status !== 200) {
         throw new Error('Failed to get chat list');
       }

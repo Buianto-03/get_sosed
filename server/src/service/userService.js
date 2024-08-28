@@ -41,6 +41,7 @@ class UserService {
         },
       ],
     });
+    console.log('allchats', JSON.parse(JSON.stringify(allChats)));
 
     // Фильтрация уникальных пар отправитель-получатель
     const seen = new Set();
@@ -49,6 +50,7 @@ class UserService {
       seen.add(chat.receiverId);
       return !duplicate;
     });
+    console.log('uniqe', JSON.parse(JSON.stringify(allChats)));
 
     return uniqueChats;
   }

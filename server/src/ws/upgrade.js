@@ -28,6 +28,7 @@ const upgradeCb = (request, socket, head) => {
         wsServer.emit('connection', ws, request, user);
       });
     } catch (error) {
+      console.log('ERR', error)
       socket.write('HTTP/1.1 401 Unauthorized\n\n');
       socket.destroy();
     }

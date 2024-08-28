@@ -59,9 +59,9 @@ authRouter.post('/signup', async (req, res) => {
   const correctUser = JSON.parse(JSON.stringify(userWithProfile));
   delete correctUser.hashpass;
 
-  console.log(correctUser);
+  // console.log(correctUser);
 
-  const { accessToken, refreshToken } = generateTokens({ correctUser });
+  const { accessToken, refreshToken } = generateTokens({ user: correctUser });
 
   res
     .cookie('refreshToken', refreshToken, cookiesConfig)

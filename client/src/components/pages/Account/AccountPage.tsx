@@ -19,14 +19,14 @@ import type { UserProfileT } from '../../../types/userProfile';
 import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
 import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 
-type Action = {
-  type: string;
-  payload: any;
-};
+// type Action = {
+//   type: string;
+//   payload: any;
+// };
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
-  console.log(user.id);
+  console.log(user.status);
 
   const { age, phoneNumber, photo, about } = useAppSelector((store) => store.userProfile);
   const dispatch = useAppDispatch();
@@ -45,9 +45,13 @@ export default function AccountPage(): JSX.Element {
     const soket = new WebSocket('ws://localhost:3000');
     soketRef.current = soket;
 
-    soket.onopen = () => {
+    soket.onopen = async () => {
       console.log('CONNECTED');
-      dispatch(getReceiverListThunk(user.id));
+      try {
+        await dispatch(getReceiverListThunk(user.id));
+      } catch (error) {
+        console.log(error); // Обрабатываем ошибку
+      }
     };
     soket.onclose = () => console.log('DISCONNECTED');
     soket.onerror = (err) => console.log('ERROR', err);
@@ -76,7 +80,7 @@ export default function AccountPage(): JSX.Element {
     };
   }, []);
 
-  const receivers = useAppSelector((store) => store.chatList.chatList)
+  const receivers = useAppSelector((store) => store.chatList.chatList);
 
   const handleEditProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

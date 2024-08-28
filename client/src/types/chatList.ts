@@ -10,6 +10,11 @@ export const chatListSchema = z.object({
     name: z.string(),
     email: z.string(),
   }),
+  sender: z.object({
+    id: z.number(),
+    name: z.string(),
+    email: z.string(),
+  }),
 });
 
 export type ChatListType = z.infer<typeof chatListSchema>;

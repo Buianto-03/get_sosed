@@ -16,7 +16,7 @@ const connectionCb = async (socket, request, user) => {
     };
     ws.send(JSON.stringify(action));
 
-    console.log(connections);
+    // console.log(connections);
   });
 
   // Получаем receiverId из запроса
@@ -25,12 +25,13 @@ const connectionCb = async (socket, request, user) => {
 
   socket.on('message', async (data) => {
     const { type, payload } = JSON.parse(data);
+    // console.log({userId: user.id, receiverId, payload, getUser: connections.get(user.id), type})
 
     switch (type) {
       case 'INITIALIZE':
         // Устанавливаем receiverId для текущего пользователя
         connections.get(user.id).receiverId = payload.receiverId;
-
+        
         // Выполняем запрос на получение сообщений между пользователями
         const allMessages = await Chat.findAll({
           where: {
@@ -114,6 +115,7 @@ const connectionCb = async (socket, request, user) => {
   socket.on('message', async (message) => {
     const actionFromFront = JSON.parse(message);
     const { type, payload } = actionFromFront;
+    
     switch (type) {
       case 'ADD_MESSAGE':
         {
