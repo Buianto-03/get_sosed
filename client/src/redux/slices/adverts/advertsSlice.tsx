@@ -6,8 +6,10 @@ import {
   getFilteredAdvertsThunk,
   getLikedAdvertsThunk,
   getTagsBySearchThunk,
+  getTopAdvertsThunk,
 } from './advertsThunk';
 import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
+import { deleteLikeThunk } from '../likes/likesThunk';
 
 const initialState: AdvertSliceT = {
   adverts: [],
@@ -24,6 +26,7 @@ const initialState: AdvertSliceT = {
   },
   tags: [],
   liked: [],
+  populars: [],
   pickedTags: [],
 };
 
@@ -72,10 +75,23 @@ export const advertSlice = createSlice({
       })
       .addCase(getLikedAdvertsThunk.fulfilled, (state, action) => {
         state.liked = action.payload;
+      })
+      .addCase(deleteLikeThunk.fulfilled, (state, action) => {
+        state.liked.filter((el) => el.id !== action.payload.id)
+      })
+      .addCase(getTopAdvertsThunk.fulfilled, (state, action) => {
+        state.populars = action.payload;
       });
   },
 });
-export const { loadCards, setAdverts, setSearchQuery, setFilters, setTags, addTag, removeTag } =
-  advertSlice.actions;
+export const {
+  loadCards,
+  setAdverts,
+  setSearchQuery,
+  setFilters,
+  setTags,
+  addTag,
+  removeTag,
+} = advertSlice.actions;
 
 export default advertSlice.reducer;

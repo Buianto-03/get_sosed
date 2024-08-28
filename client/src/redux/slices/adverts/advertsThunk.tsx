@@ -28,3 +28,8 @@ export const getLikedAdvertsThunk = createAsyncThunk(
   'adverts/getLikedAdverts',
   async () => advertService.getLikedAdverts(),
 );
+
+export const getTopAdvertsThunk = createAsyncThunk(
+  'adverts/getTopAdverts',
+  async () => advertService.getTopAdverts(),
+);

@@ -10,10 +10,10 @@ import { useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 import ChatPage from '../pages/Account/ChatPage';
 import PostAdvertPage from '../pages/PostAdvertPage/PostAdvertPage';
+import ProtectedRoute from './ProtectedRoute';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
-  const status = useAppSelector((store) => store.auth.user.status);
-  console.log(status);
+  const user = useAppSelector((store) => store.auth.user);
   const router = createBrowserRouter([
     {
       path: '/',
@@ -21,28 +21,62 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
       children: [
         {
           path: '/account',
-          element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+              <AccountPage />
+            </ProtectedRoute>
+          ),
+          // element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
         },
         {
           path: '/chat/:receiverId',
-          element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+              <ChatPage />
+            </ProtectedRoute>
+          ),
+          // element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
         },
         {
           path: '/signin',
-          element: <SignInPage />,
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Guest} redirect="/">
+              <SignInPage />
+            </ProtectedRoute>
+          ),
+          // element: <SignInPage />,
         },
         {
           path: '/signup',
-          element: <SignUpPage />,
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Guest} redirect="/">
+              <SignUpPage />
+            </ProtectedRoute>
+          ),
+          // element: <SignUpPage />,
         },
-        { path: '/', element: <MainPage /> },
+        {
+          path: '/',
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+              <MainPage />
+            </ProtectedRoute>
+          ),
+          //  element: <MainPage />
+        },
         {
           path: '/advert/:id',
           element: <AdvertPage />,
+          // element: <AdvertPage />,
         },
         {
           path: '/post',
-          element: <PostAdvertPage />,
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+              <PostAdvertPage />
+            </ProtectedRoute>
+          ),
+          // element: <PostAdvertPage />,
         },
       ],
     },

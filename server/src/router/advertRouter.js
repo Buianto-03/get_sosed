@@ -21,13 +21,21 @@ advertRouter
     upload.array('files', 10),
     verifyAccessToken,
     advertController.createAdvert,
-  ) 
+  )
   .get(advertController.getFilteredAdverts);
 
 advertRouter
   .route('/filters')
   .post(advertController.getFilteredAdverts);
   // .get(advertController.getFilteredAdverts);
+
+advertRouter
+  .route('/liked')
+  .get(verifyAccessToken, advertController.likedAdvertsHandler);
+
+  advertRouter
+  .route('/top')
+  .get(advertController.getTopAdvertsByLikes);
 
 advertRouter.route('/tags').get(advertController.getTagsBySearch);
 advertRouter.route('/:postId').delete(advertController.deletePost);
@@ -36,10 +44,6 @@ advertRouter
   .get(advertController.getAdvertById)
   .delete(advertController.deletePost);
 //   .patch(verifyAccessToken, advertController.patchPost);
-
-advertRouter
-  .route('/liked')
-  .get(verifyAccessToken, advertController.likedAdvertsHandler);
 
 // advertRouter.route('/search').get(advertController.searchAdverts);
 module.exports = advertRouter;

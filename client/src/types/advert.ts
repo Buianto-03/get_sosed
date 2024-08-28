@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { userSchema } from './auth';
+import { photoSchema } from './photo';
+import { LikedAdvertsType } from './like';
 
 export const advertSchema = z.object({
   id: z.number(),
@@ -22,6 +24,7 @@ export const advertSchema = z.object({
     coordinates: z.string(),
     advertId: z.number(),
   }),
+  AdvertPhotos: z.array(photoSchema).nullable().optional(),
 });
 
 export type AdvertType = z.infer<typeof advertSchema>;
@@ -35,7 +38,6 @@ export type FilterType = {
   category: string;
 };
 
-
 export type AdvertSliceT = {
   adverts: AdvertType[];
   chosenAdvert: AdvertType | null;
@@ -43,7 +45,8 @@ export type AdvertSliceT = {
   query: string;
   filters: FilterType;
   tags: string[];
-  liked: AdvertType[]
+  populars: AdvertType[]
+  liked: LikedAdvertsType[]
   pickedTags: string[]
 };
 
@@ -62,3 +65,4 @@ export type PostAdvertType = {
   // title, body, price, floor, square, rooms, city, district, address, metro
   coordinates: string;
 };
+

@@ -1,12 +1,22 @@
 const { Op } = require('sequelize');
-const { Advert, Location, Tags, User, Like } = require('../../db/models');
+const Sequelize = require('sequelize');
+const {
+  Advert,
+  Location,
+  Tags,
+  User,
+  Like,
+  AdvertPhoto,
+} = require('../../db/models');
 
 class AdvertService {
-  constructor(advert, location, tags, user, like) {
+  constructor(advert, location, tags, user, like, advertPhoto) {
     this.advert = advert;
     this.location = location;
     this.tags = tags;
-    (this.user = user), (this.like = like);
+    this.user = user;
+    this.like = like;
+    this.advertPhoto = advertPhoto;
   }
 
   async addAdvert(formData) {
@@ -24,6 +34,7 @@ class AdvertService {
       userId,
       coordinates,
     } = formData;
+
     const advert = await this.advert.create({
       title,
       body,
@@ -50,7 +61,7 @@ class AdvertService {
   async getAdverts() {
     let adverts = await this.advert.findAll({
       order: [['id', 'ASC']],
-      include: ['User', 'Location'],
+      include: ['User', 'Location', 'AdvertPhotos'],
     });
 
     adverts = adverts.map((el) => {
@@ -66,12 +77,14 @@ class AdvertService {
     console.log('id-----', id);
 
     const advert = await this.advert.findByPk(id, {
-      include: ['User', 'Location'],
+      include: ['User', 'Location', 'AdvertPhotos'],
     });
     return advert;
   }
 
   async likedAdverts(id) {
+    console.log('id ------------->', id);
+
     const likedAdverts = await this.like.findAll({
       where: { userId: id },
       include: [
@@ -81,7 +94,17 @@ class AdvertService {
         },
       ],
     });
+    // console.log(likedAdverts);
+    
     return likedAdverts;
+  }
+
+  async newAdvertPhotos(adverId, photo) {
+    const newAdvertPhotos = await this.advertPhoto.create({
+      photo: photo,
+      advertId: adverId,
+    });
+    return newAdvertPhotos
   }
 
   // async deletePost(id) {
@@ -186,8 +209,53 @@ class AdvertService {
       throw error;
     }
   }
+
+  async getTopAdvertsByLikes() {
+    try {
+      const topAdverts = await Advert.findAll({
+        attributes: [
+          'id',
+          'title',
+          'body',
+          'price',
+          'floor',
+          'square',
+          'rooms',
+          'userId',
+          'createdAt',
+          'updatedAt',
+          [
+            Sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM "Likes"
+            WHERE "Likes"."advertId" = "Advert"."id"
+          )`),
+            'likeCount',
+          ],
+        ],
+        order: [[Sequelize.literal('"likeCount"'), 'DESC']],
+        limit: 4,
+        include: [
+          'Location',
+          'User',
+          { model: AdvertPhoto, as: 'AdvertPhotos' },
+        ],
+      });
+      return topAdverts;
+    } catch (error) {
+      console.error('Error fetching top adverts by likes:', error);
+      throw error;
+    }
+  }
 }
 
-const advertService = new AdvertService(Advert, Location, Tags, User, Like);
+const advertService = new AdvertService(
+  Advert,
+  Location,
+  Tags,
+  User,
+  Like,
+  AdvertPhoto,
+);
 
 module.exports = advertService;

@@ -1,34 +1,23 @@
 'use strict';
 
+const generateRandomInt = (min, max) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+
+const objects = [];
+
+for (let i = 0; i < 30; i++) {
+  objects.push({
+    userId: generateRandomInt(1, 5),
+    advertId: generateRandomInt(1, 15),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+}
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Likes', [
-      {
-        userId: 2,
-        advertId: 10,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        userId: 3,
-        advertId: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        userId: 4,
-        advertId: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        userId: 5,
-        advertId: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
+    await queryInterface.bulkInsert('Likes', objects);
     /**
      * Add seed commands here.
      *
