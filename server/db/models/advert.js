@@ -4,12 +4,13 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Advert extends Model {
-    static associate({AdvertPhoto, User, Location, AdvertTags}) {
+    static associate({AdvertPhoto, User, Location, AdvertTags, Like}) {
       // define association here
       this.hasMany(AdvertPhoto, {foreignKey: 'advertId'})
       this.belongsTo(User, {foreignKey: 'userId'})
       this.hasOne(Location, {foreignKey: 'advertId'})
       this.hasMany(AdvertTags, {foreignKey: 'advertId'})
+      this.hasMany(Like, {foreignKey: 'advertId'})
     }
   }
   Advert.init({

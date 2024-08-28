@@ -37,5 +37,9 @@ advertRouter
   .delete(advertController.deletePost);
 //   .patch(verifyAccessToken, advertController.patchPost);
 
+advertRouter
+  .route('/liked')
+  .get(verifyAccessToken, advertController.likedAdvertsHandler);
+
 // advertRouter.route('/search').get(advertController.searchAdverts);
 module.exports = advertRouter;
