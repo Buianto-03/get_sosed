@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { advertSchema } from './advert';
 
 export const likeSchema = z.object({
   id: z.number(),
@@ -23,3 +24,12 @@ export type LikeSliceTtype = {
   likes: LikeType[];
   // isLiked: boolean;
 };
+
+export const likedAdvertsSchema = z.object({
+  id: z.number(),
+  advertId: z.number(),
+  userId: z.number(),
+  Advert: advertSchema,
+});
+
+export type LikedAdvertsType = z.infer<typeof likedAdvertsSchema>;

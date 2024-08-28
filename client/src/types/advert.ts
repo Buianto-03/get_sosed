@@ -65,3 +65,4 @@ export type PostAdvertType = {
   // title, body, price, floor, square, rooms, city, district, address, metro
   coordinates: string;
 };
+

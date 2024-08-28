@@ -94,6 +94,8 @@ class AdvertController {
 
     try {
       const likedAdverts = await this.service.likedAdverts(id);
+      console.log(JSON.parse(JSON.stringify(likedAdverts)));
+
       res.status(200).json(likedAdverts);
     } catch (error) {
       console.log(error);

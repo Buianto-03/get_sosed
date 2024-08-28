@@ -10,7 +10,15 @@
       type="text/javascript"
     ></script>
   </head>
-  <body style="background-color: #fafafa">
+  <body style="
+    margin: 0;
+    padding: 0;
+    background-color: #fafafa; /* Основной цвет фона */
+    background-image: url('https://img.freepik.com/free-vector/white-abstract-background_23-2148814882.jpg'); /* URL изображения фона */
+    background-size: cover; /* Изображение будет масштабироваться для покрытия всего фона */
+    background-repeat: no-repeat; /* Запрещает повторение изображения */
+    background-attachment: fixed; /* Закрепляет фон, чтобы он не прокручивался */
+  ">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

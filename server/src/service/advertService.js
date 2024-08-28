@@ -83,6 +83,8 @@ class AdvertService {
   }
 
   async likedAdverts(id) {
+    console.log('id ------------->', id);
+
     const likedAdverts = await this.like.findAll({
       where: { userId: id },
       include: [
@@ -92,6 +94,8 @@ class AdvertService {
         },
       ],
     });
+    // console.log(likedAdverts);
+    
     return likedAdverts;
   }
 

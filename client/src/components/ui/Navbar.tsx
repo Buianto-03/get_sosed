@@ -21,32 +21,6 @@ import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 import { logoutThunk } from '../../redux/slices/auth/thunks';
 
-type Props = {
-  children: React.ReactNode;
-};
-
-const Links = ['Главная', 'Поиск', 'О нас'];
-
-export function NavLink(props: Props): JSX.Element {
-  const { children } = props;
-
-  return (
-    <Box
-      as="a"
-      px={2}
-      py={1}
-      rounded="md"
-      _hover={{
-        textDecoration: 'none',
-        bg: '#D6D6FF', // чуть темнее, чем #EDEDFF
-      }}
-      href="#"
-    >
-      {children}
-    </Box>
-  );
-}
-
 export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
@@ -54,7 +28,7 @@ export default function Navbar(): JSX.Element {
   const dispatch = useAppDispatch();
 
   return (
-    <Box bg="#EDEDFF" px={4}>
+    <Box bg="#cacae2" px={4}>
       <Flex h={16} alignItems="center" justifyContent="space-between">
         <IconButton
           size="md"
@@ -62,25 +36,31 @@ export default function Navbar(): JSX.Element {
           aria-label="Open Menu"
           display={{ md: 'none' }}
           onClick={isOpen ? onClose : onOpen}
-          bg="#EDEDFF"
+          bg="#cacae2"
           _hover={{
             bg: '#D6D6FF', // чуть темнее, чем #EDEDFF
           }}
         />
         <HStack spacing={8} alignItems="center">
-          <Box style={{ width: '40px', marginLeft: '20px' }}>
-            <img src="/public/logo.png" alt="logo" />
+          <Box style={{ width: '40px', marginLeft: '20px' }} cursor="pointer">
+            <img src="/public/logo.png" alt="logo" onClick={() => navigate('/')} />
           </Box>
           <HStack as="nav" spacing={4} display={{ base: 'none', md: 'flex' }}>
             {/* {Links.map((link) => (
               <NavLink key={link}>{link}</NavLink>
             ))} */}
-            <Nav.Link as={Link} to="/">
-              Главная
-            </Nav.Link>
-            <Nav.Link>Поиск</Nav.Link>
-            <Nav.Link>О нас</Nav.Link>
-            <Nav.Link as={Link} to='/post'>Добавить объявление</Nav.Link>
+            {user.status === UserStatus.Logged ? (
+              <>
+                <Nav.Link as={Link} to="/" style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>
+                  Главная
+                </Nav.Link>
+                <Nav.Link style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>Поиск</Nav.Link>
+                <Nav.Link style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>О нас</Nav.Link>
+                <Nav.Link as={Link} to="/post" style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>
+                  Добавить объявление
+                </Nav.Link>
+              </>
+            ) : null}
           </HStack>
         </HStack>
         <Flex alignItems="center">
@@ -96,13 +76,20 @@ export default function Navbar(): JSX.Element {
               />
             </MenuButton>
             <MenuList>
-              <MenuItem onClick={() => navigate('/account')}>
-                {user.status === UserStatus.Logged ? `Аккаунт ${user.name}` : 'Гость'}
-              </MenuItem>
-              <MenuItem onClick={() => navigate('/signin')}>Войти</MenuItem>
-              <MenuItem onClick={() => navigate('/signup')}>Зарегистрироваться</MenuItem>
-              <MenuDivider />
-              <MenuItem onClick={() => void dispatch(logoutThunk())}>Выйти</MenuItem>
+              {user.status === UserStatus.Logged ? (
+                <>
+                  <MenuItem onClick={() => navigate('/account')}>
+                    {user.status === UserStatus.Logged ? `Аккаунт ${user.name}` : 'Гость'}
+                  </MenuItem>
+                  <MenuDivider />
+                  <MenuItem onClick={() => void dispatch(logoutThunk())}>Выйти</MenuItem>
+                </>
+              ) : (
+                <>
+                  <MenuItem onClick={() => navigate('/signin')}>Войти</MenuItem>
+                  <MenuItem onClick={() => navigate('/signup')}>Зарегистрироваться</MenuItem>
+                </>
+              )}
             </MenuList>
           </Menu>
         </Flex>
@@ -111,9 +98,12 @@ export default function Navbar(): JSX.Element {
       {isOpen ? (
         <Box pb={4} display={{ md: 'none' }}>
           <Stack as="nav" spacing={4}>
-            {Links.map((link) => (
-              <NavLink key={link}>{link}</NavLink>
-            ))}
+            <Nav.Link as={Link} to="/">
+              Главная
+            </Nav.Link>
+            <Nav.Link as={Link} to="/post">
+              Добавить объявление
+            </Nav.Link>
           </Stack>
         </Box>
       ) : null}
