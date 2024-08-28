@@ -117,6 +117,13 @@ class AdvertService {
     if (filters.rooms) {
       whereClause.rooms = Number(filters.rooms);
     }
+    console.log(filters.tags.map((el) => el.id));
+
+    // if (filters.tags) {
+    //   whereClause.tags = {
+    //     [Op.contains]: filters.tags.map((el) => el.id),
+    //   };
+    // }
 
     try {
       const adverts = await this.advert.findAll({
@@ -128,7 +135,12 @@ class AdvertService {
             where: locationClause, // Фильтрация по местоположению
           },
           'User',
-        ],
+          // {
+          //   model: this.tags,
+          //   as: 'Tags',
+          // },
+          
+        ],// подключить таблицу с тегами
       });
       return adverts;
     } catch (error) {
@@ -160,12 +172,11 @@ class AdvertService {
   // }
 
   async getTagsLikeStr(str) {
-    console.log(str); // приходит объект
     try {
       const tags = await this.tags.findAll({
         where: {
           name: {
-            [Op.iLike]: `%${str.query}%`, // нужно сделать валидцию на регистр символа <--- str не строка
+            [Op.iLike]: `%${str}%`, // нужно сделать валидцию на регистр символа <--- str не строка
           },
         },
       });

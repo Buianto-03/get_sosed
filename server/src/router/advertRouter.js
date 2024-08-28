@@ -26,8 +26,8 @@ advertRouter
 
 advertRouter
   .route('/filters')
-  // .post(advertController.getFilteredAdverts);
-  .get(advertController.getFilteredAdverts);
+  .post(advertController.getFilteredAdverts);
+  // .get(advertController.getFilteredAdverts);
 
 advertRouter.route('/tags').get(advertController.getTagsBySearch);
 advertRouter.route('/:postId').delete(advertController.deletePost);

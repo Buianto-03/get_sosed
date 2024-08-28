@@ -33,7 +33,7 @@ class AdvertService {
   async getFilteredAdverts(filters: FilterType): Promise<AdvertType[]> {
     try {
       // const response = await this.client.post('/adverts/filters',filters )
-      const response = await this.client.get('/adverts/filters', { params: filters });
+      const response = await this.client.post('/adverts/filters', filters);
       return advertSchema.array().parse(response.data);
     } catch (error) {
       console.log(error);

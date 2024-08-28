@@ -61,8 +61,9 @@ class AdvertController {
   };
   getFilteredAdverts = async (req, res) => {
     try {
-      // const filters = req.body;// post
-      const filters = req.query; // get
+      const filters = req.body;// post (есть свойство tags)
+      console.log({filters});
+      // const filters = req.query; // get (есть свойство tags)
       const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);
     } catch (error) {
@@ -75,8 +76,10 @@ class AdvertController {
 
   getTagsBySearch = async (req, res) => {
     // inputValue <- req.body/query
+    console.log(req.query);
+    
     try {
-      const inputValue = req.query;
+      const inputValue = req.query.query;
       const tags = await this.service.getTagsLikeStr(inputValue);
       res.json(tags);
     } catch (error) {

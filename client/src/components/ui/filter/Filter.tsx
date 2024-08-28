@@ -30,10 +30,8 @@ import {
   NumberInput,
   NumberInputField,
   useBreakpointValue,
-  Select,
 } from '@chakra-ui/react';
 import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { debounce } from 'lodash';
 import { addTag, removeTag, setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
@@ -58,7 +56,7 @@ export default function Filter(): JSX.Element {
   const debouncedSearch = useCallback(
     debounce((query: string): void => {
       if (query.trim() === '') {
-        dispatch(setTags([]));
+        dispatch(setTags([])); // сделать првоерку на filter дописать
         return;
       }
       dispatch(getTagsBySearchThunk(query)).catch(console.log);
@@ -69,10 +67,6 @@ export default function Filter(): JSX.Element {
   useEffect(() => {
     debouncedSearch(inputValue);
   }, [inputValue, debouncedSearch]);
-
-  // useEffect(() => {
-  //   dispatch(loadTagsFromStorage());
-  // }, [dispatch]);
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
@@ -86,7 +80,7 @@ export default function Filter(): JSX.Element {
       district,
       metro,
       category,
-      // tags: pickedTags
+      tags: pickedTags,
     };
     dispatch(setFilters(filters)); // Отправляем параметры фильтрации в Redux
   };
@@ -248,7 +242,6 @@ export default function Filter(): JSX.Element {
           </InputRightElement>
         </InputGroup>
         {/**
-         * Выбранные теги {pickedTags.map(tag => <Button >tag.name</Button>)}
          */}
         <Box mt={4}>
           {pickedTags.map((tag) => (
@@ -258,7 +251,7 @@ export default function Filter(): JSX.Element {
               colorScheme="blue"
               mr={2}
               mb={2}
-              onClick={() => handleRemoveTag(tag)} // Удаление тега при клике
+              onClick={() => handleRemoveTag(tag)}
             >
               {tag.name}
             </Button>
@@ -286,7 +279,7 @@ export default function Filter(): JSX.Element {
                   align="center"
                   cursor="pointer"
                   _hover={{ bg: 'gray.100' }}
-                  onClick={() => handleTagClick(tag)} // dispatch(addTag(tag???))
+                  onClick={() => handleTagClick(tag)}
                 >
                   <Text>{tag.name}</Text>
                 </Flex>

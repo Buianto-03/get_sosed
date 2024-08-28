@@ -54,10 +54,6 @@ export const advertSlice = createSlice({
     removeTag(state, action: PayloadAction<string>) {
       state.pickedTags = state.pickedTags.filter((tag) => tag.id !== action.payload);
     },
-    // clearPickedTags: (state) => {
-    //   state.pickedTags = []; // Добавлен для очистки выбранных тегов
-    // },
-
     // addTag, removeTag
   },
   extraReducers: (builder) => {
@@ -79,15 +75,7 @@ export const advertSlice = createSlice({
       });
   },
 });
-export const {
-  loadCards,
-  setAdverts,
-  setSearchQuery,
-  setFilters,
-  setTags,
-  addTag,
-  removeTag,
-  clearPickedTags,
-} = advertSlice.actions;
+export const { loadCards, setAdverts, setSearchQuery, setFilters, setTags, addTag, removeTag } =
+  advertSlice.actions;
 
 export default advertSlice.reducer;
