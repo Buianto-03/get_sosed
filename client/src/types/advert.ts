@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { userSchema } from './auth';
 import { photoSchema } from './photo';
+import { LikedAdvertsType } from './like';
 
 export const advertSchema = z.object({
   id: z.number(),
@@ -44,9 +45,8 @@ export type AdvertSliceT = {
   query: string;
   filters: FilterType;
   tags: string[];
-  liked: AdvertType[],
   populars: AdvertType[]
-  liked: AdvertType[]
+  liked: LikedAdvertsType[]
   pickedTags: string[]
 };
 
