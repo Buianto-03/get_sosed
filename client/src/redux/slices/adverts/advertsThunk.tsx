@@ -18,3 +18,8 @@ export const getTagsBySearchThunk = createAsyncThunk<string[], string>(
   'adverts/getTagsBySearch',
   async (tags: string) => advertService.getTagsBySearch(tags), 
 );
+
+export const getLikedAdvertsThunk = createAsyncThunk(
+  'adverts/getLikedAdverts',
+  async () => advertService.getLikedAdverts(),
+);

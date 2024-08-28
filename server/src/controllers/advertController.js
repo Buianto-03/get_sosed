@@ -71,6 +71,22 @@ class AdvertController {
     }
   };
 
+  likedAdvertsHandler = async (req, res) => {
+    const { id } = res.locals.user;
+    // const {id} = req.params
+    console.log('res.locals ---->', res.locals);
+
+    try {
+      const likedAdverts = await this.service.likedAdverts(id);
+      res.status(200).json(likedAdverts);
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json({ error: 'Ошибка при получении избранных объявлений' });
+    }
+  };
+
   // searchAdverts = async (req, res) => {
   //   try {
   //     const { filter } = req.query;

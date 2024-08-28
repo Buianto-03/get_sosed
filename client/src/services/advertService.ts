@@ -58,6 +58,16 @@ class AdvertService {
       return Promise.reject(error);
     }
   }
+
+  async getLikedAdverts(): Promise<AdvertType[]> {
+    try {
+      const response = await this.client.get('/adverts/liked');
+      return advertSchema.array().parse(response.data);
+    } catch (error) {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  }
 }
 
 const advertService = new AdvertService(axiosInstance);

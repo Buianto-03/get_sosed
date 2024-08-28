@@ -18,6 +18,7 @@ import { editUserProfileThunk } from '../../../redux/slices/userProfile/thunks';
 import type { UserProfileT } from '../../../types/userProfile';
 import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
 import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
+import { getLikedAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
 
 // type Action = {
 //   type: string;
@@ -27,6 +28,7 @@ import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
   console.log(user.status);
+  const likedAdverts = useAppSelector((store) => store.advert.liked);
 
   const { age, phoneNumber, photo, about } = useAppSelector((store) => store.userProfile);
   const dispatch = useAppDispatch();
@@ -74,6 +76,8 @@ export default function AccountPage(): JSX.Element {
           break;
       }
     };
+
+      void dispatch(checkAuthThunk()).then(() => void dispatch(getLikedAdvertsThunk()));
 
     return () => {
       soketRef.current?.close();
@@ -216,7 +220,25 @@ export default function AccountPage(): JSX.Element {
           display="flex"
           flexDirection="column"
         >
-          <Text>Выберите собеседника</Text>
+          <Text fontSize="xl" fontWeight="bold" mb={4}>
+            Liked Adverts
+          </Text>
+          {likedAdverts.length === 0 ? (
+            <Text>No liked adverts found.</Text>
+          ) : (
+            likedAdverts.map((advert) => (
+              <Box key={advert.id} mb={4} p={4} bg="white" borderRadius="md" boxShadow="md">
+                <Text fontSize="lg" fontWeight="bold">
+                  {advert.title}
+                </Text>
+                <Text>{advert.body}</Text>
+                <Text color="gray.500">Price: {advert.price}₽</Text>
+                <Text color="gray.500">
+                  Location: {advert.Location.city}, {advert.Location.district}
+                </Text>
+              </Box>
+            ))
+          )}
         </GridItem>
       </Grid>
     </Container>
