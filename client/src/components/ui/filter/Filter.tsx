@@ -1,14 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  InputGroup, Input, InputRightElement, Button, Box, Flex, Popover,
-  PopoverTrigger, PopoverContent, PopoverArrow, PopoverCloseButton, PopoverBody,
-  Text, Icon, FormControl, FormLabel, VStack, Tabs, TabList, TabPanels, Tab,
-  TabPanel, RangeSlider, RangeSliderTrack, RangeSliderFilledTrack, RangeSliderThumb,
-  HStack, NumberInput, NumberInputField, useBreakpointValue,
+  InputGroup,
+  Input,
+  InputRightElement,
+  Button,
+  Box,
+  Flex,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverBody,
+  Text,
+  Icon,
+  FormControl,
+  FormLabel,
+  VStack,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  RangeSlider,
+  RangeSliderTrack,
+  RangeSliderFilledTrack,
+  RangeSliderThumb,
+  HStack,
+  NumberInput,
+  NumberInputField,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useDispatch } from 'react-redux';
-import { setFilters } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
+import { useSearchParams } from 'react-router-dom';
+import { debounce } from 'lodash';
+import { setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
+import { getTagsBySearchThunk } from '../../../redux/slices/adverts/advertsThunk';
 
 export default function Filter(): JSX.Element {
   const [inputValue, setInputValue] = useState<string>('');
@@ -18,15 +47,49 @@ export default function Filter(): JSX.Element {
   const [district, setDistrict] = useState<string>('');
   const [metro, setMetro] = useState<string>('');
   const [category, setCategory] = useState<string>(''); // Категория (Квартиры, Дома, Вторичка, Новостройка)
-  const dispatch = useDispatch();
+
+   // Состояние для хранения предложенных тегов на основе ввода
+   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+
+   // Состояние для хранения выбранных тегов
+   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+
+  const dispatch = useAppDispatch();
+  // const appFilters = useAppSelector(store => store.advert.filters)
+  // const [searchParams, setSearchParams] = useSearchParams();
+
+  // нужно использовать debounce, чтобы сервер не падал
+
+  const debouncedSearch = useCallback(
+    debounce((query: string): void => {
+      if (query.trim() === '') {
+        dispatch(setTags([]));
+        return;
+      }
+      dispatch(getTagsBySearchThunk(query)) .then((tags) => setSuggestedTags(tags.map((tag) => tag.name)))
+      .catch(console.log);
+    }, 300),
+    [],
+  );
+  useEffect(() => {
+    debouncedSearch(inputValue);
+  }, [inputValue, debouncedSearch]);
+
+
+  // Функция для удаления тега из списка выбранных
+  const handleRemoveTag = (tag: string) => {
+    setSelectedTags((prevTags) => prevTags.filter((t) => t !== tag));
+  };
+
+  // Обработчик изменения значения в поле ввода
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
-  // useEffect(() => {
-
-  // }, [priceRange])
-
-  const handleSearch = () => {
+  const handleFilter = () => {
     // Собираем параметры фильтрации и отправляем в Redux
     const filters = {
       query: inputValue,
@@ -41,11 +104,27 @@ export default function Filter(): JSX.Element {
   };
 
   return (
-    <Flex p={4} bg="gray.100" borderRadius="md" boxShadow="md" width="100%" alignItems="center" justifyContent="center">
+    <Flex
+      p={4}
+      bg="gray.100"
+      borderRadius="md"
+      boxShadow="md"
+      width="100%"
+      alignItems="center"
+      justifyContent="center"
+    >
       {/* Поповер для фильтра и категорий */}
       <Popover>
         <PopoverTrigger>
-          <Button size="lg" borderRadius="md" bg="blue.50" color="blue.700" borderColor="blue.300" _hover={{ bg: 'blue.100' }} mr={4}>
+          <Button
+            size="lg"
+            borderRadius="md"
+            bg="blue.50"
+            color="blue.700"
+            borderColor="blue.300"
+            _hover={{ bg: 'blue.100' }}
+            mr={4}
+          >
             Категории и фильтр
           </Button>
         </PopoverTrigger>
@@ -75,7 +154,14 @@ export default function Filter(): JSX.Element {
                   <VStack spacing={4}>
                     <FormControl>
                       <FormLabel>Цена (₽)</FormLabel>
-                      <RangeSlider aria-label={['min', 'max']} value={priceRange} min={0} max={400000} step={1000} onChange={(val) => setPriceRange(val)}>
+                      <RangeSlider
+                        aria-label={['min', 'max']}
+                        value={priceRange}
+                        min={0}
+                        max={400000}
+                        step={1000}
+                        onChange={(val) => setPriceRange(val)}
+                      >
                         <RangeSliderTrack>
                           <RangeSliderFilledTrack />
                         </RangeSliderTrack>
@@ -83,11 +169,24 @@ export default function Filter(): JSX.Element {
                         <RangeSliderThumb index={1} />
                       </RangeSlider>
                       <HStack justifyContent="space-between" mt={2}>
-                        <NumberInput maxW="100px" mr="2rem" value={priceRange[0]} onChange={(value) => setPriceRange([Number(value), priceRange[1]])} min={0} max={priceRange[1]}>
+                        <NumberInput
+                          maxW="100px"
+                          mr="2rem"
+                          value={priceRange[0]}
+                          onChange={(value) => setPriceRange([Number(value), priceRange[1]])}
+                          min={0}
+                          max={priceRange[1]}
+                        >
                           <NumberInputField />
                         </NumberInput>
                         <Text>до</Text>
-                        <NumberInput maxW="100px" value={priceRange[1]} onChange={(value) => setPriceRange([priceRange[0], Number(value)])} min={priceRange[0]} max={400000}>
+                        <NumberInput
+                          maxW="100px"
+                          value={priceRange[1]}
+                          onChange={(value) => setPriceRange([priceRange[0], Number(value)])}
+                          min={priceRange[0]}
+                          max={400000}
+                        >
                           <NumberInputField />
                         </NumberInput>
                       </HStack>
@@ -102,20 +201,32 @@ export default function Filter(): JSX.Element {
 
                     <FormControl>
                       <FormLabel>Город</FormLabel>
-                      <Input placeholder="Город" value={city} onChange={(e) => setCity(e.target.value)} />
+                      <Input
+                        placeholder="Город"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                      />
                     </FormControl>
 
                     <FormControl>
                       <FormLabel>Район</FormLabel>
-                      <Input placeholder="Район" value={district} onChange={(e) => setDistrict(e.target.value)} />
+                      <Input
+                        placeholder="Район"
+                        value={district}
+                        onChange={(e) => setDistrict(e.target.value)}
+                      />
                     </FormControl>
 
                     <FormControl>
                       <FormLabel>Метро</FormLabel>
-                      <Input placeholder="Метро" value={metro} onChange={(e) => setMetro(e.target.value)} />
+                      <Input
+                        placeholder="Метро"
+                        value={metro}
+                        onChange={(e) => setMetro(e.target.value)}
+                      />
                     </FormControl>
 
-                    <Button onClick={handleSearch} colorScheme="blue" width="full">
+                    <Button onClick={handleFilter} colorScheme="blue" width="full">
                       Применить фильтр
                     </Button>
                   </VStack>
@@ -128,9 +239,16 @@ export default function Filter(): JSX.Element {
 
       {/* Поле поиска */}
       <InputGroup>
-        <Input placeholder="Поиск по объявлениям" value={inputValue} onChange={(e) => setInputValue(e.target.value)} size="lg" borderRadius="md" />
+        <Input
+          placeholder="Поиск по объявлениям"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)} // Как буд-то бы нужно сюда повесить хэндлер
+          // onClick={handleSearch}
+          size="lg"
+          borderRadius="md"
+        />
         <InputRightElement>
-          <Button onClick={handleSearch} colorScheme="blue" borderRadius="md">
+          <Button onClick={handleFilter} colorScheme="blue" borderRadius="md">
             <SearchIcon />
           </Button>
         </InputRightElement>

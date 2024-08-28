@@ -1,10 +1,11 @@
 const { Op } = require('sequelize');
-const { Advert, Location } = require('../../db/models');
+const { Advert, Location, Tags } = require('../../db/models');
 
 class AdvertService {
-  constructor(advert, location) {
+  constructor(advert, location, tags) {
     this.advert = advert;
     this.location = location;
+    this.tags = tags;
   }
 
   async addAdvert(formData) {
@@ -45,7 +46,7 @@ class AdvertService {
     });
     return advert;
   }
-  
+
   // async deletePost(id) {
   //   try {
   //     await this.advert.destroy({ where: { id } });
@@ -98,8 +99,47 @@ class AdvertService {
       throw error;
     }
   }
+
+  async searchAdverts(filter) {
+    try {
+      const adverts = await this.advert.findAll({
+        where: {
+          name: {
+            [Op.iLike]: `%${filter}%`,
+          },
+        },
+        include: ['User', 'Location'],
+        order: [['name', 'ASC']],
+      });
+      return adverts;
+    } catch (error) {
+      console.error('Ошибка при поиске объявлений:', error);
+      throw error;
+    }
+  }
+
+  // getTagsLikeStr(str) {
+  //   // where: { tagName: { [Op.like]: `%${str}%` } }
+  // }
+
+  async getTagsLikeStr(str) {
+    console.log(str); // приходит объект
+    try {
+      const tags = await this.tags.findAll({
+        where: {  
+          name: {
+            [Op.iLike]: `%${str.query}%`, // нужно сделать валидцию на регистр символа <--- str не строка
+          },
+        },
+      });
+      return tags;
+    } catch (error) {
+      console.error('Ошибка при поиске тегов:', error);
+      throw error;
+    }
+  }
 }
 
-const advertService = new AdvertService(Advert, Location);
+const advertService = new AdvertService(Advert, Location, Tags);
 
 module.exports = advertService;

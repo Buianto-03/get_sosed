@@ -46,6 +46,18 @@ class AdvertService {
       return Promise.reject(error);
     }
   }
+
+  async getTagsBySearch(query: string): Promise<string[]> {
+    try {
+      const response = await this.client.get('/adverts/tags', {
+        params: { query },
+      });
+      return response.data as string[]; 
+    } catch (error) {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  }
 }
 
 const advertService = new AdvertService(axiosInstance);

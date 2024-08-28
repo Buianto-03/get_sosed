@@ -14,3 +14,7 @@ export const getAdvertByIdThunk = createAsyncThunk(
   'adverts/getAdvertByIdThunk',
   async (id: number) => advertService.getAdvertById(id),
 );
+export const getTagsBySearchThunk = createAsyncThunk<string[], string>(
+  'adverts/getTagsBySearch',
+  async (tags: string) => advertService.getTagsBySearch(tags), 
+);

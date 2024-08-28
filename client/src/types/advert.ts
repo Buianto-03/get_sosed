@@ -35,10 +35,12 @@ export type FilterType = {
   category: string;
 };
 
+
 export type AdvertSliceT = {
   adverts: AdvertType[];
   chosenAdvert: AdvertType | null;
   visitableCards: number;
   query: string;
   filters: FilterType;
+  tags: string[];
 };
