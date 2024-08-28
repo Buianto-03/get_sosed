@@ -8,9 +8,30 @@ class AdvertService {
   }
 
   async addAdvert(formData) {
-    const { city, district, address, metro, coordinates } = formData;
-    const advert = await this.advert.create(formData);
-    const location = await this.location.create({
+    const {
+      title,
+      body,
+      price,
+      floor,
+      square,
+      rooms,
+      city,
+      district,
+      address,
+      metro,
+      userId,
+      coordinates,
+    } = formData;
+    const advert = await this.advert.create({
+      title,
+      body,
+      price,
+      floor,
+      square,
+      rooms,
+      userId,
+    });
+    await this.location.create({
       city,
       district,
       address,
@@ -40,12 +61,14 @@ class AdvertService {
   }
 
   async getAdvertById(id) {
+    console.log('id-----', id);
+
     const advert = await this.advert.findByPk(id, {
       include: ['User', 'Location'],
     });
     return advert;
   }
-  
+
   // async deletePost(id) {
   //   try {
   //     await this.advert.destroy({ where: { id } });

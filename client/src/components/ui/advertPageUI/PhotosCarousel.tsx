@@ -12,11 +12,7 @@ const settings = {
   slidesToShow: 1,
   slidesToScroll: 1,
 };
-const images = [
-  'https://images.cdn-cian.ru/images/2199178038-1.jpg',
-  'https://images.cdn-cian.ru/images/2199178106-1.jpg',
-  'https://images.cdn-cian.ru/images/2199178140-1.jpg',
-];
+const images = ['/images/1.jpg', '/images/2.jpg'];
 
 export default function PhotosCarousel(): JSX.Element {
   const [slider, setSlider] = useState<Slider | null>(null);
@@ -75,15 +71,16 @@ export default function PhotosCarousel(): JSX.Element {
         slidesToScroll={settings.slidesToScroll}
         ref={(slide) => setSlider(slide)}
       >
-        {images.map((url, index) => (
+        {images.map((url) => (
           <Box
-            key={index}
+            key={url}
             height="600px"
             position="relative"
             backgroundPosition="center"
             backgroundRepeat="no-repeat"
             backgroundSize="cover"
             backgroundImage={`url(${url})`}
+            // backgroundImage={`url(${url})`}
           />
         ))}
       </Slider>

@@ -82,7 +82,9 @@ export default function AccountPage(): JSX.Element {
 
   const handleSaveProfile = (formData: UserProfileT): void => {
     if (user.status === UserStatus.Logged) {
-      void dispatch(editUserProfileThunk({ formData, id: user.id })).then(() => dispatch(checkAuthThunk()));
+      void dispatch(editUserProfileThunk({ formData, id: user.id })).then(() =>
+        dispatch(checkAuthThunk()),
+      );
       console.log('Profile updated:', editProfile);
       setIsEditing(false);
     }
@@ -190,6 +192,9 @@ export default function AccountPage(): JSX.Element {
                 </Button>
               </Box>
             )}
+            <Button mt={4} colorScheme="teal">
+              Разместить объявление
+            </Button>
           </VStack>
         </GridItem>
         <GridItem colSpan={{ base: 1, md: 2 }} bg="#cacae2" borderRadius="md" boxShadow="lg">

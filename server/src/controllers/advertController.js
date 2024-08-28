@@ -1,4 +1,6 @@
 const advertService = require('../service/advertService');
+const sharp = require('sharp');
+const fs = require('fs/promises');
 
 class AdvertController {
   constructor(service) {
@@ -12,8 +14,8 @@ class AdvertController {
   getAdvertById = async (req, res) => {
     try {
       const { advertId } = req.params;
+      // console.log(advertId);
       const advert = await this.service.getAdvertById(advertId);
-      console.log(advert);
 
       res.status(201).json(advert);
     } catch (error) {
@@ -21,13 +23,25 @@ class AdvertController {
     }
   };
 
-  createPost = async (req, res) => {
+  createAdvert = async (req, res) => {
     try {
-      const newPost = await this.service.addAdvert({
+      const newAdvert = await this.service.addAdvert({
         ...req.body,
-        userId: 1,
+        userId: res.locals.user.id,
       });
-      res.status(201).json(newPost);
+
+      if (!req.files.length) {
+        return res.status(400).json({ message: 'File not found' });
+      }
+
+      await fs.mkdir(`./public/images/advert-${newAdvert.id}`);
+      req.files.forEach(async (file, i) => {
+        const name = `advert${newAdvert.id}-${i}.webp`;
+        const outputBuffer = await sharp(file.buffer).webp().toBuffer();
+        await fs.writeFile(`./public/images/advert-${newAdvert.id}/${name}`, outputBuffer);
+      });
+
+      res.status(201).json(newAdvert);
     } catch (error) {
       console.log(error);
       res.sendStatus(500);

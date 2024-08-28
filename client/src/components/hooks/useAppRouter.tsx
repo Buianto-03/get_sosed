@@ -9,6 +9,7 @@ import AdvertPage from '../pages/AdvertPage/AdvertPage';
 import { useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 import ChatPage from '../pages/Account/ChatPage';
+import PostAdvertPage from '../pages/PostAdvertPage/PostAdvertPage';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
   const status = useAppSelector((store) => store.auth.user.status);
@@ -38,7 +39,11 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         {
           path: '/advert/:id',
           element: <AdvertPage />,
-        }
+        },
+        {
+          path: '/post',
+          element: <PostAdvertPage />,
+        },
       ],
     },
   ]);
