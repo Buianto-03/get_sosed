@@ -46,7 +46,7 @@ export default function Filter(): JSX.Element {
   const [city, setCity] = useState<string>(initFilters.city);
   const [district, setDistrict] = useState<string>(initFilters.district);
   const [metro, setMetro] = useState<string>(initFilters.metro);
-  const [category, setCategory] = useState<string>(initFilters.category); // Категория (Квартиры, Дома, Вторичка, Новостройка)
+  // const [category, setCategory] = useState<string>(initFilters.category); // Категория (Квартиры, Дома, Вторичка, Новостройка)
   //  // Состояние для хранения предложенных тегов на основе ввода
 
   const dispatch = useAppDispatch();
@@ -80,7 +80,7 @@ export default function Filter(): JSX.Element {
       city,
       district,
       metro,
-      category,
+      // category,
       tags: pickedTags,
     };
     dispatch(setFilters(filters)); // Отправляем параметры фильтрации в Redux
@@ -114,7 +114,7 @@ export default function Filter(): JSX.Element {
             _hover={{ bg: 'blue.100' }}
             mr={4}
           >
-            Категории и фильтр
+            Фильтр
           </Button>
         </PopoverTrigger>
         <PopoverContent width={popoverWidth} maxWidth="100vw" marginX="auto" position="relative">
@@ -123,11 +123,11 @@ export default function Filter(): JSX.Element {
           <PopoverBody>
             <Tabs variant="enclosed">
               <TabList>
-                <Tab>Категории</Tab>
                 <Tab>Фильтр</Tab>
+                {/* <Tab>Категории</Tab> */}
               </TabList>
               <TabPanels>
-                <TabPanel>
+                {/* <TabPanel>
                   <Box>
                     <Flex align="center" mt={2} onClick={() => setCategory('Квартиры')}>
                       <Text flex="1">Квартиры</Text>
@@ -138,7 +138,7 @@ export default function Filter(): JSX.Element {
                       <Icon as={ChevronRightIcon} />
                     </Flex>
                   </Box>
-                </TabPanel>
+                </TabPanel> */}
                 <TabPanel>
                   <VStack spacing={4}>
                     <FormControl>

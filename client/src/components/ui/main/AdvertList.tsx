@@ -8,7 +8,7 @@ import { loadCards, setFilters } from '../../../redux/slices/adverts/advertsSlic
 import type { FilterType } from '../../../types/advert';
 
 export default function AdvertList(): JSX.Element {
-  const { adverts, visitableCards, filters } = useAppSelector((state) => state.advert);
+  const { adverts, visitableCards, filters, pickedTags} = useAppSelector((state) => state.advert);
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ export default function AdvertList(): JSX.Element {
     // );
     const filtersFromQuery: FilterType = {
       city: querySearchParams.get('city') || '',
-      category: querySearchParams.get('category') || '',
+      // category: querySearchParams.get('category') || '',
       district: querySearchParams.get('district') || '',
       metro: querySearchParams.get('metro') || '',
       priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
@@ -49,7 +49,7 @@ export default function AdvertList(): JSX.Element {
     searchParams.set('priceFrom', filters.priceFrom.toString());
     searchParams.set('priceTo', filters.priceTo.toString());
     searchParams.set('city', filters.city);
-    searchParams.set('category', filters.category);
+    // searchParams.set('category', filters.category);
     searchParams.set('district', filters.district);
     searchParams.set('metro', filters.metro);
     setSearchParams(searchParams);

@@ -35,7 +35,7 @@ export type FilterType = {
   city: string;
   district: string;
   metro: string;
-  category: string;
+  // category: string;
 };
 
 export const tagSchema = z.object({
