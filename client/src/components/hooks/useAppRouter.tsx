@@ -11,6 +11,7 @@ import { UserStatus } from '../../types/auth';
 import ChatPage from '../pages/Account/ChatPage';
 import PostAdvertPage from '../pages/PostAdvertPage/PostAdvertPage';
 import ProtectedRoute from './ProtectedRoute';
+import WelcomePage from '../pages/WelcomePage/WelcomePage';
 
 export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
   const user = useAppSelector((store) => store.auth.user);
@@ -19,6 +20,10 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
       path: '/',
       element: <Layout />,
       children: [
+        {
+          path: '/',
+          element: <WelcomePage />,
+        },
         {
           path: '/account',
           element: (
@@ -56,11 +61,11 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
           // element: <SignUpPage />,
         },
         {
-          path: '/',
+          path: '/home',
           element: (
-            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+            // <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
               <MainPage />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           ),
           //  element: <MainPage />
         },

@@ -60,7 +60,7 @@ export default function Navbar(): JSX.Element {
                 <Nav.Link as={Link} to="/" style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>
                   Главная
                 </Nav.Link>
-                <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>Поиск</Nav.Link>
+                <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }} as={Link} to='/home'>Поиск</Nav.Link>
                 <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>О нас</Nav.Link>
                 <Nav.Link
                   as={Link}
@@ -110,6 +110,9 @@ export default function Navbar(): JSX.Element {
           <Stack as="nav" spacing={4}>
             <Nav.Link as={Link} to="/">
               Главная
+            </Nav.Link>
+            <Nav.Link as={Link} to="/home">
+              Поиск
             </Nav.Link>
             <Nav.Link as={Link} to="/post">
               Добавить объявление

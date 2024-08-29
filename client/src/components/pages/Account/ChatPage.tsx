@@ -90,7 +90,7 @@ export default function ChatPage(): JSX.Element {
           display="flex"
           flexDirection="column"
           alignItems="center"
-          h="90vh" // 90% высоты экрана
+          h="40svh" // 90% высоты экрана
           overflowY="auto"
         >
           <Box
