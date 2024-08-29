@@ -8,7 +8,7 @@ import {
   getTagsBySearchThunk,
   getTopAdvertsThunk,
 } from './advertsThunk';
-import type { AdvertSliceT, AdvertType, FilterType } from '../../../types/advert';
+import type { AdvertSliceT, AdvertType, FilterType, TagType } from '../../../types/advert';
 import { deleteLikeThunk } from '../likes/likesThunk';
 
 const initialState: AdvertSliceT = {
@@ -46,15 +46,15 @@ export const advertSlice = createSlice({
     setFilters: (state, action: PayloadAction<FilterType>) => {
       state.filters = action.payload;
     },
-    setTags: (state, action: PayloadAction<string[]>) => {
+    setTags: (state, action: PayloadAction<TagType[]>) => {
       state.tags = action.payload;
     },
-    addTag: (state, action: PayloadAction<string>) => {
+    addTag: (state, action: PayloadAction<TagType>) => {
       if (!state.pickedTags.includes(action.payload)) {
         state.pickedTags.push(action.payload);
       }
     },
-    removeTag(state, action: PayloadAction<string>) {
+    removeTag(state, action: PayloadAction<number>) {
       state.pickedTags = state.pickedTags.filter((tag) => tag.id !== action.payload);
     },
     // addTag, removeTag

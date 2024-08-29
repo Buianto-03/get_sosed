@@ -70,10 +70,3 @@ export default function SignInPage(): JSX.Element {
     </Center>
   );
 }
-
-// const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-//   e.preventDefault();
-//   const formData = Object.fromEntries(new FormData(e.currentTarget)) as LoginForm;
-//   void dispatch(signinThunk(formData));
-//   e.currentTarget.reset();
-// };

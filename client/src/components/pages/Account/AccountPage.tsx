@@ -27,7 +27,7 @@ import { deleteLikeThunk } from '../../../redux/slices/likes/likesThunk';
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
-  const likedAdverts = useAppSelector((store) => store.advert.liked);
+  const likedAdverts = useAppSelector((store) => store.advert?.liked);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [online, setOnline] = useState<BackendUserT[]>([]);
@@ -48,37 +48,39 @@ export default function AccountPage(): JSX.Element {
   const soketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const soket = new WebSocket('ws://localhost:3000');
-    soketRef.current = soket;
-
-    soket.onopen = async () => {
-      console.log('CONNECTED');
-      try {
-        await dispatch(getReceiverListThunk(user.id));
-      } catch (error) {
-        console.log(error); // Обрабатываем ошибку
-      }
-    };
-    soket.onclose = () => console.log('DISCONNECTED');
-    soket.onerror = (err) => console.log('ERROR', err);
-
-    soket.onmessage = (event: MessageEvent) => {
-      const action: Action = JSON.parse(event.data);
-      const { type, payload } = action;
-
-      switch (type) {
-        case 'SET_USERS':
-          setOnline(payload);
-          break;
-        case 'SET_MESSAGES':
-          setMessages(payload);
-          break;
-        case 'NEW_MESSAGES':
-          setMessages(payload);
-          break;
-        default:
-          break;
-      }
+    if (user.status === UserStatus.Logged) {
+      const soket = new WebSocket('ws://localhost:3000');
+      soketRef.current = soket;
+  
+      soket.onopen = async () => {
+        console.log('CONNECTED');
+        try {
+          await dispatch(getReceiverListThunk(user.id));
+        } catch (error) {
+          console.log(error); // Обрабатываем ошибку
+        }
+      };
+      soket.onclose = () => console.log('DISCONNECTED');
+      soket.onerror = (err) => console.log('ERROR', err);
+  
+      soket.onmessage = (event: MessageEvent) => {
+        const action: Action = JSON.parse(event.data);
+        const { type, payload } = action;
+  
+        switch (type) {
+          case 'SET_USERS':
+            setOnline(payload);
+            break;
+          case 'SET_MESSAGES':
+            setMessages(payload);
+            break;
+          case 'NEW_MESSAGES':
+            setMessages(payload);
+            break;
+          default:
+            break;
+        }
+    }
     };
 
     void dispatch(checkAuthThunk()).then(() => void dispatch(getLikedAdvertsThunk()));

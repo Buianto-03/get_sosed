@@ -3,7 +3,6 @@ import React from 'react';
 import { Form, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../../redux/hooks';
 import { postAdvertThunk } from '../../../redux/slices/adverts/advertsThunk';
-import type { PostAdvertType } from '../../../types/advert';
 import axiosInstance from '../../../services/client';
 import type { ApiResponse } from '../../../types/postAdvertInterfaces';
 

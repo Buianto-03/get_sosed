@@ -9,7 +9,7 @@ import type { ChatType } from '../../../types/chat';
 
 type Action = {
   type: string;
-  payload: any;
+  payload: unknown;
 };
 
 export default function ChatPage(): JSX.Element {
@@ -59,7 +59,7 @@ export default function ChatPage(): JSX.Element {
     };
   }, [receiverId]);
 
-  const sendNewMessage = (message: string) => {
+  const sendNewMessage = (message: string):void => {
     if (soketRef.current) {
       const action: Action = {
         type: 'ADD_MESSAGE',
@@ -143,7 +143,8 @@ export default function ChatPage(): JSX.Element {
           h="50vh" // 50% высоты экрана
         >
           <Box flex="1" overflowY="auto" borderRadius="md" bg="#d8d8ed" p={4}>
-            <ChatComponent online={online} messages={messages} />
+            <ChatComponent online={online} messages={messages} /> 
+            {/* Зачем здесь проп онлайн? */}
           </Box>
           <ChatInput
             onSendMessage={sendNewMessage}

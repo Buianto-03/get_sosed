@@ -32,11 +32,11 @@ import {
   useBreakpointValue,
 } from '@chakra-ui/react';
 import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { useSearchParams } from 'react-router-dom';
 import { debounce } from 'lodash';
 import { addTag, removeTag, setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { getTagsBySearchThunk } from '../../../redux/slices/adverts/advertsThunk';
+import type { TagType } from '../../../types/advert';
 
 export default function Filter(): JSX.Element {
   const [inputValue, setInputValue] = useState<string>('');
@@ -51,7 +51,6 @@ export default function Filter(): JSX.Element {
   const dispatch = useAppDispatch();
   const tags = useAppSelector((store) => store.advert.tags);
   const pickedTags = useAppSelector((store) => store.advert.pickedTags);
-  console.log(tags);
 
   const debouncedSearch = useCallback(
     debounce((query: string): void => {
@@ -70,7 +69,7 @@ export default function Filter(): JSX.Element {
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
-  const handleFilter = () => {
+  const handleFilter = (): void => {
     // Собираем параметры фильтрации и отправляем в Redux
     const filters = {
       query: inputValue,
@@ -84,11 +83,11 @@ export default function Filter(): JSX.Element {
     };
     dispatch(setFilters(filters)); // Отправляем параметры фильтрации в Redux
   };
-  const handleTagClick = (tag: string) => {
+  const handleTagClick = (tag: TagType): void => {
     dispatch(addTag(tag));
     setInputValue('');
   };
-  const handleRemoveTag = (tag: { id: string; name: string }) => {
+  const handleRemoveTag = (tag: TagType): void => {
     dispatch(removeTag(tag.id)); // Передаем только идентификатор тега
   };
   return (
@@ -143,12 +142,12 @@ export default function Filter(): JSX.Element {
                     <FormControl>
                       <FormLabel>Цена (₽)</FormLabel>
                       <RangeSlider
-                        aria-label={['min', 'max']}
+                        // aria-label={['min', 'max']}
                         value={priceRange}
                         min={0}
                         max={400000}
                         step={1000}
-                        onChange={(val) => setPriceRange(val)}
+                        onChange={(val) => setPriceRange(val as [number, number])}
                       >
                         <RangeSliderTrack>
                           <RangeSliderFilledTrack />
@@ -271,7 +270,7 @@ export default function Filter(): JSX.Element {
             width="100%"
             maxW={popoverWidth}
           >
-            {tags.length > 0 ? (
+            {tags && tags.length ? (
               tags.map((tag) => (
                 <Flex
                   key={tag.id}

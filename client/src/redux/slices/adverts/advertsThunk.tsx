@@ -19,7 +19,7 @@ export const postAdvertThunk = createAsyncThunk(
   'adverts/postAdvertThunk',
   async (data: FormData) => advertService.createAdvert(data),
 );
-export const getTagsBySearchThunk = createAsyncThunk<string[], string>(
+export const getTagsBySearchThunk = createAsyncThunk(
   'adverts/getTagsBySearch',
   async (tags: string) => advertService.getTagsBySearch(tags), 
 );

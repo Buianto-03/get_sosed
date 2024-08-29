@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
-import { advertSchema } from '../types/advert';
-import type { AdvertType, FilterType, PostAdvertType } from '../types/advert';
+import { advertSchema, tagSchema } from '../types/advert';
+import type { AdvertType, FilterType, TagType } from '../types/advert';
 import axiosInstance from './client';
 import { likedAdvertsSchema, type LikedAdvertsType } from '../types/like';
 
@@ -52,12 +52,12 @@ class AdvertService {
     }
   }
 
-  async getTagsBySearch(query: string): Promise<string[]> {
+  async getTagsBySearch(query: string): Promise<TagType[]> {
     try {
       const response = await this.client.get('/adverts/tags', {
         params: { query },
       });
-      return response.data as string[];
+      return tagSchema.array().parse(response.data);
     } catch (error) {
       console.log(error);
       return Promise.reject(error);

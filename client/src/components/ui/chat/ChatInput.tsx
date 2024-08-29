@@ -3,17 +3,9 @@ import { Box, Input, Button, HStack } from '@chakra-ui/react';
 
 type ChatInputProps = {
   onSendMessage: (message: string) => void;
-  borderRadius: string;
-  boxShadow: string;
-  _focus: object;
 };
 
-export default function ChatInput({
-  onSendMessage,
-  boxShadow,
-  borderRadius,
-  _focus
-}: ChatInputProps): JSX.Element {
+export default function ChatInput({ onSendMessage }: ChatInputProps): JSX.Element {
   const [message, setMessage] = useState('');
 
   const handleSendMessage = (): void => {

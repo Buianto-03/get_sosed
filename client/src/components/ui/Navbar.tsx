@@ -42,8 +42,12 @@ export default function Navbar(): JSX.Element {
           }}
         />
         <HStack spacing={8} alignItems="center">
-          <Box style={{ width: '40px', marginLeft: '20px' }} cursor="pointer">
-            <img src="/public/logo.png" alt="logo" onClick={() => navigate('/')} />
+          <Box
+            style={{ width: '40px', marginLeft: '20px' }}
+            cursor="pointer"
+            onClick={() => navigate('/')}
+          >
+            <img src="/public/logo.png" alt="logo" />
           </Box>
           <HStack as="nav" spacing={4} display={{ base: 'none', md: 'flex' }}>
             {/* {Links.map((link) => (
@@ -51,12 +55,16 @@ export default function Navbar(): JSX.Element {
             ))} */}
             {user.status === UserStatus.Logged ? (
               <>
-                <Nav.Link as={Link} to="/" style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>
+                <Nav.Link as={Link} to="/" style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>
                   Главная
                 </Nav.Link>
-                <Nav.Link style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>Поиск</Nav.Link>
-                <Nav.Link style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>О нас</Nav.Link>
-                <Nav.Link as={Link} to="/post" style={{fontWeight: 'inherit', fontSize: '1.5rem'}}>
+                <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>Поиск</Nav.Link>
+                <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>О нас</Nav.Link>
+                <Nav.Link
+                  as={Link}
+                  to="/post"
+                  style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}
+                >
                   Добавить объявление
                 </Nav.Link>
               </>
