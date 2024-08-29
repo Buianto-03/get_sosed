@@ -66,7 +66,7 @@ class AdvertController {
   getFilteredAdverts = async (req, res) => {
     try {
       const filters = req.body;// post (есть свойство tags)
-      console.log({filters});
+      console.log(filters.tags);
       // const filters = req.query; // get (есть свойство tags)
       const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);
