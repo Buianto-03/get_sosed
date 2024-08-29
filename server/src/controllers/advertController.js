@@ -65,11 +65,11 @@ class AdvertController {
     res.json(updatedUser);
   };
   getFilteredAdverts = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   
     try {
       const filters = req.body;// post (есть свойство tags)
-      console.log(filters.tags);
+      // console.log(filters.tags);
       // const filters = req.query; // get (есть свойство tags)
       const filteredAdverts = await this.service.getFilteredAdverts(filters);
       res.json(filteredAdverts);

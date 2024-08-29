@@ -11,7 +11,9 @@ function App(): JSX.Element {
 
   useEffect(() => {
     void dispatch(checkAuthThunk());
-    void dispatch(getAdvertsThunk());
+    // void dispatch(getAdvertsThunk());
+    // dispatch getTagsByStringTagsThunk  <---
+    // tags=Квартира,Кухня ->>> stringTags: ['Квартира', 'Кухня'] ->>> tags: [{id: 1, name: 'Квартира'}, {id: 2, name: 'Кухня'}]
     
   }, []);
 

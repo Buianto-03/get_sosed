@@ -11,23 +11,28 @@ import {
 import type { AdvertSliceT, AdvertType, FilterType, TagType } from '../../../types/advert';
 import { deleteLikeThunk } from '../likes/likesThunk';
 
+const searchParams = new URLSearchParams(window.location.search);
+// searchParams.forEach((_, key) => searchParams.delete(key));
+// searchParams.set('tags', pickedTags.map(t => t.name).join(','));
+
 const initialState: AdvertSliceT = {
   adverts: [],
   visitableCards: 8,
   query: '',
   chosenAdvert: null,
   filters: {
-    priceFrom: 0,
-    priceTo: 400000,
-    city: '',
-    district: '',
-    metro: '',
-    category: '',
+    city: searchParams.get('city') || '',
+    category: searchParams.get('category') || '',
+    district: searchParams.get('district') || '',
+    metro: searchParams.get('metro') || '',
+    priceFrom: Number(searchParams.get('priceFrom') || '0'),
+    priceTo: Number(searchParams.get('priceTo') || '0'),
   },
   tags: [],
   liked: [],
   populars: [],
   pickedTags: [],
+  // stringTags: searchParams ... .split(',')
 };
 
 export const advertSlice = createSlice({

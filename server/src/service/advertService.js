@@ -113,7 +113,7 @@ class AdvertService {
     const whereClause = {};
     const locationClause = {};
 
-    console.log({ filters });
+    // console.log({ filters });
 
     if (filters.city) locationClause.city = filters.city;
     if (filters.district) locationClause.district = filters.district;
@@ -155,11 +155,11 @@ class AdvertService {
           'User',
           {
             model: this.tags, // Модель Tag
-            where: {
+            where: filters.tags.length > 0 ? {
               [Op.or]: filters.tags.map(({ id }) => ({ id })),
-            },
+            } : undefined,
             as: 'tags',
-            required: true,
+            required: filters.tags.length > 0,
           },
         ], // подключить таблицу с тегами
       });

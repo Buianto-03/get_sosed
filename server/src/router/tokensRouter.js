@@ -26,6 +26,7 @@ tokensRouter.get('/refresh', verifyRefreshToken, async (req, res) => {
       .json({ accessToken, user });
   } catch (error) {
     console.log(error);
+    res.sendStatus(501)
   }
 });
 

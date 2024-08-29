@@ -25,7 +25,7 @@ export default function AdvertList(): JSX.Element {
     //     priceTo: Number(querySearchParams.get('priceTo') || '0'),
     //   } as FilterType),
     // );
-    const filters: FilterType = {
+    const filtersFromQuery: FilterType = {
       city: querySearchParams.get('city') || '',
       category: querySearchParams.get('category') || '',
       district: querySearchParams.get('district') || '',
@@ -33,7 +33,7 @@ export default function AdvertList(): JSX.Element {
       priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
       priceTo: Number(querySearchParams.get('priceTo') || '0'),
     }
-    void dispatch(getFilteredAdvertsThunk({...filters, tags: pickedTags}));
+    void dispatch(getFilteredAdvertsThunk({...filtersFromQuery, tags: pickedTags}));
   }, [querySearchParams]);
   // управляемый инпут сделать и чтобы он сохранялся в редаксе
 

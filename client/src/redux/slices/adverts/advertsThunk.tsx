@@ -1,13 +1,13 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import advertService from '../../../services/advertService';
-import type { FilterType, PostAdvertType } from '../../../types/advert';
+import type { FilterType, PostAdvertType, TagType } from '../../../types/advert';
 
 export const getAdvertsThunk = createAsyncThunk('adverts/getAdvertsThunk', () =>
   advertService.getAdverts(),
 );
 export const getFilteredAdvertsThunk = createAsyncThunk(
   'adverts/getFilteredAdverts',
-  async (filters: FilterType) => advertService.getFilteredAdverts(filters),
+  async (filters: FilterType & {tags: TagType[]}) => advertService.getFilteredAdverts(filters),
 );
 
 export const getAdvertByIdThunk = createAsyncThunk(

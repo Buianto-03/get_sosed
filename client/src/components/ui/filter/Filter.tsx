@@ -39,13 +39,14 @@ import { getTagsBySearchThunk } from '../../../redux/slices/adverts/advertsThunk
 import type { TagType } from '../../../types/advert';
 
 export default function Filter(): JSX.Element {
+  const initFilters = useAppSelector(store => store.advert.filters)
   const [inputValue, setInputValue] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([initFilters.priceFrom, initFilters.priceTo]);
   // const [rooms, setRooms] = useState<number>(1); // Количество комнат
-  const [city, setCity] = useState<string>('');
-  const [district, setDistrict] = useState<string>('');
-  const [metro, setMetro] = useState<string>('');
-  const [category, setCategory] = useState<string>(''); // Категория (Квартиры, Дома, Вторичка, Новостройка)
+  const [city, setCity] = useState<string>(initFilters.city);
+  const [district, setDistrict] = useState<string>(initFilters.district);
+  const [metro, setMetro] = useState<string>(initFilters.metro);
+  const [category, setCategory] = useState<string>(initFilters.category); // Категория (Квартиры, Дома, Вторичка, Новостройка)
   //  // Состояние для хранения предложенных тегов на основе ввода
 
   const dispatch = useAppDispatch();
