@@ -5,7 +5,7 @@ const likes = [];
 for (let i = 1; i < 16; i++) {
   for (let j = 0; j < 3; j++) {
     likes.push({
-      photo: `/images/advert-18/advert18-${j}.webp`,
+      photo: `/images/adverts/advert-1/advert1-${j}.webp`,
       advertId: i,
       createdAt: new Date(),
       updatedAt: new Date(),

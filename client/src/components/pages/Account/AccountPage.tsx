@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FaThumbsUp } from 'react-icons/fa';
+import type { Action } from '@reduxjs/toolkit';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ChatList from '../../ui/chat/ChatList';
 import { UserStatus, type BackendUserT } from '../../../types/auth';
@@ -51,7 +52,7 @@ export default function AccountPage(): JSX.Element {
     if (user.status === UserStatus.Logged) {
       const soket = new WebSocket('ws://localhost:3000');
       soketRef.current = soket;
-  
+
       soket.onopen = async () => {
         console.log('CONNECTED');
         try {
@@ -62,11 +63,11 @@ export default function AccountPage(): JSX.Element {
       };
       soket.onclose = () => console.log('DISCONNECTED');
       soket.onerror = (err) => console.log('ERROR', err);
-  
+
       soket.onmessage = (event: MessageEvent) => {
-        const action: Action = JSON.parse(event.data);
+        const action: Action = JSON.parse(event.data as string) as Action;
         const { type, payload } = action;
-  
+
         switch (type) {
           case 'SET_USERS':
             setOnline(payload);
@@ -80,8 +81,8 @@ export default function AccountPage(): JSX.Element {
           default:
             break;
         }
+      };
     }
-    };
 
     void dispatch(checkAuthThunk()).then(() => void dispatch(getLikedAdvertsThunk()));
 
