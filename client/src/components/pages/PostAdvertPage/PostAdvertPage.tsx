@@ -1,12 +1,14 @@
 import { Box, Button, Container, FormControl, FormLabel, Heading, Input } from '@chakra-ui/react';
 import React from 'react';
 import { Form, useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../../redux/hooks';
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { postAdvertThunk } from '../../../redux/slices/adverts/advertsThunk';
 import axiosInstance from '../../../services/client';
 import type { ApiResponse } from '../../../types/postAdvertInterfaces';
+import { UserStatus } from '../../../types/auth';
 
 export default function PostAdvertPage(): JSX.Element {
+  const user = useAppSelector((store) => store.auth.user);
   const [value, setValue] = React.useState<string>('');
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -63,7 +65,8 @@ export default function PostAdvertPage(): JSX.Element {
 
   return (
     <Container>
-      {!value && (
+      {user.status !== UserStatus.Logged && <div>Пожалуйста, авторизуйтесь</div>}
+      {user.status === UserStatus.Logged && !value && (
         <>
           <Heading textAlign="center" mt={5} mb={10}>
             Разместите объявление
@@ -71,59 +74,59 @@ export default function PostAdvertPage(): JSX.Element {
           <Form encType="multipart/form-data" onSubmit={submitHandler}>
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.title}</FormLabel>
-              <Input name="title" type="text" />
+              <Input name="title" type="text" required/>
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.body}</FormLabel>
-              <Input as="textarea" rows={3} resize="none" maxLength={100} name="body" type="text" />
+              <Input maxLength={100} name="body" type="text" required/>
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel whiteSpace="nowrap" width="">
                 {formObject.price}, руб
               </FormLabel>
-              <Input name="price" type="number" />
+              <Input name="price" type="number" required/>
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.floor}</FormLabel>
-              <Input name="floor" type="text" />
+              <Input name="floor" type="text" required/>
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel whiteSpace="nowrap">{formObject.square}, кв.м.</FormLabel>
-              <Input name="square" type="text" />
+              <Input name="square" type="text" required/>
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel whiteSpace="nowrap">{formObject.rooms}</FormLabel>
-              <Input name="rooms" type="text" />
+              <Input name="rooms" type="text" required />
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.city}</FormLabel>
-              <Input name="city" type="text" />
+              <Input name="city" type="text" required />
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.district}</FormLabel>
-              <Input name="district" type="text" />
+              <Input name="district" type="text" required />
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.address}</FormLabel>
-              <Input name="address" type="text" />
+              <Input name="address" type="text" required />
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.metro}</FormLabel>
-              <Input name="metro" type="text" />
+              <Input name="metro" type="text" required />
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>Выберите фото</FormLabel>
-              <Input name="files" type="file" multiple />
+              <Input name="files" type="file" multiple required />
             </FormControl>
 
             <Box display="flex" justifyContent="center">
@@ -132,8 +135,12 @@ export default function PostAdvertPage(): JSX.Element {
           </Form>
         </>
       )}
-      {value === 'success' && <div>Объявление опубликовано</div>}
-      {value === 'error' && <div>Что-то пошло не так. Повторите позже</div>}
+      {user.status === UserStatus.Logged && value === 'success' && (
+        <div>Объявление опубликовано</div>
+      )}
+      {user.status === UserStatus.Logged && value === 'error' && (
+        <div>Что-то пошло не так. Повторите позже</div>
+      )}
     </Container>
   );
 }

@@ -35,7 +35,7 @@ class AdvertController {
         return res.status(400).json({ message: 'File not found' });
       }
 
-      await fs.mkdir(`./public/images/advert-${newAdvert.id}`);
+      await fs.mkdir(`./public/images/adverts/advert-${newAdvert.id}`);
       req.files.forEach(async (file, i) => {
         const name = `advert${newAdvert.id}-${i}.webp`;
         const outputBuffer = await sharp(file.buffer).webp().toBuffer();
@@ -100,7 +100,7 @@ class AdvertController {
 
     try {
       const likedAdverts = await this.service.likedAdverts(id);
-      console.log(JSON.parse(JSON.stringify(likedAdverts)));
+      // console.log(JSON.parse(JSON.stringify(likedAdverts)));
 
       res.status(200).json(likedAdverts);
     } catch (error) {

@@ -46,23 +46,27 @@ class LikeService {
 
       return likeWithProfile;
     } else {
-      return ;
+      return;
     }
   }
 
   async deleteLike(advertId, userId) {
+    console.log({ advertId, userId });
     const like = await this.like.findOne({
       where: {
         advertId,
         userId,
       },
     });
-    if (like) {
-      await this.like.destroy({ where: { id: like.id } });
-      return like;
-    } else {
-      return ;
-    }
+    // if (like) {
+    //   await this.like.destroy();
+    //   return like;
+    // } else {
+    //   return ;
+    // }
+    console.log({ like });
+    await this.like.destroy({ where: { advertId, userId } });
+    return like || {};
   }
 }
 

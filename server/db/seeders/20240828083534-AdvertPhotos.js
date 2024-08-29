@@ -1,22 +1,33 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 
-const likes = [];
+const photos = [];
 
 for (let i = 1; i < 16; i++) {
-  for (let j = 0; j < 3; j++) {
-    likes.push({
-      photo: `/images/adverts/advert-1/advert1-${j}.webp`,
-      advertId: i,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+  const dirPath = path.resolve(__dirname, `../../public/images/adverts/advert-${i}`);
+  
+  if (fs.existsSync(dirPath)) {
+    const dir = fs.readdirSync(dirPath);
+
+    for (let j = 0; j < dir.length; j++) {
+      photos.push({
+        photo: `/images/adverts/advert-${i}/${dir[j]}`,
+        advertId: i,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+  } else {
+    console.error(`Directory ${dirPath} does not exist`);
   }
 }
+
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('AdvertPhotos', likes, {});
+    await queryInterface.bulkInsert('AdvertPhotos', photos, {});
 
     /**
      * Add seed commands here.

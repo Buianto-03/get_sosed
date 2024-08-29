@@ -5,7 +5,6 @@ import {
   Center,
   FormControl,
   FormLabel,
-  FormHelperText,
   Input,
   Stack,
   Heading,
@@ -27,24 +26,35 @@ export default function SignUpPage(): JSX.Element {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    const formData = Object.fromEntries(new FormData(e.currentTarget)) as SignUpSchemaT;
+    // const formData = Object.fromEntries(new FormData(e.currentTarget)) as SignUpSchemaT;
 
-    // Валидация пароля
-    const { password } = formData;
+    // // Валидация пароля
+    // const { password } = formData;
+
+    const formData = new FormData(e.currentTarget);
+    const password = formData.get('password') as string;
+    formData.append('gender', gender.toString())
+
     if (password.length < 9 || !/\d/.test(password)) {
       setErrors({
         confirmPassword: 'Пароль должен быть не менее 9 символов и содержать хотя бы одну цифру',
       });
       return;
     }
-
-    // Если ошибок нет, отправляем данные
     setErrors({});
-    void dispatch(signupThunk({...formData, gender: gender.toString()}));
+    
+    void dispatch(signupThunk(formData));
 
-    e.currentTarget.reset();
-    console.log('Форма отправлена');
-    navigate('/account');
+
+
+    return;
+    // Если ошибок нет, отправляем данные
+    // setErrors({});
+    // void dispatch(signupThunk({ ...formData, gender: gender.toString() }));
+
+    // e.currentTarget.reset();
+    // console.log('Форма отправлена');
+    // navigate('/home');
   };
 
   return (
@@ -62,7 +72,6 @@ export default function SignUpPage(): JSX.Element {
             <FormControl id="email">
               <FormLabel>Email</FormLabel>
               <Input name="email" type="email" placeholder="Введите ваш email" />
-              <FormHelperText>Мы никогда не делимся вашей почтой.</FormHelperText>
             </FormControl>
             <FormControl id="password">
               <FormLabel>Пароль</FormLabel>
@@ -84,6 +93,10 @@ export default function SignUpPage(): JSX.Element {
                 </Stack>
               </RadioGroup>
             </FormControl>
+            <FormControl id="photo">
+              <FormLabel>Выберите фото</FormLabel>
+              <Input name="file" type="file" />
+            </FormControl>
             <Button
               type="submit"
               bg="#00CEC9"
@@ -92,10 +105,10 @@ export default function SignUpPage(): JSX.Element {
               mt={4}
               _hover={{ bg: '#00B5B3' }}
             >
-              Войти
+              Зарегистрироваться
             </Button>
             <Text textAlign="center">
-              Уже есть аккаунта?{' '}
+              Уже есть аккаунт?{' '}
               <Button onClick={() => navigate('/signin')} variant="link" color="#00CEC9">
                 Войти
               </Button>

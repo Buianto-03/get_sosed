@@ -8,7 +8,7 @@ import { loadCards, setFilters } from '../../../redux/slices/adverts/advertsSlic
 import type { FilterType } from '../../../types/advert';
 
 export default function AdvertList(): JSX.Element {
-  const { adverts, visitableCards, filters, pickedTags } = useAppSelector((state) => state.advert);
+  const { adverts, visitableCards, filters } = useAppSelector((state) => state.advert);
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,11 +52,10 @@ export default function AdvertList(): JSX.Element {
     searchParams.set('category', filters.category);
     searchParams.set('district', filters.district);
     searchParams.set('metro', filters.metro);
-    searchParams.set('tags', pickedTags.map(t => t.name).join(','));
     setSearchParams(searchParams);
 
     // navigate(`${location.pathname}?${searchParams.toString()}`);
-  }, [filters, dispatch, pickedTags]);
+  }, [filters, dispatch]);
 
   const handleLoadMore = (): void => {
     dispatch(loadCards());

@@ -8,12 +8,19 @@ export const userPorfileSchema = z.object({
   phoneNumber: z.string().nullable(),
 });
 
+export const userPhotoSchema = z.object({
+  id: z.number(),
+  photo: z.string(),
+  userId: z.number(),
+});
+
 export const userSchema = z.object({
   name: z.string(),
   email: z.string(),
   id: z.number(),
   roleId: z.number(),
   UserProfile: userPorfileSchema.optional(),
+  UserPhotos: userPhotoSchema.array().optional(),
 });
 
 export type BackendUserT = z.infer<typeof userSchema>;

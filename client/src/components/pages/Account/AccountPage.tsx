@@ -37,11 +37,11 @@ export default function AccountPage(): JSX.Element {
   const [editProfile, setEditProfile] = useState({
     age: '',
     phoneNumber: '',
-    photo: '',
+    // photo: '',
     about: '',
   });
   const [errors, setErrors] = useState({
-    photo: '',
+    // photo: '',
     age: '',
     phoneNumber: '',
     about: '',
@@ -101,12 +101,12 @@ export default function AccountPage(): JSX.Element {
     }));
 
     // Simple validation checks
-    if (name === 'photo') {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        photo: '',
-      }));
-    }
+    // if (name === 'photo') {
+    //   setErrors((prevErrors) => ({
+    //     ...prevErrors,
+    //     photo: '',
+    //   }));
+    // }
 
     if (name === 'age') {
       const ageValue = parseInt(value, 10);
@@ -179,7 +179,7 @@ export default function AccountPage(): JSX.Element {
         <GridItem
           rowSpan={{ base: 1, md: 2 }}
           colSpan={{ base: 1, md: 1 }}
-          bg="#cacae2"
+          bg="#CACAE2"
           p={4}
           borderRadius="md"
           boxShadow="lg"
@@ -188,14 +188,44 @@ export default function AccountPage(): JSX.Element {
             {isEditing ? (
               <Box as="form" onSubmit={handleSaveProfile}>
                 <FormControl isInvalid={!!errors.photo}>
-                  <Input
+                  <Image
+                    borderRadius="full"
+                    mb={4}
+                    maxW={{ base: '70px', md: '150px' }}
+                    maxH={{ base: '100px', md: '150px' }}
+                    w="100%"
+                    h="auto"
+                    src={
+                      user.status === UserStatus.Logged &&
+                      user.UserProfile?.photo
+                        ? user.UserProfile.photo
+                        : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
+                    }
+                    alt="User Avatar"
+                  />
+                  <label
+                    htmlFor="photo"
+                    style={{
+                      border: '1px solid #ccc',
+                      display: 'inline-block',
+                      padding: '6px 12px',
+                      cursor: 'pointer',
+                      background: 'white',
+                      marginBottom: '0.5rem',
+                      width: '100%',
+                      height: '2.5rem',
+                      borderRadius: '0.375rem',
+                    }}
+                  >
+                    Выберите фото
+                  </label>
+                  <input
+                    id="photo"
                     name="photo"
-                    value={editProfile.photo}
-                    onChange={handleEditProfileChange}
-                    mb={2}
-                    type="url"
-                    bg="white"
-                    placeholder="Photo URL"
+                    type="file"
+                    style={{
+                      display: 'none',
+                    }}
                   />
                   <FormErrorMessage>{errors.photo}</FormErrorMessage>
                 </FormControl>
@@ -207,7 +237,7 @@ export default function AccountPage(): JSX.Element {
                     onChange={handleEditProfileChange}
                     mb={2}
                     bg="white"
-                    placeholder="Age"
+                    placeholder="Возраст"
                   />
                   <FormErrorMessage>{errors.age}</FormErrorMessage>
                 </FormControl>
@@ -219,7 +249,7 @@ export default function AccountPage(): JSX.Element {
                     mb={2}
                     type="text"
                     bg="white"
-                    placeholder="About"
+                    placeholder="О себе"
                   />
                   <FormErrorMessage>{errors.about}</FormErrorMessage>
                 </FormControl>
@@ -231,15 +261,15 @@ export default function AccountPage(): JSX.Element {
                     mb={2}
                     type="tel"
                     bg="white"
-                    placeholder="Phone Number"
+                    placeholder="Номер телефона"
                   />
                   <FormErrorMessage>{errors.phoneNumber}</FormErrorMessage>
                 </FormControl>
                 <Button type="submit" colorScheme="teal" mb={2}>
-                  Save
+                  Сохранить
                 </Button>
-                <Button onClick={() => setIsEditing(false)} colorScheme="gray" mb={2} ml={2}>
-                  Cancel
+                <Button onClick={() => setIsEditing(false)} colorScheme="gray" mb={2}>
+                  Отменить
                 </Button>
               </Box>
             ) : (
@@ -252,8 +282,8 @@ export default function AccountPage(): JSX.Element {
                   w="100%"
                   h="auto"
                   src={
-                    user.UserProfile?.photo
-                      ? user.UserProfile?.photo
+                    user.status === UserStatus.Logged && user.UserProfile?.photo
+                      ? user.UserProfile.photo
                       : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
                   }
                   alt="User Avatar"
@@ -268,28 +298,28 @@ export default function AccountPage(): JSX.Element {
                   {user.UserProfile?.about}
                 </Text>
                 <Text fontSize="sm" color="whiteAlpha.700">
-                  Age: {user.UserProfile?.age}
+                  Возраст: {user.UserProfile?.age}
                 </Text>
                 <Text fontSize="sm" color="whiteAlpha.700">
-                  Gender: {user.UserProfile?.gender}
+                  Пол: {user.UserProfile?.gender}
                 </Text>
-                <Button mt={4} onClick={() => setIsEditing(true)} colorScheme="teal">
-                  Edit Profile
+                <Button mt={4} onClick={() => setIsEditing(true)} colorScheme="gray">
+                  Изменить профиль
                 </Button>
               </Box>
             )}
-            <Button mt={4} colorScheme="teal">
+            <Button mt={4} colorScheme="gray" onClick={() => navigate('/post')}>
               Разместить объявление
             </Button>
           </VStack>
         </GridItem>
-        <GridItem colSpan={{ base: 1, md: 2 }} bg="#cacae2" borderRadius="md" boxShadow="lg">
+        <GridItem colSpan={{ base: 1, md: 2 }} bg="#F3F3FF" borderRadius="md" boxShadow="lg">
           <ChatList receivers={receivers} online={online} />
         </GridItem>
         <GridItem
           rowSpan={{ base: 1, md: 2 }}
           colSpan={{ base: 1, md: 2 }}
-          bg="#cacae2"
+          bg="#F3F3FF"
           borderRadius="md"
           boxShadow="lg"
           display="flex"
@@ -297,44 +327,48 @@ export default function AccountPage(): JSX.Element {
           overflowY="auto" // Enable vertical scrolling
         >
           <Text fontSize="xl" fontWeight="bold" mb={4}>
-            Liked Adverts
+            Избранные объявления
           </Text>
           {likedAdverts.length === 0 ? (
-            <Text>No liked adverts found.</Text>
+            <Text>Нет избранных объявлений.</Text>
           ) : (
-            likedAdverts.map((advert) => (
-              <Box p={2} key={advert.id}>
+            likedAdverts.map((like) => (
+              <Box p={2} key={like.id}>
                 <Box
                   mb={4}
                   p={4}
-                  onClick={() => navigate(`/advert/${advert.id}`)}
+                  onClick={() => navigate(`/advert/${like.advertId}`)}
                   cursor="pointer"
                   bg="white"
                   borderRadius="md"
                   boxShadow="md"
                 >
                   <Text fontSize="lg" fontWeight="bold">
-                    {advert.Advert.title}
+                    {like.Advert.title}
                   </Text>
-                  <Text>{advert.Advert.body}</Text>
-                  <Text color="gray.500">Price: {advert.Advert.price}₽</Text>
+                  <Text>{like.Advert.body}</Text>
+                  <Text color="gray.500">Price: {like.Advert.price}₽</Text>
                   <Text color="gray.500" marginBottom={2}>
-                    Location: {advert.Advert.Location.city}, {advert.Advert.Location.district},{' '}
-                    {advert.Advert.Location.metro}, {advert.Advert.Location.address}
+                    Расположение: {like.Advert.Location.city}, {like.Advert.Location.district},{' '}
+                    {like.Advert.Location.metro}, {like.Advert.Location.address}
                   </Text>
+                  <Icon
+                    as={FaThumbsUp}
+                    boxSize={6}
+                    color='#CACAE2'
+                    cursor="pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (user.status === UserStatus.Logged) {
+                        void dispatch(deleteLikeThunk(like.advertId));
+                        console.log(like.id);
+
+                        void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
+                      }
+                      return false;
+                    }}
+                  />
                 </Box>
-                <Icon
-                  as={FaThumbsUp}
-                  boxSize={6}
-                  cursor="pointer"
-                  onClick={(e) => {
-                    if (user.status === UserStatus.Logged) {
-                      void dispatch(deleteLikeThunk(advert.id));
-                      void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
-                    }
-                    return false;
-                  }}
-                />
               </Box>
             ))
           )}
