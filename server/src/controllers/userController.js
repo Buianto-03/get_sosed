@@ -1,5 +1,7 @@
 const userService = require('../service/userService');
 const verifyAccessToken = require('../middlewares/verifyAccessToken');
+const fs = require('fs/promises');
+const sharp = require('sharp');
 
 class UserController {
   constructor(service) {
@@ -14,7 +16,7 @@ class UserController {
     // const { id } = res.locals.user;
     const { userId } = req.params;
     // console.log(req.params);
-    
+
     const receiversList = await this.service.getReceiverUsers(userId);
     res.json(receiversList);
   };
@@ -40,6 +42,19 @@ class UserController {
 
   patchUser = async (req, res) => {
     const { id } = res.locals.user;
+    console.log(req.file);
+    const files = await fs.readdir(`./public/images/users/user-${id}`);
+
+    if (files.length) {
+      await fs.rm(`./public/images/users/user-${id}/${files[0]}`);
+    }
+    const fileName = `user-${id}.webp`;
+    const outputBuffer = await sharp(req.file.buffer).webp().toBuffer();
+    await fs.writeFile(
+      `./public/images/users/user-${id}/${fileName}`,
+      outputBuffer,
+    );
+
     const updatedUser = await this.service.editUser(req.body, id);
     res.json(updatedUser);
   };

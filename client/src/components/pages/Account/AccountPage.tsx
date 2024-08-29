@@ -37,11 +37,11 @@ export default function AccountPage(): JSX.Element {
   const [editProfile, setEditProfile] = useState({
     age: '',
     phoneNumber: '',
-    photo: '',
+    // photo: '',
     about: '',
   });
   const [errors, setErrors] = useState({
-    photo: '',
+    // photo: '',
     age: '',
     phoneNumber: '',
     about: '',
@@ -101,12 +101,12 @@ export default function AccountPage(): JSX.Element {
     }));
 
     // Simple validation checks
-    if (name === 'photo') {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        photo: '',
-      }));
-    }
+    // if (name === 'photo') {
+    //   setErrors((prevErrors) => ({
+    //     ...prevErrors,
+    //     photo: '',
+    //   }));
+    // }
 
     if (name === 'age') {
       const ageValue = parseInt(value, 10);
@@ -188,14 +188,44 @@ export default function AccountPage(): JSX.Element {
             {isEditing ? (
               <Box as="form" onSubmit={handleSaveProfile}>
                 <FormControl isInvalid={!!errors.photo}>
-                  <Input
+                  <Image
+                    borderRadius="full"
+                    mb={4}
+                    maxW={{ base: '70px', md: '150px' }}
+                    maxH={{ base: '100px', md: '150px' }}
+                    w="100%"
+                    h="auto"
+                    src={
+                      user.status === UserStatus.Logged &&
+                      user.UserProfile?.photo
+                        ? user.UserProfile.photo
+                        : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
+                    }
+                    alt="User Avatar"
+                  />
+                  <label
+                    htmlFor="photo"
+                    style={{
+                      border: '1px solid #ccc',
+                      display: 'inline-block',
+                      padding: '6px 12px',
+                      cursor: 'pointer',
+                      background: 'white',
+                      marginBottom: '0.5rem',
+                      width: '100%',
+                      height: '2.5rem',
+                      borderRadius: '0.375rem',
+                    }}
+                  >
+                    Выберите фото
+                  </label>
+                  <input
+                    id="photo"
                     name="photo"
-                    value={editProfile.photo}
-                    onChange={handleEditProfileChange}
-                    mb={2}
-                    type="url"
-                    bg="white"
-                    placeholder="Ссылка на фото"
+                    type="file"
+                    style={{
+                      display: 'none',
+                    }}
                   />
                   <FormErrorMessage>{errors.photo}</FormErrorMessage>
                 </FormControl>
@@ -252,8 +282,8 @@ export default function AccountPage(): JSX.Element {
                   w="100%"
                   h="auto"
                   src={
-                    user.UserProfile?.photo
-                      ? user.UserProfile?.photo
+                    user.status === UserStatus.Logged && user.UserProfile?.photo
+                      ? user.UserProfile.photo
                       : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
                   }
                   alt="User Avatar"

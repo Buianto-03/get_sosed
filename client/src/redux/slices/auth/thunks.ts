@@ -6,7 +6,7 @@ export const signinThunk = createAsyncThunk('auth/signinThunk', (formData: Login
   authService.submitLoginForm(formData),
 );
 
-export const signupThunk = createAsyncThunk('auth/signupThunk', (formData: SignUpSchemaT) =>
+export const signupThunk = createAsyncThunk('auth/signupThunk', (formData: FormData) =>
   authService.submitSignUpForm(formData),
 );
 

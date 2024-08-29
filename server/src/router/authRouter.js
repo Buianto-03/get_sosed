@@ -1,8 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { User, UserProfile } = require('../../db/models');
+const { User, UserProfile, UserPhoto } = require('../../db/models');
 const generateTokens = require('../utils/generateTokens');
 const cookiesConfig = require('../configs/cookiesConfig');
+const upload = require('../middlewares/getImage');
+const fs = require('fs/promises');
+const sharp = require('sharp');
 
 const authRouter = express.Router();
 
@@ -29,7 +32,9 @@ authRouter.post('/login', async (req, res) => {
     .json({ accessToken, user });
 });
 
-authRouter.post('/signup', async (req, res) => {
+authRouter.post('/signup', upload.single('file'), async (req, res) => {
+  console.log(req.body, req.file);
+
   const { email, password, name } = req.body;
   const { gender } = req.body;
 
@@ -46,10 +51,18 @@ authRouter.post('/signup', async (req, res) => {
   delete user.hashpass;
 
   console.log(user);
+  await fs.mkdir(`./public/images/users/user-${user.id}`);
+  const fileName = `user-${user.id}.webp`;
+  const outputBuffer = await sharp(req.file.buffer).webp().toBuffer();
+  await fs.writeFile(
+    `./public/images/users/user-${user.id}/${fileName}`,
+    outputBuffer,
+  );
 
   const userProfile = await UserProfile.create({
     userId: user.id,
     gender,
+    photo: `/images/users/user-${user.id}/${fileName}`,
   });
 
   const userWithProfile = await User.findByPk(user.id, {
@@ -58,8 +71,6 @@ authRouter.post('/signup', async (req, res) => {
 
   const correctUser = JSON.parse(JSON.stringify(userWithProfile));
   delete correctUser.hashpass;
-
-  // console.log(correctUser);
 
   const { accessToken, refreshToken } = generateTokens({ user: correctUser });
 

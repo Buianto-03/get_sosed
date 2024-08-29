@@ -21,7 +21,7 @@ class AuthService {
     }
   }
 
-  async submitSignUpForm(formData: SignUpSchemaT): Promise<AuthSchemaT> {
+  async submitSignUpForm(formData: FormData): Promise<AuthSchemaT> {
     try {
       const response = await this.client.post('/auth/signup', formData);
       return authSchema.parse(response.data);
