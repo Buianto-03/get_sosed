@@ -12,7 +12,6 @@ function App(): JSX.Element {
   useEffect(() => {
     void dispatch(checkAuthThunk());
     void dispatch(getAdvertsThunk());
-    
   }, []);
 
   return <RouterProvider router={router} />;

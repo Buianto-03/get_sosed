@@ -64,7 +64,7 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
           path: '/home',
           element: (
             // <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
-              <MainPage />
+            <MainPage />
             // </ProtectedRoute>
           ),
           //  element: <MainPage />
@@ -77,10 +77,12 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         {
           path: '/post',
           element: (
-            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
-              <PostAdvertPage />
-            </ProtectedRoute>
+            // (
+            //   <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+            <PostAdvertPage />
           ),
+          //   </ProtectedRoute>
+          // ),
           // element: <PostAdvertPage />,
         },
       ],

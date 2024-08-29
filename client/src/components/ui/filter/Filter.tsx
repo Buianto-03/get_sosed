@@ -145,7 +145,7 @@ export default function Filter(): JSX.Element {
                         // aria-label={['min', 'max']}
                         value={priceRange}
                         min={0}
-                        max={400000}
+                        max={300000}
                         step={1000}
                         onChange={(val) => setPriceRange(val as [number, number])}
                       >
