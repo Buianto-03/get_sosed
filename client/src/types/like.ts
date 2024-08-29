@@ -16,12 +16,14 @@ export const likeSchema = z.object({
       }),
     })
     .optional(),
+  Advert: advertSchema.optional()
 });
 
 export type LikeType = z.infer<typeof likeSchema>;
 
 export type LikeSliceTtype = {
   likes: LikeType[];
+  selectedLike: LikeType | null;
   // isLiked: boolean;
 };
 

@@ -12,6 +12,7 @@ import {
   Icon,
   FormControl,
   FormErrorMessage,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FaThumbsUp } from 'react-icons/fa';
@@ -25,12 +26,30 @@ import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
 import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 import { getLikedAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
 import { deleteLikeThunk } from '../../../redux/slices/likes/likesThunk';
+import DeleteModalConfirm from '../../ui/Modal/ConfirmDeleteModal';
+import { setSelectedLike } from '../../../redux/slices/likes/likesSlice';
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
   const likedAdverts = useAppSelector((store) => store.advert?.liked);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const { onOpen, onClose } = useDisclosure({
+    isOpen,
+    onOpen: () => setIsOpen(true),
+    onClose: () => {
+      setIsOpen(false);
+      if (user.status === UserStatus.Logged) {
+        void dispatch(deleteLikeThunk(like.advertId));
+        console.log(like.id);
+
+        void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
+      }
+      return false;
+    },
+  });
   const [online, setOnline] = useState<BackendUserT[]>([]);
   const [messages, setMessages] = useState<ChatType[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -93,7 +112,7 @@ export default function AccountPage(): JSX.Element {
 
   const receivers = useAppSelector((store) => store.chatList.chatList);
 
-  const handleEditProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditProfileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setEditProfile((prevProfile) => ({
       ...prevProfile,
@@ -155,12 +174,11 @@ export default function AccountPage(): JSX.Element {
 
   const handleSaveProfile = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    if (!errors.photo && !errors.age && !errors.phoneNumber && !errors.about) {
-      const formData = Object.fromEntries(new FormData(e.currentTarget));
+    if (!errors.age && !errors.phoneNumber && !errors.about) {
+      const formData = new FormData(e.currentTarget);
       if (user.status === UserStatus.Logged) {
-        void dispatch(editUserProfileThunk({ formData, id: user.id })).then(() =>
-          dispatch(checkAuthThunk()),
-        );
+        formData.append('id', user.id);
+        void dispatch(editUserProfileThunk(formData)).then(() => dispatch(checkAuthThunk()));
         console.log('Profile updated:', editProfile);
         setIsEditing(false);
       }
@@ -196,14 +214,13 @@ export default function AccountPage(): JSX.Element {
                     w="100%"
                     h="auto"
                     src={
-                      user.status === UserStatus.Logged &&
-                      user.UserProfile?.photo
+                      user.status === UserStatus.Logged && user.UserProfile?.photo
                         ? user.UserProfile.photo
                         : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
                     }
                     alt="User Avatar"
                   />
-                  <label
+                  {/* <label
                     htmlFor="photo"
                     style={{
                       border: '1px solid #ccc',
@@ -218,14 +235,14 @@ export default function AccountPage(): JSX.Element {
                     }}
                   >
                     Выберите фото
-                  </label>
+                  </label> */}
                   <input
                     id="photo"
                     name="photo"
                     type="file"
-                    style={{
-                      display: 'none',
-                    }}
+                    // style={{
+                    //   display: 'none',
+                    // }}
                   />
                   <FormErrorMessage>{errors.photo}</FormErrorMessage>
                 </FormControl>
@@ -355,17 +372,12 @@ export default function AccountPage(): JSX.Element {
                   <Icon
                     as={FaThumbsUp}
                     boxSize={6}
-                    color='#CACAE2'
+                    color="#CACAE2"
                     cursor="pointer"
                     onClick={(e) => {
+                      void dispatch(setSelectedLike(like))
                       e.stopPropagation();
-                      if (user.status === UserStatus.Logged) {
-                        void dispatch(deleteLikeThunk(like.advertId));
-                        console.log(like.id);
-
-                        void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
-                      }
-                      return false;
+                      onOpen();
                     }}
                   />
                 </Box>
@@ -374,6 +386,7 @@ export default function AccountPage(): JSX.Element {
           )}
         </GridItem>
       </Grid>
+      <DeleteModalConfirm isOpen={isOpen} onClose={onClose} onOpen={onOpen} />;
     </Container>
   );
 }

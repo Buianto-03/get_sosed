@@ -109,7 +109,7 @@ export default function SignUpPage(): JSX.Element {
             </Button>
             <Text textAlign="center">
               Уже есть аккаунт?{' '}
-              <Button onClick={() => navigate('/signin')} variant="link" color="#00CEC9">
+              <Button onClick={() => navigate('/home')} variant="link" color="#00CEC9">
                 Войти
               </Button>
             </Text>
