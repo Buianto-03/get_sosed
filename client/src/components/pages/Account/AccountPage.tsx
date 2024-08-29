@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FaThumbsUp } from 'react-icons/fa';
+import type { Action } from '@reduxjs/toolkit';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ChatList from '../../ui/chat/ChatList';
 import { UserStatus, type BackendUserT } from '../../../types/auth';
@@ -64,7 +65,7 @@ export default function AccountPage(): JSX.Element {
       soket.onerror = (err) => console.log('ERROR', err);
 
       soket.onmessage = (event: MessageEvent) => {
-        const action: Action = JSON.parse(event.data);
+        const action: Action = JSON.parse(event.data as string) as Action;
         const { type, payload } = action;
 
         switch (type) {

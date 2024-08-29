@@ -7,16 +7,18 @@ const {
   User,
   Like,
   AdvertPhoto,
+  AdvertTag,
 } = require('../../db/models');
 
 class AdvertService {
-  constructor(advert, location, tags, user, like, advertPhoto) {
+  constructor(advert, location, tags, user, like, advertPhoto, advertTag) {
     this.advert = advert;
     this.location = location;
     this.tags = tags;
     this.user = user;
     this.like = like;
     this.advertPhoto = advertPhoto;
+    this.advertTag = advertTag;
   }
 
   async addAdvert(formData) {
@@ -95,7 +97,7 @@ class AdvertService {
       ],
     });
     // console.log(likedAdverts);
-    
+
     return likedAdverts;
   }
 
@@ -104,24 +106,10 @@ class AdvertService {
       photo: photo,
       advertId: adverId,
     });
-    return newAdvertPhotos
+    return newAdvertPhotos;
   }
 
-  // async deletePost(id) {
-  //   try {
-  //     await this.advert.destroy({ where: { id } });
-  //     return true;
-  //   } catch (error) {
-  //     console.log(error);
-  //     return false;
-  //   }
-  // }
-  //   async editPost(newData, id) {
-  //     const post = await this.model.findByPk(id);
-  //     await post.update(newData);
-  //     const updatedPost = await this.model.findByPk(id, { include: 'User' });
-  //     return updatedPost;
-  //   }
+
   async getFilteredAdverts(filters) {
     const whereClause = {};
     const locationClause = {};
@@ -149,7 +137,10 @@ class AdvertService {
     // }
 
     try {
+      console.log(whereClause);
+
       const adverts = await this.advert.findAll({
+        // const adverts = await this.advertTag.findAll({
         where: whereClause,
         include: [
           {
@@ -158,13 +149,18 @@ class AdvertService {
             where: locationClause, // Фильтрация по местоположению
           },
           'User',
-          // {
-          //   model: this.tags,
-          //   as: 'Tags',
-          // },
-          
-        ],// подключить таблицу с тегами
+          {
+            model: this.tags, // Модель Tag
+            where: {
+              [Op.or]: filters.tags.map(({ id }) => ({ id })),
+            },
+            as: 'tags',
+            required: true,
+          },
+
+        ], // подключить таблицу с тегами
       });
+      console.log(JSON.stringify(adverts, null, 2));
       return adverts;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);
@@ -256,6 +252,7 @@ const advertService = new AdvertService(
   User,
   Like,
   AdvertPhoto,
+  AdvertTag,
 );
 
 module.exports = advertService;
