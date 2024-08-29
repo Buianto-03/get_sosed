@@ -128,7 +128,9 @@ class AdvertService {
     if (filters.rooms) {
       whereClause.rooms = Number(filters.rooms);
     }
-    console.log(filters.tags.map((el) => el.id));
+    console.log(filters);
+    
+    // console.log(filters.tags.map((el) => el.id));
 
     // if (filters.tags) {
     //   whereClause.tags = {
@@ -137,8 +139,6 @@ class AdvertService {
     // }
 
     try {
-      console.log(whereClause);
-
       const adverts = await this.advert.findAll({
         // const adverts = await this.advertTag.findAll({
         where: whereClause,
@@ -160,7 +160,7 @@ class AdvertService {
 
         ], // подключить таблицу с тегами
       });
-      console.log(JSON.stringify(adverts, null, 2));
+      console.log('adverts----', JSON.stringify(adverts));
       return adverts;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);

@@ -1,12 +1,14 @@
 import { Box, Button, Container, FormControl, FormLabel, Heading, Input } from '@chakra-ui/react';
 import React from 'react';
 import { Form, useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../../redux/hooks';
+import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { postAdvertThunk } from '../../../redux/slices/adverts/advertsThunk';
 import axiosInstance from '../../../services/client';
 import type { ApiResponse } from '../../../types/postAdvertInterfaces';
+import { UserStatus } from '../../../types/auth';
 
 export default function PostAdvertPage(): JSX.Element {
+  const user = useAppSelector((store) => store.auth.user);
   const [value, setValue] = React.useState<string>('');
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -63,7 +65,8 @@ export default function PostAdvertPage(): JSX.Element {
 
   return (
     <Container>
-      {!value && (
+      {user.status !== UserStatus.Logged && <div>Пожалуйста, авторизуйтесь</div>}
+      {user.status === UserStatus.Logged && !value && (
         <>
           <Heading textAlign="center" mt={5} mb={10}>
             Разместите объявление
@@ -76,7 +79,7 @@ export default function PostAdvertPage(): JSX.Element {
 
             <FormControl display="flex" alignItems="center" pb="5">
               <FormLabel>{formObject.body}</FormLabel>
-              <Input as="textarea" rows={3} resize="none" maxLength={100} name="body" type="text" />
+              <Input maxLength={100} name="body" type="text" />
             </FormControl>
 
             <FormControl display="flex" alignItems="center" pb="5">
@@ -132,8 +135,12 @@ export default function PostAdvertPage(): JSX.Element {
           </Form>
         </>
       )}
-      {value === 'success' && <div>Объявление опубликовано</div>}
-      {value === 'error' && <div>Что-то пошло не так. Повторите позже</div>}
+      {user.status === UserStatus.Logged && value === 'success' && (
+        <div>Объявление опубликовано</div>
+      )}
+      {user.status === UserStatus.Logged && value === 'error' && (
+        <div>Что-то пошло не так. Повторите позже</div>
+      )}
     </Container>
   );
 }
