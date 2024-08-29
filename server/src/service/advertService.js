@@ -161,6 +161,10 @@ class AdvertService {
             as: 'tags',
             required: filters.tags.length > 0,
           },
+          {
+            model: this.advertPhoto,
+            as: 'AdvertPhotos',
+          }
         ], // подключить таблицу с тегами
       });
       // console.log(JSON.stringify(adverts, null, 2));

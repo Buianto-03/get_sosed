@@ -39,9 +39,12 @@ import { getTagsBySearchThunk } from '../../../redux/slices/adverts/advertsThunk
 import type { TagType } from '../../../types/advert';
 
 export default function Filter(): JSX.Element {
-  const initFilters = useAppSelector(store => store.advert.filters)
+  const initFilters = useAppSelector((store) => store.advert.filters);
   const [inputValue, setInputValue] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([initFilters.priceFrom, initFilters.priceTo]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    initFilters.priceFrom,
+    initFilters.priceTo,
+  ]);
   // const [rooms, setRooms] = useState<number>(1); // Количество комнат
   const [city, setCity] = useState<string>(initFilters.city);
   const [district, setDistrict] = useState<string>(initFilters.district);
@@ -65,7 +68,7 @@ export default function Filter(): JSX.Element {
   );
 
   useEffect(() => {
-    if(inputValue === '') return;
+    if (inputValue === '') return;
     debouncedSearch(inputValue);
   }, [inputValue, debouncedSearch]);
 
@@ -237,8 +240,8 @@ export default function Filter(): JSX.Element {
             borderRadius="md"
           />
           <InputRightElement>
-            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md">
-              <SearchIcon />
+            <Button onClick={handleFilter} height="100%" colorScheme="blue" borderRadius="md">
+              <SearchIcon height="100%" />
             </Button>
           </InputRightElement>
         </InputGroup>

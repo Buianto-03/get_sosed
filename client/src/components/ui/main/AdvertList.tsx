@@ -66,13 +66,13 @@ export default function AdvertList(): JSX.Element {
       <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center">
         Фильтр
       </Text>
-      <Flex direction="row" wrap="wrap" gap={4} justifyContent="center">
+      <Flex direction="row" wrap="wrap" gap={4} justifyContent="center" mb={8}>
         {adverts.slice(0, visitableCards).map((advert) => (
           <AdvertCard key={advert.id} advert={advert} />
         ))}
       </Flex>
       {visitableCards < adverts.length && (
-        <Flex justifyContent="center" mt={4}>
+        <Flex justifyContent="center" mt={4} mb={4}>
           <Button onClick={handleLoadMore} colorScheme="blue">
             Посмотреть еще
           </Button>
