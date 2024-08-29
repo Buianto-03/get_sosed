@@ -29,13 +29,13 @@ export default function ChatList({ online, receivers }: ChatListProps): JSX.Elem
         return (
           <Box
             key={`${chat.sender.id}-${chat.receiver.id}`}
-            bg="#cacae2"
+            bg="#F3F3FF"
             p={2}
-            color="white"
+            color="black"
             borderRadius="10px"
             mb={1}
             cursor="pointer"
-            _hover={{ bg: '#b0b0d6' }}
+            _hover={{ bg: '#b0b0d6', color: 'white' }}
             _active={{ bg: '#9898c2' }}
             onClick={() => handleUserClick(receiver.id)}
           >

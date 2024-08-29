@@ -27,10 +27,15 @@ export default function Navbar(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
   const dispatch = useAppDispatch();
 
-  if (user.status === UserStatus.Pending || user.status === UserStatus.Guest) console.log('no user')
+  if (user.status === UserStatus.Pending || user.status === UserStatus.Guest)
+    console.log('no user');
+
+  const handleCloseMenu = () => {
+    onClose(); // Закрытие меню
+  };
 
   return (
-    <Box bg="#cacae2" px={4}>
+    <Box bg="#F3F3FF" px={4}>
       <Flex h={16} alignItems="center" justifyContent="space-between">
         <IconButton
           size="md"
@@ -49,27 +54,36 @@ export default function Navbar(): JSX.Element {
             cursor="pointer"
             onClick={() => navigate('/')}
           >
-            <img src="/public/logo.png" alt="logo" />
+            <img src="/logo.png" alt="logo" />
           </Box>
           <HStack as="nav" spacing={4} display={{ base: 'none', md: 'flex' }}>
-            {/* {Links.map((link) => (
-              <NavLink key={link}>{link}</NavLink>
-            ))} */}
+            <Nav.Link
+              as={Link}
+              to="/"
+              style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
+            >
+              Главная
+            </Nav.Link>
+            <Nav.Link
+              style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
+              as={Link}
+              to="/home"
+            >
+              Поиск
+            </Nav.Link>
+            <Nav.Link
+              style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
+            >
+              О нас
+            </Nav.Link>
             {user.status === UserStatus.Logged ? (
-              <>
-                <Nav.Link as={Link} to="/" style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>
-                  Главная
-                </Nav.Link>
-                <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }} as={Link} to='/home'>Поиск</Nav.Link>
-                <Nav.Link style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}>О нас</Nav.Link>
-                <Nav.Link
-                  as={Link}
-                  to="/post"
-                  style={{ fontWeight: 'inherit', fontSize: '1.5rem' }}
-                >
-                  Добавить объявление
-                </Nav.Link>
-              </>
+              <Nav.Link
+                as={Link}
+                to="/post"
+                style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
+              >
+                Добавить объявление
+              </Nav.Link>
             ) : null}
           </HStack>
         </HStack>
@@ -77,7 +91,9 @@ export default function Navbar(): JSX.Element {
           <Menu>
             <MenuButton as={Button} rounded="full" variant="link" cursor="pointer" minW={0}>
               <Avatar
-                size="sm"
+                size="md"
+                border="2px"
+                borderColor=""
                 src={
                   user?.UserProfile?.photo
                     ? user?.UserProfile?.photo
@@ -88,16 +104,42 @@ export default function Navbar(): JSX.Element {
             <MenuList>
               {user.status === UserStatus.Logged ? (
                 <>
-                  <MenuItem onClick={() => navigate('/account')}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/account');
+                      onClose();
+                    }}
+                  >
                     {user.status === UserStatus.Logged ? `Аккаунт ${user.name}` : 'Гость'}
                   </MenuItem>
                   <MenuDivider />
-                  <MenuItem onClick={() => void dispatch(logoutThunk())}>Выйти</MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      dispatch(logoutThunk());
+                      onClose();
+                    }}
+                  >
+                    Выйти
+                  </MenuItem>
                 </>
               ) : (
                 <>
-                  <MenuItem onClick={() => navigate('/signin')}>Войти</MenuItem>
-                  <MenuItem onClick={() => navigate('/signup')}>Зарегистрироваться</MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/signin');
+                      onClose();
+                    }}
+                  >
+                    Войти
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/signup');
+                      onClose();
+                    }}
+                  >
+                    Зарегистрироваться
+                  </MenuItem>
                 </>
               )}
             </MenuList>
@@ -107,14 +149,14 @@ export default function Navbar(): JSX.Element {
 
       {isOpen ? (
         <Box pb={4} display={{ md: 'none' }}>
-          <Stack as="nav" spacing={4}>
-            <Nav.Link as={Link} to="/">
+          <Stack as="nav" spacing={4} onClick={handleCloseMenu}>
+            <Nav.Link as={Link} to="/" onClick={handleCloseMenu}>
               Главная
             </Nav.Link>
-            <Nav.Link as={Link} to="/home">
+            <Nav.Link as={Link} to="/home" onClick={handleCloseMenu}>
               Поиск
             </Nav.Link>
-            <Nav.Link as={Link} to="/post">
+            <Nav.Link as={Link} to="/post" onClick={handleCloseMenu}>
               Добавить объявление
             </Nav.Link>
           </Stack>
