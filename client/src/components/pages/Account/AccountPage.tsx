@@ -278,7 +278,7 @@ export default function AccountPage(): JSX.Element {
                 </Button>
               </Box>
             )}
-            <Button mt={4} colorScheme="gray">
+            <Button mt={4} colorScheme="gray" onClick={() => navigate('/post')}>
               Разместить объявление
             </Button>
           </VStack>
