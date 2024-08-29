@@ -7,9 +7,12 @@ import { userSchema } from '../types/auth';
 class UserProfileService {
   constructor(private client: AxiosInstance) {}
 
-  async editUserProfile(formData: UserProfileT): Promise<BackendUserT> {
+  async editUserProfile(formData: FormData): Promise<BackendUserT> {
     try {
-      const res = await this.client.patch<BackendUserT>(`users/${formData.id}`, formData);
+      const id = formData.get('id') as string;
+      const res = await this.client.patch<BackendUserT>(`users/${id}`, formData);
+
+      console.log(res);
       if (res.status !== 200) {
         throw new Error('Failed to edit profile');
       }

@@ -5,8 +5,8 @@ import type { BackendUserT } from '../../../types/auth';
 
 export const editUserProfileThunk = createAsyncThunk(
   'userProfile/editUserProfileThunk',
-  ({ formData, id }: { formData: UserProfileT; id: BackendUserT['id'] }) =>
-    userProfileService.editUserProfile({ ...formData, id }),
+  (formData: FormData) =>
+    userProfileService.editUserProfile(formData),
 );
 
 export const a = 3;

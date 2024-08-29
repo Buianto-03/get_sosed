@@ -21,7 +21,7 @@ export const userProfileSlice = createSlice({
       state.age = action.payload.age;
       state.about = action.payload.about;
       state.phoneNumber = action.payload.phoneNumber;
-      state.photo = action.payload.photo;
+      state.photo = action.payload.UserProfile.photo;
     });
   },
 });
