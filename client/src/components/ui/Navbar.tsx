@@ -27,6 +27,8 @@ export default function Navbar(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
   const dispatch = useAppDispatch();
 
+  if (user.status === UserStatus.Pending || user.status === UserStatus.Guest) console.log('no user')
+
   return (
     <Box bg="#cacae2" px={4}>
       <Flex h={16} alignItems="center" justifyContent="space-between">

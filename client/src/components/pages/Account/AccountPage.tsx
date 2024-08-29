@@ -51,7 +51,7 @@ export default function AccountPage(): JSX.Element {
     if (user.status === UserStatus.Logged) {
       const soket = new WebSocket('ws://localhost:3000');
       soketRef.current = soket;
-  
+
       soket.onopen = async () => {
         console.log('CONNECTED');
         try {
@@ -62,11 +62,11 @@ export default function AccountPage(): JSX.Element {
       };
       soket.onclose = () => console.log('DISCONNECTED');
       soket.onerror = (err) => console.log('ERROR', err);
-  
+
       soket.onmessage = (event: MessageEvent) => {
         const action: Action = JSON.parse(event.data);
         const { type, payload } = action;
-  
+
         switch (type) {
           case 'SET_USERS':
             setOnline(payload);
@@ -80,8 +80,8 @@ export default function AccountPage(): JSX.Element {
           default:
             break;
         }
+      };
     }
-    };
 
     void dispatch(checkAuthThunk()).then(() => void dispatch(getLikedAdvertsThunk()));
 
@@ -165,9 +165,6 @@ export default function AccountPage(): JSX.Element {
       }
     }
   };
-
-  if (user.status === UserStatus.Pending || user.status === UserStatus.Guest)
-    return <h1>Loading...</h1>;
 
   return (
     <Container p={4} maxW="container.xl" display="flex" justifyContent="center" height="100vh">

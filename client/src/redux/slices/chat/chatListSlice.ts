@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { ChatListSlice, ChatListType } from '../../../types/chatList';
+import { createSlice } from '@reduxjs/toolkit';
+import type { ChatListSlice } from '../../../types/chatList';
 import { getReceiverListThunk } from './thunks';
 
 const initialState: ChatListSlice = {

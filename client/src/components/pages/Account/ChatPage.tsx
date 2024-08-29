@@ -143,14 +143,11 @@ export default function ChatPage(): JSX.Element {
           h="50vh" // 50% высоты экрана
         >
           <Box flex="1" overflowY="auto" borderRadius="md" bg="#d8d8ed" p={4}>
-            <ChatComponent online={online} messages={messages} /> 
-            {/* Зачем здесь проп онлайн? */}
+            <ChatComponent messages={messages} /> 
           </Box>
           <ChatInput
             onSendMessage={sendNewMessage}
-            borderRadius="md"
-            boxShadow="md"
-            _focus={{ boxShadow: 'outline' }}
+            
           />
         </GridItem>
       </Grid>
