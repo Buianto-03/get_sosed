@@ -99,7 +99,7 @@ export default function Filter(): JSX.Element {
       borderRadius="md"
       boxShadow="md"
       width="100%"
-      alignItems="center"
+      // alignItems="center"
       justifyContent="center"
     >
       {/* Поповер для фильтра и категорий */}
@@ -227,7 +227,7 @@ export default function Filter(): JSX.Element {
       </Popover>
 
       {/* Поле поиска */}
-      <Box width="100%" maxW={popoverWidth}>
+      <Box width="100%" maxW={popoverWidth} >
         <InputGroup>
           <Input
             placeholder="Поиск по объявлениям"
@@ -237,7 +237,7 @@ export default function Filter(): JSX.Element {
             borderRadius="md"
           />
           <InputRightElement>
-            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md">
+            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2} >
               <SearchIcon />
             </Button>
           </InputRightElement>
