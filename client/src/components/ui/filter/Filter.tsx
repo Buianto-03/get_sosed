@@ -41,7 +41,7 @@ import type { TagType } from '../../../types/advert';
 export default function Filter(): JSX.Element {
   const [inputValue, setInputValue] = useState<string>('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
-  const [rooms, setRooms] = useState<number>(1); // Количество комнат
+  // const [rooms, setRooms] = useState<number>(1); // Количество комнат
   const [city, setCity] = useState<string>('');
   const [district, setDistrict] = useState<string>('');
   const [metro, setMetro] = useState<string>('');
@@ -64,6 +64,7 @@ export default function Filter(): JSX.Element {
   );
 
   useEffect(() => {
+    if(inputValue === '') return;
     debouncedSearch(inputValue);
   }, [inputValue, debouncedSearch]);
 

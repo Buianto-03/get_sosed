@@ -1,6 +1,7 @@
 const advertService = require('../service/advertService');
 const sharp = require('sharp');
 const fs = require('fs/promises');
+const { log } = require('console');
 
 class AdvertController {
   constructor(service) {
@@ -64,6 +65,8 @@ class AdvertController {
     res.json(updatedUser);
   };
   getFilteredAdverts = async (req, res) => {
+  console.log(req.body);
+  
     try {
       const filters = req.body;// post (есть свойство tags)
       console.log(filters.tags);

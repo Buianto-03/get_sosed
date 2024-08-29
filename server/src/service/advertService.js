@@ -109,10 +109,11 @@ class AdvertService {
     return newAdvertPhotos;
   }
 
-
   async getFilteredAdverts(filters) {
     const whereClause = {};
     const locationClause = {};
+
+    console.log({ filters });
 
     if (filters.city) locationClause.city = filters.city;
     if (filters.district) locationClause.district = filters.district;
@@ -120,15 +121,18 @@ class AdvertService {
 
     if (filters.priceFrom || filters.priceTo) {
       whereClause.price = {};
-      if (filters.priceFrom)
+      if (filters.priceFrom !== undefined) {
         whereClause.price[Op.gte] = Number(filters.priceFrom);
-      if (filters.priceTo) whereClause.price[Op.lte] = Number(filters.priceTo);
+      }
+      if (filters.priceTo && filters.priceTo !== 0) {
+        whereClause.price[Op.lte] = Number(filters.priceTo);
+      }
     }
 
     if (filters.rooms) {
       whereClause.rooms = Number(filters.rooms);
     }
-    console.log(filters.tags.map((el) => el.id));
+    // console.log(filters.tags.map((el) => el.id));
 
     // if (filters.tags) {
     //   whereClause.tags = {
@@ -137,7 +141,7 @@ class AdvertService {
     // }
 
     try {
-      console.log(whereClause);
+      console.log({ whereClause });
 
       const adverts = await this.advert.findAll({
         // const adverts = await this.advertTag.findAll({
@@ -157,10 +161,10 @@ class AdvertService {
             as: 'tags',
             required: true,
           },
-
         ], // подключить таблицу с тегами
       });
-      console.log(JSON.stringify(adverts, null, 2));
+      // console.log(JSON.stringify(adverts, null, 2));
+      console.log({ adverts });
       return adverts;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);

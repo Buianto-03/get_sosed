@@ -15,22 +15,35 @@ export default function AdvertList(): JSX.Element {
   const [querySearchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    dispatch(
-      setFilters({
-        city: querySearchParams.get('city') || '',
-        category: querySearchParams.get('category') || '',
-        district: querySearchParams.get('district') || '',
-        metro: querySearchParams.get('metro') || '',
-        priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
-        priceTo: Number(querySearchParams.get('priceTo') || '0'),
-      } as FilterType),
-    );
+    // dispatch(
+    //   setFilters({
+    //     city: querySearchParams.get('city') || '',
+    //     category: querySearchParams.get('category') || '',
+    //     district: querySearchParams.get('district') || '',
+    //     metro: querySearchParams.get('metro') || '',
+    //     priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
+    //     priceTo: Number(querySearchParams.get('priceTo') || '0'),
+    //   } as FilterType),
+    // );
+    const filters: FilterType = {
+      city: querySearchParams.get('city') || '',
+      category: querySearchParams.get('category') || '',
+      district: querySearchParams.get('district') || '',
+      metro: querySearchParams.get('metro') || '',
+      priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
+      priceTo: Number(querySearchParams.get('priceTo') || '0'),
+    }
+    void dispatch(getFilteredAdvertsThunk({...filters, tags: pickedTags}));
   }, [querySearchParams]);
   // управляемый инпут сделать и чтобы он сохранялся в редаксе
 
+  // нужно сделать дефолтное значение и исправить чтобы фильтры применялися без обновления страницы
+
   useEffect(() => {
     // Отправляем запрос с фильтрами, когда они изменяются
-    void dispatch(getFilteredAdvertsThunk({...filters, tags: pickedTags}));
+    // void dispatch(getFilteredAdvertsThunk({...filters, tags: pickedTags}));
+    console.log(filters);
+    
     const searchParams = new URLSearchParams(location.search);
     // searchParams.forEach((_, key) => searchParams.delete(key));
     searchParams.set('priceFrom', filters.priceFrom.toString());
