@@ -1,18 +1,20 @@
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
-import type { LikeSliceTtype } from '../../../types/like';
+import type { LikeSliceTtype, LikeType } from '../../../types/like';
 import { deleteLikeThunk, getLikesThunk, setLikeThunk } from './likesThunk';
 
 const initialState: LikeSliceTtype = {
   likes: [],
+  selectedLike: null,
 };
 
 export const likesSlice = createSlice({
   name: 'likes',
   initialState,
   reducers: {
-    // setLikes: (state, action) => {
-    //     state.likes = action.payload
-    // }
+    setSelectedLike: (state, action: PayloadAction<LikeType>) => {
+      state.selectedLike = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -24,10 +26,11 @@ export const likesSlice = createSlice({
       })
       .addCase(deleteLikeThunk.fulfilled, (state, action) => {
         state.likes = state.likes.filter((like) => like.id !== action.payload.id);
+        state.selectedLike = null;
       });
   },
 });
 
-// export const {  } = likesSlice.actions;
+export const { setSelectedLike } = likesSlice.actions;
 
 export default likesSlice.reducer;

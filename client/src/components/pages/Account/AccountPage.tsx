@@ -12,6 +12,7 @@ import {
   Icon,
   FormControl,
   FormErrorMessage,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FaThumbsUp } from 'react-icons/fa';
@@ -25,12 +26,30 @@ import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
 import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 import { getLikedAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
 import { deleteLikeThunk } from '../../../redux/slices/likes/likesThunk';
+import DeleteModalConfirm from '../../ui/Modal/ConfirmDeleteModal';
+import { setSelectedLike } from '../../../redux/slices/likes/likesSlice';
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
   const likedAdverts = useAppSelector((store) => store.advert?.liked);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const { onOpen, onClose } = useDisclosure({
+    isOpen,
+    onOpen: () => setIsOpen(true),
+    onClose: () => {
+      setIsOpen(false);
+      if (user.status === UserStatus.Logged) {
+        void dispatch(deleteLikeThunk(like.advertId));
+        console.log(like.id);
+
+        void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
+      }
+      return false;
+    },
+  });
   const [online, setOnline] = useState<BackendUserT[]>([]);
   const [messages, setMessages] = useState<ChatType[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -196,8 +215,7 @@ export default function AccountPage(): JSX.Element {
                     w="100%"
                     h="auto"
                     src={
-                      user.status === UserStatus.Logged &&
-                      user.UserProfile?.photo
+                      user.status === UserStatus.Logged && user.UserProfile?.photo
                         ? user.UserProfile.photo
                         : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
                     }
@@ -355,17 +373,12 @@ export default function AccountPage(): JSX.Element {
                   <Icon
                     as={FaThumbsUp}
                     boxSize={6}
-                    color='#CACAE2'
+                    color="#CACAE2"
                     cursor="pointer"
                     onClick={(e) => {
+                      void dispatch(setSelectedLike(like))
                       e.stopPropagation();
-                      if (user.status === UserStatus.Logged) {
-                        void dispatch(deleteLikeThunk(like.advertId));
-                        console.log(like.id);
-
-                        void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
-                      }
-                      return false;
+                      onOpen();
                     }}
                   />
                 </Box>
@@ -374,6 +387,7 @@ export default function AccountPage(): JSX.Element {
           )}
         </GridItem>
       </Grid>
+      <DeleteModalConfirm isOpen={isOpen} onClose={onClose} onOpen={onOpen} />;
     </Container>
   );
 }
