@@ -16,7 +16,7 @@ export default function AdvertCard({ advert }: AdverProps): JSX.Element {
   return (
     <Box
       width="300px"
-      height="400px"
+      // height="400px"
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"

@@ -155,11 +155,18 @@ class AdvertService {
           'User',
           {
             model: this.tags, // Модель Tag
-            where: filters.tags.length > 0 ? {
-              [Op.or]: filters.tags.map(({ id }) => ({ id })),
-            } : undefined,
+            where:
+              filters.tags.length > 0
+                ? {
+                    [Op.or]: filters.tags.map(({ id }) => ({ id })),
+                  }
+                : undefined,
             as: 'tags',
             required: filters.tags.length > 0,
+          },
+          {
+            model: this.advertPhoto,
+            as: 'AdvertPhotos',
           },
         ], // подключить таблицу с тегами
       });

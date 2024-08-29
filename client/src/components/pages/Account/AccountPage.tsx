@@ -124,7 +124,7 @@ export default function AccountPage(): JSX.Element {
     //   setErrors((prevErrors) => ({
     //     ...prevErrors,
     //     photo: '',
-    //   }));
+    //   }))
     // }
 
     if (name === 'age') {
@@ -209,7 +209,8 @@ export default function AccountPage(): JSX.Element {
                   <Image
                     borderRadius="full"
                     mb={4}
-                    maxW={{ base: '70px', md: '150px' }}
+                    ml={{ base: 24, md: 20 }}
+                    maxW={{ base: '100px', md: '150px' }}
                     maxH={{ base: '100px', md: '150px' }}
                     w="100%"
                     h="auto"
@@ -294,10 +295,11 @@ export default function AccountPage(): JSX.Element {
                 <Image
                   borderRadius="full"
                   mb={4}
+                  ml={{ base: 10, md: 3 }}
                   maxW={{ base: '100px', md: '150px' }}
                   maxH={{ base: '100px', md: '150px' }}
-                  w="100%"
-                  h="auto"
+                  w={{ base: '100px', md: '150px' }} // Устанавливаем фиксированную ширину
+                  h={{ base: '100px', md: '150px' }}
                   src={
                     user.status === UserStatus.Logged && user.UserProfile?.photo
                       ? user.UserProfile.photo
@@ -375,7 +377,7 @@ export default function AccountPage(): JSX.Element {
                     color="#CACAE2"
                     cursor="pointer"
                     onClick={(e) => {
-                      void dispatch(setSelectedLike(like))
+                      void dispatch(setSelectedLike(like));
                       e.stopPropagation();
                       onOpen();
                     }}
@@ -386,7 +388,7 @@ export default function AccountPage(): JSX.Element {
           )}
         </GridItem>
       </Grid>
-      <DeleteModalConfirm isOpen={isOpen} onClose={onClose} onOpen={onOpen} />;
+      <DeleteModalConfirm isOpen={isOpen} onClose={onClose} onOpen={onOpen} />
     </Container>
   );
 }
