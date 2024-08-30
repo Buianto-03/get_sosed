@@ -112,6 +112,16 @@ export default function AccountPage(): JSX.Element {
 
   const receivers = useAppSelector((store) => store.chatList.chatList);
 
+  useEffect(() => {
+    if (isEditing && user.status === UserStatus.Logged && user.UserProfile) {
+      setEditProfile({
+        age: user.UserProfile.age?.toString() || '',
+        phoneNumber: user.UserProfile.phoneNumber || '',
+        about: user.UserProfile.about || '',
+      });
+    }
+  }, [isEditing, user]);
+
   const handleEditProfileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setEditProfile((prevProfile) => ({

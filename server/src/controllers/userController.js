@@ -44,23 +44,27 @@ class UserController {
     try {
       const { id } = res.locals.user;
 
-      const files = await fs.readdir(`./public/images/users/user-${id}`);
+      if (req.file) {
+        const files = await fs.readdir(`./public/images/users/user-${id}`);
 
-      if (files.length) {
-        await fs.rm(`./public/images/users/user-${id}/${files[0]}`);
+        if (files.length) {
+          await fs.rm(`./public/images/users/user-${id}/${files[0]}`);
+        }
+        const fileName = `${new Date().getMilliseconds()}0.webp`;
+        const outputBuffer = await sharp(req.file.buffer).webp().toBuffer();
+        await fs.writeFile(
+          `./public/images/users/user-${id}/${fileName}`,
+          outputBuffer,
+        );
+        const updatedUser = await this.service.editUser(
+          { ...req.body, photo: `/images/users/user-${id}/${fileName}` },
+          id,
+        );
+        res.json(updatedUser);
+      } else {
+        const updatedUser = await this.service.editUser(req.body, id);
+        res.json(updatedUser);
       }
-      const fileName = `${new Date().getMilliseconds()}0.webp`;
-      const outputBuffer = await sharp(req.file.buffer).webp().toBuffer();
-      await fs.writeFile(
-        `./public/images/users/user-${id}/${fileName}`,
-        outputBuffer,
-      );
-
-      const updatedUser = await this.service.editUser(
-        { ...req.body, photo: `/images/users/user-${id}/${fileName}` },
-        id,
-      );
-      res.json(updatedUser);
     } catch (error) {
       console.log(error);
     }

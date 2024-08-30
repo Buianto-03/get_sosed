@@ -71,11 +71,6 @@ export default function Navbar(): JSX.Element {
             >
               Поиск
             </Nav.Link>
-            <Nav.Link
-              style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
-            >
-              О нас
-            </Nav.Link>
             {user.status === UserStatus.Logged ? (
               <Nav.Link
                 as={Link}
