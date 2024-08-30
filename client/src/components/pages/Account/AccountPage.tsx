@@ -43,9 +43,7 @@ export default function AccountPage(): JSX.Element {
       setIsOpen(false);
       if (user.status === UserStatus.Logged) {
         void dispatch(deleteLikeThunk(like.advertId));
-        console.log(like.id);
-
-        void dispatch(getLikedAdvertsThunk()).catch(console.log('olol'));
+        void dispatch(getLikedAdvertsThunk()).catch(() => console.log('olol'));
       }
       return false;
     },
@@ -177,7 +175,7 @@ export default function AccountPage(): JSX.Element {
     if (!errors.age && !errors.phoneNumber && !errors.about) {
       const formData = new FormData(e.currentTarget);
       if (user.status === UserStatus.Logged) {
-        formData.append('id', user.id);
+        formData.append('id', user.id.toString());
         void dispatch(editUserProfileThunk(formData)).then(() => dispatch(checkAuthThunk()));
         console.log('Profile updated:', editProfile);
         setIsEditing(false);
@@ -205,7 +203,8 @@ export default function AccountPage(): JSX.Element {
           <VStack spacing={2} alignItems="center" mt={4}>
             {isEditing ? (
               <Box as="form" onSubmit={handleSaveProfile}>
-                <FormControl isInvalid={!!errors.photo}>
+                {/* <FormControl isInvalid={!!errors.photo}> */}
+                <FormControl>
                   <Image
                     borderRadius="full"
                     mb={4}

@@ -9,7 +9,6 @@ import {
   VStack,
   Button,
   Icon,
-  useBreakpointValue,
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -35,10 +34,6 @@ export default function AdvertPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
   const { id } = useParams();
 
-  const gridTemplateColumns = useBreakpointValue({ base: '1fr', md: '2fr 1fr' });
-  const buttonSize = useBreakpointValue({ base: 'md', md: 'lg' });
-  const headingSize = useBreakpointValue({ base: 'md', md: 'lg' });
-
   useEffect(() => {
     if (id) {
       void dispatch(getAdvertByIdThunk(+id)).then((res) => {
@@ -62,23 +57,22 @@ export default function AdvertPage(): JSX.Element {
     }
     return false;
   };
-
+  
   return advert ? (
     <>
-      <Container p={4} maxW="container.xl" display="flex" justifyContent="center">
-        <Grid h="auto" w="100%" templateColumns={gridTemplateColumns} gap={4}>
-          <GridItem>
-            <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4} bg="white">
-              <Box maxW="100%" overflow="hidden">
-                <PhotosCarousel photos={advert.AdvertPhotos} />
-              </Box>
-              <Heading as="h2" size={headingSize} mb={4} pt={5}>
+      <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
+        <Grid h="auto" w="100%" templateColumns="repeat(5, 1fr)" gap={6}>
+          <GridItem colSpan={3}>
+            <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
+              {/* <Image src="/images/1.jpg" /> */}
+              <PhotosCarousel photos={advert.AdvertPhotos}/>
+              <Heading as="h2" size="lg" mb={4} pt={5}>
                 О квартире
               </Heading>
               <Text mt={2}>Комнаты: {advert.rooms}</Text>
               <Text mt={2}>Площадь: {advert.square}</Text>
               <Text mt={2}>Этаж: {advert.floor}</Text>
-              <Heading as="h2" size={headingSize} mb={4} pt={5}>
+              <Heading as="h2" size="lg" mb={4} pt={5}>
                 Расположение
               </Heading>
               <VStack align="start" spacing={2}>
@@ -89,9 +83,9 @@ export default function AdvertPage(): JSX.Element {
               </VStack>
             </Box>
           </GridItem>
-          <GridItem>
-            <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={4} bg="white">
-              <Heading as="h1" size={headingSize} mt={4}>
+          <GridItem colSpan={2}>
+            <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
+              <Heading as="h1" size="xl" mt={4}>
                 {advert.title}
               </Heading>
               <Text mt={2}>{advert.body}</Text>
@@ -99,14 +93,14 @@ export default function AdvertPage(): JSX.Element {
                 Цена: {advert.price} руб.
               </Heading>
               <br />
-              <Heading as="h2" size={headingSize} mb={4}>
+              <Heading as="h2" size="lg" mb={4}>
                 Информация о владельце
               </Heading>
               <VStack align="start" spacing={2}>
                 <Text>Имя: {advert.User.name}</Text>
                 <Text>Email: {advert.User.email}</Text>
               </VStack>
-              <Button colorScheme="teal" size={buttonSize} onClick={() => navigate('/')} mr={5}>
+              <Button colorScheme="teal" size="lg" onClick={() => navigate('/')} mr={5}>
                 Написать соседу
               </Button>
               <Button variant="ghost" colorScheme="blue" mr={2} onClick={(e) => likeHandler(e)}>
@@ -128,12 +122,12 @@ export default function AdvertPage(): JSX.Element {
           </GridItem>
         </Grid>
       </Container>
-      <Container p={4} maxW="container.xl" display="flex" justifyContent="center">
+      <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
         <YMap location={advert.Location.coordinates} />
       </Container>
     </>
   ) : (
-    <Container p={4} maxW="container.xl" display="flex" justifyContent="center">
+    <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
       <Text>Объявление не найдено</Text>
     </Container>
   );
