@@ -1,7 +1,7 @@
 const express = require('express');
 const verifyAccessToken = require('../middlewares/verifyAccessToken');
 const userController = require('../controllers/userController');
-const upload = require('../middlewares/getImage')
+const upload = require('../middlewares/getImage');
 
 const userRouter = express.Router();
 
