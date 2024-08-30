@@ -7,12 +7,10 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  useDisclosure,
   Button,
 } from '@chakra-ui/react';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { deleteLikeThunk } from '../../../redux/slices/likes/likesThunk';
-import { LikeType } from '../../../types/like';
 import { getLikedAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
 
 type DeleteModalConfirmProps = {
@@ -22,7 +20,6 @@ type DeleteModalConfirmProps = {
 };
 
 export default function DeleteModalConfirm({
-  onOpen,
   isOpen,
   onClose,
 }: DeleteModalConfirmProps): JSX.Element {
@@ -49,13 +46,23 @@ export default function DeleteModalConfirm({
 
         <ModalFooter>
           <Button
-            colorScheme="blue"
+            _hover={{ bg: '#b0b0d6', color: 'white' }}
+            _active={{ bg: '#9898c2' }}
+            color="black"
             mr={3}
             onClick={handleDeleteLike}
           >
             Удалить
           </Button>
-          <Button variant="ghost" onClick={onClose}>Закрыть</Button>
+          <Button
+            _hover={{ bg: '#b0b0d6', color: 'white' }}
+            _active={{ bg: '#9898c2' }}
+            color="black"
+            variant="ghost"
+            onClick={onClose}
+          >
+            Закрыть
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

@@ -1,6 +1,5 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from './client';
-import type { UserProfileT } from '../types/userProfile';
 import type { BackendUserT } from '../types/auth';
 import { userSchema } from '../types/auth';
 

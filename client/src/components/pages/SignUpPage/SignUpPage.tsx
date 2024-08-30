@@ -15,7 +15,6 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../../redux/hooks';
-import type { SignUpSchemaT } from '../../../types/auth';
 import { signupThunk } from '../../../redux/slices/auth/thunks';
 
 export default function SignUpPage(): JSX.Element {

@@ -9,7 +9,7 @@ import type { ChatType } from '../../../types/chat';
 
 type Action = {
   type: string;
-  payload: unknown;
+  payload: BackendUserT[] | ChatType[] | ChatType | {text: object, receiverId: string};
 };
 
 export default function ChatPage(): JSX.Element {
@@ -25,7 +25,6 @@ export default function ChatPage(): JSX.Element {
 
     soket.onopen = () => {
       console.log('CONNECTED');
-      // Отправляем receiverId сразу после открытия соединения
       const initialMessage = JSON.stringify({
         type: 'INITIALIZE',
         payload: { receiverId },
@@ -40,14 +39,14 @@ export default function ChatPage(): JSX.Element {
 
       switch (type) {
         case 'SET_USERS':
-          setOnline(payload);
+          setOnline(payload as BackendUserT[]);
           break;
         case 'SET_MESSAGES':
         case 'NEW_MESSAGES':
-          setMessages(payload);
+          setMessages(payload as ChatType[]);
           break;
         case 'ADD_MESSAGE':
-          setMessages((prevMessages) => [...prevMessages, payload]);
+          setMessages((prevMessages) => [...prevMessages, payload as ChatType]);
           break;
         default:
           break;
@@ -59,7 +58,7 @@ export default function ChatPage(): JSX.Element {
     };
   }, [receiverId]);
 
-  const sendNewMessage = (message: string):void => {
+  const sendNewMessage = (message: string): void => {
     if (soketRef.current) {
       const action: Action = {
         type: 'ADD_MESSAGE',
@@ -90,7 +89,7 @@ export default function ChatPage(): JSX.Element {
           display="flex"
           flexDirection="column"
           alignItems="center"
-          h="50svh" // 90% высоты экрана
+          h="50svh"
           overflowY="auto"
         >
           <Box
@@ -140,15 +139,12 @@ export default function ChatPage(): JSX.Element {
           boxShadow="2xl"
           display="flex"
           flexDirection="column"
-          h="50vh" // 50% высоты экрана
+          h="50vh"
         >
           <Box flex="1" overflowY="auto" borderRadius="md" bg="#d8d8ed" p={4}>
             <ChatComponent messages={messages} /> 
           </Box>
-          <ChatInput
-            onSendMessage={sendNewMessage}
-            
-          />
+          <ChatInput onSendMessage={sendNewMessage} />
         </GridItem>
       </Grid>
     </Container>

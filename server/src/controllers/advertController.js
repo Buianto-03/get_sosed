@@ -40,10 +40,10 @@ class AdvertController {
         const name = `advert${newAdvert.id}-${i}.webp`;
         const outputBuffer = await sharp(file.buffer).webp().toBuffer();
         await fs.writeFile(
-          `./public/images/advert-${newAdvert.id}/${name}`,
+          `./public/images/adverts/advert-${newAdvert.id}/${name}`,
           outputBuffer,
         );
-        await this.service.newAdvertPhotos(newAdvert.id, `/images/advert-${newAdvert.id}/${name}`)
+        await this.service.newAdvertPhotos(newAdvert.id, `/images/adverts/advert-${newAdvert.id}/${name}`)
       });
 
       res.status(201).json(newAdvert);

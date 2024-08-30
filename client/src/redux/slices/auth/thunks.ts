@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../../services/authService';
-import type { LoginForm, SignUpSchemaT } from '../../../types/auth';
+import type { LoginForm } from '../../../types/auth';
 
 export const signinThunk = createAsyncThunk('auth/signinThunk', (formData: LoginForm) =>
   authService.submitLoginForm(formData),

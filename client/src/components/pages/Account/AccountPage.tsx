@@ -42,7 +42,6 @@ export default function AccountPage(): JSX.Element {
     onClose: () => {
       setIsOpen(false);
       if (user.status === UserStatus.Logged) {
-        void dispatch(deleteLikeThunk(like.advertId));
         void dispatch(getLikedAdvertsThunk()).catch(() => console.log('olol'));
       }
       return false;
