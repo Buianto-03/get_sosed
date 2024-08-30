@@ -87,7 +87,7 @@ export default function Filter(): JSX.Element {
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
   const handleFilter = (): void => {
-    // Собираем параметры фильтрации и отправляем в Redux
+    // Собираем параметры фильтрации и отправляем в Redux asdad
     const filters = {
       query: inputValue,
       priceFrom: priceRange[0],
