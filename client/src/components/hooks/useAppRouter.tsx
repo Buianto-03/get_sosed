@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from '../Layout';
 import AccountPage from '../pages/Account/AccountPage';
 import SignInPage from '../pages/SignInPage/SignInPage';
@@ -85,6 +85,10 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
           //   </ProtectedRoute>
           // ),
           // element: <PostAdvertPage />,
+        },
+        {
+          path: '*',
+          element: <Navigate to="/" />,
         },
       ],
     },
