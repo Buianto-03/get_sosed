@@ -62,27 +62,18 @@ export default function Filter(): JSX.Element {
   const debouncedSearch = useCallback(
     debounce((query: string): void => {
       if (query.trim() === '') {
-        dispatch(setTags([]));
+        dispatch(setTags([])); // сделать првоерку на filter дописать
         return;
       }
       dispatch(getTagsBySearchThunk(query)).catch(console.log);
-    },
-    [dispatch],
+    }, 300),
+    [],
   );
 
-  // Debounced версия функции поиска
-  const debouncedSearch = useCallback(
-    debounce((query: string) => performSearch(query), 300),
-    [performSearch],
-  );
-
-  // Обновление debouncedSearch при изменении query
   useEffect(() => {
+    if (inputValue === '') return;
     debouncedSearch(inputValue);
-    return () => {
-      debouncedSearch.cancel(); // Отмена debounce при размонтировании компонента
-    };
-  }, [debouncedSearch, inputValue]);
+  }, [inputValue, debouncedSearch]);
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
@@ -300,8 +291,8 @@ export default function Filter(): JSX.Element {
             size="lg"
             borderRadius="md"
           />
-          <InputRightElement>
-            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2} >
+          {/* <InputRightElement>
+            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2}>
               <SearchIcon />
             </Button>
           </InputRightElement> */}
