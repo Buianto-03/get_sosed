@@ -67,13 +67,11 @@ export default function WelcomePage(): JSX.Element {
               <Heading as="h2" size={{ base: 'lg', md: 'xl' }}>
                 Проблема которую мы решаем
               </Heading>
-              <Text fontSize={{ base: 'md', md: 'xl' }}>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dolorem maxime voluptatum
-                voluptatibus iure perferendis laudantium quibusdam. Cumque fugit magnam unde
-                delectus ex eos dolorem, quam reiciendis quasi natus a aliquam. Lorem, ipsum dolor
-                sit amet consectetur adipisicing elit. Error numquam natus ex ab id earum, maiores,
-                quod praesentium recusandae quisquam temporibus corporis quibusdam assumenda esse
-                sint quam, labore facilis molestiae?
+              <Text mt={3} fontSize={{ base: '1.4rem', md: '1.1rem', sm: 'xl' }}>
+                Как часто вы задавались вопросом аренды жилья в реалиях современного мира? В
+                нынешнее время большенству людей тяжело нести ношу аренды в одиночку из-за общего
+                роста цен на жилье. Наш сервис направлен на студентов, находящихся в поиске жилья и
+                соседа для совместной аренды жилья.
               </Text>
             </Box>
           </GridItem>
@@ -89,13 +87,10 @@ export default function WelcomePage(): JSX.Element {
               <Heading as="h2" size={{ base: 'lg', md: 'xl' }}>
                 Что мы предлагаем
               </Heading>
-              <Text fontSize={{ base: 'md', md: 'xl' }}>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dolorem maxime voluptatum
-                voluptatibus iure perferendis laudantium quibusdam. Cumque fugit magnam unde
-                delectus ex eos dolorem, quam reiciendis quasi natus a aliquam. Lorem ipsum dolor
-                sit, amet consectetur adipisicing elit. Praesentium doloremque similique quaerat,
-                suscipit natus reiciendis id debitis accusantium quae repudiandae, quia, non
-                blanditiis! Quis suscipit beatae, accusamus consequuntur voluptatum delectus?
+              <Text mt={3} fontSize={{ base: '1.4rem', md: '1.1rem', sm: 'xl' }}>
+                Наше решение - это GETSOSED. Сервис с централизованной агрегацией объявлений о сдаче
+                квартир в аренду и удобным поиском соседа для совместного проживаиния. Наш сервис
+                предлагает обширную базу доступных для аренды квартир по Москве и Санкт-Петербургу.
               </Text>
             </Box>
           </GridItem>

@@ -20,7 +20,6 @@ import { Nav } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 import { logoutThunk } from '../../redux/slices/auth/thunks';
-import { userProfile } from '../../types/userProfile';
 
 export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -111,7 +110,7 @@ export default function Navbar(): JSX.Element {
                   <MenuDivider />
                   <MenuItem
                     onClick={() => {
-                      dispatch(logoutThunk());
+                      void dispatch(logoutThunk());
                       onClose();
                     }}
                   >

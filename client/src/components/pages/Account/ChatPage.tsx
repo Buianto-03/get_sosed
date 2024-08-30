@@ -15,6 +15,7 @@ type Action = {
 export default function ChatPage(): JSX.Element {
   const { receiverId } = useParams<{receiverId: string}>();
   const user = useAppSelector((store) => store.auth.user);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [online, setOnline] = useState<BackendUserT[]>([]);
   const [messages, setMessages] = useState<ChatType[]>([]);
   const soketRef = useRef<WebSocket | null>(null);

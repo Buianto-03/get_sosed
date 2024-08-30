@@ -38,7 +38,7 @@ export default function DeleteModalConfirm({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Modal Title</ModalHeader>
+        <ModalHeader />
         <ModalCloseButton />
         <ModalBody>
           <h1>Вы уверены, что хотите удалить этот элемент?</h1>

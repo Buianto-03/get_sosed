@@ -54,6 +54,7 @@ export default function AccountPage(): JSX.Element {
     },
   });
   const [online, setOnline] = useState<BackendUserT[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [messages, setMessages] = useState<ChatType[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState({
@@ -109,7 +110,8 @@ export default function AccountPage(): JSX.Element {
     return () => {
       soketRef.current?.close();
     };
-  }, [user.status, user, dispatch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.status, dispatch]);
 
   const receivers = useAppSelector((store) => store.chatList.chatList);
 
