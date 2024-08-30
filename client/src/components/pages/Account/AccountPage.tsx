@@ -287,21 +287,27 @@ export default function AccountPage(): JSX.Element {
                   }
                   alt="User Avatar"
                 />
-                <Text fontSize="lg" fontWeight="bold" color="white">
-                  {user.name}
-                </Text>
-                <Text fontSize="md" color="whiteAlpha.800">
-                  {user.email}
-                </Text>
-                <Text fontSize="sm" color="whiteAlpha.700">
-                  {user.UserProfile?.about}
-                </Text>
-                <Text fontSize="sm" color="whiteAlpha.700">
-                  Возраст: {user.UserProfile?.age}
-                </Text>
-                <Text fontSize="sm" color="whiteAlpha.700">
-                  Пол: {user.UserProfile?.gender}
-                </Text>
+                {user.status === UserStatus.Logged && user.UserProfile ? (
+                  <>
+                    <Text fontSize="lg" fontWeight="bold" color="white">
+                      {user.name}
+                    </Text>
+                    <Text fontSize="md" color="whiteAlpha.800">
+                      {user.email}
+                    </Text>
+                    <Text fontSize="sm" color="whiteAlpha.700">
+                      {user.UserProfile?.about}
+                    </Text>
+                    <Text fontSize="sm" color="whiteAlpha.700">
+                      Возраст: {user.UserProfile?.age}
+                    </Text>
+                    <Text fontSize="sm" color="whiteAlpha.700">
+                      Пол: {user.UserProfile?.gender}
+                    </Text>
+                  </>
+                ) : (
+                  <div />
+                )}
                 <Button mt={4} onClick={() => setIsEditing(true)} colorScheme="gray">
                   Изменить профиль
                 </Button>
