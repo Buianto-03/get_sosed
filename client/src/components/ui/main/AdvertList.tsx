@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { Flex, Button, Text } from '@chakra-ui/react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../../redux/hooks';
 import AdvertCard from './AdvertCard';
 import { getFilteredAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
-import { loadCards, setFilters } from '../../../redux/slices/adverts/advertsSlice';
+import { loadCards } from '../../../redux/slices/adverts/advertsSlice';
 import type { FilterType } from '../../../types/advert';
 
 export default function AdvertList(): JSX.Element {

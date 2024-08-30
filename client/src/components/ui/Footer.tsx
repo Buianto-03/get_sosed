@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Stack, Text, Link, Divider } from '@chakra-ui/react';
+import { Box, Container, Stack, Text, Divider } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 
 export default function Footer(): JSX.Element {
@@ -14,7 +14,7 @@ export default function Footer(): JSX.Element {
 
           {/* Ссылки */}
           <Stack direction={{ base: 'column', md: 'row' }} spacing={6} align="center">
-            <NavLink to="/" _hover={{ color: 'white' }}>
+            <NavLink to="/">
               О нас
             </NavLink>
           </Stack>

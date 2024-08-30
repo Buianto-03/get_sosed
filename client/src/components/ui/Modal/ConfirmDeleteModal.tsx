@@ -45,10 +45,22 @@ export default function DeleteModalConfirm({
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleDeleteLike}>
+          <Button
+            _hover={{ bg: '#b0b0d6', color: 'white' }}
+            _active={{ bg: '#9898c2' }}
+            color="black"
+            mr={3}
+            onClick={handleDeleteLike}
+          >
             Удалить
           </Button>
-          <Button variant="ghost" onClick={onClose}>
+          <Button
+            _hover={{ bg: '#b0b0d6', color: 'white' }}
+            _active={{ bg: '#9898c2' }}
+            color="black"
+            variant="ghost"
+            onClick={onClose}
+          >
             Закрыть
           </Button>
         </ModalFooter>
