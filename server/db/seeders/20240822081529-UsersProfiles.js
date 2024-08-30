@@ -8,7 +8,7 @@ module.exports = {
       [
         {
           userId: 1,
-          about: 'Admin',
+          about: 'Я студент, ищу соседа',
           age: 20,
           gender: 'male',
           photo: '/images/users/user-1/0.webp',
@@ -19,7 +19,7 @@ module.exports = {
 
         {
           userId: 2,
-          about: 'Sose2',
+          about: 'Недавно переехал, ищу соседа',
           age: 20,
           gender: 'male',
           photo: '/images/users/user-2/0.webp',
@@ -29,9 +29,9 @@ module.exports = {
         },
         {
           userId: 3,
-          about: 'Sosed3',
+          about: 'Хочу сэкономить, ищу соседа',
           age: 20,
-          gender: 'sobaka',
+          gender: 'male',
           photo: '/images/users/user-3/0.webp',
           phoneNumber: 123456789,
           createdAt: new Date(),
@@ -39,9 +39,9 @@ module.exports = {
         },
         {
           userId: 4,
-          about: 'Sosed4',
+          about: 'Ищу соседей',
           age: 20,
-          gender: 'sobaka',
+          gender: 'female',
           photo: '/images/users/user-4/0.webp',
           phoneNumber: 123456789,
           createdAt: new Date(),
@@ -49,7 +49,7 @@ module.exports = {
         },
         {
           userId: 5,
-          about: 'Sosed5',
+          about: 'Ищу квартиру с соседом',
           age: 20,
           gender: 'female',
           photo: '/images/users/user-5/0.webp',
