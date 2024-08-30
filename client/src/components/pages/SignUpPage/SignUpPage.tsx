@@ -45,9 +45,6 @@ export default function SignUpPage(): JSX.Element {
     
     void dispatch(signupThunk(formData));
 
-
-
-    return;
     // Если ошибок нет, отправляем данные
     // setErrors({});
     // void dispatch(signupThunk({ ...formData, gender: gender.toString() }));

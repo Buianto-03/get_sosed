@@ -11,7 +11,7 @@ export default function AdvertList(): JSX.Element {
   const { adverts, visitableCards, filters, pickedTags} = useAppSelector((state) => state.advert);
   const dispatch = useAppDispatch();
   const location = useLocation();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [querySearchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function AdvertList(): JSX.Element {
       priceTo: Number(querySearchParams.get('priceTo') || '0'),
     }
     void dispatch(getFilteredAdvertsThunk({...filtersFromQuery, tags: pickedTags}));
-  }, [querySearchParams]);
+  }, [querySearchParams, dispatch, pickedTags]);
   // управляемый инпут сделать и чтобы он сохранялся в редаксе
 
   // нужно сделать дефолтное значение и исправить чтобы фильтры применялися без обновления страницы
@@ -55,7 +55,7 @@ export default function AdvertList(): JSX.Element {
     setSearchParams(searchParams);
 
     // navigate(`${location.pathname}?${searchParams.toString()}`);
-  }, [filters, dispatch]);
+  }, [filters, dispatch, location.search, setSearchParams]);
 
   const handleLoadMore = (): void => {
     dispatch(loadCards());

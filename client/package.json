@@ -22,6 +22,7 @@
     "@emotion/styled": "^11.13.0",
     "@pbe/react-yandex-maps": "^1.2.5",
     "@reduxjs/toolkit": "^2.2.7",
+    "@types/reactstrap": "^8.7.2",
     "@types/yandex-maps": "^2.1.36",
     "axios": "^1.7.4",
     "bootstrap": "^5.3.3",

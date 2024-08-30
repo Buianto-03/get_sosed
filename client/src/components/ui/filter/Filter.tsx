@@ -13,7 +13,6 @@ import {
   PopoverCloseButton,
   PopoverBody,
   Text,
-  Icon,
   FormControl,
   FormLabel,
   VStack,
@@ -31,7 +30,7 @@ import {
   NumberInputField,
   useBreakpointValue,
 } from '@chakra-ui/react';
-import { SearchIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { SearchIcon } from '@chakra-ui/icons';
 import { debounce } from 'lodash';
 import { addTag, removeTag, setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
