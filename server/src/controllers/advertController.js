@@ -9,7 +9,13 @@ class AdvertController {
   }
 
   getAdverts = (req, res) => {
-    this.service.getAdverts().then((data) => res.json(data));
+    try {
+      this.service.getAdverts().then((data) => res.json(data));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({message: 'server error'})
+      
+    }
   };
 
   getAdvertById = async (req, res) => {
