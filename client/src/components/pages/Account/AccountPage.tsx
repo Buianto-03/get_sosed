@@ -270,8 +270,9 @@ export default function AccountPage(): JSX.Element {
               </Box>
             ) : (
               <Box textAlign="center">
-                {user.status === User}
-                <Image
+                {user.status === UserStatus.Logged && (
+                  <>
+                  <Image
                   borderRadius="full"
                   mb={4}
                   ml={{ base: 10, md: 3 }}
@@ -304,6 +305,8 @@ export default function AccountPage(): JSX.Element {
                 <Button mt={4} onClick={() => setIsEditing(true)} colorScheme="gray">
                   Изменить профиль
                 </Button>
+                  </>
+                )}
               </Box>
             )}
             <Button mt={4} colorScheme="gray" onClick={() => navigate('/post')}>

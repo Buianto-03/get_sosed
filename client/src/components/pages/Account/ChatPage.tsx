@@ -9,11 +9,11 @@ import type { ChatType } from '../../../types/chat';
 
 type Action = {
   type: string;
-  payload: BackendUserT[] | ChatType[] | ChatType | {text: object, receiverId: string};
+  payload: BackendUserT[] | ChatType[] | ChatType | {text: string, receiverId: number};
 };
 
 export default function ChatPage(): JSX.Element {
-  const { receiverId } = useParams();
+  const { receiverId } = useParams<{receiverId: string}>();
   const user = useAppSelector((store) => store.auth.user);
   const [online, setOnline] = useState<BackendUserT[]>([]);
   const [messages, setMessages] = useState<ChatType[]>([]);
@@ -35,7 +35,8 @@ export default function ChatPage(): JSX.Element {
     soket.onerror = (err) => console.log('ERROR', err);
 
     soket.onmessage = (event: MessageEvent) => {
-      const { type, payload }: Action = JSON.parse(event.data);
+      const action: Action = JSON.parse(event.data as string) as Action;
+      const { type, payload } = action;
 
       switch (type) {
         case 'SET_USERS':
@@ -59,10 +60,10 @@ export default function ChatPage(): JSX.Element {
   }, [receiverId]);
 
   const sendNewMessage = (message: string): void => {
-    if (soketRef.current) {
+    if (soketRef.current && receiverId) {
       const action: Action = {
         type: 'ADD_MESSAGE',
-        payload: { text: message, receiverId },
+        payload: { text: message, receiverId: +receiverId},
       };
       soketRef.current.send(JSON.stringify(action));
     }
