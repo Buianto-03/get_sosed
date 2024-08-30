@@ -13,6 +13,7 @@ import {
   FormControl,
   FormErrorMessage,
   useDisclosure,
+  FormLabel,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FaThumbsUp } from 'react-icons/fa';
@@ -109,7 +110,7 @@ export default function AccountPage(): JSX.Element {
     return () => {
       soketRef.current?.close();
     };
-  }, [user.status, user, dispatch]);
+  }, [user.status, dispatch]);
 
   const receivers = useAppSelector((store) => store.chatList.chatList);
 
@@ -224,6 +225,22 @@ export default function AccountPage(): JSX.Element {
                     }
                     alt="User Avatar"
                   />
+                  <Input type="file" name="photo" id="photo" display="none" />
+                  <FormLabel
+                    htmlFor="photo"
+                    mb={2}
+                    bg="white"
+                    border="1px solid"
+                    borderColor="gray.300"
+                    borderRadius="md"
+                    px={4}
+                    py={2}
+                    cursor="pointer"
+                    display="inline-block"
+                    width="auto"
+                  >
+                    Выберите фото
+                  </FormLabel>
                 </FormControl>
                 <FormControl isInvalid={!!errors.age}>
                   <Input
@@ -272,45 +289,45 @@ export default function AccountPage(): JSX.Element {
               <Box textAlign="center">
                 {user.status === UserStatus.Logged && (
                   <>
-                  <Image
-                  borderRadius="full"
-                  mb={4}
-                  ml={{ base: 10, md: 3 }}
-                  maxW={{ base: '100px', md: '150px' }}
-                  maxH={{ base: '100px', md: '150px' }}
-                  w={{ base: '100px', md: '150px' }} // Устанавливаем фиксированную ширину
-                  h={{ base: '100px', md: '150px' }}
-                  src={
-                    user.status === UserStatus.Logged && user.UserProfile?.photo
-                      ? user.UserProfile.photo
-                      : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
-                  }
-                  alt="User Avatar"
-                />
-                {user.status === UserStatus.Logged && user.UserProfile ? (
-                  <>
-                    <Text fontSize="lg" fontWeight="bold" color="white">
-                      {user.name}
-                    </Text>
-                    <Text fontSize="md" color="whiteAlpha.800">
-                      {user.email}
-                    </Text>
-                    <Text fontSize="sm" color="whiteAlpha.700">
-                      {user.UserProfile?.about}
-                    </Text>
-                    <Text fontSize="sm" color="whiteAlpha.700">
-                      Возраст: {user.UserProfile?.age}
-                    </Text>
-                    <Text fontSize="sm" color="whiteAlpha.700">
-                      Пол: {user.UserProfile?.gender}
-                    </Text>
-                  </>
-                ) : (
-                  <div />
-                )}
-                <Button mt={4} onClick={() => setIsEditing(true)} colorScheme="gray">
-                  Изменить профиль
-                </Button>
+                    <Image
+                      borderRadius="full"
+                      mb={4}
+                      ml={{ base: 10, md: 3 }}
+                      maxW={{ base: '100px', md: '150px' }}
+                      maxH={{ base: '100px', md: '150px' }}
+                      w={{ base: '100px', md: '150px' }} // Устанавливаем фиксированную ширину
+                      h={{ base: '100px', md: '150px' }}
+                      src={
+                        user.status === UserStatus.Logged && user.UserProfile?.photo
+                          ? user.UserProfile.photo
+                          : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
+                      }
+                      alt="User Avatar"
+                    />
+                    {user.status === UserStatus.Logged && user.UserProfile ? (
+                      <>
+                        <Text fontSize="lg" fontWeight="bold" color="white">
+                          {user.name}
+                        </Text>
+                        <Text fontSize="md" color="whiteAlpha.800">
+                          {user.email}
+                        </Text>
+                        <Text fontSize="sm" color="whiteAlpha.700">
+                          {user.UserProfile?.about}
+                        </Text>
+                        <Text fontSize="sm" color="whiteAlpha.700">
+                          Возраст: {user.UserProfile?.age}
+                        </Text>
+                        <Text fontSize="sm" color="whiteAlpha.700">
+                          Пол: {user.UserProfile?.gender}
+                        </Text>
+                      </>
+                    ) : (
+                      <div />
+                    )}
+                    <Button mt={4} onClick={() => setIsEditing(true)} colorScheme="gray">
+                      Изменить профиль
+                    </Button>
                   </>
                 )}
               </Box>

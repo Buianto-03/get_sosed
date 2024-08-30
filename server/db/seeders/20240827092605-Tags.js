@@ -20,11 +20,6 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        name: 'Студия',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
         name: 'С мебелью',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -39,7 +34,6 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-
       {
         name: 'Рядом с метро',
         createdAt: new Date(),

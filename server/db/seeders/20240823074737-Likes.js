@@ -1,23 +1,32 @@
 'use strict';
 
-const generateRandomInt = (min, max) =>
-  Math.floor(Math.random() * (max - min + 1)) + min;
+const generateRandomInt = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
-const objects = [];
+const likes = [];
+const usedCombinations = new Set();
 
-for (let i = 0; i < 30; i++) {
-  objects.push({
-    userId: generateRandomInt(1, 5),
-    advertId: generateRandomInt(1, 15),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+while (likes.length < 15) {
+  const userId = generateRandomInt(1, 5);
+  const advertId = generateRandomInt(1, 15);
+  const combination = `${userId}-${advertId}`;
+
+  if (!usedCombinations.has(combination)) {
+    usedCombinations.add(combination);
+    likes.push({
+      userId,
+      advertId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+  }
 }
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Likes', objects);
+    await queryInterface.bulkInsert('Likes', likes, {});
     /**
      * Add seed commands here.
      *

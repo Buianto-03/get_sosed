@@ -111,7 +111,7 @@ export default function Navbar(): JSX.Element {
                   <MenuDivider />
                   <MenuItem
                     onClick={() => {
-                      dispatch(logoutThunk());
+                      void dispatch(logoutThunk());
                       onClose();
                     }}
                   >
