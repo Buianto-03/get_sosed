@@ -1,7 +1,7 @@
 import type { AxiosInstance } from 'axios';
 import { ZodError } from 'zod';
 import axiosInstance from './client';
-import type { AuthSchemaT, LoginForm, SignUpSchemaT } from '../types/auth';
+import type { AuthSchemaT, LoginForm } from '../types/auth';
 import { authSchema } from '../types/auth';
 
 class AuthService {

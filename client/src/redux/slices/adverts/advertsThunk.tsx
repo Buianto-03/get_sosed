@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import advertService from '../../../services/advertService';
-import type { FilterType, PostAdvertType, TagType } from '../../../types/advert';
+import type { FilterType, TagType } from '../../../types/advert';
 
 export const getAdvertsThunk = createAsyncThunk('adverts/getAdvertsThunk', () =>
   advertService.getAdverts(),

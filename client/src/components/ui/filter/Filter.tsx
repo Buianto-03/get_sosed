@@ -55,21 +55,30 @@ export default function Filter(): JSX.Element {
   const tags = useAppSelector((store) => store.advert.tags);
   const pickedTags = useAppSelector((store) => store.advert.pickedTags);
 
-  const debouncedSearch = useCallback(
-    debounce((query: string): void => {
+  const performSearch = useCallback(
+    (query: string): void => {
       if (query.trim() === '') {
-        dispatch(setTags([])); // сделать првоерку на filter дописать
+        dispatch(setTags([]));
         return;
       }
       dispatch(getTagsBySearchThunk(query)).catch(console.log);
-    }, 300),
-    [],
+    },
+    [dispatch],
   );
 
+  // Debounced версия функции поиска
+  const debouncedSearch = useCallback(
+    debounce((query: string) => performSearch(query), 300),
+    [performSearch],
+  );
+
+  // Обновление debouncedSearch при изменении query
   useEffect(() => {
-    if (inputValue === '') return;
     debouncedSearch(inputValue);
-  }, [inputValue, debouncedSearch]);
+    return () => {
+      debouncedSearch.cancel(); // Отмена debounce при размонтировании компонента
+    };
+  }, [debouncedSearch, inputValue]);
 
   const popoverWidth = useBreakpointValue({ base: '100vw', md: '80vw' });
 
@@ -229,7 +238,7 @@ export default function Filter(): JSX.Element {
       </Popover>
 
       {/* Поле поиска */}
-      <Box width="100%" maxW={popoverWidth} >
+      <Box width="100%" maxW={popoverWidth}>
         <InputGroup>
           <Input
             placeholder="Поиск по объявлениям"
@@ -239,7 +248,7 @@ export default function Filter(): JSX.Element {
             borderRadius="md"
           />
           <InputRightElement>
-            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2} >
+            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2}>
               <SearchIcon />
             </Button>
           </InputRightElement>
