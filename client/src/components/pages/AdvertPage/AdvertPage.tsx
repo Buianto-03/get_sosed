@@ -57,7 +57,7 @@ export default function AdvertPage(): JSX.Element {
     }
     return false;
   };
-  
+
   return advert ? (
     <>
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
@@ -65,7 +65,7 @@ export default function AdvertPage(): JSX.Element {
           <GridItem colSpan={3}>
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
               {/* <Image src="/images/1.jpg" /> */}
-              <PhotosCarousel photos={advert.AdvertPhotos}/>
+              <PhotosCarousel photos={advert.AdvertPhotos} />
               <Heading as="h2" size="lg" mb={4} pt={5}>
                 О квартире
               </Heading>
@@ -100,7 +100,16 @@ export default function AdvertPage(): JSX.Element {
                 <Text>Имя: {advert.User.name}</Text>
                 <Text>Email: {advert.User.email}</Text>
               </VStack>
-              <Button colorScheme="teal" size="lg" onClick={() => navigate('/')} mr={5}>
+              <Button
+                colorScheme="teal"
+                size="lg"
+                onClick={() => 
+                  user.status === UserStatus.Logged && user.id === advert.userId
+                    ? navigate(`/advert/${advert.id}`)
+                    : navigate(`/chat/${advert.userId}`)
+                }
+                mr={5}
+              >
                 Написать соседу
               </Button>
               <Button variant="ghost" colorScheme="blue" mr={2} onClick={(e) => likeHandler(e)}>

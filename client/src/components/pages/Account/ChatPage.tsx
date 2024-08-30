@@ -9,11 +9,11 @@ import type { ChatType } from '../../../types/chat';
 
 type Action = {
   type: string;
-  payload: unknown;
+  payload: BackendUserT[] | ChatType[] | ChatType | {text: string, receiverId: number};
 };
 
 export default function ChatPage(): JSX.Element {
-  const { receiverId } = useParams();
+  const { receiverId } = useParams<{receiverId: string}>();
   const user = useAppSelector((store) => store.auth.user);
   const [online, setOnline] = useState<BackendUserT[]>([]);
   const [messages, setMessages] = useState<ChatType[]>([]);
@@ -25,7 +25,6 @@ export default function ChatPage(): JSX.Element {
 
     soket.onopen = () => {
       console.log('CONNECTED');
-      // Отправляем receiverId сразу после открытия соединения
       const initialMessage = JSON.stringify({
         type: 'INITIALIZE',
         payload: { receiverId },
@@ -36,18 +35,19 @@ export default function ChatPage(): JSX.Element {
     soket.onerror = (err) => console.log('ERROR', err);
 
     soket.onmessage = (event: MessageEvent) => {
-      const { type, payload }: Action = JSON.parse(event.data);
+      const action: Action = JSON.parse(event.data as string) as Action;
+      const { type, payload } = action;
 
       switch (type) {
         case 'SET_USERS':
-          setOnline(payload);
+          setOnline(payload as BackendUserT[]);
           break;
         case 'SET_MESSAGES':
         case 'NEW_MESSAGES':
-          setMessages(payload);
+          setMessages(payload as ChatType[]);
           break;
         case 'ADD_MESSAGE':
-          setMessages((prevMessages) => [...prevMessages, payload]);
+          setMessages((prevMessages) => [...prevMessages, payload as ChatType]);
           break;
         default:
           break;
@@ -59,11 +59,11 @@ export default function ChatPage(): JSX.Element {
     };
   }, [receiverId]);
 
-  const sendNewMessage = (message: string):void => {
-    if (soketRef.current) {
+  const sendNewMessage = (message: string): void => {
+    if (soketRef.current && receiverId) {
       const action: Action = {
         type: 'ADD_MESSAGE',
-        payload: { text: message, receiverId },
+        payload: { text: message, receiverId: +receiverId},
       };
       soketRef.current.send(JSON.stringify(action));
     }
@@ -90,7 +90,7 @@ export default function ChatPage(): JSX.Element {
           display="flex"
           flexDirection="column"
           alignItems="center"
-          h="50svh" // 90% высоты экрана
+          h="50svh"
           overflowY="auto"
         >
           <Box
@@ -140,15 +140,12 @@ export default function ChatPage(): JSX.Element {
           boxShadow="2xl"
           display="flex"
           flexDirection="column"
-          h="50vh" // 50% высоты экрана
+          h="50vh"
         >
           <Box flex="1" overflowY="auto" borderRadius="md" bg="#d8d8ed" p={4}>
             <ChatComponent messages={messages} /> 
           </Box>
-          <ChatInput
-            onSendMessage={sendNewMessage}
-            
-          />
+          <ChatInput onSendMessage={sendNewMessage} />
         </GridItem>
       </Grid>
     </Container>

@@ -20,6 +20,7 @@ import { Nav } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { UserStatus } from '../../types/auth';
 import { logoutThunk } from '../../redux/slices/auth/thunks';
+import { userProfile } from '../../types/userProfile';
 
 export default function Navbar(): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -90,8 +91,8 @@ export default function Navbar(): JSX.Element {
                 border="2px"
                 borderColor=""
                 src={
-                  user?.UserProfile?.photo
-                    ? user?.UserProfile?.photo
+                  user.status === UserStatus.Logged && user.UserProfile && user.UserProfile.photo
+                    ? user.UserProfile.photo
                     : 'https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png'
                 }
               />
