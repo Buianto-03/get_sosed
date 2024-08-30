@@ -1,13 +1,13 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import advertService from '../../../services/advertService';
-import type { FilterType, PostAdvertType, TagType } from '../../../types/advert';
+import type { FilterType, TagType } from '../../../types/advert';
 
 export const getAdvertsThunk = createAsyncThunk('adverts/getAdvertsThunk', () =>
   advertService.getAdverts(),
 );
 export const getFilteredAdvertsThunk = createAsyncThunk(
   'adverts/getFilteredAdverts',
-  async (filters: FilterType & {tags: TagType[]}) => advertService.getFilteredAdverts(filters),
+  async (filters: FilterType & { tags: TagType[] }) => advertService.getFilteredAdverts(filters),
 );
 
 export const getAdvertByIdThunk = createAsyncThunk(
@@ -15,21 +15,18 @@ export const getAdvertByIdThunk = createAsyncThunk(
   async (id: number) => advertService.getAdvertById(id),
 );
 
-export const postAdvertThunk = createAsyncThunk(
-  'adverts/postAdvertThunk',
-  async (data: FormData) => advertService.createAdvert(data),
+export const postAdvertThunk = createAsyncThunk('adverts/postAdvertThunk', async (data: FormData) =>
+  advertService.createAdvert(data),
 );
 export const getTagsBySearchThunk = createAsyncThunk(
   'adverts/getTagsBySearch',
-  async (tags: string) => advertService.getTagsBySearch(tags), 
+  async (tags: string) => advertService.getTagsBySearch(tags),
 );
 
-export const getLikedAdvertsThunk = createAsyncThunk(
-  'adverts/getLikedAdverts',
-  async () => advertService.getLikedAdverts(),
+export const getLikedAdvertsThunk = createAsyncThunk('adverts/getLikedAdverts', async () =>
+  advertService.getLikedAdverts(),
 );
 
-export const getTopAdvertsThunk = createAsyncThunk(
-  'adverts/getTopAdverts',
-  async () => advertService.getTopAdverts(),
+export const getTopAdvertsThunk = createAsyncThunk('adverts/getTopAdverts', async () =>
+  advertService.getTopAdverts(),
 );

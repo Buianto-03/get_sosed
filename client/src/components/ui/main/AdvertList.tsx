@@ -32,6 +32,8 @@ export default function AdvertList(): JSX.Element {
       metro: querySearchParams.get('metro') || '',
       priceFrom: Number(querySearchParams.get('priceFrom') || '0'),
       priceTo: Number(querySearchParams.get('priceTo') || '0'),
+      roomsFrom: Number(querySearchParams.get('roomsFrom') || '0'),
+      roomsTo: Number(querySearchParams.get('roomsTo') || '0'),
     }
     void dispatch(getFilteredAdvertsThunk({...filtersFromQuery, tags: pickedTags}));
   }, [querySearchParams, dispatch, pickedTags]);
@@ -52,6 +54,9 @@ export default function AdvertList(): JSX.Element {
     // searchParams.set('category', filters.category);
     searchParams.set('district', filters.district);
     searchParams.set('metro', filters.metro);
+    searchParams.set('roomsFrom', filters.roomsFrom.toString());
+    searchParams.set('roomsTo', filters.roomsTo.toString());
+
     setSearchParams(searchParams);
 
     // navigate(`${location.pathname}?${searchParams.toString()}`);

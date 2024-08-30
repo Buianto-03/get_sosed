@@ -129,8 +129,17 @@ class AdvertService {
       }
     }
 
-    if (filters.rooms) {
-      whereClause.rooms = Number(filters.rooms);
+    // if (filters.rooms) {
+    //   whereClause.rooms = Number(filters.rooms);
+    // }
+    if(filters.roomsFrom || filters.roomsTo) {
+      whereClause.rooms = {};
+      if (filters.roomsFrom !== undefined) {
+        whereClause.rooms[Op.gte] = Number(filters.roomsFrom);
+      }
+      if (filters.roomsTo && filters.roomsTo !== 0) {
+        whereClause.rooms[Op.lte] = Number(filters.roomsTo);
+      }
     }
     // console.log(filters.tags.map((el) => el.id));
 
@@ -158,7 +167,7 @@ class AdvertService {
             where:
               filters.tags.length > 0
                 ? {
-                    [Op.or]: filters.tags.map(({ id }) => ({ id })),
+                    [Op.and]: filters.tags.map(({ id }) => ({ id })),
                   }
                 : undefined,
             as: 'tags',

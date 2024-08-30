@@ -23,6 +23,8 @@ const initialState: AdvertSliceT = {
   filters: {
     city: searchParams.get('city') || '',
     // category: searchParams.get('category') || '',
+    roomsFrom: Number(searchParams.get('roomsFrom') || '0'),
+    roomsTo: Number(searchParams.get('roomsTo') || '0'),
     district: searchParams.get('district') || '',
     metro: searchParams.get('metro') || '',
     priceFrom: Number(searchParams.get('priceFrom') || '0'),

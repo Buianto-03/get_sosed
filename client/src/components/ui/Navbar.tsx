@@ -30,7 +30,7 @@ export default function Navbar(): JSX.Element {
   if (user.status === UserStatus.Pending || user.status === UserStatus.Guest)
     console.log('no user');
 
-  const handleCloseMenu = () => {
+  const handleCloseMenu = (): void => {
     onClose(); // Закрытие меню
   };
 

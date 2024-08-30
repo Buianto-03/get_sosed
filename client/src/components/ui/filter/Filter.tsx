@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   InputGroup,
   Input,
-  InputRightElement,
   Button,
   Box,
   Flex,
@@ -29,8 +28,8 @@ import {
   NumberInput,
   NumberInputField,
   useBreakpointValue,
+  useDisclosure,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
 import { debounce } from 'lodash';
 import { addTag, removeTag, setFilters, setTags } from '../../../redux/slices/adverts/advertsSlice'; // Измените на правильное действие
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
@@ -44,7 +43,10 @@ export default function Filter(): JSX.Element {
     initFilters.priceFrom,
     initFilters.priceTo,
   ]);
-  // const [rooms, setRooms] = useState<number>(1); // Количество комнат
+  const [roomsRange, setRoomsRange] = useState<[number, number]>([
+    initFilters.roomsFrom,
+    initFilters.roomsTo,
+  ]); // Количество комнат
   const [city, setCity] = useState<string>(initFilters.city);
   const [district, setDistrict] = useState<string>(initFilters.district);
   const [metro, setMetro] = useState<string>(initFilters.metro);
@@ -54,7 +56,9 @@ export default function Filter(): JSX.Element {
   const dispatch = useAppDispatch();
   const tags = useAppSelector((store) => store.advert.tags);
   const pickedTags = useAppSelector((store) => store.advert.pickedTags);
+  const {isOpen, onOpen, onClose} = useDisclosure();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
     debounce((query: string): void => {
       if (query.trim() === '') {
@@ -84,8 +88,11 @@ export default function Filter(): JSX.Element {
       metro,
       // category,
       tags: pickedTags,
+      roomsFrom: roomsRange[0],
+      roomsTo: roomsRange[1],
     };
-    dispatch(setFilters(filters)); // Отправляем параметры фильтрации в Redux
+    dispatch(setFilters(filters));
+    onClose() // Отправляем параметры фильтрации в Redux
   };
   const handleTagClick = (tag: TagType): void => {
     dispatch(addTag(tag));
@@ -97,7 +104,7 @@ export default function Filter(): JSX.Element {
   return (
     <Flex
       p={4}
-      bg="gray.100"
+      bg="#F3F3FF"
       borderRadius="md"
       boxShadow="md"
       width="100%"
@@ -105,7 +112,7 @@ export default function Filter(): JSX.Element {
       justifyContent="center"
     >
       {/* Поповер для фильтра и категорий */}
-      <Popover>
+      <Popover isOpen={isOpen} onClose={onClose} onOpen={onOpen}>
         <PopoverTrigger>
           <Button
             size="lg"
@@ -115,6 +122,7 @@ export default function Filter(): JSX.Element {
             borderColor="blue.300"
             _hover={{ bg: 'blue.100' }}
             mr={4}
+            onClick={onOpen}
           >
             Фильтр
           </Button>
@@ -185,10 +193,55 @@ export default function Filter(): JSX.Element {
 
                     {/* <FormControl>
                       <FormLabel>Количество комнат</FormLabel>
-                      <NumberInput min={1} max={5} value={rooms} onChange={(value) => setRooms(Number(value))}>
+                      <NumberInput
+                        min={1}
+                        max={5}
+                        value={rooms}
+                        onChange={(value) => setRooms(Number(value))}
+                      >
                         <NumberInputField />
                       </NumberInput>
                     </FormControl> */}
+
+                    <FormControl>
+                      <FormLabel>Кол-во комнат</FormLabel>
+                      <RangeSlider
+                        // aria-label={['min', 'max']}
+                        value={roomsRange}
+                        min={0}
+                        max={8}
+                        step={1}
+                        onChange={(val) => setRoomsRange(val as [number, number])}
+                      >
+                        <RangeSliderTrack>
+                          <RangeSliderFilledTrack />
+                        </RangeSliderTrack>
+                        <RangeSliderThumb index={0} />
+                        <RangeSliderThumb index={1} />
+                      </RangeSlider>
+                      <HStack justifyContent="space-between" mt={2}>
+                        <NumberInput
+                          maxW="100px"
+                          mr="2rem"
+                          value={roomsRange[0]}
+                          onChange={(value) => setRoomsRange([Number(value), roomsRange[1]])}
+                          min={0}
+                          max={roomsRange[1]}
+                        >
+                          <NumberInputField />
+                        </NumberInput>
+                        <Text>до</Text>
+                        <NumberInput
+                          maxW="100px"
+                          value={roomsRange[1]}
+                          onChange={(value) => setRoomsRange([roomsRange[0], Number(value)])}
+                          min={priceRange[0]}
+                          max={8}
+                        >
+                          <NumberInputField />
+                        </NumberInput>
+                      </HStack>
+                    </FormControl>
 
                     <FormControl>
                       <FormLabel>Город</FormLabel>
@@ -229,7 +282,7 @@ export default function Filter(): JSX.Element {
       </Popover>
 
       {/* Поле поиска */}
-      <Box width="100%" maxW={popoverWidth} >
+      <Box width="100%" maxW={popoverWidth}>
         <InputGroup>
           <Input
             placeholder="Поиск по объявлениям"
@@ -238,11 +291,11 @@ export default function Filter(): JSX.Element {
             size="lg"
             borderRadius="md"
           />
-          <InputRightElement>
-            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2} >
+          {/* <InputRightElement>
+            <Button onClick={handleFilter} colorScheme="blue" borderRadius="md" mt={2}>
               <SearchIcon />
             </Button>
-          </InputRightElement>
+          </InputRightElement> */}
         </InputGroup>
         {/**
          */}

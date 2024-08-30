@@ -36,6 +36,8 @@ export type FilterType = {
   district: string;
   metro: string;
   // category: string;
+  roomsFrom: number;
+  roomsTo: number;
 };
 
 export const tagSchema = z.object({
