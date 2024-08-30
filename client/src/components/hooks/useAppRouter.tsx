@@ -44,7 +44,12 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         },
         {
           path: '/signin',
-          element: <SignInPage />,
+          element: (
+            <ProtectedRoute isAllowed={user.status === UserStatus.Guest} redirect="/">
+              <SignInPage />
+            </ProtectedRoute>
+          ),
+
           // element: <SignInPage />,
         },
         {

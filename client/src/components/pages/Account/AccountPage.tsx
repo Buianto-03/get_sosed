@@ -16,18 +16,24 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { FaThumbsUp } from 'react-icons/fa';
-import type { Action } from '@reduxjs/toolkit';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import ChatList from '../../ui/chat/ChatList';
-import { UserStatus, type BackendUserT } from '../../../types/auth';
+import { UserStatus } from '../../../types/auth';
+import type { BackendUserT } from '../../../types/auth';
 import type { ChatType } from '../../../types/chat';
 import { editUserProfileThunk } from '../../../redux/slices/userProfile/thunks';
 import { checkAuthThunk } from '../../../redux/slices/auth/thunks';
 import { getReceiverListThunk } from '../../../redux/slices/chat/thunks';
 import { getLikedAdvertsThunk } from '../../../redux/slices/adverts/advertsThunk';
-import { deleteLikeThunk } from '../../../redux/slices/likes/likesThunk';
 import DeleteModalConfirm from '../../ui/Modal/ConfirmDeleteModal';
 import { setSelectedLike } from '../../../redux/slices/likes/likesSlice';
+
+type ChatTypePayload = {
+  type: 'SET_USERS' | 'SET_MESSAGES' | 'NEW_MESSAGES';
+  payload: ChatType[] | BackendUserT[];
+};
+
+type Action = ChatTypePayload;
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((store) => store.auth.user);
@@ -42,7 +48,6 @@ export default function AccountPage(): JSX.Element {
     onClose: () => {
       setIsOpen(false);
       if (user.status === UserStatus.Logged) {
-        void dispatch(deleteLikeThunk(like.advertId));
         void dispatch(getLikedAdvertsThunk()).catch(() => console.log('olol'));
       }
       return false;
@@ -54,11 +59,9 @@ export default function AccountPage(): JSX.Element {
   const [editProfile, setEditProfile] = useState({
     age: '',
     phoneNumber: '',
-    // photo: '',
     about: '',
   });
   const [errors, setErrors] = useState({
-    // photo: '',
     age: '',
     phoneNumber: '',
     about: '',
@@ -87,13 +90,13 @@ export default function AccountPage(): JSX.Element {
 
         switch (type) {
           case 'SET_USERS':
-            setOnline(payload);
+            setOnline(payload as BackendUserT[]);
             break;
           case 'SET_MESSAGES':
-            setMessages(payload);
+            setMessages(payload as ChatType[]);
             break;
           case 'NEW_MESSAGES':
-            setMessages(payload);
+            setMessages(payload as ChatType[]);
             break;
           default:
             break;
@@ -106,7 +109,7 @@ export default function AccountPage(): JSX.Element {
     return () => {
       soketRef.current?.close();
     };
-  }, []);
+  }, [user.status, user, dispatch]);
 
   const receivers = useAppSelector((store) => store.chatList.chatList);
 
@@ -126,14 +129,6 @@ export default function AccountPage(): JSX.Element {
       ...prevProfile,
       [name]: value,
     }));
-
-    // Simple validation checks
-    // if (name === 'photo') {
-    //   setErrors((prevErrors) => ({
-    //     ...prevErrors,
-    //     photo: '',
-    //   }))
-    // }
 
     if (name === 'age') {
       const ageValue = parseInt(value, 10);
@@ -213,7 +208,6 @@ export default function AccountPage(): JSX.Element {
           <VStack spacing={2} alignItems="center" mt={4}>
             {isEditing ? (
               <Box as="form" onSubmit={handleSaveProfile}>
-                {/* <FormControl isInvalid={!!errors.photo}> */}
                 <FormControl>
                   <Image
                     borderRadius="full"
@@ -230,31 +224,6 @@ export default function AccountPage(): JSX.Element {
                     }
                     alt="User Avatar"
                   />
-                  {/* <label
-                    htmlFor="photo"
-                    style={{
-                      border: '1px solid #ccc',
-                      display: 'inline-block',
-                      padding: '6px 12px',
-                      cursor: 'pointer',
-                      background: 'white',
-                      marginBottom: '0.5rem',
-                      width: '100%',
-                      height: '2.5rem',
-                      borderRadius: '0.375rem',
-                    }}
-                  >
-                    Выберите фото
-                  </label> */}
-                  <input
-                    id="photo"
-                    name="photo"
-                    type="file"
-                    // style={{
-                    //   display: 'none',
-                    // }}
-                  />
-                  <FormErrorMessage>{errors.photo}</FormErrorMessage>
                 </FormControl>
                 <FormControl isInvalid={!!errors.age}>
                   <Input
@@ -301,6 +270,7 @@ export default function AccountPage(): JSX.Element {
               </Box>
             ) : (
               <Box textAlign="center">
+                {user.status === User}
                 <Image
                   borderRadius="full"
                   mb={4}
@@ -397,7 +367,7 @@ export default function AccountPage(): JSX.Element {
           )}
         </GridItem>
       </Grid>
-      <DeleteModalConfirm isOpen={isOpen} onClose={onClose} onOpen={onOpen} />
+      <DeleteModalConfirm isOpen={isOpen} onClose={onClose} />
     </Container>
   );
 }
