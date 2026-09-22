@@ -11,6 +11,7 @@ export const setLikeThunk = createAsyncThunk('likes/setLikeThunk', (advertId: Ad
   likeService.setLike(advertId),
 );
 
-export const deleteLikeThunk = createAsyncThunk('likes/deleteLikeThunk', (id: LikeType['id']) =>
-  likeService.deleteLike(id),
+export const deleteLikeThunk = createAsyncThunk(
+  'likes/deleteLikeThunk',
+  (advertId: AdvertType['id']) => likeService.deleteLike(advertId),
 );

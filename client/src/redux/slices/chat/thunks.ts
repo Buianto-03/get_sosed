@@ -6,5 +6,3 @@ export const getReceiverListThunk = createAsyncThunk(
   'chatList/getReceiverListThunk',
   (id: ChatListType['senderId']) => chatListService.getChatList(id),
 );
-
-export const a = 3;

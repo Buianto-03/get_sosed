@@ -6,5 +6,3 @@ export const editUserProfileThunk = createAsyncThunk(
   (formData: FormData) =>
     userProfileService.editUserProfile(formData),
 );
-
-export const a = 3;

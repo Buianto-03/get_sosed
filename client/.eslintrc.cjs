@@ -46,6 +46,7 @@ module.exports = {
     '@typescript-eslint/switch-exhaustiveness-check': 'error',
     '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
     'import/no-extraneous-dependencies': 'off',
+    'import/prefer-default-export': 'off',
     'no-console': 'off',
     '@typescript-eslint/no-non-null-assertion': 'warn',
   },

@@ -1,9 +1,9 @@
 import { Box, Button, Container, FormControl, FormLabel, Heading, Input } from '@chakra-ui/react';
 import React from 'react';
+import axios from 'axios';
 import { Form, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../redux/hooks';
 import { postAdvertThunk } from '../../../redux/slices/adverts/advertsThunk';
-import axiosInstance from '../../../services/client';
 import type { ApiResponse } from '../../../types/postAdvertInterfaces';
 import { UserStatus } from '../../../types/auth';
 
@@ -41,8 +41,8 @@ export default function PostAdvertPage(): JSX.Element {
     if (!city || !address) return;
     const queryAddress = `${city}, ${address}`.replaceAll(' ', '+');
 
-    axiosInstance<ApiResponse>(
-      `https://geocode-maps.yandex.ru/1.x/?apikey=2955bf46-ac2f-4eeb-86ca-2434442ed867&geocode=${queryAddress}&lang=ru_RU&format=json`,
+    axios<ApiResponse>(
+      `https://geocode-maps.yandex.ru/1.x/?apikey=${import.meta.env.VITE_YANDEX_API_KEY}&geocode=${queryAddress}&lang=ru_RU&format=json`,
     )
       .then((res) => {
         const coordinates =

@@ -84,7 +84,7 @@ export const advertSlice = createSlice({
         state.liked = action.payload;
       })
       .addCase(deleteLikeThunk.fulfilled, (state, action) => {
-        state.liked.filter((el) => el.id !== action.payload.id);
+        state.liked = state.liked.filter((el) => el.advertId !== action.payload.advertId);
       })
       .addCase(getTopAdvertsThunk.fulfilled, (state, action) => {
         state.populars = action.payload;

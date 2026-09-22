@@ -78,13 +78,10 @@ export default function useAppRouter(): ReturnType<typeof createBrowserRouter> {
         {
           path: '/post',
           element: (
-            // (
-            //   <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
-            <PostAdvertPage />
+            <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+              <PostAdvertPage />
+            </ProtectedRoute>
           ),
-          //   </ProtectedRoute>
-          // ),
-          // element: <PostAdvertPage />,
         },
         {
           path: '*',
