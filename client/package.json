@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 && node scripts/check-boundaries.mjs",
+    "lint:ts": "tsc --noEmit",
     "check:architecture": "node scripts/check-boundaries.mjs",
     "preview": "vite preview",
     "compile": "./node_modules/.bin/tsc",
