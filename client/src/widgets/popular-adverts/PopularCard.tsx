@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Flex, Box, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../app/store/hooks';
-import AdvertCard from '../../entities/advert/ui/AdvertCard';
-import { getTopAdvertsThunk } from '../../entities/advert/model/advertsThunk';
+import { useAppSelector, useAppDispatch } from '@app/store/hooks';
+import AdvertCard from '@entities/advert/ui/AdvertCard';
+import { getTopAdvertsThunk } from '@entities/advert/model/advertsThunk';
 
 export default function PopularCard(): JSX.Element {
   const adverts = useAppSelector(store => store.advert.populars)

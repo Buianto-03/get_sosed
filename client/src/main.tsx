@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom/client';
 import { ChakraProvider } from '@chakra-ui/react';
 import { Provider } from 'react-redux';
 import axios from 'axios';
-import App from './app/App';
-import { store } from './app/store/store';
-import { configureApiAuth } from './shared/api/client';
-import { API_URL } from './shared/config/env';
-import { authSchema } from './entities/session/model/auth';
-import { clearAuth, setAccessToken } from './entities/session/model/authSlice';
+import App from '@app/App';
+import { store } from '@app/store/store';
+import { configureApiAuth } from '@shared/api/client';
+import { API_URL } from '@shared/config/env';
+import { authSchema } from '@entities/session/model/auth';
+import { clearAuth, setAccessToken } from '@entities/session/model/authSlice';
 
 configureApiAuth({
   getAccessToken: () => store.getState().auth.accessToken,

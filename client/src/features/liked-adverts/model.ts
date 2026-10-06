@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { z } from 'zod';
-import axiosInstance from '../../shared/api/client';
-import { advertSchema } from '../../entities/advert/model/advert';
+import axiosInstance from '@shared/api/client';
+import { advertSchema } from '@entities/advert/model/advert';
 
 const likedAdvertSchema = z.object({
   id: z.number(),

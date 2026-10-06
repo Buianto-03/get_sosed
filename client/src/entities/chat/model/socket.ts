@@ -1,4 +1,4 @@
-import { WS_URL } from '../../../shared/config/env';
+import { WS_URL } from '@shared/config/env';
 import { incomingMessageSchema } from './protocol';
 import type { IncomingMessage, OutgoingMessage } from './protocol';
 

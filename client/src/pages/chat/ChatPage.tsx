@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Grid, GridItem, Container, Avatar, Text, Box } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
-import ChatComponent from '../../widgets/chat-window/ChatComponent';
-import ChatInput from '../../features/send-message/ChatInput';
-import { UserStatus } from '../../entities/session/model/auth';
-import { chatSocket } from '../../entities/chat/model/socket';
-import { getReceiverListThunk } from '../../entities/chat/model/thunks';
+import { useAppDispatch, useAppSelector } from '@app/store/hooks';
+import ChatComponent from '@widgets/chat-window/ChatComponent';
+import ChatInput from '@features/send-message/ChatInput';
+import { UserStatus } from '@entities/session/model/auth';
+import { chatSocket } from '@entities/chat/model/socket';
+import { getReceiverListThunk } from '@entities/chat/model/thunks';
 
 export default function ChatPage(): JSX.Element {
   const { receiverId } = useParams<{receiverId: string}>();

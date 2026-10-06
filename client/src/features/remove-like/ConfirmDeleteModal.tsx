@@ -9,8 +9,8 @@ import {
   ModalCloseButton,
   Button,
 } from '@chakra-ui/react';
-import { useAppDispatch } from '../../app/store/hooks';
-import { deleteLikeThunk } from '../../entities/like/model/likesThunk';
+import { useAppDispatch } from '@app/store/hooks';
+import { deleteLikeThunk } from '@entities/like/model/likesThunk';
 
 type DeleteModalConfirmProps = {
   isOpen: boolean;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { UserStatus } from '@entities/session/model/auth';
 import { useAppSelector } from '../store/hooks';
-import { UserStatus } from '../../entities/session/model/auth';
 
 type ProtectedRouteProps = {
   access: 'logged' | 'guest';

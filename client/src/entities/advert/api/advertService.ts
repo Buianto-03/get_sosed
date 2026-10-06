@@ -1,7 +1,7 @@
 import type { AxiosInstance } from 'axios';
+import axiosInstance from '@shared/api/client';
 import { advertSchema, tagSchema } from '../model/advert';
 import type { AdvertType, FilterType, TagType } from '../model/advert';
-import axiosInstance from '../../../shared/api/client';
 
 class AdvertService {
   constructor(private client: AxiosInstance) {}

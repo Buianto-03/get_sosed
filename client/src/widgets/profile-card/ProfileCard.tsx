@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Avatar, Box, Button, Text, VStack } from '@chakra-ui/react';
-import type { BackendUserT } from '../../entities/session/model/auth';
-import ProfileForm from '../../features/edit-profile/ProfileForm';
+import type { BackendUserT } from '@entities/session/model/auth';
+import ProfileForm from '@features/edit-profile/ProfileForm';
 
 export default function ProfileCard({ user, onPost }: {
   user: BackendUserT;

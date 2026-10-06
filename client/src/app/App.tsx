@@ -1,11 +1,11 @@
 import React, { Suspense, useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
-import router from './router/router';
+import { checkAuthThunk } from '@entities/session/model/thunks';
+import { chatSocket } from '@entities/chat/model/socket';
+import { addMessage, clearChat, setMessages, setOnline } from '@entities/chat/model/chatListSlice';
+import { UserStatus } from '@entities/session/model/auth';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { checkAuthThunk } from '../entities/session/model/thunks';
-import { chatSocket } from '../entities/chat/model/socket';
-import { addMessage, clearChat, setMessages, setOnline } from '../entities/chat/model/chatListSlice';
-import { UserStatus } from '../entities/session/model/auth';
+import router from './router/router';
 
 function App(): JSX.Element {
   const dispatch = useAppDispatch();
@@ -17,7 +17,6 @@ function App(): JSX.Element {
     // void dispatch(getAdvertsThunk());
     // dispatch getTagsByStringTagsThunk  <---
     // tags=Квартира,Кухня ->>> stringTags: ['Квартира', 'Кухня'] ->>> tags: [{id: 1, name: 'Квартира'}, {id: 2, name: 'Кухня'}]
-    
   }, [dispatch]);
 
   useEffect(() => {
@@ -36,11 +35,15 @@ function App(): JSX.Element {
           break;
         case 'ADD_MESSAGE':
         case 'NEW_MESSAGE':
-          dispatch(addMessage({
-            userId: action.payload.senderId === userId
-              ? action.payload.receiverId : action.payload.senderId,
-            message: action.payload,
-          }));
+          dispatch(
+            addMessage({
+              userId:
+                action.payload.senderId === userId
+                  ? action.payload.receiverId
+                  : action.payload.senderId,
+              message: action.payload,
+            }),
+          );
           break;
         default:
           break;
@@ -49,7 +52,11 @@ function App(): JSX.Element {
     return () => chatSocket.disconnect();
   }, [dispatch, userId]);
 
-  return <Suspense fallback={<div>Загрузка...</div>}><RouterProvider router={router} /></Suspense>;
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <RouterProvider router={router} />
+    </Suspense>
+  );
 }
 
 export default App;

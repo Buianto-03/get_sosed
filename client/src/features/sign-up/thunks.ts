@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import authService from '../../entities/session/api/authService';
-import { setSession } from '../../entities/session/model/authSlice';
+import authService from '@entities/session/api/authService';
+import { setSession } from '@entities/session/model/authSlice';
 
 export const signupThunk = createAsyncThunk('auth/signup', async (formData: FormData, { dispatch }) => {
   const session = await authService.submitSignUpForm(formData);

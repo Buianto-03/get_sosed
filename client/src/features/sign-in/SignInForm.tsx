@@ -12,8 +12,8 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../app/store/hooks';
-import type { LoginForm } from '../../entities/session/model/auth';
+import { useAppDispatch } from '@app/store/hooks';
+import type { LoginForm } from '@entities/session/model/auth';
 import { signinThunk } from './thunks';
 
 export default function SignInForm(): JSX.Element {

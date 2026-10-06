@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { Container, Grid, GridItem, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
-import { UserStatus } from '../../entities/session/model/auth';
-import { getReceiverListThunk } from '../../entities/chat/model/thunks';
-import { getLikedAdvertsThunk } from '../../features/liked-adverts/model';
-import ChatList from '../../widgets/chat-list/ChatList';
-import LikedAdverts from '../../widgets/liked-adverts/LikedAdverts';
-import ProfileCard from '../../widgets/profile-card/ProfileCard';
+import { useAppDispatch, useAppSelector } from '@app/store/hooks';
+import { UserStatus } from '@entities/session/model/auth';
+import { getReceiverListThunk } from '@entities/chat/model/thunks';
+import { getLikedAdvertsThunk } from '@features/liked-adverts/model';
+import ChatList from '@widgets/chat-list/ChatList';
+import LikedAdverts from '@widgets/liked-adverts/LikedAdverts';
+import ProfileCard from '@widgets/profile-card/ProfileCard';
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((state) => state.auth.user);

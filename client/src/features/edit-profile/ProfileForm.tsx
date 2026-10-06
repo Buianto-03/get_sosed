@@ -3,9 +3,9 @@ import {
   Box, Button, FormControl, FormErrorMessage, FormLabel, Input, Text, VStack,
 } from '@chakra-ui/react';
 import { z } from 'zod';
-import { useAppDispatch } from '../../app/store/hooks';
-import type { BackendUserT } from '../../entities/session/model/auth';
-import { checkAuthThunk } from '../../entities/session/model/thunks';
+import { useAppDispatch } from '@app/store/hooks';
+import type { BackendUserT } from '@entities/session/model/auth';
+import { checkAuthThunk } from '@entities/session/model/thunks';
 import { editUserProfileThunk } from './thunks';
 
 const profileSchema = z.object({

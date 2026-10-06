@@ -4,8 +4,8 @@ import {
   PopoverCloseButton, PopoverContent, PopoverTrigger, SimpleGrid, Text,
 } from '@chakra-ui/react';
 import { useSearchParams } from 'react-router-dom';
-import advertService from '../../entities/advert/api/advertService';
-import type { TagType } from '../../entities/advert/model/advert';
+import advertService from '@entities/advert/api/advertService';
+import type { TagType } from '@entities/advert/model/advert';
 import { readFilters, writeFilters } from './model/filters';
 import type { AppliedFilters } from './model/filters';
 

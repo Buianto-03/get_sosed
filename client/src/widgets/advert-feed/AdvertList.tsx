@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { Flex, Button, Text } from '@chakra-ui/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../app/store/hooks';
-import AdvertCard from '../../entities/advert/ui/AdvertCard';
-import { getFilteredAdvertsThunk } from '../../entities/advert/model/advertsThunk';
-import { loadCards } from '../../entities/advert/model/advertsSlice';
-import { readFilters } from '../../features/advert-filter/model/filters';
+import { useAppSelector, useAppDispatch } from '@app/store/hooks';
+import AdvertCard from '@entities/advert/ui/AdvertCard';
+import { getFilteredAdvertsThunk } from '@entities/advert/model/advertsThunk';
+import { loadCards } from '@entities/advert/model/advertsSlice';
+import { readFilters } from '@features/advert-filter/model/filters';
 
 export default function AdvertList(): JSX.Element {
   const { adverts, visitableCards, loading, error } = useAppSelector((state) => state.advert);

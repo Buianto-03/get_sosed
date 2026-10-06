@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Button, Text, VStack } from '@chakra-ui/react';
-import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
-import { getLikedAdvertsThunk } from '../../features/liked-adverts/model';
-import ConfirmDeleteModal from '../../features/remove-like/ConfirmDeleteModal';
+import { useAppDispatch, useAppSelector } from '@app/store/hooks';
+import { getLikedAdvertsThunk } from '@features/liked-adverts/model';
+import ConfirmDeleteModal from '@features/remove-like/ConfirmDeleteModal';
 
 export default function LikedAdverts({ onOpenAdvert }: {
   onOpenAdvert: (id: number) => void;

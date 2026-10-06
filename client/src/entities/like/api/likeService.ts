@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
+import axiosInstance from '@shared/api/client';
 import { likeSchema, type LikeType } from '../model/like';
-import axiosInstance from '../../../shared/api/client';
 
 class LikeService {
   constructor(private client: AxiosInstance) {}

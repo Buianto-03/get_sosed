@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import axiosInstance from '../../../shared/api/client';
+import axiosInstance from '@shared/api/client';
 import { chatListSchema, type ChatListType } from '../model/chatList';
 
 class ChatListService {

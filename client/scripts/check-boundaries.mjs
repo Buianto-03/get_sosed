@@ -18,9 +18,16 @@ const errors = [];
 for (const file of sourceFiles) {
   const source = relative(root, file).split(sep);
   const content = await readFile(file, 'utf8');
-  const imports = content.matchAll(/\b(?:from|import)\s*['"](\.[^'"]+)['"]/g);
+  const imports = content.matchAll(/\b(?:from|import)\s*['"]([^'"]+)['"]/g);
   for (const [, specifier] of imports) {
-    const target = resolve(dirname(file), specifier);
+    let target;
+    if (specifier.startsWith('.')) {
+      target = resolve(dirname(file), specifier);
+    } else {
+      const aliasMatch = specifier.match(/^@(app|pages|widgets|features|entities|shared)\/(.*)$/);
+      if (!aliasMatch) continue;
+      target = resolve(root, aliasMatch[1], aliasMatch[2]);
+    }
     const destination = relative(root, target).split(sep);
     if (!(source[0] in levels) || !(destination[0] in levels)) continue;
     const storeHooks = destination.join('/') === 'app/store/hooks';

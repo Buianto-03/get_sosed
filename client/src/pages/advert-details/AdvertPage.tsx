@@ -13,17 +13,17 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
-import { useAppDispatch, useAppSelector } from '../../app/store/hooks';
+import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import {
   deleteLikeThunk,
   getLikesThunk,
   setLikeThunk,
-} from '../../entities/like/model/likesThunk';
-import LikeProfile from '../../entities/like/ui/LikeProfile';
-import PhotosCarousel from '../../shared/ui/PhotosCarousel';
-import { UserStatus } from '../../entities/session/model/auth';
-import YMap from '../../shared/ui/YMap';
-import { getAdvertByIdThunk } from '../../entities/advert/model/advertsThunk';
+} from '@entities/like/model/likesThunk';
+import LikeProfile from '@entities/like/ui/LikeProfile';
+import PhotosCarousel from '@shared/ui/PhotosCarousel';
+import { UserStatus } from '@entities/session/model/auth';
+import YMap from '@shared/ui/YMap';
+import { getAdvertByIdThunk } from '@entities/advert/model/advertsThunk';
 
 export default function AdvertPage(): JSX.Element {
   const navigate = useNavigate();

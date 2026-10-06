@@ -14,7 +14,7 @@ import {
   RadioGroup,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../app/store/hooks';
+import { useAppDispatch } from '@app/store/hooks';
 import { signupThunk } from './thunks';
 
 export default function SignUpForm(): JSX.Element {

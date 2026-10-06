@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
 import { ZodError } from 'zod';
-import axiosInstance from '../../../shared/api/client';
+import axiosInstance from '@shared/api/client';
 import type { AuthSchemaT, LoginForm } from '../model/auth';
 import { authSchema } from '../model/auth';
 

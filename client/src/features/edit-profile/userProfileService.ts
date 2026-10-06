@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import axiosInstance from '../../shared/api/client';
+import axiosInstance from '@shared/api/client';
 
 class UserProfileService {
   constructor(private client: AxiosInstance) {}

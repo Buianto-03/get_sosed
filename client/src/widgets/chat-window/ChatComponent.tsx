@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Box, VStack, Text, Flex } from '@chakra-ui/react';
-import { useAppSelector } from '../../app/store/hooks';
-import type { ChatType } from '../../entities/chat/model/chat';
-import { UserStatus } from '../../entities/session/model/auth';
+import { useAppSelector } from '@app/store/hooks';
+import type { ChatType } from '@entities/chat/model/chat';
+import { UserStatus } from '@entities/session/model/auth';
 
 type ChatComponentProps = {
   messages: ChatType[];
