@@ -8,6 +8,10 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:3000',
       '/images': 'http://localhost:3000',
+      '/ws': {
+        target: 'http://localhost:3000',
+        ws: true,
+      },
     },
   },
   build: {

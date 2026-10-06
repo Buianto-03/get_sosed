@@ -50,7 +50,7 @@ const connectionCb = async (socket, request, user) => {
 
         // Отправляем сообщения только текущему пользователю
         socket.send(
-          JSON.stringify({ type: 'SET_MESSAGES', payload: allMessages }),
+          JSON.stringify({ type: 'SET_MESSAGES', receiverId: Number(payload.receiverId), payload: allMessages }),
         );
         break;
 

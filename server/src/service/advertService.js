@@ -7,7 +7,7 @@ const {
   User,
   Like,
   AdvertPhoto,
-  AdvertTag,
+  AdvertTags,
 } = require('../../db/models');
 
 class AdvertService {
@@ -112,6 +112,9 @@ class AdvertService {
   async getFilteredAdverts(filters) {
     const whereClause = {};
     const locationClause = {};
+    const selectedTagIds = [...new Set((filters.tags || [])
+      .map(({ id }) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0))];
 
     // console.log({ filters });
 
@@ -141,19 +144,21 @@ class AdvertService {
         whereClause.rooms[Op.lte] = Number(filters.roomsTo);
       }
     }
-    // console.log(filters.tags.map((el) => el.id));
-
-    // if (filters.tags) {
-    //   whereClause.tags = {
-    //     [Op.contains]: filters.tags.map((el) => el.id),
-    //   };
-    // }
-
     try {
-      console.log({ whereClause });
+      if (selectedTagIds.length > 0) {
+        const matches = await this.advertTag.findAll({
+          attributes: ['advertId'],
+          where: { tagId: { [Op.in]: selectedTagIds } },
+          group: ['advertId'],
+          having: Sequelize.where(
+            Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('tagId'))),
+            selectedTagIds.length,
+          ),
+        });
+        whereClause.id = { [Op.in]: matches.map(({ advertId }) => advertId) };
+      }
 
       const adverts = await this.advert.findAll({
-        // const adverts = await this.advertTag.findAll({
         where: whereClause,
         include: [
           {
@@ -164,14 +169,8 @@ class AdvertService {
           'User',
           {
             model: this.tags, // Модель Tag
-            where:
-              filters.tags.length > 0
-                ? {
-                    [Op.and]: filters.tags.map(({ id }) => ({ id })),
-                  }
-                : undefined,
             as: 'tags',
-            required: filters.tags.length > 0,
+            required: false,
           },
           {
             model: this.advertPhoto,
@@ -180,7 +179,6 @@ class AdvertService {
         ], // подключить таблицу с тегами
       });
       // console.log(JSON.stringify(adverts, null, 2));
-      console.log({ adverts });
       return adverts;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);
@@ -272,7 +270,7 @@ const advertService = new AdvertService(
   User,
   Like,
   AdvertPhoto,
-  AdvertTag,
+  AdvertTags,
 );
 
 module.exports = advertService;

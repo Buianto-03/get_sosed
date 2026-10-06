@@ -1,79 +1,29 @@
-# Elbrus Bootcamp Vite bundle
+# Get Sosed — фронтенд
 
-## React + Typescript + ESLint + Prettier
+React, TypeScript, Vite, Redux Toolkit и Chakra UI. Структура кода и правила
+импортов описаны в [ARCH.md](./ARCH.md).
 
-Современный быстрый сборщик React проекта на Typescript с предустановленными настройками ESLint и Prettier от Elbrus Bootcamp.
+## Запуск
 
-## Использование
-
-```
-npx degit Elbrus-Bootcamp/vite-react-ts my-app
-
-cd my-app
-
-npm i
-```
-
-## Скрипты
-
-- Запустить в режиме разработки
-
-```
+```sh
+npm install
+cp .env.example .env
 npm run dev
 ```
 
-- Собрать проект
+Vite проксирует `/api`, `/images` и `/ws` на сервер по адресу
+`http://localhost:3000`. Для геокодирования при публикации объявления укажите
+`VITE_YANDEX_API_KEY` в `.env`. По умолчанию клиент использует текущий хост для
+WebSocket; `VITE_API_URL` и `VITE_WS_URL` позволяют переопределить адреса.
 
-```
+## Проверки
+
+```sh
 npm run build
+npm run lint
+npm test
 ```
 
-- Превью
-
-```
-npm run preview
-```
-
-## `ENV`
-
-Для подключения переменных окружения нужно описать их в файле `.env` в корне. Переменные окружения можно получить из объекта `import.meta.env`. Чтобы Typescript подсказывал, какими переменными окружения можно пользоваться, их нужно прописать в файле `src/env.d.ts`. Только переменные с префиксом `VITE_` передаются на клиент.
-
-## `settings.json`
-
-Чтобы настроить форматирование и линтование по сохранению, необходимо прописать в `settings.json` (ctrl + shift + P) следующие настройки:
-
-```json
-{
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-}
-```
-
-Можно добавить форматирование Prettier для JS и React:
-
-```json
-{
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
-}
-```
-
-При работе не из корневой директории необходимо настроить CWD для ESLint:
-
-```json
-{
-  "eslint.workingDirectories": [
-    { "directory": "./client", "changeProcessCWD": true },
-    { "directory": "./server", "changeProcessCWD": true }
-  ]
-}
-```
-
-Если директория не `client` или `server`, то можно добавить соответствующую строчку в данный массив.
+Сборка записывается в `../server/dist`, откуда Express раздаёт SPA. `lint`
+включает проверку границ FSD. `test` запускает автоматические проверки ключевых
+сценариев без отдельного тестового сервера.
