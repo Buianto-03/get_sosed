@@ -6,13 +6,13 @@ import AdvertCard from '@entities/advert/ui/AdvertCard';
 import { getTopAdvertsThunk } from '@entities/advert/model/advertsThunk';
 
 export default function PopularCard(): JSX.Element {
-  const adverts = useAppSelector(store => store.advert.populars)
+  const adverts = useAppSelector(store => store.advert.populars);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    void dispatch(getTopAdvertsThunk())
-  }, [dispatch])
+    void dispatch(getTopAdvertsThunk());
+  }, [dispatch]);
 
   return (
     <Box p={8}>

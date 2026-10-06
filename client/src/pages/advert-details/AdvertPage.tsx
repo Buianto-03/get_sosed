@@ -113,7 +113,7 @@ export default function AdvertPage(): JSX.Element {
               <Button
                 colorScheme="teal"
                 size="lg"
-                onClick={() => 
+                onClick={() =>
                   user.status === UserStatus.Logged && user.id === advert.userId
                     ? navigate(`/advert/${advert.id}`)
                     : navigate(`/chat/${advert.userId}`)

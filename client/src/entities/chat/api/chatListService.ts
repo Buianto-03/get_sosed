@@ -17,7 +17,7 @@ class ChatListService {
       return Promise.reject(new Error('Failed getting chat list'));
     }
   }
-  
+
 }
 
 const chatListService = new ChatListService(axiosInstance);

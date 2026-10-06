@@ -24,4 +24,4 @@ export type ChatListSlice = {
   chatList: ChatListType[];
   online: { id: number; name: string }[];
   messagesByUser: Record<number, ChatType[]>;
-}
+};

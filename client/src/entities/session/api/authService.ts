@@ -10,7 +10,7 @@ class AuthService {
   async submitLoginForm(formData: LoginForm): Promise<AuthSchemaT> {
     try {
       const res = await this.client.post('/auth/login', formData);
-      
+
       return authSchema.parse(res.data);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -35,7 +35,7 @@ class AuthService {
   async checkAuth(): Promise<AuthSchemaT> {
     try {
       const res = await this.client.get('/tokens/refresh');
-      
+
       return authSchema.parse(res.data);
     } catch (error) {
       return Promise.reject(new Error('Check auth error'));

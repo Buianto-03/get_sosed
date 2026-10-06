@@ -23,7 +23,7 @@ export default function AdvertCard({ advert, onOpen }: AdverProps): JSX.Element 
       boxShadow="md"
       onClick={handleClick}
       cursor="pointer"
-      bg='#fff'
+      bg="#fff"
     >
       {/* Image Section */}
       <Box position="relative" height="140px">
@@ -31,14 +31,14 @@ export default function AdvertCard({ advert, onOpen }: AdverProps): JSX.Element 
           advert.AdvertPhotos &&
           advert.AdvertPhotos[0] &&
           advert.AdvertPhotos[0].photo && (
-            <Image
-              src={advert.AdvertPhotos[0].photo}
-              alt="Apartment"
-              objectFit="cover"
-              width="100%"
-              height="100%"
-            />
-          )}
+          <Image
+            src={advert.AdvertPhotos[0].photo}
+            alt="Apartment"
+            objectFit="cover"
+            width="100%"
+            height="100%"
+          />
+        )}
 
         {/* Like Icon */}
         <IconButton

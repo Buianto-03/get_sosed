@@ -46,12 +46,12 @@ export default function SignInForm(): JSX.Element {
             </Heading>
             <FormControl id="email">
               <FormLabel>Email</FormLabel>
-              <Input name='email' type="email" placeholder="Введите ваш email" />
+              <Input name="email" type="email" placeholder="Введите ваш email" />
               <FormHelperText>Мы никогда не делимся вашей почтой.</FormHelperText>
             </FormControl>
             <FormControl id="password">
               <FormLabel>Пароль</FormLabel>
-              <Input name='password' type="password" placeholder="Введите ваш пароль" />
+              <Input name="password" type="password" placeholder="Введите ваш пароль" />
             </FormControl>
             <Button
               type="submit"

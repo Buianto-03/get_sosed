@@ -35,7 +35,7 @@ export default function SignUpForm(): JSX.Element {
     const formData = new FormData(e.currentTarget);
     const password = formData.get('password') as string;
     const confirmPassword = formData.get('confirmPassword');
-    formData.append('gender', gender.toString())
+    formData.append('gender', gender.toString());
 
     if (password.length < 9 || !/\d/.test(password)) {
       setErrors({
@@ -49,7 +49,7 @@ export default function SignUpForm(): JSX.Element {
     }
     formData.delete('confirmPassword');
     setErrors({});
-    
+
     setRequestError('');
     setSubmitting(true);
     try {

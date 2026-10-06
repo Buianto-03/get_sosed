@@ -13,79 +13,79 @@ const PostAdvertPage = React.lazy(() => import('@pages/advert-create/PostAdvertP
 const WelcomePage = React.lazy(() => import('@pages/welcome/WelcomePage'));
 
 const router = createBrowserRouter([
-    {
-      path: '/',
-      element: <Layout />,
-      children: [
-        {
-          path: '/',
-          element: <WelcomePage />,
-        },
-        {
-          path: '/account',
-          element: (
-            <ProtectedRoute access="logged" redirect="/signin">
-              <AccountPage />
-            </ProtectedRoute>
-          ),
-          // element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
-        },
-        {
-          path: '/chat/:receiverId',
-          element: (
-            <ProtectedRoute access="logged" redirect="/signin">
-              <ChatPage />
-            </ProtectedRoute>
-          ),
-          // element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
-        },
-        {
-          path: '/signin',
-          element: (
-            <ProtectedRoute access="guest" redirect="/">
-              <SignInPage />
-            </ProtectedRoute>
-          ),
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      {
+        path: '/',
+        element: <WelcomePage />,
+      },
+      {
+        path: '/account',
+        element: (
+          <ProtectedRoute access="logged" redirect="/signin">
+            <AccountPage />
+          </ProtectedRoute>
+        ),
+        // element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
+      },
+      {
+        path: '/chat/:receiverId',
+        element: (
+          <ProtectedRoute access="logged" redirect="/signin">
+            <ChatPage />
+          </ProtectedRoute>
+        ),
+        // element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
+      },
+      {
+        path: '/signin',
+        element: (
+          <ProtectedRoute access="guest" redirect="/">
+            <SignInPage />
+          </ProtectedRoute>
+        ),
 
-          // element: <SignInPage />,
-        },
-        {
-          path: '/signup',
-          element: (
-            <ProtectedRoute access="guest" redirect="/">
-              <SignUpPage />
-            </ProtectedRoute>
-          ),
-          // element: <SignUpPage />,
-        },
-        {
-          path: '/home',
-          element: (
-            // <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
-            <MainPage />
-            // </ProtectedRoute>
-          ),
-          //  element: <MainPage />
-        },
-        {
-          path: '/advert/:id',
-          element: <AdvertPage />,
-          // element: <AdvertPage />,
-        },
-        {
-          path: '/post',
-          element: (
-            <ProtectedRoute access="logged" redirect="/signin">
-              <PostAdvertPage />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: '*',
-          element: <Navigate to="/" />,
-        },
-      ],
-    },
-  ]);
+        // element: <SignInPage />,
+      },
+      {
+        path: '/signup',
+        element: (
+          <ProtectedRoute access="guest" redirect="/">
+            <SignUpPage />
+          </ProtectedRoute>
+        ),
+        // element: <SignUpPage />,
+      },
+      {
+        path: '/home',
+        element: (
+        // <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
+          <MainPage />
+        // </ProtectedRoute>
+        ),
+        //  element: <MainPage />
+      },
+      {
+        path: '/advert/:id',
+        element: <AdvertPage />,
+        // element: <AdvertPage />,
+      },
+      {
+        path: '/post',
+        element: (
+          <ProtectedRoute access="logged" redirect="/signin">
+            <PostAdvertPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '*',
+        element: <Navigate to="/" />,
+      },
+    ],
+  },
+]);
 
 export default router;

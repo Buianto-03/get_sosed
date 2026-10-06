@@ -9,7 +9,7 @@ import { chatSocket } from '@entities/chat/model/socket';
 import { getReceiverListThunk } from '@entities/chat/model/thunks';
 
 export default function ChatPage(): JSX.Element {
-  const { receiverId } = useParams<{receiverId: string}>();
+  const { receiverId } = useParams<{ receiverId: string }>();
   const user = useAppSelector((store) => store.auth.user);
   const chatList = useAppSelector((store) => store.chatList.chatList);
   const dispatch = useAppDispatch();
@@ -87,7 +87,7 @@ export default function ChatPage(): JSX.Element {
           h="50vh"
         >
           <Box flex="1" overflowY="auto" borderRadius="md" bg="#d8d8ed" p={4}>
-            <ChatComponent messages={messages} /> 
+            <ChatComponent messages={messages} />
           </Box>
           <ChatInput onSendMessage={sendNewMessage} />
           {sendError && <Text role="alert" color="red.500">{sendError}</Text>}

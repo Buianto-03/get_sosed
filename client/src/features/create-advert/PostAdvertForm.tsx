@@ -44,12 +44,12 @@ export default function PostAdvertForm(): JSX.Element {
       const res = await axios<ApiResponse>(
         `https://geocode-maps.yandex.ru/1.x/?apikey=${YANDEX_API_KEY}&geocode=${queryAddress}&lang=ru_RU&format=json`,
       );
-        const coordinates =
+      const coordinates =
           res.data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos
             .split(' ')
             .reverse()
             .join(', ');
-        formData.append('coordinates', coordinates);
+      formData.append('coordinates', coordinates);
       await dispatch(postAdvertThunk(formData)).unwrap();
       setValue('success');
       setTimeout(() => navigate('/'), 2000);

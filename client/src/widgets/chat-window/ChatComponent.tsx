@@ -28,10 +28,10 @@ export default function ChatComponent({ messages }: ChatComponentProps): JSX.Ele
         '&::-webkit-scrollbar': {
           width: '16px',
           borderRadius: '8px',
-          backgroundColor: `rgba(0, 0, 0, 0.05)`,
+          backgroundColor: 'rgba(0, 0, 0, 0.05)',
         },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: `rgba(0, 0, 0, 0.05)`,
+          backgroundColor: 'rgba(0, 0, 0, 0.05)',
         },
       }}
       w="100%"
