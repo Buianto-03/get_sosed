@@ -21,9 +21,11 @@ WebSocket; `VITE_API_URL` и `VITE_WS_URL` позволяют переопред
 ```sh
 npm run build
 npm run lint
-npm test
+npm run test
 ```
 
 Сборка записывается в `../server/dist`, откуда Express раздаёт SPA. `lint`
-включает проверку границ FSD. `test` запускает автоматические проверки ключевых
-сценариев без отдельного тестового сервера.
+включает проверку границ FSD. `test` запускает Vitest и ищет colocated тесты в
+`src` (`*.test.ts` и `*.test.tsx`). Компоненты проверяются в jsdom через React
+Testing Library. TypeScript проверяет тесты вместе с исходниками, а Vite не
+добавляет их в production-бандл.
