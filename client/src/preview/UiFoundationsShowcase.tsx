@@ -7,8 +7,11 @@ import {
   ButtonVariant,
 } from '../shared/ui/button/Button';
 import { IconButton } from '../shared/ui/button/IconButton';
+import { Checkbox } from '../shared/ui/selection/checkbox/Checkbox';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
+import { RadioGroup, RadioOrientation } from '../shared/ui/selection/radio-group/RadioGroup';
+import { Select } from '../shared/ui/selection/select/Select';
 import { Input, InputType } from '../shared/ui/input/Input';
 import { Heading, HeadingLevel, HeadingSize } from '../shared/ui/heading/Heading';
 import { Link, LinkVariant } from '../shared/ui/link/Link';
@@ -23,6 +26,8 @@ import { Textarea, TextareaResize } from '../shared/ui/textarea/Textarea';
 import styles from './UiFoundationsShowcase.module.scss';
 
 export function UiFoundationsShowcase(): JSX.Element {
+  const [housingChoice, setHousingChoice] = React.useState('room');
+
   return (
     <details className={styles.showcase}>
       <summary className={styles.summary}>Показать примеры типографики и контейнеров</summary>
@@ -117,6 +122,46 @@ export function UiFoundationsShowcase(): JSX.Element {
               rows={4}
               placeholder="Напишите несколько предложений"
               resize={TextareaResize.Vertical}
+            />
+          </div>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Элементы выбора
+          </Heading>
+          <div className={styles.selectionExamples}>
+            <Select
+              id="preview-selection-city"
+              label="Город"
+              defaultValue=""
+              required
+              hint="Выберите город из списка"
+              options={[
+                { value: 'moscow', label: 'Москва' },
+                { value: 'spb', label: 'Санкт-Петербург' },
+                { value: 'kazan', label: 'Казань' },
+                { value: 'hidden', label: 'Недоступный вариант', disabled: true },
+              ]}
+            />
+            <Checkbox
+              id="preview-pets"
+              label="Питомцы разрешены"
+              hint="Отметьте, если готовы жить с животными"
+              defaultChecked
+            />
+            <RadioGroup
+              id="preview-housing-type"
+              name="preview-housing-type"
+              label="Что вы ищете?"
+              value={housingChoice}
+              onValueChange={setHousingChoice}
+              orientation={RadioOrientation.Horizontal}
+              options={[
+                { value: 'room', label: 'Комнату' },
+                { value: 'neighbor', label: 'Соседа' },
+                { value: 'unavailable', label: 'Недоступно', disabled: true },
+              ]}
+              hint="Выбор меняется локально"
             />
           </div>
         </Surface>

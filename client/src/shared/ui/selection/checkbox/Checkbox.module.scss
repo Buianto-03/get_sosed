@@ -1,0 +1,100 @@
+@use '../../../styles/tokens' as tokens;
+
+.checkboxField {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-2;
+}
+
+.label {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: flex-start;
+  gap: tokens.$space-2;
+  color: tokens.$color-ink;
+  cursor: pointer;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+}
+
+.input {
+  position: relative;
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  place-items: center;
+  margin: 1px 0 0;
+  border: 1px solid tokens.$color-muted;
+  border-radius: tokens.$radius-sm;
+  appearance: none;
+  background-color: tokens.$color-surface;
+  cursor: pointer;
+
+  &::after {
+    width: 5px;
+    height: 9px;
+    border: solid tokens.$color-surface;
+    border-width: 0 2px 2px 0;
+    content: '';
+    opacity: 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+
+  &:checked {
+    border-color: tokens.$color-accent;
+    background-color: tokens.$color-accent;
+
+    &::after {
+      opacity: 1;
+    }
+  }
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background-color: tokens.$color-soft;
+    cursor: not-allowed;
+  }
+
+  &:disabled:checked {
+    border-color: tokens.$color-muted;
+    background-color: tokens.$color-muted;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: tokens.$color-danger;
+  }
+}
+
+.labelText {
+  overflow-wrap: anywhere;
+}
+
+.required {
+  color: tokens.$color-danger;
+}
+
+.hint,
+.error {
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  color: tokens.$color-muted;
+}
+
+.error {
+  color: tokens.$color-danger;
+}
+
+.disabled .label {
+  color: tokens.$color-muted;
+  cursor: not-allowed;
+}

@@ -62,13 +62,27 @@
   }
 }
 
+.selectionExamples {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: tokens.$space-5;
+  margin-top: tokens.$space-4;
+
+  > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 640px) {
   .variants,
-  .fieldExamples {
+  .fieldExamples,
+  .selectionExamples {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .fieldExamples > :last-child {
+  .fieldExamples > :last-child,
+  .selectionExamples > :last-child {
     grid-column: auto;
   }
 }
