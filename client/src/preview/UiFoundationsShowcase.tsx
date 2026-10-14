@@ -20,6 +20,7 @@ import { Skeleton, SkeletonShape } from '../shared/ui/feedback/Skeleton';
 import { Spinner, SpinnerSize } from '../shared/ui/feedback/Spinner';
 import { Stepper, StepperOrientation } from '../shared/ui/stepper/Stepper';
 import { Tabs, TabsOrientation } from '../shared/ui/tabs/Tabs';
+import { UploadArea } from '../shared/ui/upload-area/UploadArea';
 import { Checkbox } from '../shared/ui/selection/checkbox/Checkbox';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
@@ -332,6 +333,14 @@ export function UiFoundationsShowcase(): JSX.Element {
                 { id: 'publish', label: 'Публикация', disabled: true },
               ]}
             />
+          </div>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Выбор фотографий
+          </Heading>
+          <div className={styles.uploadExample}>
+            <UploadArea id="preview-listing-photos" label="Фотографии объявления" maxFiles={6} />
           </div>
         </Surface>
       </Container>

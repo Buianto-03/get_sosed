@@ -109,6 +109,8 @@
   background: tokens.$color-surface;
 }
 
+.uploadExample { margin-top: tokens.$space-4; }
+
 @media (max-width: 640px) {
   .variants,
   .fieldExamples,

@@ -1,0 +1,36 @@
+@use '../../styles/tokens' as tokens;
+
+.picker {
+  display: inline-flex;
+}
+.input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+.button {
+  min-height: 40px;
+  padding: tokens.$space-2 tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  cursor: pointer;
+  font: inherit;
+
+  &:hover:not(:disabled) {
+    background: tokens.$color-soft;
+  }
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 2px;
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
