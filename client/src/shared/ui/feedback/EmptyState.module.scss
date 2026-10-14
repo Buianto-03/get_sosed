@@ -1,0 +1,30 @@
+@use '../../styles/tokens' as tokens;
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: tokens.$space-3;
+  padding: tokens.$space-8 tokens.$space-4;
+  border: 1px dashed tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  color: tokens.$color-ink;
+  text-align: center;
+}
+
+.icon {
+  color: tokens.$color-muted;
+  font-size: 32px;
+}
+.title {
+  margin: 0;
+  font-size: tokens.$font-size-lg;
+}
+.description {
+  max-width: 42ch;
+  margin: 0;
+  color: tokens.$color-muted;
+  line-height: tokens.$line-height-normal;
+}
+.action {
+  margin-top: tokens.$space-2;
+}

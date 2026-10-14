@@ -14,6 +14,10 @@ import { Chip, ChipSize, ChipVariant } from '../shared/ui/chip/Chip';
 import { Modal } from '../shared/ui/overlay/Modal';
 import { Drawer } from '../shared/ui/overlay/Drawer';
 import { Menu } from '../shared/ui/overlay/Menu';
+import { Alert, AlertVariant } from '../shared/ui/feedback/Alert';
+import { EmptyState } from '../shared/ui/feedback/EmptyState';
+import { Skeleton, SkeletonShape } from '../shared/ui/feedback/Skeleton';
+import { Spinner, SpinnerSize } from '../shared/ui/feedback/Spinner';
 import { Checkbox } from '../shared/ui/selection/checkbox/Checkbox';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
@@ -255,6 +259,34 @@ export function UiFoundationsShowcase(): JSX.Element {
               Пример выдвижной панели. Фокус остаётся внутри, а прокрутка страницы блокируется.
             </Text>
           </Drawer>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Загрузка, ошибки и пустое состояние
+          </Heading>
+          <div className={styles.smallComponents}>
+            <div className={styles.componentRow} role="group" aria-label="Индикаторы загрузки">
+              <Spinner size={SpinnerSize.Md} label="Загрузка примера" />
+              <Skeleton shape={SkeletonShape.Circle} />
+              <div className={styles.skeletonLines}>
+                <Skeleton shape={SkeletonShape.Text} width="500px" />
+                <Skeleton shape={SkeletonShape.Rectangle} width="45%" />
+              </div>
+            </div>
+            <Alert variant={AlertVariant.Error} title="Ошибка загрузки">
+              Не удалось загрузить объявления. Проверьте соединение и попробуйте ещё раз.
+            </Alert>
+            <EmptyState
+              icon={<LuSearch aria-hidden="true" />}
+              title="Пока ничего не найдено"
+              description="Попробуйте изменить фильтры поиска."
+              action={(
+                <Button variant={ButtonVariant.Secondary} onClick={() => undefined}>
+                  Сбросить фильтры
+                </Button>
+              )}
+            />
+          </div>
         </Surface>
       </Container>
     </details>

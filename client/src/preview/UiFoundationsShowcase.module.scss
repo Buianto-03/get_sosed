@@ -88,6 +88,12 @@
   gap: tokens.$space-3;
 }
 
+.skeletonLines {
+  display: grid;
+  width: min(260px, 100%);
+  gap: tokens.$space-2;
+}
+
 @media (max-width: 640px) {
   .variants,
   .fieldExamples,
