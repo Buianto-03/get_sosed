@@ -1,0 +1,29 @@
+@use '../../styles/tokens' as tokens;
+
+.iconButton {
+  padding-inline: 0;
+  font-size: tokens.$font-size-md;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.iconSm {
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.iconMd {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.iconLg {
+  width: 48px;
+  min-width: 48px;
+  min-height: 48px;
+}

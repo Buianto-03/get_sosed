@@ -1,7 +1,16 @@
 import React from 'react';
+import { LuHeart } from 'react-icons/lu';
+import {
+  Button,
+  ButtonSize,
+  ButtonType,
+  ButtonVariant,
+} from '../shared/ui/button/Button';
+import { IconButton } from '../shared/ui/button/IconButton';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
 import { Heading, HeadingLevel, HeadingSize } from '../shared/ui/heading/Heading';
+import { Link, LinkVariant } from '../shared/ui/link/Link';
 import {
   Surface,
   SurfaceElement,
@@ -48,6 +57,24 @@ export function UiFoundationsShowcase(): JSX.Element {
             </Text>
           </Surface>
         </div>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Кнопки и ссылки
+          </Heading>
+          <div className={styles.controls}>
+            <Button type={ButtonType.Native}>Основная</Button>
+            <Button variant={ButtonVariant.Secondary}>Вторичная</Button>
+            <Button variant={ButtonVariant.Text} size={ButtonSize.Sm}>Текстовая</Button>
+            <Button variant={ButtonVariant.Secondary} disabled>Недоступна</Button>
+            <Button loading>Загрузка</Button>
+            <IconButton
+              icon={<LuHeart aria-hidden="true" />}
+              label="Добавить в избранное"
+            />
+            <Link href="#preview-frame">Открыть макет</Link>
+            <Link href="#preview-frame" variant={LinkVariant.Subtle}>Тихая ссылка</Link>
+          </div>
+        </Surface>
       </Container>
     </details>
   );

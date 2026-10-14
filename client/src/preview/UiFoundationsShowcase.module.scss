@@ -42,6 +42,14 @@
   }
 }
 
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-3;
+  margin-top: tokens.$space-4;
+}
+
 @media (max-width: 640px) {
   .variants {
     grid-template-columns: minmax(0, 1fr);

@@ -230,6 +230,7 @@ function PreviewApp(): JSX.Element {
 
       <div className="preview-frame-wrap">
         <div
+          id="preview-frame"
           className="preview-frame"
           style={{ '--preview-width': `${viewportWidths[viewport]}px` } as React.CSSProperties}
           data-viewport={viewport}
