@@ -1,0 +1,229 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$space-6;
+  padding: 0 tokens.$space-7;
+  border-bottom: 1px solid tokens.$color-border;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  font-family: tokens.$font-family;
+}
+
+.brand {
+  display: inline-flex;
+  min-height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: tokens.$space-2;
+  color: tokens.$color-ink;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+
+  &:hover {
+    color: tokens.$color-accent;
+  }
+}
+
+.brandIcon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-soft;
+  color: tokens.$color-accent;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.desktopNav,
+.mobileActions {
+  align-items: center;
+}
+
+.desktopNav {
+  display: flex;
+  gap: tokens.$space-5;
+}
+
+.navLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 tokens.$space-1;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-sm;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover,
+  &[aria-current='page'] {
+    color: tokens.$color-accent;
+  }
+
+  &[aria-current='page'] {
+    font-weight: 700;
+  }
+}
+
+.headerCta {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 tokens.$space-3;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-accent;
+  color: tokens.$color-surface;
+  font-size: tokens.$font-size-xs;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    background: tokens.$color-accent-hover;
+  }
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 2px;
+  }
+}
+
+.profileMenu {
+  min-width: 0;
+
+  button {
+    min-height: 44px;
+  }
+}
+
+.activeProfile > button {
+  border-color: tokens.$color-accent;
+  color: tokens.$color-accent;
+}
+
+.profileTrigger {
+  display: inline-flex;
+  max-width: 180px;
+  align-items: center;
+  gap: tokens.$space-2;
+}
+
+.profileName {
+  overflow: hidden;
+  font-size: tokens.$font-size-sm;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobileActions,
+.mobileMenu {
+  display: none;
+}
+
+.menuTrigger {
+  min-height: 44px;
+  gap: tokens.$space-1;
+
+  svg {
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.mobileLink {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 tokens.$space-3;
+  border-radius: tokens.$radius-sm;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-sm;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-current='page'] {
+    background: tokens.$color-soft;
+    color: tokens.$color-accent;
+  }
+
+  &[aria-current='page'] {
+    font-weight: 700;
+  }
+}
+
+.mobileMenu {
+  position: absolute;
+  top: calc(100% - 1px);
+  right: tokens.$space-3;
+  left: tokens.$space-3;
+  z-index: 6;
+  padding: tokens.$space-2;
+  border: 1px solid tokens.$color-border;
+  border-radius: 0 0 tokens.$radius-lg tokens.$radius-lg;
+  background: tokens.$color-surface;
+  box-shadow: tokens.$shadow-card;
+}
+
+.mobileSignOut {
+  min-height: 44px;
+  justify-content: flex-start;
+  padding-left: tokens.$space-3;
+}
+
+@mixin mobileLayout {
+  .header {
+    min-height: 59px;
+    gap: tokens.$space-2;
+    padding: 0 tokens.$space-3;
+  }
+
+  .desktopNav {
+    display: none;
+  }
+
+  .mobileActions {
+    display: flex;
+    min-width: 0;
+    gap: tokens.$space-2;
+  }
+
+  .mobileActions .mobileLink {
+    padding: 0 tokens.$space-1;
+  }
+
+  .mobileMenu {
+    display: grid;
+  }
+
+  .mobileActions .profileName {
+    display: none;
+  }
+
+  .mobileActions .profileMenu button {
+    min-width: 44px;
+    padding-inline: tokens.$space-2;
+  }
+}
+
+@container (max-width: 820px) {
+  @include mobileLayout;
+}
+
+@media (max-width: 820px) {
+  @include mobileLayout;
+}

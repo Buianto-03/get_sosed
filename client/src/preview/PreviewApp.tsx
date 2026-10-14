@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { useEffect, useId, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LuAlertTriangle,
   LuArrowLeft,
@@ -25,6 +26,8 @@ import {
   profileFixture,
   type PreviewAdvert,
 } from './fixtures';
+import { SiteHeader } from '../widgets/header/SiteHeader';
+import { headerRoutes } from '../widgets/header/navigation';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -54,6 +57,7 @@ type VariantId =
   | 'step-4';
 
 type ViewportId = 'desktop' | 'tablet' | 'mobile';
+type HeaderMode = 'guest' | 'user';
 
 const screens: { id: ScreenId; label: string }[] = [
   { id: 'home', label: 'Главная' },
@@ -140,9 +144,10 @@ function getInitialValue<T extends string>(
 }
 
 function PreviewApp(): JSX.Element {
-  const [screen, setScreen] = useState<ScreenId>(
-    getInitialValue('screen', screens.map(({ id }) => id), 'home'),
-  );
+  const location = useLocation();
+  const navigate = useNavigate();
+  const screen = (Object.keys(headerRoutes) as ScreenId[])
+    .find((page) => headerRoutes[page] === location.pathname) ?? 'home';
   const [variant, setVariant] = useState<VariantId>(() => {
     const initialScreen = getInitialValue('screen', screens.map(({ id }) => id), 'home');
     const initialVariants = variants[initialScreen].map(({ id }) => id);
@@ -151,18 +156,36 @@ function PreviewApp(): JSX.Element {
   const [viewport, setViewport] = useState<ViewportId>(
     () => getInitialValue('width', viewportIds, 'desktop'),
   );
+  const [headerMode, setHeaderMode] = useState<HeaderMode>(
+    () => getInitialValue('header', ['guest', 'user'], 'guest'),
+  );
+  const previousScreen = useRef(screen);
   const activeVariants = variants[screen];
+
+  useEffect(() => {
+    if (previousScreen.current !== screen) {
+      previousScreen.current = screen;
+      setVariant(variants[screen][0].id);
+    }
+  }, [screen]);
+
+  useEffect(() => {
+    if (headerMode === 'guest' && ['chat', 'post', 'profile'].includes(screen)) {
+      navigate(headerRoutes.signin, { replace: true });
+    }
+  }, [headerMode, navigate, screen]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set('screen', screen);
     params.set('width', viewport);
     params.set('variant', variant);
+    params.set('header', headerMode);
     window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
-  }, [screen, variant, viewport]);
+  }, [screen, variant, viewport, headerMode]);
 
   const selectScreen = (nextScreen: ScreenId): void => {
-    setScreen(nextScreen);
+    navigate(headerRoutes[nextScreen]);
     setVariant(variants[nextScreen][0].id);
   };
 
@@ -225,6 +248,17 @@ function PreviewApp(): JSX.Element {
               ))}
             </select>
           </div>
+          <div className="preview-control">
+            <label htmlFor="preview-header">Шапка</label>
+            <select
+              id="preview-header"
+              value={headerMode}
+              onChange={(event) => setHeaderMode(event.target.value as HeaderMode)}
+            >
+              <option value="guest">Гость</option>
+              <option value="user">Пользователь</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -235,64 +269,23 @@ function PreviewApp(): JSX.Element {
           style={{ '--preview-width': `${viewportWidths[viewport]}px` } as React.CSSProperties}
           data-viewport={viewport}
         >
-          <SiteHeader onNavigate={selectScreen} />
+          <SiteHeader
+            user={headerMode === 'user' ? { name: profileFixture.name } : undefined}
+            onSignOut={() => {
+              setHeaderMode('guest');
+              selectScreen('home');
+            }}
+          />
           <ScreenContent screen={screen} variant={activeVariant} onNavigate={selectScreen} />
           <SiteFooter onNavigate={selectScreen} />
           <MobileNavigation screen={screen} onNavigate={selectScreen} />
         </div>
       </div>
       <p className="preview-footnote">
-        Состояние можно сохранить ссылкой: экран, ширина и вариант указаны в параметрах адреса.
+        Состояние можно сохранить ссылкой: экран, ширина, вариант и вид шапки указаны в параметрах адреса.
       </p>
       <UiFoundationsShowcase />
     </main>
-  );
-}
-
-function SiteHeader({ onNavigate }: { onNavigate: (screen: ScreenId) => void }): JSX.Element {
-  const [menuOpen, setMenuOpen] = useState(false);
-  return (
-    <header className="preview-site-header">
-      <button className="preview-brand" type="button" onClick={() => onNavigate('home')}>
-        <span className="preview-brand-icon">
-          <LuHome aria-hidden="true" />
-        </span>
-        GETSOSED
-      </button>
-      <nav className="preview-desktop-nav" aria-label="Основная навигация">
-        <button type="button" onClick={() => onNavigate('home')}>Главная</button>
-        <button type="button" onClick={() => onNavigate('search')}>Поиск</button>
-        <button type="button" onClick={() => onNavigate('about')}>О нас</button>
-        <button type="button" onClick={() => onNavigate('signin')}>Войти</button>
-        <button
-          className="preview-button preview-button-primary preview-header-cta"
-          type="button"
-          onClick={() => onNavigate('signup')}
-        >
-          Регистрация
-        </button>
-      </nav>
-      <button
-        className="preview-mobile-menu"
-        type="button"
-        aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
-        aria-expanded={menuOpen}
-        onClick={() => setMenuOpen(!menuOpen)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-      {menuOpen && (
-        <nav className="preview-mobile-menu-panel" aria-label="Меню">
-          <button type="button" onClick={() => { setMenuOpen(false); onNavigate('home'); }}>Главная</button>
-          <button type="button" onClick={() => { setMenuOpen(false); onNavigate('search'); }}>Поиск</button>
-          <button type="button" onClick={() => { setMenuOpen(false); onNavigate('about'); }}>О нас</button>
-          <button type="button" onClick={() => { setMenuOpen(false); onNavigate('signup'); }}>Регистрация</button>
-          <button type="button" onClick={() => { setMenuOpen(false); onNavigate('chat'); }}>Сообщения</button>
-        </nav>
-      )}
-    </header>
   );
 }
 
