@@ -32,4 +32,28 @@ describe('redesign preview navigation', () => {
 
     expect(screen.getByLabelText('Экран превью')).toHaveValue('signin');
   });
+
+  it('uses footer links to navigate between preview screens', () => {
+    render(
+      <MemoryRouter initialEntries={['/signin']}>
+        <PreviewApp />
+      </MemoryRouter>,
+    );
+
+    const footer = screen.getByRole('navigation', { name: 'Навигация в подвале' });
+    fireEvent.click(within(footer).getByRole('link', { name: 'О нас' }));
+    expect(screen.getByLabelText('Экран превью')).toHaveValue('about');
+  });
+
+  it('uses the fullscreen layout without a footer for chat', () => {
+    window.history.replaceState(null, '', '/?header=user');
+    render(
+      <MemoryRouter initialEntries={['/chat/1']}>
+        <PreviewApp />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText('Экран превью')).toHaveValue('chat');
+    expect(screen.queryByRole('navigation', { name: 'Навигация в подвале' })).not.toBeInTheDocument();
+  });
 });

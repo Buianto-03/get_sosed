@@ -1,0 +1,40 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.shell {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: tokens.$color-page;
+  color: tokens.$color-ink;
+}
+
+.content {
+  width: min(100%, 1440px);
+  flex: 1;
+  margin-inline: auto;
+  padding: tokens.$space-8 tokens.$space-7 tokens.$space-12;
+}
+
+.chatContent {
+  display: flex;
+  flex-direction: column;
+
+  > main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+}
+
+@container (max-width: 1100px) {
+  .content {
+    padding: tokens.$space-7 tokens.$space-6 tokens.$space-10;
+  }
+}
+
+@container (max-width: 680px) {
+  .content {
+    padding: tokens.$space-5 tokens.$space-4 tokens.$space-8;
+  }
+}

@@ -26,8 +26,8 @@ import {
   profileFixture,
   type PreviewAdvert,
 } from './fixtures';
-import { SiteHeader } from '../widgets/header/SiteHeader';
 import { headerRoutes } from '../widgets/header/navigation';
+import { SiteLayout } from '../app/layouts/SiteLayout';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -269,16 +269,17 @@ function PreviewApp(): JSX.Element {
           style={{ '--preview-width': `${viewportWidths[viewport]}px` } as React.CSSProperties}
           data-viewport={viewport}
         >
-          <SiteHeader
+          <SiteLayout
+            fullscreenChat={screen === 'chat'}
+            bottomNavigation={<MobileNavigation screen={screen} onNavigate={selectScreen} />}
             user={headerMode === 'user' ? { name: profileFixture.name } : undefined}
             onSignOut={() => {
               setHeaderMode('guest');
               selectScreen('home');
             }}
-          />
-          <ScreenContent screen={screen} variant={activeVariant} onNavigate={selectScreen} />
-          <SiteFooter onNavigate={selectScreen} />
-          <MobileNavigation screen={screen} onNavigate={selectScreen} />
+          >
+            <ScreenContent screen={screen} variant={activeVariant} onNavigate={selectScreen} />
+          </SiteLayout>
         </div>
       </div>
       <p className="preview-footnote">
@@ -286,22 +287,6 @@ function PreviewApp(): JSX.Element {
       </p>
       <UiFoundationsShowcase />
     </main>
-  );
-}
-
-function SiteFooter({ onNavigate }: { onNavigate: (screen: ScreenId) => void }): JSX.Element {
-  return (
-    <footer className="preview-site-footer">
-      <div>
-        <strong>GETSOSED</strong>
-        <span>Жильё и люди рядом</span>
-      </div>
-      <nav aria-label="Навигация в подвале">
-        <button type="button" onClick={() => onNavigate('about')}>О нас</button>
-        <button type="button" onClick={() => onNavigate('search')}>Поиск</button>
-        <button type="button" onClick={() => onNavigate('post')}>Разместить объявление</button>
-      </nav>
-    </footer>
   );
 }
 
