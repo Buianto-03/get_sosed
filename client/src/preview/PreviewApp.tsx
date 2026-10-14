@@ -31,6 +31,7 @@ import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
 import { ListingCard, ListingCardVariant } from '../entities/listing/ui/ListingCard';
 import { ListingContextCard } from '../entities/listing/ui/ListingContextCard';
+import { ListingGallery } from '../entities/listing/ui/ListingGallery';
 import { ConversationRow } from '../entities/chat/ui/ConversationRow';
 import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
 import { Button, ButtonVariant } from '../shared/ui/button/Button';
@@ -53,6 +54,9 @@ type VariantId =
   | 'empty'
   | 'error'
   | 'no-photo'
+  | 'one-photo'
+  | 'two-photos'
+  | 'many-photos'
   | 'loading'
   | 'filled'
   | 'conversation'
@@ -93,6 +97,9 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
     { id: 'data', label: 'С данными' },
     { id: 'long', label: 'Длинное описание' },
     { id: 'no-photo', label: 'Без фото' },
+    { id: 'one-photo', label: 'Одно фото' },
+    { id: 'two-photos', label: 'Два фото' },
+    { id: 'many-photos', label: 'Много фото' },
   ],
   about: [
     { id: 'data', label: 'Обычный текст' },
@@ -501,18 +508,30 @@ function DetailScreen({
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
   const advert = variant === 'long' ? longAdvert : previewAdverts[0];
-  const photos = variant === 'no-photo' ? [] : [advert.image, '/images/1pic.jpg', '/mainPhoto.jpg'];
+  let photoSources = [advert.image, '/images/1pic.jpg', '/mainPhoto.jpg'];
+  if (variant === 'no-photo') photoSources = [];
+  if (variant === 'one-photo') photoSources = [advert.image];
+  if (variant === 'two-photos') photoSources = [advert.image, '/images/1pic.jpg'];
+  if (variant === 'many-photos') {
+    photoSources = [
+      advert.image,
+      '/images/1pic.jpg',
+      '/mainPhoto.jpg',
+      '/images/kvartira-moskva-bratskaya-ulica-2249903312-1.jpg',
+    ];
+  }
+  const photos = photoSources.map((src, index) => ({
+    id: `${advert.id}-photo-${index}`,
+    src,
+    alt: index === 0 ? advert.imageAlt : 'Фото квартиры',
+  }));
   return (
     <main className="preview-page">
       <button className="preview-text-button preview-back-button" type="button" onClick={() => onNavigate('search')}>
         <LuArrowLeft aria-hidden="true" /> К результатам
       </button>
       <h2 className="preview-detail-title">{advert.title}</h2>
-      <section className="preview-gallery" aria-label="Фотографии жилья">
-        {photos.length ? photos.map((photo, index) => (
-          <img key={photo} className={index === 0 ? 'preview-gallery-main' : ''} src={photo} alt={index === 0 ? advert.imageAlt : 'Фото квартиры'} />
-        )) : <div className="preview-gallery-empty"><LuCamera aria-hidden="true" /> Фотографии не добавлены</div>}
-      </section>
+      <ListingGallery photos={photos} />
       <div className="preview-detail-grid">
         <div className="preview-detail-content">
           <section className="preview-panel">
