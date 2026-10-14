@@ -1,0 +1,139 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  font-family: tokens.$font-family;
+}
+
+.imageButton {
+  display: block;
+  width: 100%;
+  height: 190px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: tokens.$color-soft;
+  cursor: pointer;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 180ms ease;
+  }
+
+  &:hover img {
+    transform: scale(1.025);
+  }
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: -3px;
+  }
+}
+
+.imagePlaceholder {
+  display: grid;
+  height: 100%;
+  place-content: center;
+  justify-items: center;
+  gap: tokens.$space-2;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  padding: tokens.$space-4;
+}
+
+.topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$space-2;
+
+  strong {
+    font-size: tokens.$font-size-lg;
+    white-space: nowrap;
+  }
+}
+
+.saveButton {
+  flex: 0 0 auto;
+}
+
+.saved {
+  border-color: #e6b8a9;
+  background: #fff4f1;
+  color: #a43c29;
+}
+
+.content h3 {
+  margin: tokens.$space-2 0 tokens.$space-1;
+  font-size: tokens.$font-size-md;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.location {
+  margin: 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+  margin: tokens.$space-3 0 tokens.$space-4;
+}
+
+.detailsButton {
+  width: 100%;
+  min-height: 42px;
+  margin-top: auto;
+}
+
+.home .imageButton {
+  height: 205px;
+}
+
+.profile .imageButton {
+  height: 170px;
+}
+
+@container (max-width: 680px) {
+  .imageButton,
+  .home .imageButton,
+  .profile .imageButton {
+    height: 205px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imageButton img {
+    transition: none;
+  }
+}

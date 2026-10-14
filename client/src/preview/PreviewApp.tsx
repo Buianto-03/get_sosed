@@ -19,6 +19,7 @@ import {
 import {
   longAdvert,
   longMessage,
+  noPhotoAdvert,
   postFixture,
   postSteps,
   previewAdverts,
@@ -28,6 +29,7 @@ import {
 } from './fixtures';
 import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
+import { ListingCard, ListingCardVariant } from '../entities/listing/ui/ListingCard';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -74,7 +76,8 @@ const screens: { id: ScreenId; label: string }[] = [
 const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
   home: [
     { id: 'data', label: 'С данными' },
-    { id: 'long', label: 'Длинный текст' },
+    { id: 'long', label: 'Длинный заголовок' },
+    { id: 'no-photo', label: 'Карточка без фото' },
     { id: 'empty', label: 'Пустая подборка' },
   ],
   search: [
@@ -363,7 +366,10 @@ function HomeScreen({
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
-  const adverts = variant === 'empty' ? [] : previewAdverts;
+  let adverts = previewAdverts;
+  if (variant === 'empty') adverts = [];
+  if (variant === 'long') adverts = [longAdvert, ...previewAdverts.slice(1)];
+  if (variant === 'no-photo') adverts = [noPhotoAdvert, ...previewAdverts.slice(1)];
   return (
     <main className="preview-page">
       <section className="preview-hero">
@@ -392,7 +398,7 @@ function HomeScreen({
             Все объявления →
           </button>
         </div>
-        {adverts.length ? <ListingGrid adverts={adverts} onOpen={() => onNavigate('detail')} /> : <EmptyPanel />}
+        {adverts.length ? <ListingGrid adverts={adverts} variant={ListingCardVariant.Home} onOpen={() => onNavigate('detail')} /> : <EmptyPanel />}
       </section>
       <section className="preview-section preview-steps">
         <h2>Как это работает</h2>
@@ -439,7 +445,7 @@ function SearchScreen({
   } else {
     resultsContent = (
       <>
-        <ListingGrid adverts={previewAdverts} onOpen={() => onNavigate('detail')} />
+        <ListingGrid adverts={previewAdverts} variant={ListingCardVariant.Search} onOpen={() => onNavigate('detail')} />
         <div className="preview-map-placeholder">Объявления на карте</div>
       </>
     );
@@ -656,11 +662,11 @@ function ProfileScreen({
       </section>
       <section className="preview-section">
         <h2>Избранное</h2>
-        {favorites.length ? <ListingGrid adverts={favorites} onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Пока нет сохранённых объявлений" />}
+        {favorites.length ? <ListingGrid adverts={favorites} variant={ListingCardVariant.Profile} initiallySaved onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Пока нет сохранённых объявлений" />}
       </section>
       <section className="preview-section">
         <h2>Мои объявления</h2>
-        {myAdverts.length ? <ListingGrid adverts={myAdverts} onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Здесь будут ваши объявления" action="Разместить объявление" />}
+        {myAdverts.length ? <ListingGrid adverts={myAdverts} variant={ListingCardVariant.Profile} onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Здесь будут ваши объявления" action="Разместить объявление" />}
       </section>
     </main>
   );
@@ -779,7 +785,7 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
         {selectedStep === 4 && (
           <>
             <h3>Проверьте объявление</h3>
-            <PreviewListingCard advert={previewAdverts[0]} onOpen={() => undefined} />
+            <PreviewListingCard advert={previewAdverts[0]} variant={ListingCardVariant.Profile} onOpen={() => undefined} />
             <p>Публикация в этом превью не отправляет данные.</p>
           </>
         )}
@@ -794,15 +800,25 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
 
 function ListingGrid({
   adverts,
+  variant,
+  initiallySaved = false,
   onOpen,
 }: {
   adverts: PreviewAdvert[];
+  variant: ListingCardVariant;
+  initiallySaved?: boolean;
   onOpen: (advert: PreviewAdvert) => void;
 }): JSX.Element {
   return (
     <div className="preview-listing-grid">
       {adverts.map((advert) => (
-        <PreviewListingCard advert={advert} key={advert.id} onOpen={() => onOpen(advert)} />
+        <PreviewListingCard
+          advert={advert}
+          key={advert.id}
+          variant={variant}
+          initiallySaved={initiallySaved}
+          onOpen={() => onOpen(advert)}
+        />
       ))}
     </div>
   );
@@ -810,38 +826,33 @@ function ListingGrid({
 
 function PreviewListingCard({
   advert,
+  variant,
+  initiallySaved = false,
   onOpen,
 }: {
   advert: PreviewAdvert;
+  variant: ListingCardVariant;
+  initiallySaved?: boolean;
   onOpen: () => void;
 }): JSX.Element {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [saved, setSaved] = useState(initiallySaved);
   return (
-    <article className="preview-listing-card">
-      <button className="preview-image-button" type="button" onClick={onOpen} aria-label={`Открыть: ${advert.title}`}>
-        <img src={advert.image} alt={advert.imageAlt} />
-      </button>
-      <div className="preview-listing-content">
-        <div className="preview-listing-topline">
-          <strong>{advert.price.toLocaleString('ru-RU')} ₽</strong>
-          <button
-            className={isFavorite ? 'preview-icon-button is-active' : 'preview-icon-button'}
-            type="button"
-            aria-label={isFavorite ? 'Убрать из избранного' : 'Сохранить'}
-            aria-pressed={isFavorite}
-            onClick={() => setIsFavorite(!isFavorite)}
-          >
-            <LuHeart aria-hidden="true" />
-          </button>
-        </div>
-        <h3>{advert.title}</h3>
-        <p>{advert.city} · {advert.district} · {advert.metro}</p>
-        <TagList tags={advert.tags} />
-        <button className="preview-button preview-button-secondary preview-wide-button" type="button" onClick={onOpen}>
-          Подробнее
-        </button>
-      </div>
-    </article>
+    <ListingCard
+      listing={{
+        title: advert.title,
+        price: advert.price,
+        imageUrl: advert.image || undefined,
+        imageAlt: advert.imageAlt || undefined,
+        city: advert.city,
+        district: advert.district,
+        metro: advert.metro,
+        tags: advert.tags,
+      }}
+      variant={variant}
+      saved={saved}
+      onSavedChange={setSaved}
+      onOpen={onOpen}
+    />
   );
 }
 
