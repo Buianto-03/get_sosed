@@ -7,6 +7,10 @@ import {
   ButtonVariant,
 } from '../shared/ui/button/Button';
 import { IconButton } from '../shared/ui/button/IconButton';
+import { Avatar, AvatarSize } from '../shared/ui/avatar/Avatar';
+import { AvatarGroup } from '../shared/ui/avatar/AvatarGroup';
+import { Badge, BadgeSize, BadgeVariant } from '../shared/ui/badge/Badge';
+import { Chip, ChipSize, ChipVariant } from '../shared/ui/chip/Chip';
 import { Checkbox } from '../shared/ui/selection/checkbox/Checkbox';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
@@ -27,6 +31,10 @@ import styles from './UiFoundationsShowcase.module.scss';
 
 export function UiFoundationsShowcase(): JSX.Element {
   const [housingChoice, setHousingChoice] = React.useState('room');
+  const [activeChips, setActiveChips] = React.useState([
+    'Для некурящих',
+    'Можно с питомцами',
+  ]);
 
   return (
     <details className={styles.showcase}>
@@ -163,6 +171,51 @@ export function UiFoundationsShowcase(): JSX.Element {
               ]}
               hint="Выбор меняется локально"
             />
+          </div>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Чипы, статусы и аватары
+          </Heading>
+          <div className={styles.smallComponents}>
+            <div className={styles.componentRow} role="group" aria-label="Варианты статусов">
+              <Badge>Обычный</Badge>
+              <Badge variant={BadgeVariant.Accent} size={BadgeSize.Md}>Новое</Badge>
+              <Badge variant={BadgeVariant.Success}>Проверено</Badge>
+              <Badge variant={BadgeVariant.Warning}>Осталось мало мест</Badge>
+            </div>
+            <div className={styles.componentRow} role="group" aria-label="Удаляемые фильтры">
+              {activeChips.map((label) => (
+                <Chip
+                  key={label}
+                  label={label}
+                  variant={ChipVariant.Soft}
+                  size={ChipSize.Md}
+                  onRemove={() => setActiveChips((current) => current.filter((item) => item !== label))}
+                />
+              ))}
+              {activeChips.length === 0 && (
+                <Text variant={TextVariant.Small} tone={TextTone.Muted}>
+                  Все фильтры удалены
+                </Text>
+              )}
+              <Chip label="Москва" variant={ChipVariant.Accent} icon={<LuSearch />} />
+            </div>
+            <div className={styles.componentRow}>
+              <Avatar name="Анна Смирнова" size={AvatarSize.Xl} />
+              <AvatarGroup
+                label="Участники объявления"
+                max={3}
+                size={AvatarSize.Lg}
+                avatars={[
+                  { name: 'Анна Смирнова' },
+                  { name: 'Михаил Петров' },
+                  { name: 'София Иванова' },
+                  { name: 'Алексей Волков' },
+                  { name: 'Мария Соколова' },
+                ]}
+              />
+            </div>
           </div>
         </Surface>
       </Container>

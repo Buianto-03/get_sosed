@@ -74,6 +74,20 @@
   }
 }
 
+.smallComponents {
+  display: grid;
+  gap: tokens.$space-4;
+  margin-top: tokens.$space-4;
+}
+
+.componentRow {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
 @media (max-width: 640px) {
   .variants,
   .fieldExamples,

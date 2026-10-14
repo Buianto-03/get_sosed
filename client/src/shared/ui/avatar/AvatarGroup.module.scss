@@ -1,0 +1,43 @@
+@use '../../styles/tokens' as tokens;
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  padding-left: tokens.$space-1;
+
+  > * {
+    margin-left: -4px;
+    border: 2px solid tokens.$color-surface;
+  }
+}
+
+.overflow {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: tokens.$color-soft;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-xs;
+  font-weight: 650;
+}
+
+.sm {
+  width: 28px;
+  height: 28px;
+}
+
+.md {
+  width: 36px;
+  height: 36px;
+}
+
+.lg {
+  width: 44px;
+  height: 44px;
+}
+
+.xl {
+  width: 56px;
+  height: 56px;
+}
