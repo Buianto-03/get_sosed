@@ -1,0 +1,52 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: tokens.$space-3;
+  padding: tokens.$space-3 0;
+  border: 0;
+  border-bottom: 1px solid tokens.$color-border;
+  background: transparent;
+  color: tokens.$color-ink;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover,
+.active {
+  background: tokens.$color-soft;
+}
+
+.row:focus-visible {
+  outline: 3px solid tokens.$color-focus;
+  outline-offset: 2px;
+}
+
+.details {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.details strong,
+.listing,
+.message,
+.row time {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listing,
+.message,
+.row time {
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-xs;
+}
+
+.row time {
+  align-self: start;
+}

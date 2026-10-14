@@ -30,6 +30,10 @@ import {
 import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
 import { ListingCard, ListingCardVariant } from '../entities/listing/ui/ListingCard';
+import { ListingContextCard } from '../entities/listing/ui/ListingContextCard';
+import { ConversationRow } from '../entities/chat/ui/ConversationRow';
+import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
+import { Button, ButtonVariant } from '../shared/ui/button/Button';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -534,7 +538,7 @@ function DetailScreen({
         <aside className="preview-contact-card">
           <strong className="preview-price">{advert.price.toLocaleString('ru-RU')} ₽</strong>
           <p>Период и предмет аренды уточняются у автора</p>
-          <div className="preview-author"><span className="preview-avatar">{advert.author[0]}</span><strong>{advert.author}</strong></div>
+          <div className="preview-author"><PersonSummary name={advert.author} city={advert.city} /></div>
           <button className="preview-button preview-button-primary preview-wide-button" type="button" onClick={() => onNavigate('signin')}>
             Написать автору
           </button>
@@ -650,16 +654,14 @@ function ProfileScreen({
           <LuPlus aria-hidden="true" /> Разместить объявление
         </button>
       </div>
-      <section className="preview-panel preview-profile-card">
-        <span className="preview-avatar preview-avatar-large">АП</span>
-        <div>
-          <h3>{profileFixture.name}</h3>
-          <p>{profileFixture.city} · Ищу жильё для совместной аренды</p>
-          <p>{isLong ? longAdvert.description : profileFixture.about}</p>
-          <TagList tags={profileFixture.tags} />
-        </div>
-        <button className="preview-button preview-button-secondary" type="button">Изменить профиль</button>
-      </section>
+      <PersonSummary
+        name={profileFixture.name}
+        city={`${profileFixture.city} · Ищу жильё для совместной аренды`}
+        description={isLong ? longAdvert.description : profileFixture.about}
+        tags={profileFixture.tags}
+        variant={PersonSummaryVariant.Profile}
+        action={<Button variant={ButtonVariant.Secondary}>Изменить профиль</Button>}
+      />
       <section className="preview-section">
         <h2>Избранное</h2>
         {favorites.length ? <ListingGrid adverts={favorites} variant={ListingCardVariant.Profile} initiallySaved onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Пока нет сохранённых объявлений" />}
@@ -686,12 +688,15 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
           {isEmpty ? (
             <EmptyPanel title="Пока нет сообщений" />
           ) : (
-            previewConversations.map((item) => (
-              <button className="preview-conversation" key={item.id} type="button">
-                <span className="preview-avatar">{item.name[0]}</span>
-                <span><strong>{item.name}</strong><small>{item.advert}</small><small>{item.lastMessage}</small></span>
-                <time>{item.time}</time>
-              </button>
+            previewConversations.map((item, index) => (
+              <ConversationRow
+                key={item.id}
+                name={item.name}
+                listingTitle={item.advert}
+                lastMessage={item.lastMessage}
+                time={item.time}
+                active={index === 0}
+              />
             ))
           )}
         </section>
@@ -703,9 +708,14 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
           {!noSelection && !isEmpty && (
             <>
               <header className="preview-thread-header">
-                <span className="preview-avatar">А</span>
-                <div><strong>{activeConversation.name}</strong><small>{activeConversation.advert} · 25 000 ₽</small></div>
+                <strong>{activeConversation.name}</strong>
               </header>
+              <ListingContextCard
+                title={activeConversation.advert}
+                price={previewAdverts[0].price}
+                imageUrl={previewAdverts[0].image}
+                onOpen={() => undefined}
+              />
               <div className="preview-message-list">
                 {activeConversation.messages.map((message) => (
                   <p className={message.from === 'me' ? 'preview-message is-mine' : 'preview-message'} key={message.id}>

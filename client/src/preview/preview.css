@@ -626,24 +626,6 @@
   margin: 18px 0;
 }
 
-.preview-avatar {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: #eadcc8;
-  color: #704b22;
-  font-weight: 700;
-}
-
-.preview-avatar-large {
-  width: 72px;
-  height: 72px;
-  font-size: 20px;
-}
-
 .preview-contact-card .preview-button + .preview-button {
   margin-top: 9px;
 }
@@ -690,21 +672,6 @@
   gap: 16px;
 }
 
-.preview-profile-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 18px;
-}
-
-.preview-profile-card h3 {
-  margin: 0 0 4px;
-}
-
-.preview-profile-card .preview-tag-list {
-  margin-bottom: 0;
-}
-
 .preview-chat-page {
   min-height: 0;
 }
@@ -727,41 +694,6 @@
   flex-direction: column;
 }
 
-.preview-conversation {
-  display: grid;
-  width: 100%;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 0;
-  border: 0;
-  border-bottom: 1px solid #eee8df;
-  background: transparent;
-  color: var(--preview-ink);
-  text-align: left;
-}
-
-.preview-conversation > span:nth-child(2) {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-
-.preview-conversation small,
-.preview-thread-header small {
-  overflow: hidden;
-  color: var(--preview-muted);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.preview-conversation time {
-  align-self: start;
-  color: var(--preview-muted);
-  font-size: 10px;
-}
-
 .preview-thread-header {
   display: flex;
   align-items: center;
@@ -770,9 +702,8 @@
   border-bottom: 1px solid var(--preview-border);
 }
 
-.preview-thread-header div {
-  display: grid;
-  gap: 4px;
+.preview-thread-header + button {
+  margin: 14px 0;
 }
 
 .preview-message-list {
@@ -1059,15 +990,6 @@
   .preview-heading-with-action {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .preview-profile-card {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .preview-profile-card > .preview-button {
-    grid-column: 1 / -1;
   }
 
   .preview-chat-grid {

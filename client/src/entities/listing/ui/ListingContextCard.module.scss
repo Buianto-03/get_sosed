@@ -1,0 +1,64 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.card {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: tokens.$space-3;
+  padding: tokens.$space-2;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: tokens.$color-focus;
+}
+
+.card:focus-visible {
+  outline: 3px solid tokens.$color-focus;
+  outline-offset: 2px;
+}
+
+.card img,
+.placeholder {
+  display: grid;
+  width: 64px;
+  height: 52px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$color-soft;
+  object-fit: cover;
+}
+
+.placeholder {
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-xl;
+}
+
+.content {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-1;
+}
+
+.content strong,
+.content span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content strong {
+  font-size: tokens.$font-size-sm;
+}
+
+.content span {
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-xs;
+}
