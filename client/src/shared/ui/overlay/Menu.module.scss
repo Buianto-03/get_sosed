@@ -1,0 +1,48 @@
+@use '../../styles/tokens' as tokens;
+
+.root { position: relative; display: inline-flex; }
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: tokens.$space-2 tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  cursor: pointer;
+
+  &:hover { background: tokens.$color-soft; }
+  &:focus-visible { outline: 3px solid tokens.$color-focus; outline-offset: 2px; }
+}
+
+.menu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + tokens.$space-2);
+  display: grid;
+  min-width: 200px;
+  padding: tokens.$space-1;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+  box-shadow: tokens.$shadow-card;
+}
+
+.start { left: 0; }
+.end { right: 0; }
+
+.item {
+  padding: tokens.$space-2 tokens.$space-3;
+  border: 0;
+  border-radius: tokens.$radius-sm;
+  background: transparent;
+  color: tokens.$color-ink;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover:not(:disabled), &:focus-visible { outline: none; background: tokens.$color-soft; }
+  &:disabled { color: tokens.$color-muted; cursor: not-allowed; opacity: 0.6; }
+}

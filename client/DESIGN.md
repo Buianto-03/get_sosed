@@ -100,7 +100,7 @@ Desktop: заголовок и действие публикации; карто
 
 ## Состав UI kit и контроль
 
-Базовые элементы: Button, IconButton, Link, Field, Input, Textarea, Select, Checkbox, Surface, Container, Heading, Text, Divider, Chip, Avatar, Menu, Drawer, Skeleton, Alert, EmptyState. Для пока не подтверждённых экранов могут понадобиться Modal, Stepper, UploadArea. Карточка объявления, фильтры, галерея, строка диалога и нижняя навигация — составные блоки поверх kit. Вводить компоненты вместе с нужными экранами.
+Базовые элементы: Button, IconButton, Link, Field, Input, Textarea, Select, Checkbox, Surface, Container, Heading, Text, Divider, Chip, Avatar, Modal, Drawer, Menu, Skeleton, Alert, EmptyState. Stepper и UploadArea добавляются вместе с экранами, где они нужны. Карточка объявления, фильтры, галерея, строка диалога и нижняя навигация — составные блоки поверх kit. Вводить компоненты вместе с нужными экранами.
 
 - **P02 выполнена:** [карта ресурсов](src/shared/assets/redesign-assets.md), локальный Inter и SIL OFL лежат в public/fonts; карта задаёт фотографии, кадрирование и набор Lucide.
 - **P03 выполнена:** независимое превью запускается командой `npm run preview:design`; переключаются экраны, локальные состояния и ширины, значения ссылки можно передать query-параметрами.
@@ -110,5 +110,6 @@ Desktop: заголовок и действие публикации; карто
 - **K04 выполнена:** добавлены Field, Input и Textarea; preview показывает обычное, обязательное, read-only, disabled и ошибочное состояние, а также многострочный ввод.
 - **K05 выполнена:** Select, Checkbox и RadioGroup сгруппированы в `shared/ui/selection/`; тесты собраны в SelectionControls.test.tsx. В preview можно проверить пустой/выбранный варианты, disabled option и локальное переключение radio.
 - **K06 выполнена:** добавлены Badge, Chip, Avatar и AvatarGroup с enum-вариантами и размерами; удаление chip локальное, Avatar показывает инициалы при отсутствии/ошибке фото, AvatarGroup ограничивает количество видимых элементов и показывает `+N`. Примеры добавлены в UI showcase.
+- **K07 выполнена:** добавлены Modal, Drawer и Menu. Modal/Drawer закрываются по Escape, кнопке и backdrop; удерживают фокус, возвращают его при закрытии и блокируют прокрутку фона. Menu поддерживает стрелки, Home/End, Escape, выбор пункта и закрытие по клику снаружи. Showcase и тесты добавлены.
 - Для enum-пропсов UI kit использовать отдельные экспортируемые TypeScript `enum`; не заменять их union type.
 - **Q02:** проверить клавиатуру, фокус, подписи и ошибки форм, закрытие drawer, нижнюю навигацию, контраст, отсутствие горизонтального скролла на 320 px и отсутствие перекрытия контента на телефоне.

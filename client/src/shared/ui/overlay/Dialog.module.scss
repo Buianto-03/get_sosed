@@ -1,0 +1,115 @@
+@use '../../styles/tokens' as tokens;
+
+.backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: tokens.$space-4;
+  background: rgb(31 41 51 / 48%);
+}
+
+.drawerBackdrop {
+  place-items: stretch end;
+  padding: 0;
+}
+
+.panel {
+  display: flex;
+  width: min(100%, 560px);
+  max-height: min(90vh, 900px);
+  flex-direction: column;
+  overflow: auto;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-xl;
+  background: tokens.$color-surface;
+  box-shadow: tokens.$shadow-card;
+  color: tokens.$color-ink;
+  outline: none;
+}
+
+.sm {
+  width: min(100%, 400px);
+}
+.md {
+  width: min(100%, 560px);
+}
+.lg {
+  width: min(100%, 760px);
+}
+
+.drawer {
+  width: min(100%, 480px);
+  height: 100%;
+  max-height: none;
+  border-radius: tokens.$radius-xl 0 0 tokens.$radius-xl;
+}
+
+.drawer.left {
+  margin-right: auto;
+  border-radius: 0 tokens.$radius-xl tokens.$radius-xl 0;
+}
+
+.drawer.right {
+  margin-left: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$space-4;
+  padding: tokens.$space-5 tokens.$space-6;
+  border-bottom: 1px solid tokens.$color-border;
+}
+
+.title {
+  margin: 0;
+  font-size: tokens.$font-size-xl;
+  line-height: tokens.$line-height-tight;
+}
+
+.closeButton {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: tokens.$radius-md;
+  background: transparent;
+  color: tokens.$color-muted;
+  cursor: pointer;
+  font-size: tokens.$font-size-lg;
+
+  &:hover {
+    background: tokens.$color-soft;
+    color: tokens.$color-ink;
+  }
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 2px;
+  }
+}
+
+.body {
+  overflow: auto;
+  padding: tokens.$space-6;
+}
+
+@media (max-width: 640px) {
+  .backdrop {
+    padding: tokens.$space-3;
+  }
+  .drawerBackdrop {
+    padding: 0;
+  }
+  .panel {
+    max-height: 94vh;
+  }
+  .drawer {
+    width: min(92vw, 480px);
+    max-height: none;
+  }
+}

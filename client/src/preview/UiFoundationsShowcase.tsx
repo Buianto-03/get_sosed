@@ -11,6 +11,9 @@ import { Avatar, AvatarSize } from '../shared/ui/avatar/Avatar';
 import { AvatarGroup } from '../shared/ui/avatar/AvatarGroup';
 import { Badge, BadgeSize, BadgeVariant } from '../shared/ui/badge/Badge';
 import { Chip, ChipSize, ChipVariant } from '../shared/ui/chip/Chip';
+import { Modal } from '../shared/ui/overlay/Modal';
+import { Drawer } from '../shared/ui/overlay/Drawer';
+import { Menu } from '../shared/ui/overlay/Menu';
 import { Checkbox } from '../shared/ui/selection/checkbox/Checkbox';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
@@ -35,6 +38,8 @@ export function UiFoundationsShowcase(): JSX.Element {
     'Для некурящих',
     'Можно с питомцами',
   ]);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   return (
     <details className={styles.showcase}>
@@ -217,6 +222,39 @@ export function UiFoundationsShowcase(): JSX.Element {
               />
             </div>
           </div>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Всплывающие элементы
+          </Heading>
+          <div className={styles.controls}>
+            <Button onClick={() => setModalOpen(true)}>Открыть modal</Button>
+            <Button variant={ButtonVariant.Secondary} onClick={() => setDrawerOpen(true)}>
+              Открыть drawer
+            </Button>
+            <Menu
+              label="Действия объявления"
+              trigger="Меню объявления"
+              items={[
+                { label: 'Изменить', onSelect: () => undefined },
+                { label: 'Скрыть', onSelect: () => undefined },
+                { label: 'Удалить', onSelect: () => undefined },
+              ]}
+            />
+          </div>
+          <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Подтвердите действие">
+            <Text variant={TextVariant.Body}>
+              Это пример модального окна. Нажмите Escape или кнопку закрытия, чтобы вернуться к странице.
+            </Text>
+            <div className={styles.controls}>
+              <Button onClick={() => setModalOpen(false)}>Понятно</Button>
+            </div>
+          </Modal>
+          <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры поиска">
+            <Text variant={TextVariant.Body}>
+              Пример выдвижной панели. Фокус остаётся внутри, а прокрутка страницы блокируется.
+            </Text>
+          </Drawer>
         </Surface>
       </Container>
     </details>
