@@ -1,0 +1,139 @@
+@use '../../styles/tokens' as tokens;
+
+.steps {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.horizontal .steps {
+  align-items: flex-start;
+}
+.vertical .steps {
+  flex-direction: column;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.horizontal .step:not(:last-child)::after {
+  position: absolute;
+  z-index: 0;
+  top: 16px;
+  right: calc(-50% + 17px);
+  left: calc(50% + 17px);
+  height: 2px;
+  background: tokens.$color-border;
+  content: '';
+}
+
+.horizontal .completed:not(:last-child)::after {
+  background: tokens.$color-success;
+}
+.stepButton {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  gap: tokens.$space-2;
+  border: 0;
+  background: transparent;
+  color: tokens.$color-ink;
+  text-align: left;
+}
+.horizontal .stepButton {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.stepButton:not(:disabled) {
+  cursor: pointer;
+}
+.stepButton:focus-visible {
+  border-radius: tokens.$radius-sm;
+  outline: 3px solid tokens.$color-focus;
+  outline-offset: 2px;
+}
+.stepButton:disabled {
+  cursor: default;
+}
+.marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid tokens.$color-border;
+  border-radius: 50%;
+  background: tokens.$color-surface;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  font-weight: 700;
+}
+.current .marker {
+  border-color: tokens.$color-accent;
+  background: tokens.$color-accent;
+  color: tokens.$color-surface;
+}
+.completed .marker {
+  border-color: tokens.$color-success;
+  background: tokens.$color-success-surface;
+  color: tokens.$color-success;
+}
+.disabled {
+  opacity: 0.5;
+}
+.copy {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-1;
+  padding-top: tokens.$space-1;
+}
+.name {
+  font-size: tokens.$font-size-sm;
+  font-weight: 600;
+}
+.description {
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+}
+
+.vertical .step {
+  min-height: 64px;
+}
+.vertical .step:not(:last-child)::after {
+  position: absolute;
+  top: 34px;
+  bottom: -1px;
+  left: 16px;
+  width: 2px;
+  background: tokens.$color-border;
+  content: '';
+}
+.vertical .completed:not(:last-child)::after {
+  background: tokens.$color-success;
+}
+
+@media (max-width: 640px) {
+  .horizontal .steps {
+    min-width: max-content;
+    gap: tokens.$space-4;
+    overflow-x: auto;
+  }
+  .horizontal .step {
+    min-width: 88px;
+  }
+  .horizontal .name {
+    max-width: 12ch;
+  }
+  .horizontal .description {
+    display: none;
+  }
+}

@@ -1,0 +1,66 @@
+@use '../../styles/tokens' as tokens;
+
+.tabs {
+  display: flex;
+  gap: tokens.$space-1;
+}
+.horizontal {
+  flex-direction: row;
+  overflow-x: auto;
+  border-bottom: 1px solid tokens.$color-border;
+}
+.vertical {
+  flex-direction: column;
+  align-items: stretch;
+  border-left: 1px solid tokens.$color-border;
+}
+
+.tab {
+  position: relative;
+  min-height: 44px;
+  padding: tokens.$space-2 tokens.$space-4;
+  border: 0;
+  border-radius: tokens.$radius-sm tokens.$radius-sm 0 0;
+  background: transparent;
+  color: tokens.$color-muted;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+
+  &[aria-selected='true'] {
+    color: tokens.$color-accent;
+    font-weight: 700;
+  }
+  &[aria-selected='true']::after {
+    position: absolute;
+    right: tokens.$space-2;
+    bottom: -1px;
+    left: tokens.$space-2;
+    height: 3px;
+    border-radius: tokens.$radius-sm;
+    background: tokens.$color-accent;
+    content: '';
+  }
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: -3px;
+  }
+  &:disabled {
+    color: tokens.$color-muted;
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.vertical .tab {
+  border-radius: 0 tokens.$radius-sm tokens.$radius-sm 0;
+  text-align: left;
+}
+.vertical .tab[aria-selected='true']::after {
+  top: tokens.$space-2;
+  right: -1px;
+  bottom: tokens.$space-2;
+  left: auto;
+  width: 3px;
+  height: auto;
+}

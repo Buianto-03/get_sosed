@@ -18,6 +18,8 @@ import { Alert, AlertVariant } from '../shared/ui/feedback/Alert';
 import { EmptyState } from '../shared/ui/feedback/EmptyState';
 import { Skeleton, SkeletonShape } from '../shared/ui/feedback/Skeleton';
 import { Spinner, SpinnerSize } from '../shared/ui/feedback/Spinner';
+import { Stepper, StepperOrientation } from '../shared/ui/stepper/Stepper';
+import { Tabs, TabsOrientation } from '../shared/ui/tabs/Tabs';
 import { Checkbox } from '../shared/ui/selection/checkbox/Checkbox';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
@@ -44,6 +46,8 @@ export function UiFoundationsShowcase(): JSX.Element {
   ]);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('overview');
+  const [activeStep, setActiveStep] = React.useState(2);
 
   return (
     <details className={styles.showcase}>
@@ -285,6 +289,48 @@ export function UiFoundationsShowcase(): JSX.Element {
                   Сбросить фильтры
                 </Button>
               )}
+            />
+          </div>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Вкладки и шаги
+          </Heading>
+          <div className={styles.navigationExamples}>
+            <div>
+              <Tabs
+                id="preview-account-tabs"
+                label="Разделы профиля"
+                value={activeTab}
+                onValueChange={setActiveTab}
+                orientation={TabsOrientation.Horizontal}
+                tabs={[
+                  { id: 'overview', label: 'Обзор' },
+                  { id: 'settings', label: 'Настройки' },
+                  { id: 'private', label: 'Скоро', disabled: true },
+                ]}
+              />
+              <div
+                id={`preview-account-tabs-panel-${activeTab}`}
+                className={styles.tabPanel}
+                role="tabpanel"
+                aria-labelledby={`preview-account-tabs-tab-${activeTab}`}
+                tabIndex={0}
+              >
+                {activeTab === 'overview' ? 'Содержимое раздела «Обзор»' : 'Настройки меняются локально'}
+              </div>
+            </div>
+            <Stepper
+              label="Шаги публикации"
+              currentStep={activeStep}
+              onStepChange={setActiveStep}
+              orientation={StepperOrientation.Horizontal}
+              steps={[
+                { id: 'place', label: 'О помещении' },
+                { id: 'price', label: 'Цена и правила' },
+                { id: 'photos', label: 'Фотографии' },
+                { id: 'publish', label: 'Публикация', disabled: true },
+              ]}
             />
           </div>
         </Surface>

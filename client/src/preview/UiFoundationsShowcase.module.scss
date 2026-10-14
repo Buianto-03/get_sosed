@@ -94,6 +94,21 @@
   gap: tokens.$space-2;
 }
 
+.navigationExamples {
+  display: grid;
+  gap: tokens.$space-6;
+  margin-top: tokens.$space-4;
+}
+
+.tabPanel {
+  min-height: 64px;
+  padding: tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-top: 0;
+  border-radius: 0 0 tokens.$radius-md tokens.$radius-md;
+  background: tokens.$color-surface;
+}
+
 @media (max-width: 640px) {
   .variants,
   .fieldExamples,
