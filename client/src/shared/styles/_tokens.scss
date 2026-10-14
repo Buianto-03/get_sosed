@@ -1,0 +1,45 @@
+// GETSOSED Warm Neutral foundations. Import with `@use` from SCSS Modules.
+$color-ink: #1f2933;
+$color-muted: #64707a;
+$color-accent: #a16207;
+$color-accent-hover: #92400e;
+$color-page: #faf7f2;
+$color-surface: #fffdf9;
+$color-soft: #f3ece2;
+$color-border: #e8dfd2;
+$color-highlight: #fff0d6;
+$color-focus: #c98f42;
+$color-danger: #b42318;
+$color-danger-surface: #fef3f2;
+
+$font-family: 'GETSOSED Inter', Inter, Arial, sans-serif;
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.5rem;
+$font-size-3xl: 2rem;
+$font-size-display: clamp(2rem, 4.2cqi, 3.625rem);
+$line-height-tight: 1.15;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.65;
+
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 20px;
+$space-6: 24px;
+$space-7: 28px;
+$space-8: 32px;
+$space-10: 40px;
+$space-12: 48px;
+$space-16: 64px;
+
+$radius-sm: 6px;
+$radius-md: 9px;
+$radius-lg: 15px;
+$radius-xl: 16px;
+$shadow-card: 0 12px 32px rgb(55 45 31 / 9%);
+$focus-ring: 0 0 0 3px rgb(201 143 66 / 40%);

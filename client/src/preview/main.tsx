@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import PreviewApp from './PreviewApp';
+import './tokens.module.scss';
 import './preview.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

@@ -1,60 +1,13 @@
-@font-face {
-  font-family: 'GETSOSED Inter';
-  src: url('/fonts/Inter-Variable.ttf') format('truetype');
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-}
-
-:root {
-  font-family: 'GETSOSED Inter', Inter, Arial, sans-serif;
-  color: #1f2933;
-  background: #f4f1ec;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: 3px solid #c98f42;
-  outline-offset: 2px;
-}
-
 .preview-app {
-  --preview-ink: #1f2933;
-  --preview-muted: #64707a;
-  --preview-accent: #a16207;
-  --preview-accent-hover: #92400e;
-  --preview-page: #faf7f2;
-  --preview-surface: #fffdf9;
-  --preview-soft: #f3ece2;
-  --preview-border: #e8dfd2;
-  --preview-highlight: #fff0d6;
+  --preview-ink: var(--gs-color-ink);
+  --preview-muted: var(--gs-color-muted);
+  --preview-accent: var(--gs-color-accent);
+  --preview-accent-hover: var(--gs-color-accent-hover);
+  --preview-page: var(--gs-color-page);
+  --preview-surface: var(--gs-color-surface);
+  --preview-soft: var(--gs-color-soft);
+  --preview-border: var(--gs-color-border);
+  --preview-highlight: var(--gs-color-highlight);
   min-height: 100vh;
   padding: 24px clamp(16px, 3vw, 40px) 40px;
   color: var(--preview-ink);

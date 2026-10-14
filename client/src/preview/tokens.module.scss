@@ -1,0 +1,105 @@
+@use '../shared/styles/tokens' as tokens;
+
+@font-face {
+  font-family: 'GETSOSED Inter';
+  src: url('/fonts/Inter-Variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Foundations for the redesign preview. This file is intentionally imported
+   only by preview/main.tsx and does not change the legacy application. */
+:global(:root) {
+  font-family: 'GETSOSED Inter', Inter, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --gs-color-ink: #{tokens.$color-ink};
+  --gs-color-muted: #{tokens.$color-muted};
+  --gs-color-accent: #{tokens.$color-accent};
+  --gs-color-accent-hover: #{tokens.$color-accent-hover};
+  --gs-color-page: #{tokens.$color-page};
+  --gs-color-surface: #{tokens.$color-surface};
+  --gs-color-soft: #{tokens.$color-soft};
+  --gs-color-border: #{tokens.$color-border};
+  --gs-color-highlight: #{tokens.$color-highlight};
+  --gs-color-focus: #{tokens.$color-focus};
+  --gs-color-danger: #{tokens.$color-danger};
+  --gs-color-danger-surface: #{tokens.$color-danger-surface};
+
+  --gs-font-family: #{tokens.$font-family};
+  --gs-font-size-xs: #{tokens.$font-size-xs};
+  --gs-font-size-sm: #{tokens.$font-size-sm};
+  --gs-font-size-md: #{tokens.$font-size-md};
+  --gs-font-size-lg: #{tokens.$font-size-lg};
+  --gs-font-size-xl: #{tokens.$font-size-xl};
+  --gs-font-size-2xl: #{tokens.$font-size-2xl};
+  --gs-font-size-3xl: #{tokens.$font-size-3xl};
+  --gs-font-size-display: #{tokens.$font-size-display};
+  --gs-line-height-tight: #{tokens.$line-height-tight};
+  --gs-line-height-normal: #{tokens.$line-height-normal};
+  --gs-line-height-relaxed: #{tokens.$line-height-relaxed};
+
+  --gs-space-1: #{tokens.$space-1};
+  --gs-space-2: #{tokens.$space-2};
+  --gs-space-3: #{tokens.$space-3};
+  --gs-space-4: #{tokens.$space-4};
+  --gs-space-5: #{tokens.$space-5};
+  --gs-space-6: #{tokens.$space-6};
+  --gs-space-7: #{tokens.$space-7};
+  --gs-space-8: #{tokens.$space-8};
+  --gs-space-10: #{tokens.$space-10};
+  --gs-space-12: #{tokens.$space-12};
+  --gs-space-16: #{tokens.$space-16};
+
+  --gs-radius-sm: #{tokens.$radius-sm};
+  --gs-radius-md: #{tokens.$radius-md};
+  --gs-radius-lg: #{tokens.$radius-lg};
+  --gs-radius-xl: #{tokens.$radius-xl};
+  --gs-shadow-card: #{tokens.$shadow-card};
+  --gs-focus-ring: #{tokens.$focus-ring};
+}
+
+:global(*),
+:global(*::before),
+:global(*::after) {
+  box-sizing: border-box;
+}
+
+:global(html) {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--gs-color-page);
+}
+
+:global(body) {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--gs-color-ink);
+  background: var(--gs-color-page);
+  font-family: var(--gs-font-family);
+  line-height: var(--gs-line-height-normal);
+}
+
+:global(button),
+:global(input),
+:global(textarea),
+:global(select) {
+  font: inherit;
+}
+
+:global(button) {
+  cursor: pointer;
+}
+
+:global(button:focus-visible),
+:global(input:focus-visible),
+:global(textarea:focus-visible),
+:global(select:focus-visible) {
+  outline: 3px solid var(--gs-color-focus);
+  outline-offset: 2px;
+}
