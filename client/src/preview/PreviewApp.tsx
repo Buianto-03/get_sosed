@@ -35,6 +35,7 @@ import { ListingGallery } from '../entities/listing/ui/ListingGallery';
 import { ConversationRow } from '../entities/chat/ui/ConversationRow';
 import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
 import { Button, ButtonVariant } from '../shared/ui/button/Button';
+import { MainBanner } from '../pages/home/ui/MainBanner';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -383,22 +384,11 @@ function HomeScreen({
   if (variant === 'no-photo') adverts = [noPhotoAdvert, ...previewAdverts.slice(1)];
   return (
     <main className="preview-page">
-      <section className="preview-hero">
-        <div className="preview-hero-copy">
-          <p className="preview-kicker">Жильё и люди рядом</p>
-          <h2>Твоё место. Твои люди.</h2>
-          <p>Ищи жильё для совместного проживания и знакомься с будущими соседями.</p>
-          <div className="preview-actions">
-            <button className="preview-button preview-button-primary" type="button" onClick={() => onNavigate('search')}>
-              Найти жильё
-            </button>
-            <button className="preview-button preview-button-secondary" type="button" onClick={() => onNavigate('post')}>
-              Разместить объявление
-            </button>
-          </div>
-        </div>
-        <img src="/mainPhoto.jpg" alt="Гостиная в квартире" />
-      </section>
+      <MainBanner
+        onFindHousing={() => onNavigate('search')}
+        onCreateListing={() => onNavigate('post')}
+        description={variant === 'long' ? longAdvert.description : undefined}
+      />
       <section className="preview-section">
         <div className="preview-section-heading">
           <div>
@@ -583,8 +573,8 @@ function AboutScreen({
     : 'Помогаем найти жильё для совместного проживания и познакомиться с будущими соседями.';
   return (
     <main className="preview-page">
-      <section className="preview-hero preview-about-hero">
-        <div className="preview-hero-copy">
+      <section className="preview-banner preview-about-banner">
+        <div className="preview-banner-copy">
           <p className="preview-kicker">О сервисе</p>
           <h2>Комфортный дом начинается с людей</h2>
           <p>{description}</p>
