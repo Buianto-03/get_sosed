@@ -25,6 +25,7 @@ import {
   profileFixture,
   type PreviewAdvert,
 } from './fixtures';
+import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
   | 'home'
@@ -242,6 +243,7 @@ function PreviewApp(): JSX.Element {
       <p className="preview-footnote">
         Состояние можно сохранить ссылкой: экран, ширина и вариант указаны в параметрах адреса.
       </p>
+      <UiFoundationsShowcase />
     </main>
   );
 }
