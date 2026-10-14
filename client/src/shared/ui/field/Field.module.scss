@@ -1,0 +1,37 @@
+@use '../../styles/tokens' as tokens;
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-2;
+}
+
+.label {
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-sm;
+  font-weight: 600;
+  line-height: tokens.$line-height-normal;
+}
+
+.required {
+  margin-left: tokens.$space-1;
+  color: tokens.$color-danger;
+}
+
+.hint {
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  color: tokens.$color-danger;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.disabled .label {
+  color: tokens.$color-muted;
+}

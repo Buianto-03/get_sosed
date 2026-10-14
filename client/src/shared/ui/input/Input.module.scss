@@ -1,0 +1,92 @@
+@use '../../styles/tokens' as tokens;
+
+.control {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: tokens.$space-3 tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  appearance: none;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  font: inherit;
+  line-height: tokens.$line-height-normal;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+
+  &::placeholder {
+    color: tokens.$color-muted;
+    opacity: 0.8;
+  }
+
+  &:hover:not(:disabled, :read-only) {
+    border-color: tokens.$color-muted;
+  }
+
+  &:focus-visible {
+    border-color: tokens.$color-accent;
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background: tokens.$color-soft;
+    color: tokens.$color-muted;
+    cursor: not-allowed;
+  }
+
+  &:read-only {
+    background: tokens.$color-soft;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: tokens.$color-danger;
+  }
+}
+
+.leadingIcon,
+.trailingIcon {
+  position: absolute;
+  z-index: 1;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  color: tokens.$color-muted;
+  pointer-events: none;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.leadingIcon {
+  left: tokens.$space-3;
+}
+
+.trailingIcon {
+  right: tokens.$space-3;
+}
+
+.withLeadingIcon {
+  padding-left: tokens.$space-10;
+}
+
+.withTrailingIcon {
+  padding-right: tokens.$space-10;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input {
+    transition: none;
+  }
+}

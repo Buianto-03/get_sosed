@@ -50,8 +50,25 @@
   margin-top: tokens.$space-4;
 }
 
+.fieldExamples {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: tokens.$space-5;
+  margin-top: tokens.$space-4;
+
+  > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 640px) {
-  .variants {
+  .variants,
+  .fieldExamples {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fieldExamples > :last-child {
+    grid-column: auto;
   }
 }

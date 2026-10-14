@@ -1,5 +1,5 @@
 import React from 'react';
-import { LuHeart } from 'react-icons/lu';
+import { LuHeart, LuSearch } from 'react-icons/lu';
 import {
   Button,
   ButtonSize,
@@ -9,6 +9,7 @@ import {
 import { IconButton } from '../shared/ui/button/IconButton';
 import { Container, ContainerWidth } from '../shared/ui/container/Container';
 import { Divider } from '../shared/ui/divider/Divider';
+import { Input, InputType } from '../shared/ui/input/Input';
 import { Heading, HeadingLevel, HeadingSize } from '../shared/ui/heading/Heading';
 import { Link, LinkVariant } from '../shared/ui/link/Link';
 import {
@@ -18,6 +19,7 @@ import {
   SurfaceTone,
 } from '../shared/ui/surface/Surface';
 import { Text, TextTone, TextVariant } from '../shared/ui/text/Text';
+import { Textarea, TextareaResize } from '../shared/ui/textarea/Textarea';
 import styles from './UiFoundationsShowcase.module.scss';
 
 export function UiFoundationsShowcase(): JSX.Element {
@@ -73,6 +75,49 @@ export function UiFoundationsShowcase(): JSX.Element {
             />
             <Link href="#preview-frame">Открыть макет</Link>
             <Link href="#preview-frame" variant={LinkVariant.Subtle}>Тихая ссылка</Link>
+          </div>
+        </Surface>
+        <Surface as={SurfaceElement.Section} padding={SurfacePadding.Md}>
+          <Heading level={HeadingLevel.H3} size={HeadingSize.Md}>
+            Текстовые поля
+          </Heading>
+          <div className={styles.fieldExamples}>
+            <Input
+              id="preview-city"
+              label="Город"
+              type={InputType.Search}
+              placeholder="Например, Москва"
+              hint="Можно указать город или район"
+              leadingIcon={<LuSearch />}
+            />
+            <Input
+              id="preview-email-error"
+              label="Электронная почта"
+              type={InputType.Email}
+              required
+              placeholder="name@example.com"
+              error="Проверьте адрес: он должен быть указан в формате name@example.com и содержать домен почты."
+            />
+            <Input
+              id="preview-readonly"
+              label="Только чтение"
+              value="Значение нельзя изменить"
+              readOnly
+            />
+            <Input
+              id="preview-disabled"
+              label="Недоступное поле"
+              placeholder="Сначала выберите город"
+              disabled
+            />
+            <Textarea
+              id="preview-description"
+              label="О себе"
+              hint="Коротко расскажите о себе и привычках"
+              rows={4}
+              placeholder="Напишите несколько предложений"
+              resize={TextareaResize.Vertical}
+            />
           </div>
         </Surface>
       </Container>
