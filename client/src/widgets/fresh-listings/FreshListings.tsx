@@ -3,7 +3,7 @@ import {
   ListingCard,
   ListingCardVariant,
   type ListingCardData,
-} from '../../entities/listing/ui/ListingCard';
+} from '../../entities/listing/ui/listing-card/ListingCard';
 import { EmptyState } from '../../shared/ui/feedback/EmptyState';
 import styles from './FreshListings.module.scss';
 

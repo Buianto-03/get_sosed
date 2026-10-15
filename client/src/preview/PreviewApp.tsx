@@ -26,8 +26,8 @@ import {
 } from './fixtures';
 import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
-import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/ListingCard';
-import { ListingContextCard } from '../entities/listing/ui/ListingContextCard';
+import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
+import { ListingContextCard } from '../entities/listing/ui/listing-context-card/ListingContextCard';
 import { ConversationRow } from '../entities/chat/ui/ConversationRow';
 import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
 import { Button, ButtonVariant } from '../shared/ui/button/Button';

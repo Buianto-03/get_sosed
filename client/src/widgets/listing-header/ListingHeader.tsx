@@ -1,6 +1,9 @@
 import React from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
-import { ListingGallery, type ListingPhoto } from '../../entities/listing/ui/ListingGallery';
+import {
+  ListingGallery,
+  type ListingPhoto,
+} from '../../entities/listing/ui/listing-gallery/ListingGallery';
 import { Button, ButtonSize, ButtonVariant } from '../../shared/ui/button/Button';
 import { Heading, HeadingLevel, HeadingSize } from '../../shared/ui/heading/Heading';
 import styles from './ListingHeader.module.scss';
@@ -20,8 +23,7 @@ export function ListingHeader({ title, photos, onBack }: ListingHeaderProps): JS
         size={ButtonSize.Sm}
         onClick={onBack}
       >
-        <LuArrowLeft aria-hidden="true" />
-        К результатам
+        <LuArrowLeft aria-hidden="true" />К результатам
       </Button>
       <Heading
         className={styles.listingHeader__title}

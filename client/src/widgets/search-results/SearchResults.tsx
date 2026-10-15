@@ -4,7 +4,7 @@ import {
   ListingCard,
   ListingCardVariant,
   type ListingCardData,
-} from '../../entities/listing/ui/ListingCard';
+} from '../../entities/listing/ui/listing-card/ListingCard';
 import { Button, ButtonVariant } from '../../shared/ui/button/Button';
 import { Alert, AlertVariant } from '../../shared/ui/feedback/Alert';
 import { EmptyState } from '../../shared/ui/feedback/EmptyState';
