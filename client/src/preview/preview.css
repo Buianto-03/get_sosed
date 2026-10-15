@@ -423,18 +423,6 @@
   line-height: 1.5;
 }
 
-.preview-back-button {
-  margin-bottom: 10px;
-}
-
-.preview-detail-title {
-  max-width: 900px;
-  margin: 0 0 22px;
-  font-size: 34px;
-  letter-spacing: -0.035em;
-  line-height: 1.16;
-}
-
 .preview-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
@@ -815,10 +803,6 @@
   .preview-detail-grid,
   .preview-chat-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .preview-detail-title {
-    font-size: 27px;
   }
 
   .preview-contact-card {

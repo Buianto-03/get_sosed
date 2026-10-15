@@ -3,7 +3,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  LuArrowLeft,
   LuBedDouble,
   LuCamera,
   LuCheck,
@@ -29,13 +28,13 @@ import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
 import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/ListingCard';
 import { ListingContextCard } from '../entities/listing/ui/ListingContextCard';
-import { ListingGallery } from '../entities/listing/ui/ListingGallery';
 import { ConversationRow } from '../entities/chat/ui/ConversationRow';
 import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
 import { Button, ButtonVariant } from '../shared/ui/button/Button';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
+import { ListingHeader } from '../widgets/listing-header/ListingHeader';
 import { SearchResults, SearchResultsState } from '../widgets/search-results/SearchResults';
 import {
   SearchFilters,
@@ -538,11 +537,7 @@ function DetailScreen({
   }));
   return (
     <main className="preview-page">
-      <button className="preview-text-button preview-back-button" type="button" onClick={() => onNavigate('search')}>
-        <LuArrowLeft aria-hidden="true" /> К результатам
-      </button>
-      <h2 className="preview-detail-title">{advert.title}</h2>
-      <ListingGallery photos={photos} />
+      <ListingHeader title={advert.title} photos={photos} onBack={() => onNavigate('search')} />
       <div className="preview-detail-grid">
         <div className="preview-detail-content">
           <section className="preview-panel">
