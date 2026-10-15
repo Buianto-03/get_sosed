@@ -16,6 +16,7 @@ import { AboutBanner } from '@widgets/about-banner/AboutBanner';
 import { AboutSteps } from '@widgets/about-steps/AboutSteps';
 import { SignInCard, type SignInFeedback } from '@features/sign-in/ui/sign-in-card/SignInCard';
 import { SignUpCard, type SignUpFeedback, type SignUpValues } from '@features/sign-up/ui/sign-up-card/SignUpCard';
+import { ProfilePage } from '@pages/profile/ui/profile-page/ProfilePage';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
 import {
   longAdvert,
@@ -33,8 +34,6 @@ import { SiteLayout } from '../app/layouts/SiteLayout';
 import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
 import { ListingContextCard } from '../entities/listing/ui/listing-context-card/ListingContextCard';
 import { ConversationRow } from '../entities/chat/ui/ConversationRow';
-import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
-import { Button, ButtonVariant } from '../shared/ui/button/Button';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
@@ -46,6 +45,7 @@ import {
   type SearchFilterValues,
 } from '../features/advert-filter/ui/SearchFilters';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
+import { toProfileListings } from './helper';
 
 type ScreenId =
   | 'home'
@@ -77,9 +77,13 @@ type VariantId =
   | 'step-1'
   | 'step-2'
   | 'step-3'
-  | 'step-4';
+  | 'step-4'
+  | 'empty-profile'
+  | 'empty-favorites'
+  | 'empty-listings'
+  | 'avatar-fallback';
 
-type ViewportId = 'desktop' | 'tablet' | 'mobile';
+type ViewportId = 'desktop' | 'tablet' | 'tablet-small' | 'mobile' | 'mobile-small';
 type HeaderMode = 'guest' | 'user';
 
 const screens: { id: ScreenId; label: string }[] = [
@@ -135,8 +139,12 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
   ],
   profile: [
     { id: 'filled', label: 'Заполнен' },
+    { id: 'empty-profile', label: 'Пустой профиль' },
+    { id: 'empty-favorites', label: 'Нет избранного' },
+    { id: 'empty-listings', label: 'Нет своих объявлений' },
     { id: 'empty', label: 'Пустые списки' },
-    { id: 'long', label: 'Длинный текст' },
+    { id: 'long', label: 'Длинное имя и текст' },
+    { id: 'avatar-fallback', label: 'Аватар: запасные инициалы' },
   ],
   chat: [
     { id: 'conversation', label: 'Переписка' },
@@ -156,15 +164,19 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
 const viewportWidths: Record<ViewportId, number> = {
   desktop: 1440,
   tablet: 1024,
+  'tablet-small': 768,
   mobile: 390,
+  'mobile-small': 320,
 };
 
-const viewportIds: ViewportId[] = ['desktop', 'tablet', 'mobile'];
+const viewportIds: ViewportId[] = ['desktop', 'tablet', 'tablet-small', 'mobile', 'mobile-small'];
 
 const viewportLabels: Record<ViewportId, string> = {
   desktop: 'Desktop · 1440',
   tablet: 'Планшет · 1024',
+  'tablet-small': 'Планшет · 768',
   mobile: 'Телефон · 390',
+  'mobile-small': 'Телефон · 320',
 };
 
 function getInitialValue<T extends string>(
@@ -692,40 +704,38 @@ function ProfileScreen({
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
-  const isEmpty = variant === 'empty';
-  const isLong = variant === 'long';
-  const { favorites: savedAdverts } = profileFixture;
-  let favorites = savedAdverts;
-  if (isEmpty) favorites = [];
-  if (isLong) favorites = [longAdvert, ...profileFixture.favorites];
-  const myAdverts = isEmpty ? [] : profileFixture.myAdverts;
-
-  return (
-    <main className="preview-page">
-      <div className="preview-page-heading preview-heading-with-action">
-        <h2>Профиль</h2>
-        <button className="preview-button preview-button-primary" type="button" onClick={() => onNavigate('post')}>
-          <LuPlus aria-hidden="true" /> Разместить объявление
-        </button>
-      </div>
-      <PersonSummary
-        name={profileFixture.name}
-        city={`${profileFixture.city} · Ищу жильё для совместной аренды`}
-        description={isLong ? longAdvert.description : profileFixture.about}
-        tags={profileFixture.tags}
-        variant={PersonSummaryVariant.Profile}
-        action={<Button variant={ButtonVariant.Secondary}>Изменить профиль</Button>}
-      />
-      <section className="preview-section">
-        <h2>Избранное</h2>
-        {favorites.length ? <ListingGrid adverts={favorites} variant={ListingCardVariant.Profile} initiallySaved onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Пока нет сохранённых объявлений" />}
-      </section>
-      <section className="preview-section">
-        <h2>Мои объявления</h2>
-        {myAdverts.length ? <ListingGrid adverts={myAdverts} variant={ListingCardVariant.Profile} onOpen={() => onNavigate('detail')} /> : <EmptyPanel title="Здесь будут ваши объявления" action="Разместить объявление" />}
-      </section>
-    </main>
+  const [savedIds, setSavedIds] = useState<string[]>(
+    () => [longAdvert.id, ...profileFixture.favorites.map(({ id }) => id)],
   );
+  const [editNotice, setEditNotice] = useState(false);
+  const isLong = variant === 'long';
+  const favorites = variant === 'empty' || variant === 'empty-favorites'
+    ? []
+    : (isLong ? [longAdvert, ...previewAdverts] : previewAdverts)
+      .filter(({ id }) => savedIds.includes(id));
+  const myAdverts = variant === 'empty' || variant === 'empty-listings'
+    ? []
+    : profileFixture.myAdverts;
+  return <ProfilePage
+    profile={variant === 'empty-profile' ? null : {
+      name: isLong ? 'Александр Петров с очень длинным именем для проверки переноса на узком экране' : profileFixture.name,
+      city: profileFixture.city,
+      intent: 'Ищу жильё для совместной аренды',
+      description: isLong ? longAdvert.description : profileFixture.about,
+      habits: profileFixture.tags,
+      avatarUrl: variant === 'avatar-fallback' ? '/images/missing-profile-avatar.jpg' : undefined,
+    }}
+    favorites={toProfileListings(favorites, savedIds)}
+    myListings={toProfileListings(myAdverts, savedIds)}
+    onCreateListing={() => onNavigate('post')}
+    onEditProfile={() => setEditNotice(true)}
+    onFindListings={() => onNavigate('search')}
+    onOpenListing={() => onNavigate('detail')}
+    onSaveListing={(id, saved) => setSavedIds((current) => saved
+      ? [...current.filter((item) => item !== id), id]
+      : current.filter((item) => item !== id))}
+    editNotice={editNotice ? 'Форма редактирования профиля появится на следующем шаге.' : undefined}
+  />;
 }
 
 function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
@@ -859,32 +869,6 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
         </div>
       </section>
     </main>
-  );
-}
-
-function ListingGrid({
-  adverts,
-  variant,
-  initiallySaved = false,
-  onOpen,
-}: {
-  adverts: PreviewAdvert[];
-  variant: ListingCardVariant;
-  initiallySaved?: boolean;
-  onOpen: (advert: PreviewAdvert) => void;
-}): JSX.Element {
-  return (
-    <div className="preview-listing-grid">
-      {adverts.map((advert) => (
-        <PreviewListingCard
-          advert={advert}
-          key={advert.id}
-          variant={variant}
-          initiallySaved={initiallySaved}
-          onOpen={() => onOpen(advert)}
-        />
-      ))}
-    </div>
   );
 }
 

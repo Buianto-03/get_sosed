@@ -1,0 +1,93 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.page {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-10;
+  container-type: inline-size;
+}
+
+.heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: tokens.$space-4;
+}
+
+.eyebrow {
+  margin: 0 0 tokens.$space-2;
+  color: tokens.$color-accent;
+  font-size: tokens.$font-size-xs;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heading h1 {
+  overflow-wrap: anywhere;
+}
+
+.createButton {
+  flex: 0 0 auto;
+  gap: tokens.$space-2;
+}
+
+.collection {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-5;
+}
+
+.collectionHeading {
+  display: flex;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
+.collectionTitle {
+  overflow-wrap: anywhere;
+}
+
+.count {
+  display: inline-grid;
+  min-width: 30px;
+  min-height: 30px;
+  place-items: center;
+  padding: 0 tokens.$space-2;
+  border-radius: 999px;
+  background: tokens.$color-soft;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  font-weight: 700;
+}
+
+.listingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-5;
+}
+
+@container (max-width: 1000px) {
+  .listingGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 620px) {
+  .page {
+    gap: tokens.$space-8;
+  }
+
+  .heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .createButton {
+    align-self: stretch;
+  }
+
+  .listingGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

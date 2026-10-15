@@ -56,4 +56,22 @@ describe('redesign preview navigation', () => {
     expect(screen.getByLabelText('Экран превью')).toHaveValue('chat');
     expect(screen.queryByRole('navigation', { name: 'Навигация в подвале' })).not.toBeInTheDocument();
   });
+
+  it('updates the profile favorites and exposes the empty profile state', () => {
+    window.history.replaceState(null, '', '/?screen=profile&header=user');
+    render(
+      <MemoryRouter initialEntries={['/account']}>
+        <PreviewApp />
+      </MemoryRouter>,
+    );
+
+    const favorites = screen.getByRole('region', { name: 'Избранное' });
+    expect(within(favorites).getAllByRole('article')).toHaveLength(2);
+    fireEvent.click(within(favorites).getAllByRole('button', { name: 'Убрать из избранного' })[0]);
+    fireEvent.click(within(favorites).getByRole('button', { name: 'Убрать из избранного' }));
+    expect(within(favorites).getByText('Пока нет сохранённых объявлений')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Состояние превью'), { target: { value: 'empty-profile' } });
+    expect(screen.getByText('Расскажите о себе')).toBeInTheDocument();
+  });
 });

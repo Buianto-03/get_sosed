@@ -10,6 +10,7 @@ export enum PersonSummaryVariant {
 
 export type PersonSummaryProps = {
   name: string;
+  avatarUrl?: string;
   city?: string;
   description?: string;
   tags?: string[];
@@ -19,6 +20,7 @@ export type PersonSummaryProps = {
 
 export function PersonSummary({
   name,
+  avatarUrl,
   city,
   description,
   tags = [],
@@ -27,7 +29,7 @@ export function PersonSummary({
 }: PersonSummaryProps): JSX.Element {
   return (
     <section className={[styles.summary, styles[variant]].join(' ')}>
-      <Avatar name={name} size={variant === PersonSummaryVariant.Profile ? AvatarSize.Xl : AvatarSize.Lg} />
+      <Avatar name={name} src={avatarUrl} size={variant === PersonSummaryVariant.Profile ? AvatarSize.Xl : AvatarSize.Lg} />
       <div className={styles.details}>
         <h3>{name}</h3>
         {city && <p className={styles.meta}>{city}</p>}

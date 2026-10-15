@@ -21,6 +21,7 @@
 .details h3 {
   color: tokens.$color-ink;
   font-size: tokens.$font-size-md;
+  overflow-wrap: anywhere;
 }
 
 .meta,
@@ -43,6 +44,11 @@
   border: 1px solid tokens.$color-border;
   border-radius: tokens.$radius-lg;
   background: tokens.$color-surface;
+  overflow-wrap: anywhere;
+}
+
+.profile .details {
+  flex: 1 1 auto;
 }
 
 .profile .details h3 {
@@ -53,13 +59,14 @@
   margin-left: auto;
 }
 
-@media (max-width: 600px) {
+@container (max-width: 600px) {
   .profile {
     flex-wrap: wrap;
     padding: tokens.$space-4;
   }
 
   .action {
+    flex: 0 0 100%;
     width: 100%;
     margin-left: 0;
   }
