@@ -1,0 +1,37 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.filters__form {
+  min-width: 0;
+}
+
+.filters__fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-3;
+}
+
+.filters__form_drawer .filters__fields {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.filters__conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3 tokens.$space-5;
+  margin: tokens.$space-5 0;
+}
+
+.filters__actions {
+  display: grid;
+  gap: tokens.$space-2;
+}
+
+.filters__submit {
+  width: 100%;
+}
+
+@container (max-width: 1000px) {
+  .filters__fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

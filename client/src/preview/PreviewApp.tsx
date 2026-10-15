@@ -13,7 +13,6 @@ import {
   LuMessagesSquare,
   LuPlus,
   LuSearch,
-  LuSlidersHorizontal,
   LuUser,
 } from 'react-icons/lu';
 import {
@@ -38,6 +37,11 @@ import { Button, ButtonVariant } from '../shared/ui/button/Button';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
+import {
+  SearchFilters,
+  emptySearchFilters,
+  type SearchFilterValues,
+} from '../features/advert-filter/ui/SearchFilters';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -428,17 +432,35 @@ function SearchScreen({
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
-  let resultCount = '3 варианта';
-  if (variant === 'empty') resultCount = '0 вариантов';
+  const [appliedFilters, setAppliedFilters] = useState<SearchFilterValues>(emptySearchFilters);
+  const filteredAdverts = previewAdverts.filter((advert) => {
+    const includes = (value: string, query: string): boolean => (
+      value.toLocaleLowerCase('ru').includes(query.trim().toLocaleLowerCase('ru'))
+    );
+    return (
+      (!appliedFilters.city || advert.city === appliedFilters.city)
+      && (!appliedFilters.priceTo || advert.price <= Number(appliedFilters.priceTo))
+      && (!appliedFilters.roomsFrom || advert.rooms >= Number(appliedFilters.roomsFrom))
+      && includes(advert.district, appliedFilters.district)
+      && includes(advert.metro, appliedFilters.metro)
+      && appliedFilters.conditions.every((condition) => advert.tags.includes(condition))
+    );
+  });
+  const resultTotal = variant === 'empty' ? 0 : filteredAdverts.length;
+  let resultNoun = 'вариантов';
+  if (resultTotal === 1) resultNoun = 'вариант';
+  if (resultTotal >= 2 && resultTotal <= 4) resultNoun = 'варианта';
+  let resultCount = `${resultTotal} ${resultNoun}`;
   if (variant === 'error') resultCount = 'Ошибка загрузки';
 
   let resultsContent: JSX.Element;
-  if (variant === 'empty') {
+  if (variant === 'empty' || (variant !== 'error' && filteredAdverts.length === 0)) {
     resultsContent = (
       <EmptyPanel
         title="Пока ничего не найдено"
         text="Измените фильтры или попробуйте другой район."
         action="Сбросить фильтры"
+        onAction={() => setAppliedFilters(emptySearchFilters)}
       />
     );
   } else if (variant === 'error') {
@@ -454,7 +476,7 @@ function SearchScreen({
   } else {
     resultsContent = (
       <>
-        <ListingGrid adverts={previewAdverts} variant={ListingCardVariant.Search} onOpen={() => onNavigate('detail')} />
+        <ListingGrid adverts={filteredAdverts} variant={ListingCardVariant.Search} onOpen={() => onNavigate('detail')} />
         <div className="preview-map-placeholder">Объявления на карте</div>
       </>
     );
@@ -466,27 +488,11 @@ function SearchScreen({
         <h2>Найти жильё</h2>
         <p>Выбирайте варианты по цене, месту и условиям.</p>
       </div>
-      <section className="preview-filter-panel">
-        <div className="preview-filter-heading">
-          <LuSlidersHorizontal aria-hidden="true" />
-          <strong>Фильтры</strong>
-        </div>
-        <div className="preview-filter-grid">
-          <FieldMock label="Город" value="Все города" />
-          <FieldMock label="Цена до, ₽" value="Например, 35 000" />
-          <FieldMock label="Комнат от" value="Любое число" />
-          <FieldMock label="Район" value="Любой район" />
-          <FieldMock label="Метро" value="Любая станция" />
-        </div>
-        <div className="preview-check-row">
-          {['Для некурящих', 'Питомцы разрешены', 'Тихие вечера', 'С рабочим местом'].map((item) => (
-            <label key={item}><input type="checkbox" /> {item}</label>
-          ))}
-        </div>
-        <button className="preview-button preview-button-primary preview-wide-button" type="button">
-          Показать объявления
-        </button>
-      </section>
+      <SearchFilters
+        applied={appliedFilters}
+        onApply={setAppliedFilters}
+        getDrawerBoundary={() => document.getElementById('preview-frame')}
+      />
       <section className="preview-section preview-results">
         <div className="preview-section-heading">
           <h2>Объявления</h2>
@@ -932,17 +938,19 @@ function EmptyPanel({
   title = 'Пока ничего не найдено',
   text = 'Измените фильтры или попробуйте другой район.',
   action,
+  onAction,
 }: {
   title?: string;
   text?: string;
   action?: string;
+  onAction?: () => void;
 }): JSX.Element {
   return (
     <div className="preview-state-panel">
       <div className="preview-state-icon"><LuSearch aria-hidden="true" /></div>
       <h3>{title}</h3>
       <p>{text}</p>
-      {action && <button className="preview-button preview-button-secondary" type="button">{action}</button>}
+      {action && <button className="preview-button preview-button-secondary" type="button" onClick={onAction}>{action}</button>}
     </div>
   );
 }

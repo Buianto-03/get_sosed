@@ -12,6 +12,7 @@ export type DrawerProps = {
   side?: DialogSide;
   closeLabel?: string;
   className?: string;
+  getBoundary?: () => HTMLElement | null;
 };
 
 export function Drawer({ side = DialogSide.Right, ...rest }: DrawerProps): JSX.Element | null {
