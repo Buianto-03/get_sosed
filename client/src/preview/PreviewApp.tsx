@@ -15,6 +15,7 @@ import { ListingDetails } from '@widgets/listing-details/listing-details/Listing
 import { AboutBanner } from '@widgets/about-banner/AboutBanner';
 import { AboutSteps } from '@widgets/about-steps/AboutSteps';
 import { SignInCard, type SignInFeedback } from '@features/sign-in/ui/sign-in-card/SignInCard';
+import { SignUpCard, type SignUpFeedback, type SignUpValues } from '@features/sign-up/ui/sign-up-card/SignUpCard';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
 import {
   longAdvert,
@@ -130,6 +131,7 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
   signup: [
     { id: 'data', label: 'Обычное состояние' },
     { id: 'error', label: 'Ошибка поля' },
+    { id: 'loading', label: 'Отправка' },
   ],
   profile: [
     { id: 'filled', label: 'Заполнен' },
@@ -382,7 +384,7 @@ function ScreenContent({
     case 'signin':
       return <SignInPreview key={variant} variant={variant} onNavigate={onNavigate} />;
     case 'signup':
-      return <SignupScreen variant={variant} onNavigate={onNavigate} />;
+      return <SignUpPreview key={variant} variant={variant} onNavigate={onNavigate} />;
     case 'profile':
       return <ProfileScreen variant={variant} onNavigate={onNavigate} />;
     case 'chat':
@@ -632,40 +634,53 @@ function SignInPreview({
   );
 }
 
-function SignupScreen({
+function SignUpPreview({
   variant,
   onNavigate,
 }: {
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
+  const [values, setValues] = useState<SignUpValues>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [submitted, setSubmitted] = useState(false);
   const isError = variant === 'error';
+  const errors: Partial<Record<keyof SignUpValues, string>> = {};
+  if (isError || (submitted && !values.name.trim())) {
+    errors.name = 'Введите имя.';
+  }
+  if (submitted && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+    errors.email = 'Введите корректный email.';
+  }
+  if (submitted && (values.password.length < 9 || !/\d/.test(values.password))) {
+    errors.password = 'Не менее 9 символов и одна цифра.';
+  }
+  if (submitted && values.confirmPassword !== values.password) {
+    errors.confirmPassword = 'Пароли не совпадают.';
+  }
+  let feedback: SignUpFeedback | undefined;
+  if (isError) {
+    feedback = { variant: AlertVariant.Error, message: 'Не удалось создать профиль. Проверьте данные.' };
+  } else if (submitted && Object.keys(errors).length === 0) {
+    feedback = { variant: AlertVariant.Info, message: 'Данные заполнены. В preview регистрация не выполняется.' };
+  }
 
   return (
-    <main className="preview-page preview-auth-page">
-      <form className="preview-auth-card" onSubmit={(event) => event.preventDefault()}>
-        <h2>Регистрация</h2>
-        <p>Создайте профиль, чтобы общаться и размещать объявления.</p>
-        {['Имя', 'Email', 'Пароль', 'Повторите пароль'].map((field, index) => (
-          <FieldMock
-            key={field}
-            label={field}
-            value={isError && index === 0 ? 'Неверный формат' : ''}
-            error={isError && index === 0}
-            type={field.toLowerCase().includes('пароль') ? 'password' : 'text'}
-          />
-        ))}
-        {isError && <p className="preview-field-error">Проверьте это поле.</p>}
-        <button className="preview-button preview-button-primary preview-wide-button" type="submit">
-          Зарегистрироваться
-        </button>
-        <button className="preview-text-button" type="button" onClick={() => onNavigate('signin')}>
-          Уже есть аккаунт? Войти
-        </button>
-        <button className="preview-text-button" type="button" onClick={() => onNavigate('home')}>
-          Смотреть объявления без входа
-        </button>
-      </form>
+    <main className="preview-page">
+      <SignUpCard
+        values={values}
+        errors={errors}
+        feedback={feedback}
+        loading={variant === 'loading'}
+        onChange={(field, value) => setValues((current) => ({ ...current, [field]: value }))}
+        onSubmit={() => setSubmitted(true)}
+        onSignIn={() => onNavigate('signin')}
+        onBrowseListings={() => onNavigate('search')}
+      />
     </main>
   );
 }

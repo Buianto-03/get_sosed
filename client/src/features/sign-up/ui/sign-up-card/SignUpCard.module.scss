@@ -1,0 +1,83 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.signUpCard {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 620px;
+  padding: tokens.$space-5;
+  place-items: center;
+  container-type: inline-size;
+}
+
+.signUpCard__surface {
+  width: min(100%, 440px);
+  min-width: 0;
+  padding: tokens.$space-7;
+  box-shadow: tokens.$shadow-card;
+}
+
+.signUpCard__form {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-4;
+}
+
+.signUpCard__intro {
+  min-width: 0;
+  margin-bottom: tokens.$space-1;
+
+  p {
+    margin: tokens.$space-2 0 0;
+    color: tokens.$color-muted;
+    font-size: tokens.$font-size-sm;
+    line-height: tokens.$line-height-normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.signUpCard__submit {
+  width: 100%;
+}
+
+.signUpCard__signIn {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 tokens.$space-1;
+  margin: 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+
+  button {
+    min-height: 36px;
+    padding: 0;
+    text-align: left;
+  }
+}
+
+.signUpCard__browse {
+  justify-self: start;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 0;
+  text-align: left;
+  white-space: normal;
+}
+
+@container (max-width: 480px) {
+  .signUpCard {
+    min-height: 580px;
+    padding: tokens.$space-4 0;
+  }
+
+  .signUpCard__surface {
+    padding: tokens.$space-5;
+  }
+
+  .signUpCard__intro h2 {
+    font-size: tokens.$font-size-2xl;
+  }
+}
