@@ -1,0 +1,92 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.results {
+  width: 100%;
+  min-width: 0;
+  margin-top: tokens.$space-10;
+  container-type: inline-size;
+}
+
+.results__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: tokens.$space-4;
+  margin-bottom: tokens.$space-5;
+
+  h2 {
+    min-width: 0;
+    margin: 0;
+    color: tokens.$color-ink;
+    font-size: tokens.$font-size-2xl;
+    line-height: tokens.$line-height-tight;
+    overflow-wrap: anywhere;
+  }
+}
+
+.results__count {
+  flex: 0 0 auto;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  white-space: nowrap;
+}
+
+.results__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-5;
+}
+
+.results__map {
+  display: grid;
+  min-height: 145px;
+  margin-top: tokens.$space-5;
+  place-items: center;
+  padding: tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: repeating-linear-gradient(32deg, tokens.$color-page 0 10px, tokens.$color-soft 10px 14px);
+  color: tokens.$color-accent;
+  font-size: tokens.$font-size-sm;
+  font-weight: 650;
+  text-align: center;
+}
+
+.results__skeletonCard {
+  display: grid;
+  align-content: start;
+  gap: tokens.$space-4;
+  min-width: 0;
+  padding: tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+}
+
+.results__error {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-4;
+
+  > :first-child {
+    width: 100%;
+  }
+}
+
+@container (max-width: 1000px) {
+  .results__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 620px) {
+  .results__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: tokens.$space-2;
+  }
+
+  .results__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

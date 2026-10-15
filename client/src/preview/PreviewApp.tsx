@@ -3,7 +3,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  LuAlertTriangle,
   LuArrowLeft,
   LuBedDouble,
   LuCamera,
@@ -37,6 +36,7 @@ import { Button, ButtonVariant } from '../shared/ui/button/Button';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
+import { SearchResults, SearchResultsState } from '../widgets/search-results/SearchResults';
 import {
   SearchFilters,
   emptySearchFilters,
@@ -65,6 +65,7 @@ type VariantId =
   | 'two-photos'
   | 'many-photos'
   | 'loading'
+  | 'partial'
   | 'filled'
   | 'conversation'
   | 'no-selection'
@@ -97,6 +98,9 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
   ],
   search: [
     { id: 'data', label: 'С данными' },
+    { id: 'long', label: 'Длинный заголовок' },
+    { id: 'loading', label: 'Загрузка' },
+    { id: 'partial', label: 'Промежуточное количество' },
     { id: 'empty', label: 'Пусто' },
     { id: 'error', label: 'Ошибка' },
   ],
@@ -299,7 +303,12 @@ function PreviewApp(): JSX.Element {
               selectScreen('home');
             }}
           >
-            <ScreenContent screen={screen} variant={activeVariant} onNavigate={selectScreen} />
+            <ScreenContent
+              screen={screen}
+              variant={activeVariant}
+              onNavigate={selectScreen}
+              onSelectVariant={setVariant}
+            />
           </SiteLayout>
         </div>
       </div>
@@ -348,16 +357,18 @@ function ScreenContent({
   screen,
   variant,
   onNavigate,
+  onSelectVariant,
 }: {
   screen: ScreenId;
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
+  onSelectVariant: (variant: VariantId) => void;
 }): JSX.Element {
   switch (screen) {
     case 'home':
       return <HomeScreen variant={variant} onNavigate={onNavigate} />;
     case 'search':
-      return <SearchScreen variant={variant} onNavigate={onNavigate} />;
+      return <SearchScreen variant={variant} onNavigate={onNavigate} onSelectVariant={onSelectVariant} />;
     case 'detail':
       return <DetailScreen variant={variant} onNavigate={onNavigate} />;
     case 'about':
@@ -428,12 +439,16 @@ function HomeScreen({
 function SearchScreen({
   variant,
   onNavigate,
+  onSelectVariant,
 }: {
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
+  onSelectVariant: (variant: VariantId) => void;
 }): JSX.Element {
   const [appliedFilters, setAppliedFilters] = useState<SearchFilterValues>(emptySearchFilters);
-  const filteredAdverts = previewAdverts.filter((advert) => {
+  const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
+  const searchAdverts = variant === 'long' ? [longAdvert, ...previewAdverts.slice(1)] : previewAdverts;
+  const filteredAdverts = searchAdverts.filter((advert) => {
     const includes = (value: string, query: string): boolean => (
       value.toLocaleLowerCase('ru').includes(query.trim().toLocaleLowerCase('ru'))
     );
@@ -446,41 +461,25 @@ function SearchScreen({
       && appliedFilters.conditions.every((condition) => advert.tags.includes(condition))
     );
   });
-  const resultTotal = variant === 'empty' ? 0 : filteredAdverts.length;
-  let resultNoun = 'вариантов';
-  if (resultTotal === 1) resultNoun = 'вариант';
-  if (resultTotal >= 2 && resultTotal <= 4) resultNoun = 'варианта';
-  let resultCount = `${resultTotal} ${resultNoun}`;
-  if (variant === 'error') resultCount = 'Ошибка загрузки';
-
-  let resultsContent: JSX.Element;
-  if (variant === 'empty' || (variant !== 'error' && filteredAdverts.length === 0)) {
-    resultsContent = (
-      <EmptyPanel
-        title="Пока ничего не найдено"
-        text="Измените фильтры или попробуйте другой район."
-        action="Сбросить фильтры"
-        onAction={() => setAppliedFilters(emptySearchFilters)}
-      />
-    );
-  } else if (variant === 'error') {
-    resultsContent = (
-      <StatePanel
-        icon={<LuAlertTriangle aria-hidden="true" />}
-        title="Не удалось загрузить объявления"
-        text="Проверьте соединение и попробуйте снова."
-        action="Повторить"
-        tone="error"
-      />
-    );
-  } else {
-    resultsContent = (
-      <>
-        <ListingGrid adverts={filteredAdverts} variant={ListingCardVariant.Search} onOpen={() => onNavigate('detail')} />
-        <div className="preview-map-placeholder">Объявления на карте</div>
-      </>
-    );
-  }
+  const visibleAdverts = variant === 'partial' ? filteredAdverts.slice(0, 2) : filteredAdverts;
+  const listings = visibleAdverts.map((advert) => ({
+    id: advert.id,
+    listing: {
+      title: advert.title,
+      price: advert.price,
+      imageUrl: advert.image || undefined,
+      imageAlt: advert.imageAlt || undefined,
+      city: advert.city,
+      district: advert.district,
+      metro: advert.metro,
+      tags: advert.tags,
+    } satisfies ListingCardData,
+    saved: savedListingIds.includes(advert.id),
+  }));
+  let resultsState = SearchResultsState.Ready;
+  if (variant === 'loading') resultsState = SearchResultsState.Loading;
+  if (variant === 'empty') resultsState = SearchResultsState.Empty;
+  if (variant === 'error') resultsState = SearchResultsState.Error;
 
   return (
     <main className="preview-page">
@@ -493,13 +492,21 @@ function SearchScreen({
         onApply={setAppliedFilters}
         getDrawerBoundary={() => document.getElementById('preview-frame')}
       />
-      <section className="preview-section preview-results">
-        <div className="preview-section-heading">
-          <h2>Объявления</h2>
-          <span className="preview-result-count">{resultCount}</span>
-        </div>
-        {resultsContent}
-      </section>
+      <SearchResults
+        listings={listings}
+        state={resultsState}
+        onOpenListing={() => onNavigate('detail')}
+        onSaveListing={(id, saved) => {
+          setSavedListingIds((current) => (
+            saved ? [...new Set([...current, id])] : current.filter((savedId) => savedId !== id)
+          ));
+        }}
+        onResetFilters={() => {
+          setAppliedFilters(emptySearchFilters);
+          onSelectVariant('data');
+        }}
+        onRetry={() => onSelectVariant('data')}
+      />
     </main>
   );
 }
@@ -951,29 +958,6 @@ function EmptyPanel({
       <h3>{title}</h3>
       <p>{text}</p>
       {action && <button className="preview-button preview-button-secondary" type="button" onClick={onAction}>{action}</button>}
-    </div>
-  );
-}
-
-function StatePanel({
-  icon,
-  title,
-  text,
-  action,
-  tone,
-}: {
-  icon: JSX.Element;
-  title: string;
-  text: string;
-  action: string;
-  tone: 'error';
-}): JSX.Element {
-  return (
-    <div className={`preview-state-panel is-${tone}`}>
-      <div className="preview-state-icon">{icon}</div>
-      <h3>{title}</h3>
-      <p>{text}</p>
-      <button className="preview-button preview-button-secondary" type="button">{action}</button>
     </div>
   );
 }

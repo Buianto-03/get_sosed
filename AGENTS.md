@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository has two independent npm packages; there is no root workspace. The React, TypeScript, and Vite client is in `client/`. Its `src/` follows Feature-Sliced Design: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. The Express and Sequelize server is in `server/`, with routes/controllers/middleware under `src/` and database models, migrations, and seeders under `db/`. Static images are in `server/public/`; `docs/` contains project plans.
+This repository has independent client and server npm packages. The React, TypeScript, and Vite client is in `client/`; its `src/` follows Feature-Sliced Design layers: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. The Express and Sequelize server is in `server/`; routes/controllers/middleware are under `src/`, and database models, migrations, and seeders under `db/`.
 
 Consult `client/ARCH.md` when making client architecture decisions. Update it when a change alters the documented principles or boundaries.
 
@@ -16,7 +16,7 @@ Consult `client/ARCH.md` when making client architecture decisions. Update it wh
 
 ## Coding Style & Naming Conventions
 
-Use two spaces, single quotes, semicolons, and trailing commas. Prettier settings are in the root and `client/.prettierrc`; ESLint enforces TypeScript and React rules. Use PascalCase for components, camelCase for functions and variables, and kebab-case feature/page directories. Declare React component props with `interface`. Name CSS/SCSS classes with BEM: `block__element_modifier` (for example, `.listing-card__title_featured`). Keep logic in its FSD slice and use typed API/data models.
+Format with two spaces, single quotes, semicolons, and trailing commas. Root and `client/.prettierrc` settings plus ESLint enforce style. Use PascalCase for components, camelCase for functions and variables, and kebab-case feature/page directories. Declare React component props with `interface`. Move component-specific helper functions to a sibling `helper.ts` file at the same directory level as the component. Name CSS/SCSS classes with BEM: `block__element_modifier` (for example, `.listing-card__title_featured`). Keep logic in its FSD slice.
 
 ## Testing Guidelines
 

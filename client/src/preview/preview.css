@@ -369,15 +369,6 @@
   font-weight: 500;
 }
 
-.preview-results {
-  margin-top: 28px;
-}
-
-.preview-result-count {
-  color: var(--preview-muted);
-  font-size: 13px;
-}
-
 .preview-map-placeholder {
   display: grid;
   min-height: 145px;
@@ -430,16 +421,6 @@
   color: var(--preview-muted);
   font-size: 14px;
   line-height: 1.5;
-}
-
-.preview-state-panel.is-error {
-  border-color: #ead0cb;
-  background: #fff9f8;
-}
-
-.preview-state-panel.is-error .preview-state-icon {
-  background: #fcebe8;
-  color: #a83227;
 }
 
 .preview-back-button {
