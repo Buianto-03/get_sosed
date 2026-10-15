@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, ButtonVariant } from '../../../shared/ui/button/Button';
+import { Button, ButtonVariant } from '../../shared/ui/button/Button';
 import styles from './MainBanner.module.scss';
 
 export type MainBannerProps = {

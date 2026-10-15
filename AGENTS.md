@@ -2,13 +2,13 @@
 
 ## Project Structure & Module Organization
 
-This repository has two independent npm packages; there is no root workspace. The React, TypeScript, and Vite client is in `client/`. Its `src/` follows Feature-Sliced Design: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. Client tests sit beside source as `*.test.ts` or `*.test.tsx`. The Express and Sequelize server is in `server/`, with routes/controllers/middleware under `src/` and database models, migrations, and seeders under `db/`. Static images are in `server/public/`; `docs/` contains project plans.
+This repository has two independent npm packages; there is no root workspace. The React, TypeScript, and Vite client is in `client/`. Its `src/` follows Feature-Sliced Design: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. The Express and Sequelize server is in `server/`, with routes/controllers/middleware under `src/` and database models, migrations, and seeders under `db/`. Static images are in `server/public/`; `docs/` contains project plans.
+
+Consult `client/ARCH.md` when making client architecture decisions. Update it when a change alters the documented principles or boundaries.
 
 ## Build, Test, and Development Commands
 
-Run commands from the package directory they target:
-
-- `cd client && npm run dev` starts Vite for local development (API requests expect the server on port 3000).
+- `cd client && npm run dev` starts Vite for development (API requests expect the server on port 3000).
 - `cd client && npm run build` type-checks and builds the client into `server/dist`.
 - `cd client && npm run lint` runs ESLint and checks FSD import boundaries; `npm run lint:ts` runs TypeScript checks alone.
 - `cd client && npm test` runs the Vitest suite once.

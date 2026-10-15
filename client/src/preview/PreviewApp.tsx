@@ -29,13 +29,15 @@ import {
 } from './fixtures';
 import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
-import { ListingCard, ListingCardVariant } from '../entities/listing/ui/ListingCard';
+import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/ListingCard';
 import { ListingContextCard } from '../entities/listing/ui/ListingContextCard';
 import { ListingGallery } from '../entities/listing/ui/ListingGallery';
 import { ConversationRow } from '../entities/chat/ui/ConversationRow';
 import { PersonSummary, PersonSummaryVariant } from '../entities/person/ui/PersonSummary';
 import { Button, ButtonVariant } from '../shared/ui/button/Button';
-import { MainBanner } from '../pages/home/ui/MainBanner';
+import { MainBanner } from '../widgets/main-banner/MainBanner';
+import { FreshListings } from '../widgets/fresh-listings/FreshListings';
+import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 
 type ScreenId =
@@ -378,37 +380,43 @@ function HomeScreen({
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
+  const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
   let adverts = previewAdverts;
   if (variant === 'empty') adverts = [];
   if (variant === 'long') adverts = [longAdvert, ...previewAdverts.slice(1)];
   if (variant === 'no-photo') adverts = [noPhotoAdvert, ...previewAdverts.slice(1)];
+  const listings = adverts.map((advert) => ({
+    id: advert.id,
+    listing: {
+      title: advert.title,
+      price: advert.price,
+      imageUrl: advert.image || undefined,
+      imageAlt: advert.imageAlt || undefined,
+      city: advert.city,
+      district: advert.district,
+      metro: advert.metro,
+      tags: advert.tags,
+    } satisfies ListingCardData,
+    saved: savedListingIds.includes(advert.id),
+  }));
   return (
-    <main className="preview-page">
+    <main className="preview-page preview-home-page">
       <MainBanner
         onFindHousing={() => onNavigate('search')}
         onCreateListing={() => onNavigate('post')}
         description={variant === 'long' ? longAdvert.description : undefined}
       />
-      <section className="preview-section">
-        <div className="preview-section-heading">
-          <div>
-            <p className="preview-kicker">Подборка</p>
-            <h2>Свежие объявления</h2>
-          </div>
-          <button className="preview-text-button" type="button" onClick={() => onNavigate('search')}>
-            Все объявления →
-          </button>
-        </div>
-        {adverts.length ? <ListingGrid adverts={adverts} variant={ListingCardVariant.Home} onOpen={() => onNavigate('detail')} /> : <EmptyPanel />}
-      </section>
-      <section className="preview-section preview-steps">
-        <h2>Как это работает</h2>
-        <div className="preview-step-grid">
-          <StepCard number="01" title="Поиск" text="Выберите расположение, бюджет и условия." />
-          <StepCard number="02" title="Детали" text="Посмотрите фотографии, описание и карту." />
-          <StepCard number="03" title="Общение" text="Напишите автору и договоритесь о деталях." />
-        </div>
-      </section>
+      <FreshListings
+        listings={listings}
+        onOpenListing={() => onNavigate('detail')}
+        onSaveListing={(id, saved) => {
+          setSavedListingIds((current) => (
+            saved ? [...new Set([...current, id])] : current.filter((savedId) => savedId !== id)
+          ));
+        }}
+        onViewAllListings={() => onNavigate('search')}
+      />
+      <HowItWorks />
     </main>
   );
 }

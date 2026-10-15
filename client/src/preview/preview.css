@@ -146,6 +146,11 @@
   min-width: 0;
 }
 
+.preview-home-page {
+  display: grid;
+  gap: 40px;
+}
+
 .preview-page-heading {
   margin-bottom: 24px;
 }
@@ -279,13 +284,6 @@
 
 .preview-wide-button {
   width: 100%;
-}
-
-.preview-steps {
-  padding: 22px;
-  border: 1px solid var(--preview-border);
-  border-radius: 16px;
-  background: var(--preview-surface);
 }
 
 .preview-step-grid {

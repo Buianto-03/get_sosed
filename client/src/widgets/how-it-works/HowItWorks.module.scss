@@ -1,0 +1,72 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.container {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.steps {
+  width: 100%;
+  min-width: 0;
+  padding: tokens.$space-6;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-xl;
+  background: tokens.$color-surface;
+
+  > h2 {
+    margin: 0;
+    color: tokens.$color-ink;
+    font-size: tokens.$font-size-2xl;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: tokens.$line-height-tight;
+    overflow-wrap: anywhere;
+  }
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-3;
+  margin-top: tokens.$space-5;
+}
+
+.step {
+  min-width: 0;
+  padding: tokens.$space-5;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+
+  > span {
+    color: tokens.$color-accent;
+    font-size: tokens.$font-size-xs;
+    font-weight: 750;
+  }
+
+  h3 {
+    margin: tokens.$space-2 0;
+    color: tokens.$color-ink;
+    font-size: tokens.$font-size-md;
+    overflow-wrap: anywhere;
+  }
+
+  p {
+    margin: 0;
+    color: tokens.$color-muted;
+    font-size: tokens.$font-size-sm;
+    line-height: tokens.$line-height-normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@container (max-width: 620px) {
+  .stepsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .steps {
+    padding: tokens.$space-4;
+  }
+}
