@@ -18,6 +18,8 @@ Consult `client/ARCH.md` when making client architecture decisions. Update it wh
 
 Format with two spaces, single quotes, semicolons, and trailing commas. Root and `client/.prettierrc` settings plus ESLint enforce style. Use PascalCase for components, camelCase for functions and variables, and kebab-case feature/page directories. Declare React component props with `interface`. Move component-specific helper functions to a sibling `helper.ts` file at the same directory level as the component. Name CSS/SCSS classes with BEM: `block__element_modifier` (for example, `.listing-card__title_featured`). Keep logic in its FSD slice.
 
+In `client/src`, place each React component with its SCSS Module in its own kebab-case directory within the FSD slice. Keep component-specific tests and helpers beside the component; keep shared code at the slice level only when it belongs to the whole slice.
+
 In `client/src`, use relative imports for files within the same FSD slice or component directory. For imports across slices or layers, use the configured `@app`, `@pages`, `@widgets`, `@features`, `@entities`, and `@shared` aliases while respecting FSD boundaries.
 
 ## Testing Guidelines

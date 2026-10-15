@@ -3,16 +3,15 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  LuBedDouble,
   LuCamera,
   LuCheck,
-  LuHeart,
   LuHome,
   LuMessagesSquare,
   LuPlus,
   LuSearch,
   LuUser,
 } from 'react-icons/lu';
+import { ListingDetails } from '@widgets/listing-details/listing-details/ListingDetails';
 import {
   longAdvert,
   longMessage,
@@ -63,6 +62,7 @@ type VariantId =
   | 'one-photo'
   | 'two-photos'
   | 'many-photos'
+  | 'disabled-contact'
   | 'loading'
   | 'partial'
   | 'filled'
@@ -110,6 +110,7 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
     { id: 'one-photo', label: 'Одно фото' },
     { id: 'two-photos', label: 'Два фото' },
     { id: 'many-photos', label: 'Много фото' },
+    { id: 'disabled-contact', label: 'Недоступное действие' },
   ],
   about: [
     { id: 'data', label: 'Обычный текст' },
@@ -518,6 +519,7 @@ function DetailScreen({
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
   const advert = variant === 'long' ? longAdvert : previewAdverts[0];
+  const [savedIds, setSavedIds] = useState<string[]>([]);
   let photoSources = [advert.image, '/images/1pic.jpg', '/mainPhoto.jpg'];
   if (variant === 'no-photo') photoSources = [];
   if (variant === 'one-photo') photoSources = [advert.image];
@@ -538,41 +540,23 @@ function DetailScreen({
   return (
     <main className="preview-page">
       <ListingHeader title={advert.title} photos={photos} onBack={() => onNavigate('search')} />
-      <div className="preview-detail-grid">
-        <div className="preview-detail-content">
-          <section className="preview-panel">
-            <h3>О жилье</h3>
-            <div className="preview-facts">
-              <span><LuBedDouble aria-hidden="true" /> {advert.rooms} комнаты</span>
-              <span>Площадь объекта {advert.area} м²</span>
-              <span>{advert.floor} этаж</span>
-            </div>
-            <p>{advert.description}</p>
-            <TagList tags={advert.tags} />
-          </section>
-          <section className="preview-panel">
-            <h3>Расположение</h3>
-            <p>{advert.city}, {advert.district} · {advert.metro}</p>
-            <div className="preview-map-placeholder">Карта</div>
-          </section>
-          <section className="preview-panel">
-            <h3>Заинтересованные пользователи</h3>
-            <p>Здесь отображаются пользователи, которым интересно это объявление.</p>
-          </section>
-        </div>
-        <aside className="preview-contact-card">
-          <strong className="preview-price">{advert.price.toLocaleString('ru-RU')} ₽</strong>
-          <p>Период и предмет аренды уточняются у автора</p>
-          <div className="preview-author"><PersonSummary name={advert.author} city={advert.city} /></div>
-          <button className="preview-button preview-button-primary preview-wide-button" type="button" onClick={() => onNavigate('signin')}>
-            Написать автору
-          </button>
-          <button className="preview-button preview-button-secondary preview-wide-button" type="button">
-            <LuHeart aria-hidden="true" /> В избранное
-          </button>
-          <p className="preview-muted">Залог, коммунальные, комиссия, дата заселения и время до метро не указаны.</p>
-        </aside>
-      </div>
+      <ListingDetails
+        information={{
+          rooms: advert.rooms,
+          area: advert.area,
+          floor: advert.floor,
+          description: advert.description,
+          tags: advert.tags,
+          location: { city: advert.city, district: advert.district, metro: advert.metro },
+        }}
+        contact={{ price: advert.price, author: advert.author, authorCity: advert.city }}
+        saved={savedIds.includes(advert.id)}
+        contactDisabled={variant === 'disabled-contact'}
+        onContact={() => onNavigate('signin')}
+        onSavedChange={(saved) => setSavedIds((current) => (
+          saved ? [...new Set([...current, advert.id])] : current.filter((id) => id !== advert.id)
+        ))}
+      />
     </main>
   );
 }

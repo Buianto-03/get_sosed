@@ -1,0 +1,53 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.listingContactCard {
+  position: sticky;
+  top: tokens.$space-4;
+  min-width: 0;
+}
+
+.listingContactCard__surface {
+  min-width: 0;
+  padding: tokens.$space-6;
+}
+
+.listingContactCard__price {
+  display: block;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-2xl;
+  line-height: tokens.$line-height-tight;
+}
+
+.listingContactCard__note {
+  margin: tokens.$space-2 0 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.listingContactCard__author {
+  margin: tokens.$space-5 0;
+}
+
+.listingContactCard__actions {
+  display: grid;
+  gap: tokens.$space-2;
+}
+
+.listingContactCard__button {
+  width: 100%;
+  white-space: normal;
+}
+
+.listingContactCard__button svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+@container (max-width: 700px) {
+  .listingContactCard {
+    position: static;
+  }
+}
