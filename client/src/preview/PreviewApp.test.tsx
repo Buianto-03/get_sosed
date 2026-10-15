@@ -74,4 +74,24 @@ describe('redesign preview navigation', () => {
     fireEvent.change(screen.getByLabelText('Состояние превью'), { target: { value: 'empty-profile' } });
     expect(screen.getByText('Расскажите о себе')).toBeInTheDocument();
   });
+
+  it('applies profile edits locally and discards canceled changes', () => {
+    window.history.replaceState(null, '', '/?screen=profile&header=user');
+    render(
+      <MemoryRouter initialEntries={['/account']}>
+        <PreviewApp />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Изменить профиль' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Имя' }), { target: { value: 'Мария Иванова' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить изменения' }));
+    expect(screen.getByRole('heading', { name: 'Мария Иванова' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Изменить профиль' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Имя' }), { target: { value: 'Другое имя' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отменить' }));
+    expect(screen.getByRole('heading', { name: 'Мария Иванова' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Другое имя' })).not.toBeInTheDocument();
+  });
 });

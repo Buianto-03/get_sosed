@@ -16,7 +16,8 @@ import { AboutBanner } from '@widgets/about-banner/AboutBanner';
 import { AboutSteps } from '@widgets/about-steps/AboutSteps';
 import { SignInCard, type SignInFeedback } from '@features/sign-in/ui/sign-in-card/SignInCard';
 import { SignUpCard, type SignUpFeedback, type SignUpValues } from '@features/sign-up/ui/sign-up-card/SignUpCard';
-import { ProfilePage } from '@pages/profile/ui/profile-page/ProfilePage';
+import { ProfileEditForm } from '@features/edit-profile/ui/profile-edit-form/ProfileEditForm';
+import { ProfilePage, type ProfileDetails } from '@pages/profile/ui/profile-page/ProfilePage';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
 import {
   longAdvert,
@@ -81,7 +82,8 @@ type VariantId =
   | 'empty-profile'
   | 'empty-favorites'
   | 'empty-listings'
-  | 'avatar-fallback';
+  | 'avatar-fallback'
+  | 'editing';
 
 type ViewportId = 'desktop' | 'tablet' | 'tablet-small' | 'mobile' | 'mobile-small';
 type HeaderMode = 'guest' | 'user';
@@ -145,6 +147,7 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
     { id: 'empty', label: 'Пустые списки' },
     { id: 'long', label: 'Длинное имя и текст' },
     { id: 'avatar-fallback', label: 'Аватар: запасные инициалы' },
+    { id: 'editing', label: 'Редактирование' },
   ],
   chat: [
     { id: 'conversation', label: 'Переписка' },
@@ -204,8 +207,31 @@ function PreviewApp(): JSX.Element {
   const [headerMode, setHeaderMode] = useState<HeaderMode>(
     () => getInitialValue('header', ['guest', 'user'], 'guest'),
   );
+  const [profile, setProfile] = useState<ProfileDetails>({
+    name: profileFixture.name,
+    city: profileFixture.city,
+    intent: 'Ищу жильё для совместной аренды',
+    description: profileFixture.about,
+    habits: profileFixture.tags,
+  });
+  const profileAvatarUrl = useRef<string>();
   const previousScreen = useRef(screen);
   const activeVariants = variants[screen];
+
+  useEffect(() => () => {
+    if (profileAvatarUrl.current) URL.revokeObjectURL(profileAvatarUrl.current);
+  }, []);
+
+  const applyProfile = (nextProfile: ProfileDetails, avatarFile: File | null | undefined): void => {
+    let { avatarUrl } = nextProfile;
+    if (avatarFile instanceof File) avatarUrl = URL.createObjectURL(avatarFile);
+    if (avatarFile === null) avatarUrl = undefined;
+    if (profileAvatarUrl.current && profileAvatarUrl.current !== avatarUrl) {
+      URL.revokeObjectURL(profileAvatarUrl.current);
+    }
+    profileAvatarUrl.current = avatarUrl?.startsWith('blob:') ? avatarUrl : undefined;
+    setProfile({ ...nextProfile, avatarUrl });
+  };
 
   useEffect(() => {
     if (previousScreen.current !== screen) {
@@ -317,7 +343,7 @@ function PreviewApp(): JSX.Element {
           <SiteLayout
             fullscreenChat={screen === 'chat'}
             bottomNavigation={<MobileNavigation screen={screen} onNavigate={selectScreen} />}
-            user={headerMode === 'user' ? { name: profileFixture.name } : undefined}
+            user={headerMode === 'user' ? { name: profile.name } : undefined}
             onSignOut={() => {
               setHeaderMode('guest');
               selectScreen('home');
@@ -328,6 +354,8 @@ function PreviewApp(): JSX.Element {
               variant={activeVariant}
               onNavigate={selectScreen}
               onSelectVariant={setVariant}
+              profile={profile}
+              onApplyProfile={applyProfile}
             />
           </SiteLayout>
         </div>
@@ -378,11 +406,15 @@ function ScreenContent({
   variant,
   onNavigate,
   onSelectVariant,
+  profile,
+  onApplyProfile,
 }: {
   screen: ScreenId;
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
   onSelectVariant: (variant: VariantId) => void;
+  profile: ProfileDetails;
+  onApplyProfile: (profile: ProfileDetails, avatarFile: File | null | undefined) => void;
 }): JSX.Element {
   switch (screen) {
     case 'home':
@@ -398,7 +430,7 @@ function ScreenContent({
     case 'signup':
       return <SignUpPreview key={variant} variant={variant} onNavigate={onNavigate} />;
     case 'profile':
-      return <ProfileScreen variant={variant} onNavigate={onNavigate} />;
+      return <ProfileScreen variant={variant} onNavigate={onNavigate} onSelectVariant={onSelectVariant} profile={profile} onApplyProfile={onApplyProfile} />;
     case 'chat':
       return <ChatScreen variant={variant} />;
     case 'post':
@@ -700,15 +732,28 @@ function SignUpPreview({
 function ProfileScreen({
   variant,
   onNavigate,
+  onSelectVariant,
+  profile,
+  onApplyProfile,
 }: {
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
+  onSelectVariant: (variant: VariantId) => void;
+  profile: ProfileDetails;
+  onApplyProfile: (profile: ProfileDetails, avatarFile: File | null | undefined) => void;
 }): JSX.Element {
   const [savedIds, setSavedIds] = useState<string[]>(
     () => [longAdvert.id, ...profileFixture.favorites.map(({ id }) => id)],
   );
-  const [editNotice, setEditNotice] = useState(false);
+  const [returnVariant, setReturnVariant] = useState<VariantId>('filled');
+  const [editingSource, setEditingSource] = useState<ProfileDetails | null | undefined>();
   const isLong = variant === 'long';
+  const visibleProfile = variant === 'empty-profile' ? null : {
+    ...profile,
+    name: isLong ? 'Александр Петров с очень длинным именем для проверки переноса на узком экране' : profile.name,
+    description: isLong ? longAdvert.description : profile.description,
+    avatarUrl: variant === 'avatar-fallback' ? '/images/missing-profile-avatar.jpg' : profile.avatarUrl,
+  };
   const favorites = variant === 'empty' || variant === 'empty-favorites'
     ? []
     : (isLong ? [longAdvert, ...previewAdverts] : previewAdverts)
@@ -716,25 +761,39 @@ function ProfileScreen({
   const myAdverts = variant === 'empty' || variant === 'empty-listings'
     ? []
     : profileFixture.myAdverts;
+
+  if (variant === 'editing') {
+    return (
+      <ProfileEditForm
+        profile={editingSource === undefined ? profile : editingSource}
+        onSave={(nextProfile, avatarFile) => {
+          onApplyProfile(nextProfile, avatarFile);
+          setEditingSource(undefined);
+          onSelectVariant('filled');
+        }}
+        onCancel={() => {
+          setEditingSource(undefined);
+          onSelectVariant(returnVariant);
+        }}
+      />
+    );
+  }
+
   return <ProfilePage
-    profile={variant === 'empty-profile' ? null : {
-      name: isLong ? 'Александр Петров с очень длинным именем для проверки переноса на узком экране' : profileFixture.name,
-      city: profileFixture.city,
-      intent: 'Ищу жильё для совместной аренды',
-      description: isLong ? longAdvert.description : profileFixture.about,
-      habits: profileFixture.tags,
-      avatarUrl: variant === 'avatar-fallback' ? '/images/missing-profile-avatar.jpg' : undefined,
-    }}
+    profile={visibleProfile}
     favorites={toProfileListings(favorites, savedIds)}
     myListings={toProfileListings(myAdverts, savedIds)}
     onCreateListing={() => onNavigate('post')}
-    onEditProfile={() => setEditNotice(true)}
+    onEditProfile={() => {
+      setReturnVariant(variant);
+      setEditingSource(visibleProfile);
+      onSelectVariant('editing');
+    }}
     onFindListings={() => onNavigate('search')}
     onOpenListing={() => onNavigate('detail')}
     onSaveListing={(id, saved) => setSavedIds((current) => saved
       ? [...current.filter((item) => item !== id), id]
       : current.filter((item) => item !== id))}
-    editNotice={editNotice ? 'Форма редактирования профиля появится на следующем шаге.' : undefined}
   />;
 }
 

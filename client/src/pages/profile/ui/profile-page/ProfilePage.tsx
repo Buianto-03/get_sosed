@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import React from 'react';
 import { LuHeart, LuPlus, LuUser } from 'react-icons/lu';
 import { PersonSummary, PersonSummaryVariant } from '@entities/person/ui/PersonSummary';
 import {
@@ -7,7 +7,6 @@ import {
   type ListingCardData,
 } from '@entities/listing/ui/listing-card/ListingCard';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
-import { Alert } from '@shared/ui/feedback/Alert';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import styles from './ProfilePage.module.scss';
@@ -36,7 +35,6 @@ export type ProfilePageProps = {
   onFindListings: () => void;
   onOpenListing: (id: string) => void;
   onSaveListing: (id: string, saved: boolean) => void;
-  editNotice?: ReactNode;
 };
 
 export function ProfilePage({
@@ -48,7 +46,6 @@ export function ProfilePage({
   onFindListings,
   onOpenListing,
   onSaveListing,
-  editNotice,
 }: ProfilePageProps): JSX.Element {
   const collections = [
     {
@@ -87,8 +84,6 @@ export function ProfilePage({
           Разместить объявление
         </Button>
       </div>
-
-      {editNotice && <Alert>{editNotice}</Alert>}
 
       {profile ? (
         <PersonSummary
