@@ -98,30 +98,34 @@
   margin-bottom: tokens.$space-3;
 }
 
-.quickReplies button {
-  min-height: 36px;
-  padding: 0 tokens.$space-3;
-  border: 1px solid tokens.$color-border;
+.quickReplies .quickReply {
   border-radius: 999px;
-  background: tokens.$color-surface;
-  color: tokens.$color-muted;
-  cursor: pointer;
 }
 
 .composer {
+  position: sticky;
+  z-index: 1;
+  bottom: 0;
   display: flex;
+  flex-shrink: 0;
   gap: tokens.$space-2;
+  padding: tokens.$space-3 0;
+  padding-bottom: calc(tokens.$space-3 + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid tokens.$color-border;
+  background: tokens.$color-surface;
 }
 
-.composer input {
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  padding: 0 tokens.$space-3;
-  border: 1px solid tokens.$color-border;
-  border-radius: tokens.$radius-md;
-  background: tokens.$color-surface;
-  color: tokens.$color-ink;
+.composerField {
+  flex: 1;
+}
+
+.composerField > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .emptyState,
@@ -130,6 +134,10 @@
   min-height: 240px;
   flex-direction: column;
   justify-content: center;
+}
+
+.sendError {
+  margin-bottom: tokens.$space-2;
 }
 
 @container (max-width: 680px) {
@@ -158,6 +166,11 @@
 
   .thread {
     min-height: 480px;
+  }
+
+  .messageList {
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .backButton {

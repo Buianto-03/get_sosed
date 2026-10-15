@@ -71,6 +71,28 @@ describe('redesign preview navigation', () => {
     expect(screen.getByRole('heading', { name: 'Выберите диалог' })).toBeInTheDocument();
   });
 
+  it('sends messages locally, uses quick replies and keeps failed text for retry', () => {
+    window.history.replaceState(null, '', '/?header=user');
+    render(
+      <MemoryRouter initialEntries={['/chat/1']}>
+        <PreviewApp />
+      </MemoryRouter>,
+    );
+
+    const composer = screen.getByRole('textbox', { name: 'Сообщение' });
+    fireEvent.click(screen.getByRole('button', { name: 'Здравствуйте!' }));
+    expect(composer).toHaveValue('Здравствуйте!');
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить' }));
+    expect(screen.getByText('Здравствуйте!', { selector: 'p' })).toBeInTheDocument();
+    expect(composer).toHaveValue('');
+
+    fireEvent.change(screen.getByLabelText('Состояние превью'), { target: { value: 'send-error' } });
+    fireEvent.change(composer, { target: { value: 'Повторное сообщение' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить' }));
+    expect(screen.getByText('Не удалось отправить сообщение. Попробуйте ещё раз.')).toBeInTheDocument();
+    expect(composer).toHaveValue('Повторное сообщение');
+  });
+
   it('updates the profile favorites and exposes the empty profile state', () => {
     window.history.replaceState(null, '', '/?screen=profile&header=user');
     render(

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LuArrowLeft, LuMessagesSquare } from 'react-icons/lu';
 import { ConversationRow } from '@entities/chat/ui/ConversationRow';
 import { ListingContextCard } from '@entities/listing/ui/listing-context-card/ListingContextCard';
-import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
+import { Button, ButtonSize, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
+import { Input } from '@shared/ui/input/Input';
 import styles from './ChatPage.module.scss';
 
 export type ChatMessage = {
@@ -32,6 +34,7 @@ export interface ChatPageProps {
   onSelectConversation: (id: string) => void;
   onBackToList: () => void;
   onOpenListing?: (id: string) => void;
+  onSendMessage: (conversationId: string, message: string) => boolean;
 }
 
 export function ChatPage({
@@ -42,8 +45,25 @@ export function ChatPage({
   onSelectConversation,
   onBackToList,
   onOpenListing,
+  onSendMessage,
 }: ChatPageProps): JSX.Element {
   const activeConversation = conversations.find(({ id }) => id === selectedConversationId);
+  const [draft, setDraft] = useState('');
+  const [sendError, setSendError] = useState(false);
+
+  useEffect(() => {
+    setDraft('');
+    setSendError(false);
+  }, [selectedConversationId]);
+
+  const sendMessage = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    const message = draft.trim();
+    if (!activeConversation || !message) return;
+    const sent = onSendMessage(activeConversation.id, message);
+    setSendError(!sent);
+    if (sent) setDraft('');
+  };
 
   return (
     <main className={styles.page}>
@@ -109,16 +129,46 @@ export function ChatPage({
                     className={message.from === 'me' ? styles.messageMine : styles.message}
                     key={message.id}
                   >
-                    {message.from === 'me' && longMessage ? longMessage : message.text}
+                    {message.id === 'm2' && longMessage ? longMessage : message.text}
                   </p>
                 ))}
               </div>
               <div className={styles.quickReplies}>
-                <button type="button">Здравствуйте!</button>
-                <button type="button">Когда можно посмотреть?</button>
+                <Button
+                  className={styles.quickReply}
+                  size={ButtonSize.Sm}
+                  variant={ButtonVariant.Secondary}
+                  onClick={() => setDraft('Здравствуйте!')}
+                >
+                  Здравствуйте!
+                </Button>
+                <Button
+                  className={styles.quickReply}
+                  size={ButtonSize.Sm}
+                  variant={ButtonVariant.Secondary}
+                  onClick={() => setDraft('Когда можно посмотреть?')}
+                >
+                  Когда можно посмотреть?
+                </Button>
               </div>
-              <form className={styles.composer} onSubmit={(event) => event.preventDefault()}>
-                <input aria-label="Сообщение" placeholder="Напишите сообщение" />
+              {sendError && (
+                <Alert className={styles.sendError} variant={AlertVariant.Error}>
+                  Не удалось отправить сообщение. Попробуйте ещё раз.
+                </Alert>
+              )}
+              <form className={styles.composer} onSubmit={sendMessage}>
+                <Input
+                  id="chat-message-input"
+                  label="Сообщение"
+                  fieldClassName={styles.composerField}
+                  autoComplete="off"
+                  value={draft}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    if (sendError) setSendError(false);
+                  }}
+                  placeholder="Напишите сообщение"
+                />
                 <Button type={ButtonType.Submit}>Отправить</Button>
               </form>
             </>

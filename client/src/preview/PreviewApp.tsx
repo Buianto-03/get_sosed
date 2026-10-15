@@ -19,7 +19,7 @@ import { SignUpCard, type SignUpFeedback, type SignUpValues } from '@features/si
 import { ProfileEditForm } from '@features/edit-profile/ui/profile-edit-form/ProfileEditForm';
 import { ProfilePage, type ProfileDetails } from '@pages/profile/ui/profile-page/ProfilePage';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
-import { ChatPage } from '@pages/chat/ui/chat-page/ChatPage';
+import { ChatPage, type ChatMessage } from '@pages/chat/ui/chat-page/ChatPage';
 import {
   longAdvert,
   longMessage,
@@ -82,7 +82,8 @@ type VariantId =
   | 'empty-favorites'
   | 'empty-listings'
   | 'avatar-fallback'
-  | 'editing';
+  | 'editing'
+  | 'send-error';
 
 type ViewportId = 'desktop' | 'tablet' | 'tablet-small' | 'mobile' | 'mobile-small';
 type HeaderMode = 'guest' | 'user';
@@ -153,6 +154,7 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
     { id: 'empty', label: 'Нет диалогов' },
     { id: 'no-selection', label: 'Нет выбранного диалога' },
     { id: 'long', label: 'Длинное сообщение' },
+    { id: 'send-error', label: 'Ошибка отправки' },
   ],
   post: [
     { id: 'step-1', label: 'Шаг 1 · Комната' },
@@ -802,16 +804,24 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
     isEmpty || noSelection ? null : previewConversations[0].id,
   );
+  const [messagesByConversation, setMessagesByConversation] = useState<Record<string, ChatMessage[]>>(
+    () => Object.fromEntries(previewConversations.map(({ id, messages }) => [id, messages])),
+  );
 
   useEffect(() => {
     setSelectedConversationId(isEmpty || noSelection ? null : previewConversations[0].id);
   }, [isEmpty, noSelection]);
 
-  const conversations = isEmpty ? [] : previewConversations.map((conversation, index) => ({
-    ...conversation,
-    price: previewAdverts[index].price,
-    imageUrl: previewAdverts[index].image,
-  }));
+  const conversations = isEmpty ? [] : previewConversations.map((conversation, index) => {
+    const messages = messagesByConversation[conversation.id] ?? conversation.messages;
+    return {
+      ...conversation,
+      lastMessage: messages[messages.length - 1]?.text ?? conversation.lastMessage,
+      messages,
+      price: previewAdverts[index].price,
+      imageUrl: previewAdverts[index].image,
+    };
+  });
 
   return (
     <ChatPage
@@ -821,6 +831,17 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
       longMessage={variant === 'long' ? longMessage : undefined}
       onSelectConversation={setSelectedConversationId}
       onBackToList={() => setSelectedConversationId(null)}
+      onSendMessage={(conversationId, message) => {
+        if (variant === 'send-error') return false;
+        setMessagesByConversation((current) => ({
+          ...current,
+          [conversationId]: [
+            ...(current[conversationId] ?? []),
+            { id: `local-${Date.now()}`, from: 'me', text: message },
+          ],
+        }));
+        return true;
+      }}
     />
   );
 }
