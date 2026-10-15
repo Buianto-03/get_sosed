@@ -14,6 +14,8 @@ import {
 import { ListingDetails } from '@widgets/listing-details/listing-details/ListingDetails';
 import { AboutBanner } from '@widgets/about-banner/AboutBanner';
 import { AboutSteps } from '@widgets/about-steps/AboutSteps';
+import { SignInCard, type SignInFeedback } from '@features/sign-in/ui/sign-in-card/SignInCard';
+import { AlertVariant } from '@shared/ui/feedback/Alert';
 import {
   longAdvert,
   longMessage,
@@ -65,6 +67,7 @@ type VariantId =
   | 'two-photos'
   | 'many-photos'
   | 'disabled-contact'
+  | 'disabled'
   | 'loading'
   | 'partial'
   | 'filled'
@@ -122,6 +125,7 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
     { id: 'data', label: 'Обычное состояние' },
     { id: 'error', label: 'Ошибка формы' },
     { id: 'loading', label: 'Отправка' },
+    { id: 'disabled', label: 'Недоступная форма' },
   ],
   signup: [
     { id: 'data', label: 'Обычное состояние' },
@@ -376,9 +380,9 @@ function ScreenContent({
     case 'about':
       return <AboutScreen variant={variant} onNavigate={onNavigate} />;
     case 'signin':
-      return <AuthScreen mode="signin" variant={variant} onNavigate={onNavigate} />;
+      return <SignInPreview key={variant} variant={variant} onNavigate={onNavigate} />;
     case 'signup':
-      return <AuthScreen mode="signup" variant={variant} onNavigate={onNavigate} />;
+      return <SignupScreen variant={variant} onNavigate={onNavigate} />;
     case 'profile':
       return <ProfileScreen variant={variant} onNavigate={onNavigate} />;
     case 'chat':
@@ -581,30 +585,68 @@ function AboutScreen({
   );
 }
 
-function AuthScreen({
-  mode,
+function SignInPreview({
   variant,
   onNavigate,
 }: {
-  mode: 'signin' | 'signup';
   variant: VariantId;
   onNavigate: (screen: ScreenId) => void;
 }): JSX.Element {
-  const isSignup = mode === 'signup';
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const passwordValid = password.trim().length > 0;
   const isError = variant === 'error';
   const isLoading = variant === 'loading';
-  let submitLabel = isSignup ? 'Зарегистрироваться' : 'Войти';
-  if (isLoading) submitLabel = 'Входим…';
-  const fields = isSignup
-    ? ['Имя', 'Email', 'Пароль', 'Повторите пароль']
-    : ['Email', 'Пароль'];
+  let feedback: SignInFeedback | undefined;
+  if (isError) {
+    feedback = { variant: AlertVariant.Error, message: 'Не удалось выполнить вход. Проверьте данные.' };
+  } else if (submitted && emailValid && passwordValid) {
+    feedback = { variant: AlertVariant.Info, message: 'Данные введены. В preview вход не выполняется.' };
+  }
+  let emailError: string | undefined;
+  if (isError) {
+    emailError = 'Проверьте адрес email.';
+  } else if (submitted && !emailValid) {
+    emailError = 'Введите корректный email.';
+  }
+
+  return (
+    <main className="preview-page">
+      <SignInCard
+        email={email}
+        password={password}
+        emailError={emailError}
+        passwordError={submitted && !passwordValid ? 'Введите пароль.' : undefined}
+        feedback={feedback}
+        loading={isLoading}
+        disabled={variant === 'disabled'}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onSubmit={() => setSubmitted(true)}
+        onRegister={() => onNavigate('signup')}
+        onBrowseListings={() => onNavigate('search')}
+      />
+    </main>
+  );
+}
+
+function SignupScreen({
+  variant,
+  onNavigate,
+}: {
+  variant: VariantId;
+  onNavigate: (screen: ScreenId) => void;
+}): JSX.Element {
+  const isError = variant === 'error';
 
   return (
     <main className="preview-page preview-auth-page">
       <form className="preview-auth-card" onSubmit={(event) => event.preventDefault()}>
-        <h2>{isSignup ? 'Регистрация' : 'Войти'}</h2>
-        <p>{isSignup ? 'Создайте профиль, чтобы общаться и размещать объявления.' : 'Войдите, чтобы писать авторам и сохранять объявления.'}</p>
-        {fields.map((field, index) => (
+        <h2>Регистрация</h2>
+        <p>Создайте профиль, чтобы общаться и размещать объявления.</p>
+        {['Имя', 'Email', 'Пароль', 'Повторите пароль'].map((field, index) => (
           <FieldMock
             key={field}
             label={field}
@@ -613,12 +655,12 @@ function AuthScreen({
             type={field.toLowerCase().includes('пароль') ? 'password' : 'text'}
           />
         ))}
-        {isError && <p className="preview-field-error">{isSignup ? 'Проверьте это поле.' : 'Не удалось выполнить вход. Проверьте данные.'}</p>}
-        <button className="preview-button preview-button-primary preview-wide-button" type="submit" disabled={isLoading}>
-          {submitLabel}
+        {isError && <p className="preview-field-error">Проверьте это поле.</p>}
+        <button className="preview-button preview-button-primary preview-wide-button" type="submit">
+          Зарегистрироваться
         </button>
-        <button className="preview-text-button" type="button" onClick={() => onNavigate(isSignup ? 'signin' : 'signup')}>
-          {isSignup ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
+        <button className="preview-text-button" type="button" onClick={() => onNavigate('signin')}>
+          Уже есть аккаунт? Войти
         </button>
         <button className="preview-text-button" type="button" onClick={() => onNavigate('home')}>
           Смотреть объявления без входа
