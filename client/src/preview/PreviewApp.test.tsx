@@ -57,6 +57,20 @@ describe('redesign preview navigation', () => {
     expect(screen.queryByRole('navigation', { name: 'Навигация в подвале' })).not.toBeInTheDocument();
   });
 
+  it('switches between conversations and returns to the conversation list', () => {
+    window.history.replaceState(null, '', '/?header=user');
+    render(
+      <MemoryRouter initialEntries={['/chat/1']}>
+        <PreviewApp />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Михаил/ }));
+    expect(within(screen.getByRole('region', { name: 'Переписка' })).getByText('Михаил')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /К диалогам/ }));
+    expect(screen.getByRole('heading', { name: 'Выберите диалог' })).toBeInTheDocument();
+  });
+
   it('updates the profile favorites and exposes the empty profile state', () => {
     window.history.replaceState(null, '', '/?screen=profile&header=user');
     render(

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import React from 'react';
 import { Button } from '@shared/ui/button/Button';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';

@@ -19,6 +19,7 @@ import { SignUpCard, type SignUpFeedback, type SignUpValues } from '@features/si
 import { ProfileEditForm } from '@features/edit-profile/ui/profile-edit-form/ProfileEditForm';
 import { ProfilePage, type ProfileDetails } from '@pages/profile/ui/profile-page/ProfilePage';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
+import { ChatPage } from '@pages/chat/ui/chat-page/ChatPage';
 import {
   longAdvert,
   longMessage,
@@ -33,8 +34,6 @@ import {
 import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
 import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
-import { ListingContextCard } from '../entities/listing/ui/listing-context-card/ListingContextCard';
-import { ConversationRow } from '../entities/chat/ui/ConversationRow';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
@@ -800,65 +799,29 @@ function ProfileScreen({
 function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
   const isEmpty = variant === 'empty';
   const noSelection = variant === 'no-selection';
-  const activeConversation = previewConversations[0];
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
+    isEmpty || noSelection ? null : previewConversations[0].id,
+  );
+
+  useEffect(() => {
+    setSelectedConversationId(isEmpty || noSelection ? null : previewConversations[0].id);
+  }, [isEmpty, noSelection]);
+
+  const conversations = isEmpty ? [] : previewConversations.map((conversation, index) => ({
+    ...conversation,
+    price: previewAdverts[index].price,
+    imageUrl: previewAdverts[index].image,
+  }));
 
   return (
-    <main className="preview-page preview-chat-page">
-      <div className="preview-page-heading"><h2>Сообщения</h2></div>
-      <div className="preview-chat-grid">
-        <section className="preview-panel preview-chat-list">
-          <h3>Диалоги</h3>
-          {isEmpty ? (
-            <EmptyPanel title="Пока нет сообщений" />
-          ) : (
-            previewConversations.map((item, index) => (
-              <ConversationRow
-                key={item.id}
-                name={item.name}
-                listingTitle={item.advert}
-                lastMessage={item.lastMessage}
-                time={item.time}
-                active={index === 0}
-              />
-            ))
-          )}
-        </section>
-        <section className="preview-panel preview-chat-thread">
-          {noSelection && (
-            <EmptyPanel title="Выберите диалог" text="Здесь появится переписка с автором объявления." />
-          )}
-          {!noSelection && isEmpty && <EmptyPanel title="Нет выбранного диалога" />}
-          {!noSelection && !isEmpty && (
-            <>
-              <header className="preview-thread-header">
-                <strong>{activeConversation.name}</strong>
-              </header>
-              <ListingContextCard
-                title={activeConversation.advert}
-                price={previewAdverts[0].price}
-                imageUrl={previewAdverts[0].image}
-                onOpen={() => undefined}
-              />
-              <div className="preview-message-list">
-                {activeConversation.messages.map((message) => (
-                  <p className={message.from === 'me' ? 'preview-message is-mine' : 'preview-message'} key={message.id}>
-                    {variant === 'long' && message.from === 'me' ? longMessage : message.text}
-                  </p>
-                ))}
-              </div>
-              <div className="preview-quick-replies">
-                <button type="button">Здравствуйте!</button>
-                <button type="button">Когда можно посмотреть?</button>
-              </div>
-              <form className="preview-chat-composer" onSubmit={(event) => event.preventDefault()}>
-                <input aria-label="Сообщение" placeholder="Напишите сообщение" />
-                <button className="preview-button preview-button-primary" type="submit">Отправить</button>
-              </form>
-            </>
-          )}
-        </section>
-      </div>
-    </main>
+    <ChatPage
+      conversations={conversations}
+      selectedConversationId={selectedConversationId}
+      empty={isEmpty}
+      longMessage={variant === 'long' ? longMessage : undefined}
+      onSelectConversation={setSelectedConversationId}
+      onBackToList={() => setSelectedConversationId(null)}
+    />
   );
 }
 
@@ -994,27 +957,6 @@ function TagList({ tags }: { tags: string[] }): JSX.Element {
   return (
     <div className="preview-tag-list">
       {tags.map((tag) => <span key={tag}>{tag}</span>)}
-    </div>
-  );
-}
-
-function EmptyPanel({
-  title = 'Пока ничего не найдено',
-  text = 'Измените фильтры или попробуйте другой район.',
-  action,
-  onAction,
-}: {
-  title?: string;
-  text?: string;
-  action?: string;
-  onAction?: () => void;
-}): JSX.Element {
-  return (
-    <div className="preview-state-panel">
-      <div className="preview-state-icon"><LuSearch aria-hidden="true" /></div>
-      <h3>{title}</h3>
-      <p>{text}</p>
-      {action && <button className="preview-button preview-button-secondary" type="button" onClick={onAction}>{action}</button>}
     </div>
   );
 }

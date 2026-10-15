@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import React from 'react';
 import { LuBedDouble, LuMapPin, LuRuler, LuLayers } from 'react-icons/lu';
 import { Chip, ChipSize } from '@shared/ui/chip/Chip';

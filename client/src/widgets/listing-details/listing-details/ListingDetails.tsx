@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import React from 'react';
 import { ListingInformation, type ListingInformationData } from '../listing-information/ListingInformation';
 import { ListingContactCard, type ListingContactData } from '../listing-contact-card/ListingContactCard';

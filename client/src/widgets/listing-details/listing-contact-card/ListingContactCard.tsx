@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import React from 'react';
 import { LuHeart } from 'react-icons/lu';
 import { PersonSummary } from '@entities/person/ui/PersonSummary';

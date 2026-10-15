@@ -1,0 +1,171 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.page {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.pageHeading {
+  margin-bottom: tokens.$space-5;
+}
+
+.workspace {
+  display: grid;
+  min-height: 540px;
+  flex: 1;
+  grid-template-columns: minmax(260px, 0.65fr) minmax(0, 1.65fr);
+  gap: tokens.$space-4;
+}
+
+.conversationList,
+.thread {
+  min-width: 0;
+  padding: tokens.$space-5;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+}
+
+.conversationList {
+  overflow: auto;
+}
+
+.rows {
+  margin-top: tokens.$space-3;
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+}
+
+.threadHeader {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: tokens.$space-3;
+  padding-bottom: tokens.$space-3;
+  border-bottom: 1px solid tokens.$color-border;
+}
+
+.threadHeader strong {
+  font-size: tokens.$font-size-lg;
+}
+
+.backButton {
+  display: none;
+}
+
+.threadHeader + button {
+  margin: tokens.$space-3 0;
+}
+
+.messageList {
+  display: flex;
+  min-height: 300px;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: end;
+  gap: tokens.$space-3;
+  padding: tokens.$space-5 0;
+}
+
+.message,
+.messageMine {
+  max-width: min(78%, 560px);
+  margin: 0;
+  padding: tokens.$space-3 tokens.$space-4;
+  border-radius: 12px 12px 12px 3px;
+  background: tokens.$color-soft;
+  font-size: tokens.$font-size-sm;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.messageMine {
+  align-self: flex-end;
+  border-radius: 12px 12px 3px 12px;
+  background: tokens.$color-highlight;
+}
+
+.quickReplies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+  margin-bottom: tokens.$space-3;
+}
+
+.quickReplies button {
+  min-height: 36px;
+  padding: 0 tokens.$space-3;
+  border: 1px solid tokens.$color-border;
+  border-radius: 999px;
+  background: tokens.$color-surface;
+  color: tokens.$color-muted;
+  cursor: pointer;
+}
+
+.composer {
+  display: flex;
+  gap: tokens.$space-2;
+}
+
+.composer input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 tokens.$space-3;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+}
+
+.emptyState,
+.noSelection {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@container (max-width: 680px) {
+  .pageHeading {
+    margin-bottom: tokens.$space-3;
+  }
+
+  .workspace {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .conversationList,
+  .thread {
+    min-height: 0;
+    padding: tokens.$space-4;
+  }
+
+  .workspace[data-mobile-view='conversation'] .conversationList {
+    display: none;
+  }
+
+  .workspace[data-mobile-view='list'] .thread {
+    display: none;
+  }
+
+  .thread {
+    min-height: 480px;
+  }
+
+  .backButton {
+    display: inline-flex;
+    margin-right: auto;
+  }
+
+  .messageList {
+    min-height: 240px;
+  }
+}

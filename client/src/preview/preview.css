@@ -315,99 +315,6 @@
   gap: 16px;
 }
 
-.preview-chat-page {
-  min-height: 0;
-}
-
-.preview-chat-grid {
-  display: grid;
-  flex: 1;
-  min-height: 540px;
-  grid-template-columns: minmax(260px, 0.65fr) minmax(0, 1.65fr);
-  gap: 14px;
-}
-
-.preview-chat-list,
-.preview-chat-thread {
-  min-width: 0;
-}
-
-.preview-chat-thread {
-  display: flex;
-  flex-direction: column;
-}
-
-.preview-thread-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--preview-border);
-}
-
-.preview-thread-header + button {
-  margin: 14px 0;
-}
-
-.preview-message-list {
-  display: flex;
-  flex: 1;
-  min-height: 330px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: end;
-  gap: 10px;
-  padding: 18px 0;
-}
-
-.preview-message {
-  max-width: min(78%, 560px);
-  margin: 0;
-  padding: 10px 13px;
-  border-radius: 12px 12px 12px 3px;
-  background: var(--preview-soft);
-  font-size: 13px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
-.preview-message.is-mine {
-  align-self: flex-end;
-  border-radius: 12px 12px 3px 12px;
-  background: var(--preview-highlight);
-}
-
-.preview-quick-replies {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.preview-quick-replies button {
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--preview-border);
-  border-radius: 999px;
-  background: white;
-  color: #59636b;
-  font-size: 11px;
-}
-
-.preview-chat-composer {
-  display: flex;
-  gap: 8px;
-}
-
-.preview-chat-composer input {
-  width: 100%;
-  min-width: 0;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--preview-border);
-  border-radius: 8px;
-}
-
 .preview-stepper {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -540,26 +447,13 @@
     margin-top: 30px;
   }
 
-  .preview-listing-grid,
-  .preview-chat-grid {
+  .preview-listing-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .preview-heading-with-action {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .preview-chat-grid {
-    min-height: 0;
-  }
-
-  .preview-chat-thread {
-    min-height: 420px;
-  }
-
-  .preview-message-list {
-    min-height: 250px;
   }
 
   .preview-stepper {

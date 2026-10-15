@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import React, { useId } from 'react';
 import { Alert, type AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
