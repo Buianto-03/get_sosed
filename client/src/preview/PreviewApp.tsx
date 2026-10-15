@@ -12,6 +12,8 @@ import {
   LuUser,
 } from 'react-icons/lu';
 import { ListingDetails } from '@widgets/listing-details/listing-details/ListingDetails';
+import { AboutBanner } from '@widgets/about-banner/AboutBanner';
+import { AboutSteps } from '@widgets/about-steps/AboutSteps';
 import {
   longAdvert,
   longMessage,
@@ -573,22 +575,8 @@ function AboutScreen({
     : 'Помогаем найти жильё для совместного проживания и познакомиться с будущими соседями.';
   return (
     <main className="preview-page">
-      <section className="preview-banner preview-about-banner">
-        <div className="preview-banner-copy">
-          <p className="preview-kicker">О сервисе</p>
-          <h2>Комфортный дом начинается с людей</h2>
-          <p>{description}</p>
-          <button className="preview-button preview-button-primary" type="button" onClick={() => onNavigate('search')}>
-            Смотреть объявления
-          </button>
-        </div>
-        <img src="/mainPhoto.jpg" alt="Интерьер квартиры" />
-      </section>
-      <section className="preview-section preview-step-grid">
-        <StepCard number="01" title="Ищите подходящее" text="Выберите район, бюджет и условия проживания." />
-        <StepCard number="02" title="Смотрите детали" text="Изучите фото, описание и расположение жилья." />
-        <StepCard number="03" title="Общайтесь" text="Свяжитесь с автором и обсудите совместную аренду." />
-      </section>
+      <AboutBanner description={description} onBrowseListings={() => onNavigate('search')} />
+      <AboutSteps />
     </main>
   );
 }
@@ -907,16 +895,6 @@ function TagList({ tags }: { tags: string[] }): JSX.Element {
     <div className="preview-tag-list">
       {tags.map((tag) => <span key={tag}>{tag}</span>)}
     </div>
-  );
-}
-
-function StepCard({ number, title, text }: { number: string; title: string; text: string }): JSX.Element {
-  return (
-    <article className="preview-step-card">
-      <span>{number}</span>
-      <h3>{title}</h3>
-      <p>{text}</p>
-    </article>
   );
 }
 
