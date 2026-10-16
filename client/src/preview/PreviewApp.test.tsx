@@ -25,7 +25,7 @@ describe('redesign preview navigation', () => {
 
   it('shows sign-in for a protected screen in guest mode', () => {
     render(
-      <MemoryRouter initialEntries={['/post']}>
+      <MemoryRouter initialEntries={['/listings/new']}>
         <PreviewApp />
       </MemoryRouter>,
     );
@@ -35,7 +35,7 @@ describe('redesign preview navigation', () => {
 
   it('uses footer links to navigate between preview screens', () => {
     render(
-      <MemoryRouter initialEntries={['/signin']}>
+      <MemoryRouter initialEntries={['/sign-in']}>
         <PreviewApp />
       </MemoryRouter>,
     );
@@ -48,7 +48,7 @@ describe('redesign preview navigation', () => {
   it('uses the fullscreen layout without a footer for chat', () => {
     window.history.replaceState(null, '', '/?header=user');
     render(
-      <MemoryRouter initialEntries={['/chat/1']}>
+      <MemoryRouter initialEntries={['/messages']}>
         <PreviewApp />
       </MemoryRouter>,
     );
@@ -60,7 +60,7 @@ describe('redesign preview navigation', () => {
   it('switches between conversations and returns to the conversation list', () => {
     window.history.replaceState(null, '', '/?header=user');
     render(
-      <MemoryRouter initialEntries={['/chat/1']}>
+      <MemoryRouter initialEntries={['/messages']}>
         <PreviewApp />
       </MemoryRouter>,
     );
@@ -74,7 +74,7 @@ describe('redesign preview navigation', () => {
   it('sends messages locally, uses quick replies and keeps failed text for retry', () => {
     window.history.replaceState(null, '', '/?header=user');
     render(
-      <MemoryRouter initialEntries={['/chat/1']}>
+      <MemoryRouter initialEntries={['/messages']}>
         <PreviewApp />
       </MemoryRouter>,
     );
@@ -96,7 +96,7 @@ describe('redesign preview navigation', () => {
   it('updates the profile favorites and exposes the empty profile state', () => {
     window.history.replaceState(null, '', '/?screen=profile&header=user');
     render(
-      <MemoryRouter initialEntries={['/account']}>
+      <MemoryRouter initialEntries={['/profile']}>
         <PreviewApp />
       </MemoryRouter>,
     );
@@ -114,7 +114,7 @@ describe('redesign preview navigation', () => {
   it('applies profile edits locally and discards canceled changes', () => {
     window.history.replaceState(null, '', '/?screen=profile&header=user');
     render(
-      <MemoryRouter initialEntries={['/account']}>
+      <MemoryRouter initialEntries={['/profile']}>
         <PreviewApp />
       </MemoryRouter>,
     );

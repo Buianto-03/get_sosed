@@ -24,6 +24,7 @@ import PhotosCarousel from '@shared/ui/PhotosCarousel';
 import { UserStatus } from '@entities/session/model/auth';
 import YMap from '@shared/ui/YMap';
 import { getAdvertByIdThunk } from '@entities/advert/model/advertsThunk';
+import { routes } from '@shared/config/routes';
 
 export default function AdvertPage(): JSX.Element {
   const navigate = useNavigate();
@@ -31,12 +32,12 @@ export default function AdvertPage(): JSX.Element {
   const advert = useAppSelector((store) => store.advert.chosenAdvert);
   const likes = useAppSelector((store) => store.likes.likes);
   const user = useAppSelector((store) => store.auth.user);
-  const { id } = useParams();
+  const { listingId } = useParams();
   const [loading, setLoading] = useState(true);
   const [requestError, setRequestError] = useState('');
 
   useEffect(() => {
-    if (!id || !Number.isInteger(Number(id)) || Number(id) <= 0) {
+    if (!listingId || !Number.isInteger(Number(listingId)) || Number(listingId) <= 0) {
       setRequestError('Объявление не найдено.');
       setLoading(false);
       return undefined;
@@ -44,13 +45,13 @@ export default function AdvertPage(): JSX.Element {
     let active = true;
     setLoading(true);
     setRequestError('');
-    void dispatch(getAdvertByIdThunk(Number(id))).unwrap()
+    void dispatch(getAdvertByIdThunk(Number(listingId))).unwrap()
       .then((loadedAdvert) => dispatch(getLikesThunk(loadedAdvert.id)).unwrap())
       .catch(() => { if (active) setRequestError('Не удалось загрузить объявление.'); })
       .finally(() => { if (active) setLoading(false); });
     window.scrollTo(0, 0);
     return () => { active = false; };
-  }, [dispatch, id]);
+  }, [dispatch, listingId]);
 
   const isLiked = (): boolean =>
     user.status === UserStatus.Logged && advert
@@ -115,8 +116,8 @@ export default function AdvertPage(): JSX.Element {
                 size="lg"
                 onClick={() =>
                   user.status === UserStatus.Logged && user.id === advert.userId
-                    ? navigate(`/advert/${advert.id}`)
-                    : navigate(`/chat/${advert.userId}`)
+                    ? navigate(routes.listingDetails(advert.id))
+                    : navigate(routes.messageThread(advert.userId))
                 }
                 mr={5}
               >
@@ -135,7 +136,7 @@ export default function AdvertPage(): JSX.Element {
                 Нравится:
               </Heading>
               {likes.map((like) => (
-                <LikeProfile key={like.id} like={like} onMessage={(userId) => navigate(`/chat/${userId}`)} />
+                <LikeProfile key={like.id} like={like} onMessage={(userId) => navigate(routes.messageThread(userId))} />
               ))}
             </Box>
           </GridItem>

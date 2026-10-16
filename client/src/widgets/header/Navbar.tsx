@@ -20,6 +20,7 @@ import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { UserStatus } from '@entities/session/model/auth';
+import { routes } from '@shared/config/routes';
 import { logoutThunk } from '@features/logout/thunks';
 
 export default function Navbar(): JSX.Element {
@@ -66,14 +67,14 @@ export default function Navbar(): JSX.Element {
             <ChakraLink
               style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
               as={Link}
-              to="/home"
+              to={routes.listings}
             >
               Поиск
             </ChakraLink>
             {user.status === UserStatus.Logged ? (
               <ChakraLink
                 as={Link}
-                to="/post"
+                to={routes.listingCreate}
                 style={{ fontFamily: 'sans-serif', fontWeight: 'inherit', fontSize: '1.15rem' }}
               >
                 Добавить объявление
@@ -101,7 +102,7 @@ export default function Navbar(): JSX.Element {
                 <>
                   <MenuItem
                     onClick={() => {
-                      navigate('/account');
+                      navigate(routes.profile);
                       onClose();
                     }}
                   >
@@ -123,7 +124,7 @@ export default function Navbar(): JSX.Element {
                 <>
                   <MenuItem
                     onClick={() => {
-                      navigate('/signin');
+                      navigate(routes.signIn);
                       onClose();
                     }}
                   >
@@ -131,7 +132,7 @@ export default function Navbar(): JSX.Element {
                   </MenuItem>
                   <MenuItem
                     onClick={() => {
-                      navigate('/signup');
+                      navigate(routes.signUp);
                       onClose();
                     }}
                   >
@@ -150,10 +151,10 @@ export default function Navbar(): JSX.Element {
             <ChakraLink as={Link} to="/" onClick={handleCloseMenu}>
               Главная
             </ChakraLink>
-            <ChakraLink as={Link} to="/home" onClick={handleCloseMenu}>
+            <ChakraLink as={Link} to={routes.listings} onClick={handleCloseMenu}>
               Поиск
             </ChakraLink>
-            {user.status === UserStatus.Logged && <ChakraLink as={Link} to="/post" onClick={handleCloseMenu}>
+            {user.status === UserStatus.Logged && <ChakraLink as={Link} to={routes.listingCreate} onClick={handleCloseMenu}>
               Добавить объявление
             </ChakraLink>}
           </Stack>

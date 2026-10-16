@@ -28,7 +28,7 @@ import {
   previewConversations,
   profileFixture,
 } from './fixtures';
-import { headerRoutes } from '../widgets/header/navigation';
+import { previewRoutes, type PreviewScreen } from './routes';
 import { SiteLayout } from '../app/layouts/SiteLayout';
 import { type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
@@ -44,16 +44,7 @@ import {
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 import { toProfileListings } from './helper';
 
-type ScreenId =
-  | 'home'
-  | 'search'
-  | 'detail'
-  | 'about'
-  | 'signin'
-  | 'signup'
-  | 'profile'
-  | 'chat'
-  | 'post';
+type ScreenId = PreviewScreen;
 
 type VariantId =
   | 'data'
@@ -202,8 +193,8 @@ function getInitialValue<T extends string>(
 function PreviewApp(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
-  const screen = (Object.keys(headerRoutes) as ScreenId[])
-    .find((page) => headerRoutes[page] === location.pathname) ?? 'home';
+  const screen = (Object.keys(previewRoutes) as ScreenId[])
+    .find((page) => previewRoutes[page] === location.pathname) ?? 'home';
   const [variant, setVariant] = useState<VariantId>(() => {
     const initialScreen = getInitialValue('screen', screens.map(({ id }) => id), 'home');
     const initialVariants = variants[initialScreen].map(({ id }) => id);
@@ -250,7 +241,7 @@ function PreviewApp(): JSX.Element {
 
   useEffect(() => {
     if (headerMode === 'guest' && ['chat', 'post', 'profile'].includes(screen)) {
-      navigate(headerRoutes.signin, { replace: true });
+      navigate(previewRoutes.signin, { replace: true });
     }
   }, [headerMode, navigate, screen]);
 
@@ -264,7 +255,7 @@ function PreviewApp(): JSX.Element {
   }, [screen, variant, viewport, headerMode]);
 
   const selectScreen = (nextScreen: ScreenId): void => {
-    navigate(headerRoutes[nextScreen]);
+    navigate(previewRoutes[nextScreen]);
     setVariant(variants[nextScreen][0].id);
   };
 

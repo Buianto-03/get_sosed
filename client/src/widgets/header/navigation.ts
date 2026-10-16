@@ -1,7 +1,8 @@
+import { routes } from '@shared/config/routes';
+
 export type HeaderPage =
   | 'home'
   | 'search'
-  | 'detail'
   | 'about'
   | 'signin'
   | 'signup'
@@ -10,15 +11,14 @@ export type HeaderPage =
   | 'post';
 
 export const headerRoutes: Record<HeaderPage, string> = {
-  home: '/',
-  search: '/home',
-  detail: '/advert/1',
-  about: '/about',
-  signin: '/signin',
-  signup: '/signup',
-  profile: '/account',
-  chat: '/chat/1',
-  post: '/post',
+  home: routes.home,
+  search: routes.listings,
+  about: routes.about,
+  signin: routes.signIn,
+  signup: routes.signUp,
+  profile: routes.profile,
+  chat: routes.messages,
+  post: routes.listingCreate,
 };
 
 export type HeaderNavItem = { page: HeaderPage; label: string };

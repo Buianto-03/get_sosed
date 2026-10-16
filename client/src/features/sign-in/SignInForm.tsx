@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@app/store/hooks';
 import type { LoginForm } from '@entities/session/model/auth';
+import { routes } from '@shared/config/routes';
 import { signinThunk } from './thunks';
 
 export default function SignInForm(): JSX.Element {
@@ -28,7 +29,7 @@ export default function SignInForm(): JSX.Element {
     setSubmitting(true);
     try {
       await dispatch(signinThunk(formData)).unwrap();
-      navigate('/account');
+      navigate(routes.profile);
     } catch {
       setError('Не удалось войти. Проверьте email и пароль.');
     } finally {
@@ -67,7 +68,7 @@ export default function SignInForm(): JSX.Element {
             {error && <Text color="red.500" role="alert">{error}</Text>}
             <Text textAlign="center">
               Нет аккаунта?{' '}
-              <Button onClick={() => navigate('/signup')} variant="link" color="#00CEC9">
+              <Button onClick={() => navigate(routes.signUp)} variant="link" color="#00CEC9">
                 Зарегистрироваться
               </Button>
             </Text>

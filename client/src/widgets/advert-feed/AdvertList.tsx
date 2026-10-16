@@ -6,6 +6,7 @@ import AdvertCard from '@entities/advert/ui/AdvertCard';
 import { getFilteredAdvertsThunk } from '@entities/advert/model/advertsThunk';
 import { loadCards } from '@entities/advert/model/advertsSlice';
 import { readFilters } from '@features/advert-filter/model/filters';
+import { routes } from '@shared/config/routes';
 
 export default function AdvertList(): JSX.Element {
   const { adverts, visitableCards, loading, error } = useAppSelector((state) => state.advert);
@@ -35,7 +36,7 @@ export default function AdvertList(): JSX.Element {
       {error && <Text role="alert" color="red.500" textAlign="center">{error}</Text>}
       <Flex direction="row" wrap="wrap" gap={4} justifyContent="center" mb={8}>
         {adverts.slice(0, visitableCards).map((advert) => (
-          <AdvertCard key={advert.id} advert={advert} onOpen={(id) => navigate(`/advert/${id}`)} />
+          <AdvertCard key={advert.id} advert={advert} onOpen={(id) => navigate(routes.listingDetails(id))} />
         ))}
       </Flex>
       {visitableCards < adverts.length && (

@@ -3,6 +3,7 @@ import { Box, Avatar, AvatarBadge, Stack, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@app/store/hooks';
 import type { ChatListType } from '@entities/chat/model/chatList';
+import { routes } from '@shared/config/routes';
 import { UserStatus } from '@entities/session/model/auth';
 
 type ChatListProps = {
@@ -15,7 +16,7 @@ export default function ChatList({ online, receivers }: ChatListProps): JSX.Elem
   const navigate = useNavigate();
 
   const handleUserClick = (userId: number): void => {
-    navigate(`/chat/${userId}`);
+    navigate(routes.messageThread(userId));
   };
 
   if (authorizedUser.status !== UserStatus.Logged) return <h2>Error! Проверь статус юзера</h2>;

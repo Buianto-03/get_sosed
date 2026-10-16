@@ -9,6 +9,7 @@ import { configureApiAuth } from '@shared/api/client';
 import { API_URL } from '@shared/config/env';
 import { authSchema } from '@entities/session/model/auth';
 import { clearAuth, setAccessToken } from '@entities/session/model/authSlice';
+import '@shared/styles/foundations.module.scss';
 
 configureApiAuth({
   getAccessToken: () => store.getState().auth.accessToken,

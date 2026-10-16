@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@app/store/hooks';
 import AdvertCard from '@entities/advert/ui/AdvertCard';
 import { getTopAdvertsThunk } from '@entities/advert/model/advertsThunk';
+import { routes } from '@shared/config/routes';
 
 export default function PopularCard(): JSX.Element {
   const adverts = useAppSelector(store => store.advert.populars);
@@ -24,7 +25,7 @@ export default function PopularCard(): JSX.Element {
       {/* Сетка карточек */}
       <Flex direction="row" wrap="wrap" gap={4} justifyContent="center">
         {adverts.map((advert) => (
-          <AdvertCard key={advert.id} advert={advert} onOpen={(id) => navigate(`/advert/${id}`)} />
+          <AdvertCard key={advert.id} advert={advert} onOpen={(id) => navigate(routes.listingDetails(id))} />
         ))}
       </Flex>
     </Box>

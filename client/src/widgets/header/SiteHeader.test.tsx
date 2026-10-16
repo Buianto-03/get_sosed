@@ -20,7 +20,7 @@ function renderHeader(props: SiteHeaderProps = {}, initialPath = '/'): void {
 
 describe('SiteHeader', () => {
   it('marks the active route and navigates from the guest header', () => {
-    renderHeader({}, '/home');
+    renderHeader({}, '/listings');
 
     const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
     expect(within(navigation).getByRole('link', { name: 'Поиск' })).toHaveAttribute(
@@ -28,7 +28,7 @@ describe('SiteHeader', () => {
       'page',
     );
     fireEvent.click(within(navigation).getByRole('link', { name: 'Регистрация' }));
-    expect(screen.getByTestId('current-path')).toHaveTextContent('/signup');
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/sign-up');
   });
 
   it('opens and closes the mobile menu with Escape and outside click', () => {
@@ -60,16 +60,29 @@ describe('SiteHeader', () => {
 
   it('shows the member actions and profile menu', () => {
     const onSignOut = vi.fn();
-    renderHeader({ user: { name: 'Александр Петров' }, onSignOut }, '/account');
+    renderHeader({ user: { name: 'Александр Петров' }, onSignOut }, '/profile');
 
     const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
     expect(within(navigation).queryByRole('link', { name: 'Войти' })).not.toBeInTheDocument();
     fireEvent.click(within(navigation).getByRole('link', { name: 'Разместить объявление' }));
-    expect(screen.getByTestId('current-path')).toHaveTextContent('/post');
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/listings/new');
 
     fireEvent.click(within(navigation).getByRole('button', { name: 'Меню профиля: Александр Петров' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Выйти' }));
     expect(onSignOut).toHaveBeenCalledOnce();
+  });
+
+  it('hides navigation items while their destinations have not been registered', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SiteHeader availableRoutes={['home', 'search', 'signin', 'signup']} />
+      </MemoryRouter>,
+    );
+
+    const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
+    expect(within(navigation).getByRole('link', { name: 'Поиск' })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('link', { name: 'О нас' })).not.toBeInTheDocument();
+    expect(within(navigation).queryByRole('link', { name: 'Регистрация' })).toBeInTheDocument();
   });
 
 });

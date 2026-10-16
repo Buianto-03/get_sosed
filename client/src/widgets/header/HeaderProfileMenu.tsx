@@ -2,7 +2,8 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarSize } from '@shared/ui/avatar/Avatar';
 import { Menu } from '@shared/ui/overlay/Menu';
-import { headerRoutes } from './navigation';
+import { RoutePattern } from '@shared/config/routes';
+import { headerRoutes, type HeaderPage } from './navigation';
 import styles from './SiteHeader.module.scss';
 
 export type HeaderUser = {
@@ -13,15 +14,16 @@ export type HeaderUser = {
 type HeaderProfileMenuProps = {
   user: HeaderUser;
   onSignOut?: () => void;
+  availableRoutes?: readonly HeaderPage[];
 };
 
-export function HeaderProfileMenu({ user, onSignOut }: HeaderProfileMenuProps): JSX.Element {
+export function HeaderProfileMenu({ user, onSignOut, availableRoutes }: HeaderProfileMenuProps): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const profileSectionActive =
     location.pathname === headerRoutes.profile ||
     location.pathname === headerRoutes.post ||
-    location.pathname.startsWith('/chat/');
+    location.pathname.startsWith(`${RoutePattern.Messages}/`);
 
   return (
     <Menu
@@ -36,8 +38,12 @@ export function HeaderProfileMenu({ user, onSignOut }: HeaderProfileMenuProps): 
         </span>
       }
       items={[
-        { label: 'Профиль', onSelect: () => navigate(headerRoutes.profile) },
-        { label: 'Сообщения', onSelect: () => navigate(headerRoutes.chat) },
+        ...(availableRoutes === undefined || availableRoutes.includes('profile')
+          ? [{ label: 'Профиль', onSelect: () => navigate(headerRoutes.profile) }]
+          : []),
+        ...(availableRoutes === undefined || availableRoutes.includes('chat')
+          ? [{ label: 'Сообщения', onSelect: () => navigate(headerRoutes.chat) }]
+          : []),
         ...(onSignOut ? [{ label: 'Выйти', onSelect: onSignOut }] : []),
       ]}
     />

@@ -8,6 +8,7 @@ import { getLikedAdvertsThunk } from '@features/liked-adverts/model';
 import ChatList from '@widgets/chat-list/ChatList';
 import LikedAdverts from '@widgets/liked-adverts/LikedAdverts';
 import ProfileCard from '@widgets/profile-card/ProfileCard';
+import { routes } from '@shared/config/routes';
 
 export default function AccountPage(): JSX.Element {
   const user = useAppSelector((state) => state.auth.user);
@@ -29,13 +30,13 @@ export default function AccountPage(): JSX.Element {
     <Container p={4} maxW="container.xl">
       <Grid templateColumns={{ base: '1fr', md: '1fr 2fr 2fr' }} gap={4} minH="650px">
         <GridItem>
-          <ProfileCard user={user} onPost={() => navigate('/post')} />
+          <ProfileCard user={user} onPost={() => navigate(routes.listingCreate)} />
         </GridItem>
         <GridItem bg="#F3F3FF" borderRadius="md">
           <ChatList receivers={chatList} online={online} />
         </GridItem>
         <GridItem>
-          <LikedAdverts onOpenAdvert={(id) => navigate(`/advert/${id}`)} />
+          <LikedAdverts onOpenAdvert={(id) => navigate(routes.listingDetails(id))} />
         </GridItem>
       </Grid>
     </Container>

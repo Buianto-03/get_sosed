@@ -4,21 +4,31 @@ import { Link } from 'react-router-dom';
 import { Button, ButtonSize, ButtonVariant } from '@shared/ui/button/Button';
 import { HeaderNavLink } from './HeaderNavLink';
 import { HeaderProfileMenu, type HeaderUser } from './HeaderProfileMenu';
-import { guestMobileItems, headerRoutes, memberMobileItems, primaryItems } from './navigation';
+import {
+  guestMobileItems,
+  headerRoutes,
+  memberMobileItems,
+  primaryItems,
+  type HeaderPage,
+} from './navigation';
 import styles from './SiteHeader.module.scss';
 
 export type SiteHeaderProps = {
   user?: HeaderUser;
   onSignOut?: () => void;
+  availableRoutes?: readonly HeaderPage[];
 };
 
-export function SiteHeader({ user, onSignOut }: SiteHeaderProps): JSX.Element {
+export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps): JSX.Element {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLElement>(null);
   const menuTriggerRef = useRef<HTMLSpanElement>(null);
   const userName = user?.name;
   const closeMobileMenu = (): void => setMobileMenuOpen(false);
+  const isRouteAvailable = (page: HeaderPage): boolean => (
+    availableRoutes === undefined || availableRoutes.includes(page)
+  );
 
   useEffect(() => setMobileMenuOpen(false), [userName]);
 
@@ -58,22 +68,32 @@ export function SiteHeader({ user, onSignOut }: SiteHeaderProps): JSX.Element {
       </Link>
 
       <nav className={styles.desktopNav} aria-label="Основная навигация">
-        {primaryItems.map(({ page, label }) => (
+        {primaryItems.filter(({ page }) => isRouteAvailable(page)).map(({ page, label }) => (
           <HeaderNavLink key={page} page={page} label={label} onSelect={closeMobileMenu} />
         ))}
         {user ? (
           <>
-            <Link to={headerRoutes.post} className={styles.headerCta}>
-              Разместить объявление
-            </Link>
-            <HeaderProfileMenu user={user} onSignOut={onSignOut} />
+            {isRouteAvailable('post') && (
+              <Link to={headerRoutes.post} className={styles.headerCta}>
+                Разместить объявление
+              </Link>
+            )}
+            <HeaderProfileMenu
+              user={user}
+              onSignOut={onSignOut}
+              availableRoutes={availableRoutes}
+            />
           </>
         ) : (
           <>
-            <HeaderNavLink page="signin" label="Войти" onSelect={closeMobileMenu} />
-            <Link to={headerRoutes.signup} className={styles.headerCta}>
-              Регистрация
-            </Link>
+            {isRouteAvailable('signin') && (
+              <HeaderNavLink page="signin" label="Войти" onSelect={closeMobileMenu} />
+            )}
+            {isRouteAvailable('signup') && (
+              <Link to={headerRoutes.signup} className={styles.headerCta}>
+                Регистрация
+              </Link>
+            )}
           </>
         )}
       </nav>
@@ -93,20 +113,28 @@ export function SiteHeader({ user, onSignOut }: SiteHeaderProps): JSX.Element {
           </Button>
         </span>
         {user ? (
-          <HeaderProfileMenu user={user} onSignOut={onSignOut} />
+          <HeaderProfileMenu
+            user={user}
+            onSignOut={onSignOut}
+            availableRoutes={availableRoutes}
+          />
         ) : (
-          <HeaderNavLink page="signin" label="Войти" mobile onSelect={closeMobileMenu} />
+          isRouteAvailable('signin') && (
+            <HeaderNavLink page="signin" label="Войти" mobile onSelect={closeMobileMenu} />
+          )
         )}
       </div>
 
       {mobileMenuOpen && (
         <nav id={menuId} className={styles.mobileMenu} aria-label="Мобильное меню">
-          {primaryItems.map(({ page, label }) => (
+          {primaryItems.filter(({ page }) => isRouteAvailable(page)).map(({ page, label }) => (
             <HeaderNavLink key={page} page={page} label={label} mobile onSelect={closeMobileMenu} />
           ))}
-          {(user ? memberMobileItems : guestMobileItems).map(({ page, label }) => (
-            <HeaderNavLink key={page} page={page} label={label} mobile onSelect={closeMobileMenu} />
-          ))}
+          {(user ? memberMobileItems : guestMobileItems)
+            .filter(({ page }) => isRouteAvailable(page))
+            .map(({ page, label }) => (
+              <HeaderNavLink key={page} page={page} label={label} mobile onSelect={closeMobileMenu} />
+            ))}
           {user && onSignOut && (
             <Button
               variant={ButtonVariant.Text}

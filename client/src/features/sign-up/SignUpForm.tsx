@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@app/store/hooks';
+import { routes } from '@shared/config/routes';
 import { signupThunk } from './thunks';
 
 export default function SignUpForm(): JSX.Element {
@@ -54,20 +55,14 @@ export default function SignUpForm(): JSX.Element {
     setSubmitting(true);
     try {
       await dispatch(signupThunk(formData)).unwrap();
-      navigate('/account');
+      navigate(routes.profile);
     } catch {
       setRequestError('Не удалось зарегистрироваться. Проверьте данные и повторите попытку.');
     } finally {
       setSubmitting(false);
     }
 
-    // Если ошибок нет, отправляем данные
-    // setErrors({});
-    // void dispatch(signupThunk({ ...formData, gender: gender.toString() }));
-
-    // e.currentTarget.reset();
-    // console.log('Форма отправлена');
-    // navigate('/home');
+    // The signup thunk installs the session when the request succeeds.
   };
 
   return (
@@ -124,7 +119,7 @@ export default function SignUpForm(): JSX.Element {
             {requestError && <Text color="red.500" role="alert">{requestError}</Text>}
             <Text textAlign="center">
               Уже есть аккаунт?{' '}
-              <Button onClick={() => navigate('/signin')} variant="link" color="#00CEC9">
+              <Button onClick={() => navigate(routes.signIn)} variant="link" color="#00CEC9">
                 Войти
               </Button>
             </Text>

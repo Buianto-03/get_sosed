@@ -1,6 +1,8 @@
 import React from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Layout from '../layouts/BaseLayout';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
+import { NotFoundPage } from '@pages/not-found/ui/not-found-page/NotFoundPage';
+import { RoutePattern, routes } from '@shared/config/routes';
+import AppLayout from '@app/layouts/app-layout/AppLayout';
 import ProtectedRoute from './ProtectedRoute';
 
 const AccountPage = React.lazy(() => import('@pages/account/AccountPage'));
@@ -12,80 +14,71 @@ const ChatPage = React.lazy(() => import('@pages/chat/ChatPage'));
 const PostAdvertPage = React.lazy(() => import('@pages/advert-create/PostAdvertPage'));
 const WelcomePage = React.lazy(() => import('@pages/welcome/WelcomePage'));
 
-const router = createBrowserRouter([
+export const appRouteObjects: RouteObject[] = [
   {
     path: '/',
-    element: <Layout />,
+    element: <AppLayout />,
     children: [
       {
-        path: '/',
+        index: true,
         element: <WelcomePage />,
       },
       {
-        path: '/account',
+        path: RoutePattern.Profile,
         element: (
-          <ProtectedRoute access="logged" redirect="/signin">
+          <ProtectedRoute access="logged" redirect={routes.signIn}>
             <AccountPage />
           </ProtectedRoute>
         ),
-        // element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
       },
       {
-        path: '/chat/:receiverId',
+        path: '/messages/:receiverId',
         element: (
-          <ProtectedRoute access="logged" redirect="/signin">
+          <ProtectedRoute access="logged" redirect={routes.signIn}>
             <ChatPage />
           </ProtectedRoute>
         ),
-        // element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
       },
       {
-        path: '/signin',
+        path: RoutePattern.SignIn,
         element: (
           <ProtectedRoute access="guest" redirect="/">
             <SignInPage />
           </ProtectedRoute>
         ),
-
-        // element: <SignInPage />,
       },
       {
-        path: '/signup',
+        path: RoutePattern.SignUp,
         element: (
           <ProtectedRoute access="guest" redirect="/">
             <SignUpPage />
           </ProtectedRoute>
         ),
-        // element: <SignUpPage />,
       },
       {
-        path: '/home',
+        path: RoutePattern.Listings,
+        element: <MainPage />,
+      },
+      {
+        path: RoutePattern.ListingCreate,
         element: (
-        // <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
-          <MainPage />
-        // </ProtectedRoute>
-        ),
-        //  element: <MainPage />
-      },
-      {
-        path: '/advert/:id',
-        element: <AdvertPage />,
-        // element: <AdvertPage />,
-      },
-      {
-        path: '/post',
-        element: (
-          <ProtectedRoute access="logged" redirect="/signin">
+          <ProtectedRoute access="logged" redirect={routes.signIn}>
             <PostAdvertPage />
           </ProtectedRoute>
         ),
       },
       {
+        path: '/listings/:listingId',
+        element: <AdvertPage />,
+      },
+      {
         path: '*',
-        element: <Navigate to="/" />,
+        element: <NotFoundPage />,
       },
     ],
   },
-]);
+];
+
+const router = createBrowserRouter(appRouteObjects);
 
 export default router;
