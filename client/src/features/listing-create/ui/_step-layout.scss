@@ -1,0 +1,27 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+@mixin content {
+  display: grid;
+  gap: tokens.$space-4;
+
+  > h2 {
+    margin: 0;
+    font-size: tokens.$font-size-xl;
+  }
+
+  > p {
+    margin: 0;
+    color: tokens.$color-muted;
+    font-size: tokens.$font-size-sm;
+  }
+}
+
+@mixin form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: tokens.$space-4;
+
+  @container (max-width: 680px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

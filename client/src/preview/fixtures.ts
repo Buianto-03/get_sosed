@@ -121,20 +121,12 @@ export const profileFixture = {
   myAdverts: [previewAdverts[2]],
 };
 
-export const postSteps = [
-  { id: 1, title: 'Комната' },
-  { id: 2, title: 'Цена и правила' },
-  { id: 3, title: 'Фотографии' },
-  { id: 4, title: 'Публикация' },
-];
-
 export const postFixture = {
   title: 'Светлая комната в квартире у парка',
   city: 'Москва',
-  district: 'Аэропорт',
   metro: 'Сокол',
   area: '18',
-  price: '25 000 ₽ в месяц',
+  price: '25000',
   description:
     'Ищу соседа для совместной аренды. В квартире есть всё необходимое, рядом парк и метро.',
 };

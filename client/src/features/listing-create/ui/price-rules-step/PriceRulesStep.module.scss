@@ -1,0 +1,30 @@
+@use '../../../../shared/styles/tokens' as tokens;
+@use '../step-layout' as step;
+
+.price_rules_step {
+  @include step.content;
+}
+
+.price_rules_step__form_grid {
+  @include step.form-grid;
+}
+
+.price_rules_step__description_field {
+  grid-column: 1 / -1;
+}
+
+.price_rules_step__rules {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: tokens.$space-4;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+
+  legend {
+    padding-inline: tokens.$space-1;
+    font-size: tokens.$font-size-sm;
+    font-weight: 650;
+  }
+}

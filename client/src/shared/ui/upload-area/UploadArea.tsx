@@ -1,22 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LuImage, LuStar, LuTrash2 } from 'react-icons/lu';
+import { ButtonSize } from '../button/Button';
+import { IconButton } from '../button/IconButton';
 import { FilePicker, FilePickerAccept } from '../file-picker/FilePicker';
 import styles from './UploadArea.module.scss';
 
-type PhotoItem = {
+export interface UploadAreaPhoto {
   id: string;
   file: File;
   previewUrl: string;
-};
+  isMain: boolean;
+}
 
-export type UploadAreaProps = {
+export interface UploadAreaProps {
   id: string;
   label: string;
   maxFiles?: number;
   maxFileSizeMb?: number;
   accept?: FilePickerAccept[];
   className?: string;
-};
+  value?: UploadAreaPhoto[];
+  onChange?: (photos: UploadAreaPhoto[]) => void;
+}
 
 function makePhotoId(file: File): string {
   return `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
@@ -35,20 +40,30 @@ export function UploadArea({
   maxFileSizeMb = 10,
   accept = [FilePickerAccept.Images],
   className,
+  value,
+  onChange,
 }: UploadAreaProps): JSX.Element {
-  const [photos, setPhotos] = useState<PhotoItem[]>([]);
-  const [mainPhotoId, setMainPhotoId] = useState<string>();
+  const [uncontrolledPhotos, setUncontrolledPhotos] = useState<UploadAreaPhoto[]>([]);
+  const photos = value ?? uncontrolledPhotos;
+  const isControlled = value !== undefined;
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
-  const photosRef = useRef<PhotoItem[]>(photos);
-  photosRef.current = photos;
+  const photosRef = useRef<UploadAreaPhoto[]>(uncontrolledPhotos);
+  photosRef.current = uncontrolledPhotos;
 
   useEffect(
     () => () => {
-      photosRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+      if (!isControlled) {
+        photosRef.current.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+      }
     },
-    [],
+    [isControlled],
   );
+
+  const updatePhotos = (nextPhotos: UploadAreaPhoto[]): void => {
+    if (!isControlled) setUncontrolledPhotos(nextPhotos);
+    onChange?.(nextPhotos);
+  };
 
   const addFiles = (files: File[]): void => {
     const accepted: File[] = [];
@@ -68,22 +83,39 @@ export function UploadArea({
       }
     });
 
+    const mainPhotoId = photos.find((photo) => photo.isMain)?.id;
     const newPhotos = accepted.map((file) => ({
       id: makePhotoId(file),
       file,
       previewUrl: URL.createObjectURL(file),
+      isMain: false,
     }));
-    const nextPhotos = [...photos, ...newPhotos];
-    setPhotos(nextPhotos);
-    if (!mainPhotoId && newPhotos[0]) setMainPhotoId(newPhotos[0].id);
+    const nextMainPhotoId = mainPhotoId ?? newPhotos[0]?.id;
+    updatePhotos(
+      [...photos, ...newPhotos].map((photo) => ({
+        ...photo,
+        isMain: photo.id === nextMainPhotoId,
+      })),
+    );
     setError(errors.join(' '));
   };
 
-  const removePhoto = (photo: PhotoItem): void => {
-    URL.revokeObjectURL(photo.previewUrl);
+  const removePhoto = (photo: UploadAreaPhoto): void => {
+    if (!isControlled) URL.revokeObjectURL(photo.previewUrl);
     const nextPhotos = photos.filter((item) => item.id !== photo.id);
-    setPhotos(nextPhotos);
-    if (mainPhotoId === photo.id) setMainPhotoId(nextPhotos[0]?.id);
+    const nextMainPhotoId = photo.isMain
+      ? nextPhotos[0]?.id
+      : nextPhotos.find((item) => item.isMain)?.id;
+    updatePhotos(
+      nextPhotos.map((item) => ({
+        ...item,
+        isMain: item.id === nextMainPhotoId,
+      })),
+    );
+  };
+
+  const selectMainPhoto = (photoId: string): void => {
+    updatePhotos(photos.map((photo) => ({ ...photo, isMain: photo.id === photoId })));
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>): void => {
@@ -129,7 +161,7 @@ export function UploadArea({
       {photos.length > 0 ? (
         <ul className={styles.photoGrid} aria-label="Выбранные фотографии">
           {photos.map((photo) => {
-            const isMain = mainPhotoId === photo.id;
+            const { isMain } = photo;
             return (
               <li key={photo.id} className={styles.photo}>
                 <img className={styles.thumbnail} src={photo.previewUrl} alt="" />
@@ -143,27 +175,24 @@ export function UploadArea({
                   {photo.file.name}
                 </span>
                 <div className={styles.photoActions}>
-                  <button
-                    className={styles.action}
-                    type="button"
+                  <IconButton
+                    className={isMain ? styles.mainAction : undefined}
+                    size={ButtonSize.Lg}
                     aria-pressed={isMain}
-                    aria-label={
+                    label={
                       isMain
                         ? `Главное фото: ${photo.file.name}`
                         : `Сделать главным фото: ${photo.file.name}`
                     }
-                    onClick={() => setMainPhotoId(photo.id)}
-                  >
-                    <LuStar aria-hidden="true" />
-                  </button>
-                  <button
-                    className={styles.action}
-                    type="button"
-                    aria-label={`Удалить фото: ${photo.file.name}`}
+                    icon={<LuStar aria-hidden="true" />}
+                    onClick={() => selectMainPhoto(photo.id)}
+                  />
+                  <IconButton
+                    size={ButtonSize.Lg}
+                    label={`Удалить фото: ${photo.file.name}`}
+                    icon={<LuTrash2 aria-hidden="true" />}
                     onClick={() => removePhoto(photo)}
-                  >
-                    <LuTrash2 aria-hidden="true" />
-                  </button>
+                  />
                 </div>
               </li>
             );

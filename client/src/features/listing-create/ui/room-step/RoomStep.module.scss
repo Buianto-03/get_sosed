@@ -1,0 +1,9 @@
+@use '../step-layout' as step;
+
+.room_step {
+  @include step.content;
+}
+
+.room_step__form_grid {
+  @include step.form-grid;
+}

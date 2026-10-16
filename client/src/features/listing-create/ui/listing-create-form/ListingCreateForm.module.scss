@@ -1,0 +1,59 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.listing_create_form {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-5;
+}
+
+.listing_create_form__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: tokens.$space-4;
+
+  p {
+    flex: 0 0 auto;
+    margin: 0;
+    color: tokens.$color-muted;
+  }
+}
+
+.listing_create_form__stepper,
+.listing_create_form__form {
+  width: min(100%, 800px);
+  margin-inline: auto;
+}
+
+.listing_create_form__form {
+  min-width: 0;
+  padding: tokens.$space-6;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+}
+
+.listing_create_form__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: tokens.$space-3;
+  margin-top: tokens.$space-6;
+  padding-top: tokens.$space-4;
+  border-top: 1px solid tokens.$color-border;
+}
+
+@container (max-width: 680px) {
+  .listing_create_form__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: tokens.$space-2;
+  }
+
+  .listing_create_form__form {
+    padding: tokens.$space-4;
+  }
+
+  .listing_create_form__actions button {
+    min-width: 0;
+  }
+}

@@ -88,27 +88,9 @@
   gap: tokens.$space-1;
   padding: tokens.$space-1 tokens.$space-2 tokens.$space-2;
 }
-.action {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid tokens.$color-border;
-  border-radius: tokens.$radius-sm;
-  background: tokens.$color-surface;
-  color: tokens.$color-ink;
-  cursor: pointer;
-}
-.action[aria-pressed='true'] {
+.mainAction {
   border-color: tokens.$color-accent;
   color: tokens.$color-accent;
-}
-.action:hover {
-  background: tokens.$color-soft;
-}
-.action:focus-visible {
-  outline: 3px solid tokens.$color-focus;
-  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

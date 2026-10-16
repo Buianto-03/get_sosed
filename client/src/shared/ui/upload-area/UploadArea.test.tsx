@@ -1,7 +1,7 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { UploadArea } from './UploadArea';
+import { UploadArea, type UploadAreaPhoto } from './UploadArea';
 
 describe('UploadArea', () => {
   afterEach(() => {
@@ -61,5 +61,41 @@ describe('UploadArea', () => {
       target: { files: [largePhoto] },
     });
     expect(screen.getByRole('alert')).toHaveTextContent('размер больше 1 МБ');
+  });
+
+  it('uses the supplied value and leaves preview URL cleanup to its owner', () => {
+    const { revokeObjectURL } = mockObjectUrls('blob:controlled-photo');
+    const onChange = vi.fn<[UploadAreaPhoto[]], void>();
+    const { rerender, unmount } = render(
+      <UploadArea id="controlled-photos" label="Фотографии" value={[]} onChange={onChange} />,
+    );
+
+    const photo = new File(['image'], 'bedroom.jpg', { type: 'image/jpeg' });
+    fireEvent.change(screen.getByLabelText('Выбрать фото · выбор файлов'), {
+      target: { files: [photo] },
+    });
+
+    const selectedPhotos = onChange.mock.calls[0][0];
+    expect(selectedPhotos).toEqual([
+      expect.objectContaining({ file: photo, previewUrl: 'blob:controlled-photo', isMain: true }),
+    ]);
+    expect(screen.queryByText('bedroom.jpg')).not.toBeInTheDocument();
+
+    rerender(
+      <UploadArea
+        id="controlled-photos"
+        label="Фотографии"
+        value={selectedPhotos}
+        onChange={onChange}
+      />,
+    );
+    expect(screen.getByText('bedroom.jpg')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Удалить фото: bedroom.jpg' }));
+    expect(onChange).toHaveBeenLastCalledWith([]);
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    unmount();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
   });
 });

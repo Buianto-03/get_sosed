@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  LuCamera,
-  LuCheck,
   LuHome,
   LuMessagesSquare,
   LuPlus,
@@ -20,20 +18,19 @@ import { ProfileEditForm } from '@features/edit-profile/ui/profile-edit-form/Pro
 import { ProfilePage, type ProfileDetails } from '@pages/profile/ui/profile-page/ProfilePage';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
 import { ChatPage, type ChatMessage } from '@pages/chat/ui/chat-page/ChatPage';
+import { ListingCreatePage } from '@pages/listing-create/ui/listing-create-page/ListingCreatePage';
 import {
   longAdvert,
   longMessage,
   noPhotoAdvert,
   postFixture,
-  postSteps,
   previewAdverts,
   previewConversations,
   profileFixture,
-  type PreviewAdvert,
 } from './fixtures';
 import { headerRoutes } from '../widgets/header/navigation';
 import { SiteLayout } from '../app/layouts/SiteLayout';
-import { ListingCard, ListingCardVariant, type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
+import { type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '../widgets/how-it-works/HowItWorks';
@@ -78,6 +75,11 @@ type VariantId =
   | 'step-2'
   | 'step-3'
   | 'step-4'
+  | 'step-1-error'
+  | 'step-2-error'
+  | 'publish-loading'
+  | 'publish-error'
+  | 'published'
   | 'empty-profile'
   | 'empty-favorites'
   | 'empty-listings'
@@ -162,6 +164,11 @@ const variants: Record<ScreenId, { id: VariantId; label: string }[]> = {
     { id: 'step-3', label: 'Шаг 3 · Фотографии' },
     { id: 'step-4', label: 'Шаг 4 · Публикация' },
     { id: 'long', label: 'Длинные значения' },
+    { id: 'step-1-error', label: 'Ошибки · Комната' },
+    { id: 'step-2-error', label: 'Ошибки · Цена и правила' },
+    { id: 'publish-loading', label: 'Публикация · загрузка' },
+    { id: 'publish-error', label: 'Публикация · ошибка' },
+    { id: 'published', label: 'Публикация · успех' },
   ],
 };
 
@@ -435,7 +442,7 @@ function ScreenContent({
     case 'chat':
       return <ChatScreen variant={variant} />;
     case 'post':
-      return <PostScreen variant={variant} />;
+      return <PostScreen key={variant} variant={variant} />;
     default:
       return <HomeScreen variant="data" onNavigate={onNavigate} />;
   }
@@ -847,138 +854,49 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
 }
 
 function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
-  const stepNumber = variant.startsWith('step-') ? Number(variant.slice(-1)) : 1;
-  const selectedStep = variant === 'long' ? 1 : stepNumber;
-  const fieldValue = variant === 'long' ? longAdvert.title : postFixture.title;
+  const stepMatch = variant.match(/^step-(\d)/);
+  let initialStep = stepMatch ? Number(stepMatch[1]) : 1;
+  if (['publish-loading', 'publish-error', 'published'].includes(variant)) initialStep = 4;
+
+  const initialDraft = { ...postFixture, rules: ['Для некурящих', 'Тихие вечера'] };
+  if (variant === 'step-1-error') {
+    initialDraft.title = '';
+    initialDraft.city = '';
+    initialDraft.metro = '';
+    initialDraft.area = '';
+  }
+  if (variant === 'step-2-error') {
+    initialDraft.price = '';
+    initialDraft.description = '';
+  }
+  if (variant === 'long') {
+    initialDraft.title = longAdvert.title;
+    initialDraft.description = longAdvert.description;
+  }
+
+  let initialPublishState: 'idle' | 'loading' | 'error' | 'success' = 'idle';
+  if (variant === 'publish-loading') initialPublishState = 'loading';
+  if (variant === 'publish-error') initialPublishState = 'error';
+  if (variant === 'published') initialPublishState = 'success';
+  let initialAttemptedSteps: number[] = [];
+  if (variant === 'step-1-error') initialAttemptedSteps = [1];
+  if (variant === 'step-2-error') initialAttemptedSteps = [2];
+
+  const publishPreview = async (): Promise<void> => {
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 600);
+    });
+    if (variant === 'publish-error') throw new Error('Preview publication failed');
+  };
 
   return (
-    <main className="preview-page">
-      <div className="preview-page-heading">
-        <h2>Найдём тебе соседа</h2>
-        <p>Шаг {selectedStep} из 4</p>
-      </div>
-      <nav className="preview-stepper" aria-label="Шаги публикации">
-        {postSteps.map((step) => {
-          let className = '';
-          if (step.id === selectedStep) className = 'is-active';
-          if (step.id < selectedStep) className = 'is-complete';
-          return (
-            <div className={className} key={step.id}>
-              <span>{step.id < selectedStep ? <LuCheck aria-hidden="true" /> : step.id}</span>
-              <small>{step.title}</small>
-            </div>
-          );
-        })}
-      </nav>
-      <section className="preview-panel preview-post-form">
-        {selectedStep === 1 && (
-          <>
-            <h3>Расскажите о комнате</h3>
-            <FieldMock label="Название объявления" value={fieldValue} />
-            <div className="preview-form-grid">
-              <FieldMock label="Город" value={postFixture.city} />
-              <FieldMock label="Район и метро" value={`${postFixture.district} · ${postFixture.metro}`} />
-            </div>
-            <FieldMock label="Площадь комнаты, м²" value={postFixture.area} />
-          </>
-        )}
-        {selectedStep === 2 && (
-          <>
-            <h3>Цена и правила</h3>
-            <FieldMock label="Стоимость" value={postFixture.price} />
-            <FieldMock label="Описание" value={variant === 'long' ? longAdvert.description : postFixture.description} multiline />
-            <TagList tags={['Для некурящих', 'Тихие вечера', 'С рабочим местом']} />
-          </>
-        )}
-        {selectedStep === 3 && (
-          <>
-            <h3>Добавьте фотографии</h3>
-            <div className="preview-upload-grid">
-              {previewAdverts.slice(0, 2).map((advert) => <img src={advert.image} alt={advert.imageAlt} key={advert.id} />)}
-              <div className="preview-upload-placeholder"><LuCamera aria-hidden="true" /> Добавить фото</div>
-            </div>
-          </>
-        )}
-        {selectedStep === 4 && (
-          <>
-            <h3>Проверьте объявление</h3>
-            <PreviewListingCard advert={previewAdverts[0]} variant={ListingCardVariant.Profile} onOpen={() => undefined} />
-            <p>Публикация в этом превью не отправляет данные.</p>
-          </>
-        )}
-        <div className="preview-form-actions">
-          <button className="preview-button preview-button-secondary" type="button" disabled={selectedStep === 1}>Назад</button>
-          <button className="preview-button preview-button-primary" type="button">{selectedStep === 4 ? 'Опубликовать' : 'Продолжить'}</button>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function PreviewListingCard({
-  advert,
-  variant,
-  initiallySaved = false,
-  onOpen,
-}: {
-  advert: PreviewAdvert;
-  variant: ListingCardVariant;
-  initiallySaved?: boolean;
-  onOpen: () => void;
-}): JSX.Element {
-  const [saved, setSaved] = useState(initiallySaved);
-  return (
-    <ListingCard
-      listing={{
-        title: advert.title,
-        price: advert.price,
-        imageUrl: advert.image || undefined,
-        imageAlt: advert.imageAlt || undefined,
-        city: advert.city,
-        district: advert.district,
-        metro: advert.metro,
-        tags: advert.tags,
-      }}
-      variant={variant}
-      saved={saved}
-      onSavedChange={setSaved}
-      onOpen={onOpen}
+    <ListingCreatePage
+      initialStep={initialStep}
+      initialDraft={initialDraft}
+      initialAttemptedSteps={initialAttemptedSteps}
+      initialPublishState={initialPublishState}
+      onPublish={publishPreview}
     />
-  );
-}
-
-function FieldMock({
-  label,
-  value,
-  type = 'text',
-  error = false,
-  multiline = false,
-}: {
-  label: string;
-  value?: string;
-  type?: string;
-  error?: boolean;
-  multiline?: boolean;
-}): JSX.Element {
-  const fieldId = useId();
-  return (
-    <div className={error ? 'preview-field has-error' : 'preview-field'}>
-      <label htmlFor={fieldId}>{label}</label>
-      {multiline ? (
-        <textarea id={fieldId} readOnly value={value ?? ''} rows={4} />
-      ) : (
-        <input id={fieldId} readOnly type={type} value={value ?? ''} placeholder={label} />
-      )}
-      {error && <small id={`${fieldId}-error`}>Проверьте значение.</small>}
-    </div>
-  );
-}
-
-function TagList({ tags }: { tags: string[] }): JSX.Element {
-  return (
-    <div className="preview-tag-list">
-      {tags.map((tag) => <span key={tag}>{tag}</span>)}
-    </div>
   );
 }
 
