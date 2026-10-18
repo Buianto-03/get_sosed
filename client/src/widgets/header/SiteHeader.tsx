@@ -1,7 +1,9 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { LuHome, LuMenu, LuX } from 'react-icons/lu';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button, ButtonSize, ButtonVariant } from '@shared/ui/button/Button';
+import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
+import { routes } from '@shared/config/routes';
 import { HeaderNavLink } from './HeaderNavLink';
 import { HeaderProfileMenu, type HeaderUser } from './HeaderProfileMenu';
 import {
@@ -21,10 +23,12 @@ export type SiteHeaderProps = {
 
 export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps): JSX.Element {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const menuId = useId();
   const rootRef = useRef<HTMLElement>(null);
   const menuTriggerRef = useRef<HTMLSpanElement>(null);
   const userName = user?.name;
+  const returnTo = searchParams.get('returnTo');
   const closeMobileMenu = (): void => setMobileMenuOpen(false);
   const isRouteAvailable = (page: HeaderPage): boolean => (
     availableRoutes === undefined || availableRoutes.includes(page)
@@ -90,7 +94,10 @@ export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps
               <HeaderNavLink page="signin" label="Войти" onSelect={closeMobileMenu} />
             )}
             {isRouteAvailable('signup') && (
-              <Link to={headerRoutes.signup} className={styles.headerCta}>
+              <Link
+                to={getAuthenticationPath(routes.signUp, returnTo)}
+                className={styles.headerCta}
+              >
                 Регистрация
               </Link>
             )}

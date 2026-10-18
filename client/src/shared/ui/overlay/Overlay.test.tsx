@@ -34,8 +34,26 @@ describe('overlay components', () => {
 
   it('closes a drawer when the backdrop is clicked', () => {
     const onClose = vi.fn();
-    render(<Drawer open onClose={onClose} title="Фильтры"><p>Содержимое</p></Drawer>);
-    fireEvent.mouseDown(screen.getByRole('dialog').parentElement as HTMLElement);
+    render(
+      <div id="preview-frame">
+        <Drawer open onClose={onClose} title="Фильтры">
+          <button type="button">Действие</button>
+        </Drawer>
+      </div>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Фильтры' });
+    const backdrop = dialog.parentElement as HTMLElement;
+    expect(backdrop.parentElement).toBe(document.body);
+    expect(dialog).not.toHaveAttribute('style');
+
+    const closeButton = screen.getByRole('button', { name: 'Закрыть' });
+    const actionButton = screen.getByRole('button', { name: 'Действие' });
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(actionButton).toHaveFocus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(closeButton).toHaveFocus();
+
+    fireEvent.mouseDown(backdrop);
     expect(onClose).toHaveBeenCalledOnce();
   });
 

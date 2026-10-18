@@ -6,7 +6,7 @@ import { SiteHeader, type SiteHeaderProps } from './SiteHeader';
 
 function CurrentPath(): JSX.Element {
   const location = useLocation();
-  return <output data-testid="current-path">{location.pathname}</output>;
+  return <output data-testid="current-path">{location.pathname + location.search + location.hash}</output>;
 }
 
 function renderHeader(props: SiteHeaderProps = {}, initialPath = '/'): void {
@@ -29,6 +29,18 @@ describe('SiteHeader', () => {
     );
     fireEvent.click(within(navigation).getByRole('link', { name: 'Регистрация' }));
     expect(screen.getByTestId('current-path')).toHaveTextContent('/sign-up');
+  });
+
+  it('preserves a safe returnTo when switching auth pages from the header', () => {
+    const returnTo = '/messages/7?listingId=4#composer';
+    const search = new URLSearchParams({ returnTo }).toString();
+    renderHeader({}, `/sign-in?${search}`);
+
+    fireEvent.click(screen.getByRole('link', { name: 'Регистрация' }));
+
+    const location = screen.getByTestId('current-path').textContent ?? '';
+    expect(location.startsWith('/sign-up?')).toBe(true);
+    expect(new URLSearchParams(location.split('?')[1]).get('returnTo')).toBe(returnTo);
   });
 
   it('opens and closes the mobile menu with Escape and outside click', () => {

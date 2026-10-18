@@ -13,14 +13,17 @@ import {
   Radio,
   RadioGroup,
 } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '@app/store/hooks';
 import { routes } from '@shared/config/routes';
+import { getAuthenticationPath, getPostAuthDestination } from '@shared/lib/navigation/safe-return-to';
 import { signupThunk } from './thunks';
 
 export default function SignUpForm(): JSX.Element {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [errors, setErrors] = useState<{ confirmPassword?: string }>({});
   const [requestError, setRequestError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,7 +58,7 @@ export default function SignUpForm(): JSX.Element {
     setSubmitting(true);
     try {
       await dispatch(signupThunk(formData)).unwrap();
-      navigate(routes.profile);
+      navigate(getPostAuthDestination(returnTo), { replace: true });
     } catch {
       setRequestError('Не удалось зарегистрироваться. Проверьте данные и повторите попытку.');
     } finally {
@@ -119,7 +122,11 @@ export default function SignUpForm(): JSX.Element {
             {requestError && <Text color="red.500" role="alert">{requestError}</Text>}
             <Text textAlign="center">
               Уже есть аккаунт?{' '}
-              <Button onClick={() => navigate(routes.signIn)} variant="link" color="#00CEC9">
+              <Button
+                onClick={() => navigate(getAuthenticationPath(routes.signIn, returnTo))}
+                variant="link"
+                color="#00CEC9"
+              >
                 Войти
               </Button>
             </Text>

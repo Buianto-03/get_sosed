@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import React, { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { LuX } from 'react-icons/lu';
 import styles from './Dialog.module.scss';
@@ -29,14 +29,6 @@ export type DialogProps = {
   side?: DialogSide;
   closeLabel?: string;
   className?: string;
-  getBoundary?: () => HTMLElement | null;
-};
-
-type BoundaryPosition = {
-  top: number;
-  right: number;
-  width: number;
-  height: number;
 };
 
 const focusableSelector = [
@@ -58,36 +50,9 @@ export function Dialog({
   side = DialogSide.Right,
   closeLabel = 'Закрыть',
   className,
-  getBoundary,
 }: DialogProps): JSX.Element | null {
   const titleId = useId();
   const panelRef = useRef<HTMLElement>(null);
-  const [boundaryPosition, setBoundaryPosition] = useState<BoundaryPosition | null>(null);
-
-  useEffect(() => {
-    if (!open || kind !== DialogKind.Drawer || !getBoundary) return undefined;
-
-    const updatePosition = (): void => {
-      const rect = getBoundary()?.getBoundingClientRect();
-      if (!rect) return;
-      const top = Math.max(0, rect.top);
-      const bottom = Math.max(0, window.innerHeight - rect.bottom);
-      setBoundaryPosition({
-        top,
-        right: Math.max(0, window.innerWidth - rect.right),
-        width: rect.width,
-        height: Math.max(0, window.innerHeight - top - bottom),
-      });
-    };
-
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [getBoundary, kind, open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -149,12 +114,6 @@ export function Dialog({
   ]
     .filter(Boolean)
     .join(' ');
-  const panelStyle: CSSProperties | undefined = getBoundary && boundaryPosition ? {
-    width: `min(100%, 480px, ${boundaryPosition.width}px)`,
-    height: boundaryPosition.height,
-    marginTop: boundaryPosition.top,
-    marginRight: boundaryPosition.right,
-  } : undefined;
 
   return createPortal(
     <div
@@ -169,7 +128,6 @@ export function Dialog({
       <section
         ref={panelRef}
         className={panelClasses}
-        style={panelStyle}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

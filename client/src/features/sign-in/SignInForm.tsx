@@ -11,15 +11,18 @@ import {
   Heading,
   Text,
 } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '@app/store/hooks';
 import type { LoginForm } from '@entities/session/model/auth';
 import { routes } from '@shared/config/routes';
+import { getAuthenticationPath, getPostAuthDestination } from '@shared/lib/navigation/safe-return-to';
 import { signinThunk } from './thunks';
 
 export default function SignInForm(): JSX.Element {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -29,7 +32,7 @@ export default function SignInForm(): JSX.Element {
     setSubmitting(true);
     try {
       await dispatch(signinThunk(formData)).unwrap();
-      navigate(routes.profile);
+      navigate(getPostAuthDestination(returnTo), { replace: true });
     } catch {
       setError('Не удалось войти. Проверьте email и пароль.');
     } finally {
@@ -68,7 +71,11 @@ export default function SignInForm(): JSX.Element {
             {error && <Text color="red.500" role="alert">{error}</Text>}
             <Text textAlign="center">
               Нет аккаунта?{' '}
-              <Button onClick={() => navigate(routes.signUp)} variant="link" color="#00CEC9">
+              <Button
+                onClick={() => navigate(getAuthenticationPath(routes.signUp, returnTo))}
+                variant="link"
+                color="#00CEC9"
+              >
                 Зарегистрироваться
               </Button>
             </Text>

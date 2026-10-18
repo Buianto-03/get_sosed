@@ -42,7 +42,7 @@ export const appRouteObjects: RouteObject[] = [
       {
         path: RoutePattern.SignIn,
         element: (
-          <ProtectedRoute access="guest" redirect="/">
+          <ProtectedRoute access="guest">
             <SignInPage />
           </ProtectedRoute>
         ),
@@ -50,7 +50,7 @@ export const appRouteObjects: RouteObject[] = [
       {
         path: RoutePattern.SignUp,
         element: (
-          <ProtectedRoute access="guest" redirect="/">
+          <ProtectedRoute access="guest">
             <SignUpPage />
           </ProtectedRoute>
         ),

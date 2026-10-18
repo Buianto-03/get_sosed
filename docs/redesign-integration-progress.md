@@ -2,7 +2,7 @@
 
 Дата исходной проверки: 16 октября 2026 года. Основной документ — [план интеграции](redesign-migration-plan.md).
 
-**Выполнены M01, M02, M04 и M06. Следующая задача — M03.** Код и API/БД-контракты остаются непроверенными в runtime из-за недоступного локального окружения.
+**Выполнены M01–M06. Следующая задача — M07.** Код и API/БД-контракты остаются непроверенными в runtime из-за недоступного локального окружения.
 
 ## 1. Исходное состояние
 
@@ -207,9 +207,9 @@ client/docs/screenshots/b04-profile-desktop.png
 | --- | --- | --- |
 | M01 | Контракты, исходные проверки и журнал | DONE |
 | M02 | Новые адреса без поддержки старых путей | DONE |
-| M03 | Назначение после авторизации | TODO |
+| M03 | Назначение после авторизации | DONE |
 | M04 | Общие стили и адаптив вне preview | DONE |
-| M05 | Независимые overlays | TODO |
+| M05 | Независимые overlays | DONE |
 | M06 | Новая оболочка приложения | DONE |
 | M07 | Чтение объявлений и фотографии | TODO |
 | M08 | Настоящие теги условий | TODO |
@@ -280,3 +280,21 @@ client/docs/screenshots/b04-profile-desktop.png
 **Проверки после M04/M06:** `npm test` — PASS, 28 файлов/69 тестов; `npm run lint` — PASS, `FSD boundaries: OK`; `npm run build` — PASS. Build по-прежнему сообщает известные Sass/Rollup/outDir/chunk-size предупреждения; новых build ошибок нет.
 
 Содержимое главной пока по-прежнему рендерит прежний WelcomePage. Задача M13 подключит подготовленный новый экран главной. Остальные старые screen components также заменяются по карточкам соответствующих M-задач, а файлы сохраняются до Q03.
+
+## 12. Выполнение M03
+
+**Сделано:** добавлен `client/src/shared/lib/navigation/safe-return-to.ts`. Helper принимает только локальный путь, не допускает внешний origin, protocol-relative/backslash адреса, неверный percent-escape и повторное открытие sign-in/sign-up. Возвращает исходный pathname/query/hash; при отклонённом или отсутствующем значении безопасным default служит `/profile`. При переключении форм безопасное значение сериализуется в query параметр returnTo.
+
+ProtectedRoute теперь показывает UI kit Spinner на Pending. Гостевой доступ к protected route переходит на sign-in с исходным адресом. Logged пользователь, открывающий sign-in/sign-up, возвращается по безопасному returnTo либо в профиль. SignInForm и SignUpForm используют одинаковый post-auth helper и сохраняют returnTo между формами.
+
+**Тесты:** добавлены 11 проверок safe-return helper, 6 сценариев ProtectedRoute и тест переключения auth-форм через header для исходного query/hash, безопасного возврата к диалогу, external/protocol-relative/auth-loop targets и Pending state. Общее состояние проверки M03: `npm test` — PASS, 30 файлов/88 тестов; `npm run lint` — PASS, `FSD boundaries: OK`; `npm run build` — PASS. Сборка сохраняет прежние предупреждения Sass/Rollup/outDir/large chunk.
+
+## 13. Выполнение M05
+
+**Сделано:** из `Dialog` удалены `getBoundary`, состояние позиции, обработчик resize/scroll и вычисляемый inline style. Из `Drawer`, `SearchFilters` и preview удалён весь pass-through `getDrawerBoundary`; Drawer теперь использует общие viewport-стили и portal в `document.body`. Escape, закрытие по backdrop, focus trap/restoration и блокировка прокрутки сохранены. Обновлены каталог UI kit и описание поиска в `client/DESIGN.md`.
+
+**Тесты:** overlay-тест проверяет, что Drawer внутри элемента `preview-frame` размещается в portal под `document.body`, не получает inline-позиционирование, удерживает Tab-фокус внутри панели и закрывается по backdrop. Существующие проверки Escape, scroll lock, возврата фокуса и SearchFilters проходят. Полный `npm test -- --reporter=dot` — PASS, 30 файлов/88 тестов; после добавления проверки Tab trap отдельно повторён overlay-тест — PASS, 1 файл/3 теста. `npm run lint` — PASS, `FSD boundaries: OK`; `npm run build` — PASS. Сборка сообщает прежние Sass/Rollup/outDir/chunk-size предупреждения.
+
+**Граница проверки:** SearchFilters пока не подключён к production-странице поиска (это M16), поэтому визуальная проверка Drawer в рабочем пользовательском сценарии запланирована вместе с подключением этого экрана. В M05 проверены независимость компонента от preview-рамки и его поведение в тестах.
+
+**Передача следующему исполнителю:** M05 завершена. Следующая задача — M07, чтение объявлений и фотографий с учётом реального API-контракта.

@@ -1,5 +1,7 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useSearchParams } from 'react-router-dom';
+import { routes } from '@shared/config/routes';
+import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
 import { headerRoutes, type HeaderPage } from './navigation';
 import styles from './SiteHeader.module.scss';
 
@@ -16,9 +18,15 @@ export function HeaderNavLink({
   mobile = false,
   onSelect,
 }: HeaderNavLinkProps): JSX.Element {
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
+  let to = headerRoutes[page];
+  if (page === 'signin') to = getAuthenticationPath(routes.signIn, returnTo);
+  if (page === 'signup') to = getAuthenticationPath(routes.signUp, returnTo);
+
   return (
     <NavLink
-      to={headerRoutes[page]}
+      to={to}
       className={mobile ? styles.mobileLink : styles.navLink}
       onClick={onSelect}
     >

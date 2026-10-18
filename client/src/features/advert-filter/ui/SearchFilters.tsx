@@ -12,10 +12,9 @@ export type { SearchCondition, SearchFilterValues } from '../model/searchFilterV
 type SearchFiltersProps = {
   applied: SearchFilterValues;
   onApply: (filters: SearchFilterValues) => void;
-  getDrawerBoundary?: () => HTMLElement | null;
 };
 
-export function SearchFilters({ applied, onApply, getDrawerBoundary }: SearchFiltersProps): JSX.Element {
+export function SearchFilters({ applied, onApply }: SearchFiltersProps): JSX.Element {
   const id = useId();
   const [draft, setDraft] = useState<SearchFilterValues>(applied);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -64,7 +63,6 @@ export function SearchFilters({ applied, onApply, getDrawerBoundary }: SearchFil
         open={drawerOpen}
         onClose={closeDrawer}
         title="Фильтры и условия"
-        getBoundary={getDrawerBoundary}
       >
         <FilterForm
           idPrefix={`${id}-drawer`}

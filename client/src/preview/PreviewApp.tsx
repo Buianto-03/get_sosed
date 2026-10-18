@@ -541,7 +541,6 @@ function SearchScreen({
       <SearchFilters
         applied={appliedFilters}
         onApply={setAppliedFilters}
-        getDrawerBoundary={() => document.getElementById('preview-frame')}
       />
       <SearchResults
         listings={listings}
