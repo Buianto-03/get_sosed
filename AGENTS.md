@@ -18,6 +18,17 @@ Consult `client/ARCH.md` when making client architecture decisions. Update it wh
 
 Format with two spaces, single quotes, semicolons, and trailing commas. Root and `client/.prettierrc` settings plus ESLint enforce style. Use PascalCase for components, camelCase for functions and variables, and kebab-case feature/page directories. Declare React component props with `interface`. Move component-specific helper functions to a sibling `helper.ts` file at the same directory level as the component. Name CSS/SCSS classes with BEM: `block__element_modifier` (for example, `.listing_card__title_featured`). Keep logic in its FSD slice.
 
+### Entity Redux Files
+
+For every Redux state module in `client/src/entities`, keep the slice, async thunks, model, and selectors in separate files with the same domain prefix:
+
+- `{name}Slice.ts`: `createSlice`, initial state, reducers, and actions.
+- `{name}Thunk.ts`: async thunks and their request orchestration.
+- `{name}Model.ts`: state and payload interfaces/types, enums, and validation schemas.
+- `{name}Selectors.ts`: selectors that read or derive values from the state.
+
+For example: `likedAdvertsSlice.ts`, `likedAdvertsThunk.ts`, `likedAdvertsModel.ts`, and `likedAdvertsSelectors.ts`. Use the singular suffix `Thunk` for the file even when it exports multiple thunks. Do not put thunk definitions, model declarations, or selectors in the slice file. Selectors may import model types, but must not depend on slices or thunks. Models must not import slices or thunks; thunks may import models and API services, and slices may import models and thunk lifecycle actions. Keep these files in the owning entity's `model/` directory and respect FSD boundaries.
+
 ### TypeScript Enums
 
 Use a regular TypeScript `enum` for a finite, named set of static string or numeric values, such as fixed browser routes and UI states. Do not use `as const` plus a derived union type as a substitute for such an enum. Do not use `const enum`.

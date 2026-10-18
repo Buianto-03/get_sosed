@@ -17,8 +17,19 @@ export const likeSchema = z.object({
     .optional(),
 });
 
+export const deleteLikeSchema = z.object({
+  advertId: z.number().int().positive(),
+  deleted: z.boolean(),
+});
+
+export type DeleteLikeResult = z.infer<typeof deleteLikeSchema>;
+
 export type LikeType = z.infer<typeof likeSchema>;
 
-export type LikeSliceTtype = {
+export type LikeSliceType = {
   likes: LikeType[];
+  requests: Record<string, boolean>;
+  readRequestId: string | null;
+  advertId: number | null;
+  userId: number | null;
 };

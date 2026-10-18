@@ -2,9 +2,15 @@ import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
 import { advertSchema, tagSchema } from '../model/advert';
 import type { AdvertType, FilterType, TagType } from '../model/advert';
+import { likedAdvertSchema, type LikedAdvert } from '../model/likedAdvertsModel';
 
 class AdvertService {
   constructor(private client: AxiosInstance) {}
+
+  async getLikedAdverts(): Promise<LikedAdvert[]> {
+    const response = await this.client.get('/adverts/liked');
+    return likedAdvertSchema.array().parse(response.data);
+  }
 
   async getAdverts(): Promise<AdvertType[]> {
     try {

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Flex, Box, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '@app/store/hooks';
+import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
 import AdvertCard from '@entities/advert/ui/AdvertCard';
 import { getTopAdvertsThunk } from '@entities/advert/model/advertsThunk';
 import { routes } from '@shared/config/routes';
@@ -10,6 +11,7 @@ export default function PopularCard(): JSX.Element {
   const adverts = useAppSelector(store => store.advert.populars);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const saved = useSavedAdverts();
 
   useEffect(() => {
     void dispatch(getTopAdvertsThunk());
@@ -23,9 +25,14 @@ export default function PopularCard(): JSX.Element {
       </Text>
 
       {/* Сетка карточек */}
+      {saved.error && <Box role="alert">{saved.error}<button type="button" onClick={saved.reload}>Повторить</button></Box>}
       <Flex direction="row" wrap="wrap" gap={4} justifyContent="center">
         {adverts.map((advert) => (
-          <AdvertCard key={advert.id} advert={advert} onOpen={(id) => navigate(routes.listingDetails(id))} />
+          <AdvertCard key={advert.id} advert={advert}
+            saved={saved.savedIds.includes(advert.id)}
+            saveDisabled={saved.disabled || !!saved.pending[advert.id]}
+            saveError={saved.errors[advert.id]}
+            onSave={() => saved.toggle(advert)} onOpen={(id) => navigate(routes.listingDetails(id))} />
         ))}
       </Flex>
     </Box>

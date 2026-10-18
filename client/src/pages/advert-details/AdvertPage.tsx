@@ -15,10 +15,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import {
-  deleteLikeThunk,
   getLikesThunk,
-  setLikeThunk,
 } from '@entities/like/model/likesThunk';
+import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
 import LikeProfile from '@entities/like/ui/LikeProfile';
 import PhotosCarousel from '@shared/ui/PhotosCarousel';
 import { UserStatus } from '@entities/session/model/auth';
@@ -28,6 +27,7 @@ import { routes } from '@shared/config/routes';
 
 export default function AdvertPage(): JSX.Element {
   const navigate = useNavigate();
+  const saved = useSavedAdverts();
   const dispatch = useAppDispatch();
   const advert = useAppSelector((store) => store.advert.chosenAdvert);
   const likes = useAppSelector((store) => store.likes.likes);
@@ -55,14 +55,11 @@ export default function AdvertPage(): JSX.Element {
 
   const isLiked = (): boolean =>
     user.status === UserStatus.Logged && advert
-      ? likes.some((like) => like.userId === user.id && like.advertId === advert.id)
+      ? saved.savedIds.includes(advert.id)
       : false;
 
   const likeHandler = (): void => {
-    if (user.status === UserStatus.Logged && advert) {
-      const action = isLiked() ? deleteLikeThunk(advert.id) : setLikeThunk(advert.id);
-      void dispatch(action).unwrap().catch(() => setRequestError('Не удалось обновить лайк.'));
-    }
+    if (advert) saved.toggle(advert);
   };
 
   if (loading) return <Container p={6}>Загрузка объявления...</Container>;
@@ -70,6 +67,8 @@ export default function AdvertPage(): JSX.Element {
 
   return advert ? (
     <>
+      {saved.error && <Container role="alert">{saved.error}<Button onClick={saved.reload}>Повторить</Button></Container>}
+      {advert && saved.errors[advert.id] && <Container role="alert">{saved.errors[advert.id]}</Container>}
       {requestError && <Container p={2} color="red.500" role="alert">{requestError}</Container>}
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
         <Grid h="auto" w="100%" templateColumns="repeat(5, 1fr)" gap={6}>
@@ -124,7 +123,9 @@ export default function AdvertPage(): JSX.Element {
               >
                 Написать соседу
               </Button>
-              <Button variant="ghost" colorScheme="blue" mr={2} onClick={likeHandler}>
+              <Button variant="ghost" colorScheme="blue" mr={2} onClick={likeHandler}
+                aria-label={isLiked() ? 'Удалить из избранного' : 'Сохранить объявление'}
+                isDisabled={saved.disabled || !!saved.pending[advert.id]}>
                 {!isLiked() ? (
                   <Icon as={FaThumbsUp} boxSize={6} />
                 ) : (

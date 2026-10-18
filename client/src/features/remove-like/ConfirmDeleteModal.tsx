@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -9,10 +9,10 @@ import {
   ModalCloseButton,
   Button,
 } from '@chakra-ui/react';
-import { useAppDispatch } from '@app/store/hooks';
-import { deleteLikeThunk } from '@entities/like/model/likesThunk';
 
-type DeleteModalConfirmProps = {
+interface DeleteModalConfirmProps {
+  onDelete: (id: number) => Promise<unknown>;
+  pending: boolean;
   isOpen: boolean;
   onClose: () => void;
   onDeleted: () => void;
@@ -24,14 +24,16 @@ export default function DeleteModalConfirm({
   onClose,
   onDeleted,
   advertId,
+  onDelete,
+  pending,
 }: DeleteModalConfirmProps): JSX.Element {
-  const dispatch = useAppDispatch();
+  const [error, setError] = useState('');
 
   const handleDeleteLike = (): void => {
     if (advertId !== null) {
-      void dispatch(deleteLikeThunk(advertId)).unwrap()
-        .then(onDeleted)
-        .catch(console.error);
+      setError('');
+      void onDelete(advertId).then(onDeleted)
+        .catch(() => setError('Не удалось удалить объявление из избранного.'));
     }
   };
 
@@ -42,6 +44,7 @@ export default function DeleteModalConfirm({
         <ModalHeader />
         <ModalCloseButton />
         <ModalBody>
+          <p role="alert">{error}</p>
           <h1>Вы уверены, что хотите удалить этот элемент?</h1>
         </ModalBody>
 
@@ -51,6 +54,7 @@ export default function DeleteModalConfirm({
             _active={{ bg: '#9898c2' }}
             color="black"
             mr={3}
+            isDisabled={pending}
             onClick={handleDeleteLike}
           >
             Удалить

@@ -3,12 +3,16 @@ import { BiHeart, BiCamera, BiUser } from 'react-icons/bi';
 import React from 'react';
 import type { AdvertType } from '../model/advert';
 
-type AdverProps = {
+interface AdverProps {
+  saved: boolean;
+  saveDisabled: boolean;
+  saveError?: string;
+  onSave: () => void;
   advert: AdvertType;
   onOpen: (id: number) => void;
 };
 
-export default function AdvertCard({ advert, onOpen }: AdverProps): JSX.Element {
+export default function AdvertCard({ advert, onOpen, saved, saveDisabled, saveError, onSave }: AdverProps): JSX.Element {
   const handleClick = (): void => {
     onOpen(advert.id);
   };
@@ -42,7 +46,11 @@ export default function AdvertCard({ advert, onOpen }: AdverProps): JSX.Element 
 
         {/* Like Icon */}
         <IconButton
-          aria-label="Like"
+          aria-label={saved ? 'Убрать из избранного' : 'Сохранить объявление'}
+          aria-pressed={saved}
+          isDisabled={saveDisabled}
+          color={saved ? 'red.500' : undefined}
+          onClick={(event) => { event.stopPropagation(); onSave(); }}
           icon={<BiHeart />}
           variant="ghost"
           colorScheme="whiteAlpha"
@@ -67,6 +75,7 @@ export default function AdvertCard({ advert, onOpen }: AdverProps): JSX.Element 
 
       {/* Content Section */}
       <Box p="2">
+        {saveError && <Text role="alert">{saveError}</Text>}
         {/* Price and Details */}
         <Text fontSize="md" fontWeight="bold">
           {advert.price === null ? 'Цена не указана' : `${advert.price.toLocaleString()} ₽`}

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { UserStatus } from '@entities/session/model/auth';
 import { getReceiverListThunk } from '@entities/chat/model/thunks';
-import { getLikedAdvertsThunk } from '@features/liked-adverts/model';
 import ChatList from '@widgets/chat-list/ChatList';
 import LikedAdverts from '@widgets/liked-adverts/LikedAdverts';
 import ProfileCard from '@widgets/profile-card/ProfileCard';
@@ -21,7 +20,6 @@ export default function AccountPage(): JSX.Element {
   useEffect(() => {
     if (userId === null) return;
     void dispatch(getReceiverListThunk(userId));
-    void dispatch(getLikedAdvertsThunk());
   }, [dispatch, userId]);
 
   if (user.status !== UserStatus.Logged) return <Text>Загрузка профиля...</Text>;
