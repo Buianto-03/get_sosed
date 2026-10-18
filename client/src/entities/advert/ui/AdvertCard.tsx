@@ -69,27 +69,27 @@ export default function AdvertCard({ advert, onOpen }: AdverProps): JSX.Element 
       <Box p="2">
         {/* Price and Details */}
         <Text fontSize="md" fontWeight="bold">
-          {advert.price.toLocaleString()} ₽
+          {advert.price === null ? 'Цена не указана' : `${advert.price.toLocaleString()} ₽`}
         </Text>
         <Text fontSize="xs" color="gray.500">
           {/* Добавим описание квартиры, если это есть */}
-          {`${advert.title}`}
+          {advert.title ?? 'Объявление'}
         </Text>
 
         {/* Location and Amenities */}
         <Flex alignItems="center" mt="1">
           <Badge colorScheme="green" mr="1" fontSize="xs">
-            {advert.Location.metro}
+            {advert.location?.metro}
           </Badge>
           <Flex alignItems="center" color="gray.500" fontSize="xs">
             <Icon as={BiUser} mr="1" />
-            <Text>{advert.User.name}</Text> {/* Показываем имя пользователя */}
+            <Text>{advert.user?.name ?? 'Автор не указан'}</Text> {/* Показываем имя пользователя */}
           </Flex>
         </Flex>
 
         {/* Address */}
         <Text mt="1" fontSize="xs" color="gray.500">
-          {advert.Location.address}, {advert.Location.city}, {advert.Location.district}
+          {[advert.location?.address, advert.location?.city, advert.location?.district].filter(Boolean).join(', ') || 'Адрес не указан'}
         </Text>
       </Box>
     </Box>

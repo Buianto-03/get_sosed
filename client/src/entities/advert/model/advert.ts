@@ -1,31 +1,37 @@
 import { z } from 'zod';
 import { photoSchema } from './photo';
 
+export const tagSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+});
+
 export const advertSchema = z.object({
   id: z.number(),
-  title: z.string(),
-  body: z.string(),
-  price: z.number(),
-  userId: z.number(),
-  floor: z.number(),
-  rooms: z.number(),
-  square: z.number(),
+  title: z.string().nullable(),
+  body: z.string().nullable(),
+  price: z.number().nullable(),
+  userId: z.number().nullable(),
+  floor: z.number().nullable(),
+  rooms: z.number().nullable(),
+  square: z.number().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  User: z.object({
+  user: z.object({
     id: z.number(),
-    name: z.string(),
-    email: z.string(),
-  }),
-  Location: z.object({
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+  }).nullable(),
+  location: z.object({
     id: z.number(),
-    city: z.string(),
-    district: z.string(),
-    address: z.string(),
-    metro: z.string(),
-    coordinates: z.string(),
+    city: z.string().nullable(),
+    district: z.string().nullable(),
+    address: z.string().nullable(),
+    metro: z.string().nullable(),
+    coordinates: z.string().nullable(),
     advertId: z.number(),
-  }),
+  }).nullable(),
+  tags: z.array(tagSchema).optional(),
   AdvertPhotos: z.array(photoSchema).nullable().optional(),
 });
 
@@ -41,11 +47,6 @@ export type FilterType = {
   roomsFrom: number;
   roomsTo: number;
 };
-
-export const tagSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-});
 
 export type TagType = z.infer<typeof tagSchema>;
 

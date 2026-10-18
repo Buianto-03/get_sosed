@@ -1,32 +1,34 @@
 const advertService = require('../service/advertService');
 const sharp = require('sharp');
 const fs = require('fs/promises');
-const { log } = require('console');
 
 class AdvertController {
   constructor(service) {
     this.service = service;
   }
 
-  getAdverts = (req, res) => {
+  getAdverts = async (req, res) => {
     try {
-      this.service.getAdverts().then((data) => res.json(data));
+      const adverts = await this.service.getAdverts();
+      res.status(200).json(adverts);
     } catch (error) {
-      console.log(error);
-      res.status(500).json({message: 'server error'})
-      
+      res.status(500).json({ message: 'server error' });
     }
   };
 
   getAdvertById = async (req, res) => {
     try {
-      const { advertId } = req.params;
-      // console.log(advertId);
+      const advertId = Number(req.params.advertId);
+      if (!Number.isSafeInteger(advertId) || advertId <= 0) {
+        return res.status(404).json({ message: 'Advert not found' });
+      }
       const advert = await this.service.getAdvertById(advertId);
-
-      res.status(201).json(advert);
+      if (!advert) {
+        return res.status(404).json({ message: 'Advert not found' });
+      }
+      return res.status(200).json(advert);
     } catch (error) {
-      res.sendStatus(500);
+      return res.status(500).json({ message: 'server error' });
     }
   };
 

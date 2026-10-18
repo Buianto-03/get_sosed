@@ -76,48 +76,49 @@ export default function AdvertPage(): JSX.Element {
           <GridItem colSpan={3}>
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
               {/* <Image src="/images/1.jpg" /> */}
-              <PhotosCarousel photos={advert.AdvertPhotos?.map((photo) => photo.photo) ?? []} />
+              <PhotosCarousel photos={advert.AdvertPhotos?.flatMap((photo) => photo.photo ? [photo.photo] : []) ?? []} />
               <Heading as="h2" size="lg" mb={4} pt={5}>
                 О квартире
               </Heading>
-              <Text mt={2}>Комнаты: {advert.rooms}</Text>
-              <Text mt={2}>Площадь: {advert.square}</Text>
-              <Text mt={2}>Этаж: {advert.floor}</Text>
+              <Text mt={2}>Комнаты: {advert.rooms ?? 'Не указано'}</Text>
+              <Text mt={2}>Площадь: {advert.square ?? 'Не указано'}</Text>
+              <Text mt={2}>Этаж: {advert.floor ?? 'Не указано'}</Text>
               <Heading as="h2" size="lg" mb={4} pt={5}>
                 Расположение
               </Heading>
               <VStack align="start" spacing={2}>
-                <Text>Город: {advert.Location.city}</Text>
-                <Text>Район: {advert.Location.district}</Text>
-                <Text>Адрес: {advert.Location.address}</Text>
-                <Text>Метро: {advert.Location.metro}</Text>
+                <Text>Город: {advert.location?.city ?? 'Не указано'}</Text>
+                <Text>Район: {advert.location?.district ?? 'Не указано'}</Text>
+                <Text>Адрес: {advert.location?.address ?? 'Не указано'}</Text>
+                <Text>Метро: {advert.location?.metro ?? 'Не указано'}</Text>
               </VStack>
             </Box>
           </GridItem>
           <GridItem colSpan={2}>
             <Box borderWidth="1px" borderRadius="lg" overflow="hidden" p={6} bg="white">
               <Heading as="h1" size="xl" mt={4}>
-                {advert.title}
+                {advert.title ?? 'Объявление'}
               </Heading>
               <Text mt={2}>{advert.body}</Text>
               <Heading mt={2} fontWeight="bold">
-                Цена: {advert.price} руб.
+                {advert.price === null ? 'Цена не указана' : `Цена: ${advert.price} руб.`}
               </Heading>
               <br />
               <Heading as="h2" size="lg" mb={4}>
                 Информация о владельце
               </Heading>
               <VStack align="start" spacing={2}>
-                <Text>Имя: {advert.User.name}</Text>
-                <Text>Email: {advert.User.email}</Text>
+                <Text>Имя: {advert.user?.name ?? 'Не указано'}</Text>
+                <Text>Email: {advert.user?.email ?? 'Не указан'}</Text>
               </VStack>
               <Button
+                isDisabled={!advert.userId}
                 colorScheme="teal"
                 size="lg"
                 onClick={() =>
                   user.status === UserStatus.Logged && user.id === advert.userId
                     ? navigate(routes.listingDetails(advert.id))
-                    : navigate(routes.messageThread(advert.userId))
+                    : advert.userId && navigate(routes.messageThread(advert.userId))
                 }
                 mr={5}
               >
@@ -143,7 +144,7 @@ export default function AdvertPage(): JSX.Element {
         </Grid>
       </Container>
       <Container p={6} maxW="container.xl" display="flex" justifyContent="center">
-        <YMap location={advert.Location.coordinates} />
+        {advert.location?.coordinates && <YMap location={advert.location.coordinates} />}
       </Container>
     </>
   ) : (

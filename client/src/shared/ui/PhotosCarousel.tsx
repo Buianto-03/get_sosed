@@ -100,7 +100,9 @@ export default function PhotosCarousel({ photos }: SliderProp): JSX.Element {
             backgroundPosition="center"
             backgroundRepeat="no-repeat"
             backgroundSize="cover"
-            backgroundImage="url(/path/to/default/image.jpg)"
+            role="img"
+            aria-label="Фотографии отсутствуют"
+            backgroundColor="gray.100"
           />
         )}
       </Slider>

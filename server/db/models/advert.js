@@ -7,8 +7,8 @@ module.exports = (sequelize, DataTypes) => {
     static associate({AdvertPhoto, User, Location, AdvertTags, Like, Tags}) {
       // define association here
       this.hasMany(AdvertPhoto, {foreignKey: 'advertId'})
-      this.belongsTo(User, {foreignKey: 'userId'})
-      this.hasOne(Location, {foreignKey: 'advertId'})
+      this.belongsTo(User, {foreignKey: 'userId', as: 'user'})
+      this.hasOne(Location, {foreignKey: 'advertId', as: 'location'})
       this.hasMany(AdvertTags, {foreignKey: 'advertId', as: 'advertsTags'})
       this.hasMany(Like, {foreignKey: 'advertId'})
       this.belongsToMany(Tags, {through: AdvertTags, foreignKey: 'advertId', as: 'tags'})

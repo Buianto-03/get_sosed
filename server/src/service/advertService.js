@@ -21,6 +21,30 @@ class AdvertService {
     this.advertTag = advertTag;
   }
 
+  getReadIncludes(locationWhere) {
+    return [
+      { model: this.user, as: 'user', attributes: ['id', 'name', 'email'] },
+      {
+        model: this.location,
+        as: 'location',
+        ...(locationWhere ? { where: locationWhere } : {}),
+      },
+      {
+        model: this.advertPhoto,
+        as: 'AdvertPhotos',
+        separate: true,
+        order: [['id', 'ASC']],
+      },
+      {
+        model: this.tags,
+        as: 'tags',
+        attributes: ['id', 'name'],
+        through: { attributes: [] },
+        required: false,
+      },
+    ];
+  }
+
   async addAdvert(formData) {
     const {
       title,
@@ -55,50 +79,29 @@ class AdvertService {
       advertId: advert.id,
     });
     const advertWithUserAndLocation = await this.advert.findByPk(advert.id, {
-      include: ['User', 'Location'],
+      include: this.getReadIncludes(),
     });
     return advertWithUserAndLocation;
   }
 
   async getAdverts() {
-    let adverts = await this.advert.findAll({
+    return this.advert.findAll({
       order: [['id', 'ASC']],
-      include: ['User', 'Location', 'AdvertPhotos'],
+      include: this.getReadIncludes(),
     });
-
-    adverts = adverts.map((el) => {
-      const advert = JSON.parse(JSON.stringify(el));
-      delete advert.User.hashpass;
-      return advert;
-    });
-
-    return adverts;
   }
 
   async getAdvertById(id) {
-    console.log('id-----', id);
-
-    const advert = await this.advert.findByPk(id, {
-      include: ['User', 'Location', 'AdvertPhotos'],
+    return this.advert.findByPk(id, {
+      include: this.getReadIncludes(),
     });
-    return advert;
   }
 
   async likedAdverts(id) {
-    console.log('id ------------->', id);
-
-    const likedAdverts = await this.like.findAll({
+    return this.like.findAll({
       where: { userId: id },
-      include: [
-        {
-          model: this.advert,
-          include: ['User', 'Location'],
-        },
-      ],
+      include: [{ model: this.advert, include: this.getReadIncludes() }],
     });
-    // console.log(likedAdverts);
-
-    return likedAdverts;
   }
 
   async newAdvertPhotos(adverId, photo) {
@@ -160,23 +163,7 @@ class AdvertService {
 
       const adverts = await this.advert.findAll({
         where: whereClause,
-        include: [
-          {
-            model: this.location,
-            as: 'Location',
-            where: locationClause, // Фильтрация по местоположению
-          },
-          'User',
-          {
-            model: this.tags, // Модель Tag
-            as: 'tags',
-            required: false,
-          },
-          {
-            model: this.advertPhoto,
-            as: 'AdvertPhotos',
-          },
-        ], // подключить таблицу с тегами
+        include: this.getReadIncludes(Object.keys(locationClause).length ? locationClause : undefined),
       });
       // console.log(JSON.stringify(adverts, null, 2));
       return adverts;
@@ -194,7 +181,7 @@ class AdvertService {
             [Op.iLike]: `%${filter}%`,
           },
         },
-        include: ['User', 'Location'],
+        include: this.getReadIncludes(),
         order: [['name', 'ASC']],
       });
       return adverts;
@@ -249,11 +236,7 @@ class AdvertService {
         ],
         order: [[Sequelize.literal('"likeCount"'), 'DESC']],
         limit: 4,
-        include: [
-          'Location',
-          'User',
-          { model: AdvertPhoto, as: 'AdvertPhotos' },
-        ],
+        include: this.getReadIncludes(),
       });
       return topAdverts;
     } catch (error) {

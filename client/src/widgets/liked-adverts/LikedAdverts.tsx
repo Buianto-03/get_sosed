@@ -17,9 +17,9 @@ export default function LikedAdverts({ onOpenAdvert }: {
       <VStack spacing={3} align="stretch">
         {items.map((item) => (
           <Box key={item.id} p={3} bg="white" borderRadius="md">
-            <Button variant="link" onClick={() => onOpenAdvert(item.advertId)}>{item.Advert.title}</Button>
+            <Button variant="link" onClick={() => onOpenAdvert(item.advertId)}>{item.Advert.title ?? 'Объявление'}</Button>
             <Text>{item.Advert.body}</Text>
-            <Text>{item.Advert.price} ₽ — {item.Advert.Location.city}</Text>
+            <Text>{item.Advert.price === null ? 'Цена не указана' : `${item.Advert.price} ₽`} — {item.Advert.location?.city ?? 'Город не указан'}</Text>
             <Button mt={2} size="sm" onClick={() => setSelectedId(item.advertId)}>Удалить из избранного</Button>
           </Box>
         ))}
