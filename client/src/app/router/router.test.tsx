@@ -15,8 +15,11 @@ describe('application routes', () => {
   });
 
   it('uses the canonical paths for migrated screens', () => {
+    expect(matchedLeaf('/about')).toBe(RoutePattern.About);
     expect(matchedLeaf('/listings')).toBe(RoutePattern.Listings);
     expect(matchedLeaf('/profile')).toBe(RoutePattern.Profile);
+    expect(matchedLeaf('/profile/edit')).toBe(RoutePattern.ProfileEdit);
+    expect(matchedLeaf('/messages')).toBe(RoutePattern.Messages);
     expect(matchedLeaf('/messages/7')).toBe('/messages/:receiverId');
     expect(matchedLeaf('/sign-in')).toBe(RoutePattern.SignIn);
     expect(matchedLeaf('/sign-up')).toBe(RoutePattern.SignUp);

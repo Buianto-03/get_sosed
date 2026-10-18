@@ -1,10 +1,13 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { UserStatus } from '@entities/session/model/auth';
+import { UserStatus } from '@entities/session/model/authModel';
 import { routes } from '@shared/config/routes';
 import type { RoutePattern } from '@shared/config/routes';
 import { Spinner } from '@shared/ui/feedback/Spinner';
-import { getAuthenticationPath, getPostAuthDestination } from '@shared/lib/navigation/safe-return-to';
+import {
+  getAuthenticationPath,
+  getPostAuthDestination,
+} from '@shared/lib/navigation/safe-return-to';
 import { useAppSelector } from '../store/hooks';
 
 type ProtectedRouteProps = {

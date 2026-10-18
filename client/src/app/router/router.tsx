@@ -5,14 +5,22 @@ import { RoutePattern, routes } from '@shared/config/routes';
 import AppLayout from '@app/layouts/app-layout/AppLayout';
 import ProtectedRoute from './ProtectedRoute';
 
-const AccountPage = React.lazy(() => import('@pages/account/AccountPage'));
-const SignInPage = React.lazy(() => import('@pages/sign-in/SignInPage'));
-const SignUpPage = React.lazy(() => import('@pages/sign-up/SignUpPage'));
-const MainPage = React.lazy(() => import('@pages/search/MainPage'));
-const AdvertPage = React.lazy(() => import('@pages/advert-details/AdvertPage'));
-const ChatPage = React.lazy(() => import('@pages/chat/ChatPage'));
-const PostAdvertPage = React.lazy(() => import('@pages/advert-create/PostAdvertPage'));
-const WelcomePage = React.lazy(() => import('@pages/welcome/WelcomePage'));
+const AboutPage = React.lazy(() => import('@pages/about/ui/about-page/AboutPage'));
+const ProfileEditRoute = React.lazy(
+  () => import('@pages/profile/ui/profile-edit-route/ProfileEditRoute'),
+);
+const ProfileRoute = React.lazy(() => import('@pages/profile/ui/profile-route/ProfileRoute'));
+const SignInPage = React.lazy(() => import('@pages/sign-in/ui/sign-in-route/SignInRoute'));
+const SignUpPage = React.lazy(() => import('@pages/sign-up/ui/sign-up-route/SignUpRoute'));
+const SearchRoute = React.lazy(() => import('@pages/search/ui/search-route/SearchRoute'));
+const ListingRoute = React.lazy(
+  () => import('@pages/advert-details/ui/listing-route/ListingRoute'),
+);
+const MessagesRoute = React.lazy(() => import('@pages/chat/ui/messages-route/MessagesRoute'));
+const ListingCreateRoute = React.lazy(
+  () => import('@pages/listing-create/ui/listing-create-route/ListingCreateRoute'),
+);
+const WelcomePage = React.lazy(() => import('@pages/welcome/ui/home-route/HomeRoute'));
 
 export const appRouteObjects: RouteObject[] = [
   {
@@ -24,10 +32,30 @@ export const appRouteObjects: RouteObject[] = [
         element: <WelcomePage />,
       },
       {
+        path: RoutePattern.About,
+        element: <AboutPage />,
+      },
+      {
         path: RoutePattern.Profile,
         element: (
           <ProtectedRoute access="logged" redirect={routes.signIn}>
-            <AccountPage />
+            <ProfileRoute />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: RoutePattern.ProfileEdit,
+        element: (
+          <ProtectedRoute access="logged">
+            <ProfileEditRoute />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: RoutePattern.Messages,
+        element: (
+          <ProtectedRoute access="logged">
+            <MessagesRoute />
           </ProtectedRoute>
         ),
       },
@@ -35,7 +63,7 @@ export const appRouteObjects: RouteObject[] = [
         path: '/messages/:receiverId',
         element: (
           <ProtectedRoute access="logged" redirect={routes.signIn}>
-            <ChatPage />
+            <MessagesRoute />
           </ProtectedRoute>
         ),
       },
@@ -57,19 +85,19 @@ export const appRouteObjects: RouteObject[] = [
       },
       {
         path: RoutePattern.Listings,
-        element: <MainPage />,
+        element: <SearchRoute />,
       },
       {
         path: RoutePattern.ListingCreate,
         element: (
           <ProtectedRoute access="logged" redirect={routes.signIn}>
-            <PostAdvertPage />
+            <ListingCreateRoute />
           </ProtectedRoute>
         ),
       },
       {
         path: '/listings/:listingId',
-        element: <AdvertPage />,
+        element: <ListingRoute />,
       },
       {
         path: '*',
