@@ -1,0 +1,7 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.tag_catalog_feedback {
+  display: grid;
+  gap: tokens.$space-3;
+  min-width: 0;
+}

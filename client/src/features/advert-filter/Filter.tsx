@@ -5,6 +5,8 @@ import {
 } from '@chakra-ui/react';
 import { useSearchParams } from 'react-router-dom';
 import advertService from '@entities/advert/api/advertService';
+import { useTagCatalog } from '@entities/advert/model/use-tag-catalog';
+import { TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagType } from '@entities/advert/model/advert';
 import { readFilters, writeFilters } from './model/filters';
 import type { AppliedFilters } from './model/filters';
@@ -18,22 +20,14 @@ export default function Filter(): JSX.Element {
   const [draft, setDraft] = useState<AppliedFilters>(() => readFilters(searchParams));
   const [tagQuery, setTagQuery] = useState('');
   const [suggestions, setSuggestions] = useState<TagType[]>([]);
-  const [knownTags, setKnownTags] = useState<TagType[]>([]);
+  const catalog = useTagCatalog();
+  const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
+  const knownTags = [...catalog.tags, ...selectedTags];
   const [error, setError] = useState('');
 
   useEffect(() => {
     setDraft(readFilters(new URLSearchParams(query)));
   }, [query]);
-
-  useEffect(() => {
-    let active = true;
-    void advertService.getTagsBySearch('').then((tags) => {
-      if (active) setKnownTags(tags);
-    }).catch(() => {
-      if (active) setError('Не удалось загрузить теги.');
-    });
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     if (!tagQuery.trim()) {
@@ -61,7 +55,7 @@ export default function Filter(): JSX.Element {
     setDraft((previous) => ({ ...previous, [field]: Number(value) || 0 }));
   };
   const addTag = (tag: TagType): void => {
-    setKnownTags((previous) => [...previous.filter((item) => item.id !== tag.id), tag]);
+    setSelectedTags((previous) => [...previous.filter((item) => item.id !== tag.id), tag]);
     setDraft((previous) => ({
       ...previous,
       tagIds: [...new Set([...previous.tagIds, tag.id])],
@@ -99,6 +93,7 @@ export default function Filter(): JSX.Element {
       </Popover>
       <Box mt={3} maxW="500px">
         <Input
+          disabled={catalog.state !== TagCatalogState.Ready}
           aria-label="Поиск тегов"
           placeholder="Поиск тегов"
           value={tagQuery}
@@ -121,6 +116,13 @@ export default function Filter(): JSX.Element {
           ))}
         </Flex>
         {draft.tagIds.length > 0 && <Button mt={2} size="sm" colorScheme="blue" onClick={apply}>Применить теги</Button>}
+        {catalog.state === TagCatalogState.Loading && <Text role="status">Загрузка условий проживания…</Text>}
+        {catalog.state === TagCatalogState.Error && (
+          <Box>
+            <Text role="alert">{catalog.error}</Text>
+            <Button onClick={catalog.reload}>Повторить загрузку условий</Button>
+          </Box>
+        )}
         {error && <Text color="red.500" role="alert">{error}</Text>}
       </Box>
     </Box>

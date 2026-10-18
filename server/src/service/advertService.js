@@ -198,11 +198,9 @@ class AdvertService {
   async getTagsLikeStr(str) {
     try {
       const tags = await this.tags.findAll({
-        where: {
-          name: {
-            [Op.iLike]: `%${str}%`, // нужно сделать валидцию на регистр символа <--- str не строка
-          },
-        },
+        attributes: ['id', 'name'],
+        where: str ? { name: { [Op.iLike]: `%${str}%` } } : {},
+        order: [['id', 'ASC']],
       });
       return tags;
     } catch (error) {

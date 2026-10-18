@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { TagCatalogState } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreateForm } from '@features/listing-create/ui/listing-create-form/ListingCreateForm';
 import { ListingCreateStep } from '@features/listing-create/ui/listing-create-step/ListingCreateStep';
@@ -6,6 +8,7 @@ import type { ListingCreatePublishState, ListingDraft } from '@features/listing-
 import styles from './ListingCreatePage.module.scss';
 
 export interface ListingCreatePageProps {
+  tagCatalog: TagCatalog;
   initialStep?: number;
   initialDraft?: Partial<ListingDraft>;
   initialAttemptedSteps?: number[];
@@ -24,6 +27,7 @@ const emptyDraft: ListingDraft = {
 };
 
 export function ListingCreatePage({
+  tagCatalog,
   initialStep = 1,
   initialDraft,
   initialAttemptedSteps = [],
@@ -59,7 +63,7 @@ export function ListingCreatePage({
       return Boolean(draft.title.trim() && draft.city && draft.metro && Number(draft.area) > 0);
     }
     if (step === 2) {
-      return Boolean(Number(draft.price) > 0 && draft.description.trim());
+      return tagCatalog.state === TagCatalogState.Ready && Boolean(Number(draft.price) > 0 && draft.description.trim());
     }
     return true;
   };
@@ -99,6 +103,7 @@ export function ListingCreatePage({
       >
         {(step) => (
           <ListingCreateStep
+            tagCatalog={tagCatalog}
             step={step}
             draft={draft}
             photos={photos}

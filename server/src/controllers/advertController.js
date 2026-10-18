@@ -90,16 +90,15 @@ class AdvertController {
   };
 
   getTagsBySearch = async (req, res) => {
-    // inputValue <- req.body/query
-    console.log(req.query);
-    
+    const query = req.query.query ?? '';
+    if (typeof query !== 'string') {
+      return res.status(400).json({ error: 'query must be a string' });
+    }
     try {
-      const inputValue = req.query.query;
-      const tags = await this.service.getTagsLikeStr(inputValue);
-      res.json(tags);
+      const tags = await this.service.getTagsLikeStr(query.trim());
+      return res.status(200).json(tags);
     } catch (error) {
-      console.log('Ломай меня полностью:', error);
-      res.status(500).json({ error: 'Ошибка при поиске тегов' });
+      return res.status(500).json({ error: 'Ошибка при поиске тегов' });
     }
   };
 

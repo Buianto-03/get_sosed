@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { photoSchema } from './photo';
 
 export const tagSchema = z.object({
-  id: z.number(),
-  name: z.string(),
+  id: z.number().int().positive(),
+  name: z.string().min(1),
 });
 
 export const advertSchema = z.object({

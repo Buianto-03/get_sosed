@@ -107,3 +107,88 @@ test('details return 200, 404 for absent/invalid IDs, and 500 on rejected reads'
   await controller.getAdverts({}, res);
   assert.equal(res.code, 500);
 });
+
+test('tag catalog returns stable IDs and only id/name; searching preserves all catalog entries', async () => {
+  const { service, sequelize, models } = createService();
+  const queries = [];
+  sequelize.query = async (sql) => {
+    queries.push(sql);
+    return [models.Tags.build({ id: 73, name: 'Для некурящих' }, { isNewRecord: false })];
+  };
+  const first = await service.getTagsLikeStr('');
+  const second = await service.getTagsLikeStr('');
+  assert.equal(first[0].id, second[0].id);
+  assert.match(queries[0], /SELECT "id", "name" FROM "Tags"/);
+  assert.match(queries[0], /ORDER BY "Tags"\."id" ASC/);
+  assert.doesNotMatch(queries[0], /WHERE/);
+  await service.getTagsLikeStr('курящ');
+  assert.match(queries.at(-1), /ILIKE '%курящ%'/);
+});
+
+test('tag endpoint accepts absent query, rejects structured query and handles service failures', async () => {
+  let receivedQuery;
+  const controller = loadWithDependency(
+    '../src/controllers/advertController.js', '../service/advertService', {
+      getTagsLikeStr: async (query) => {
+        receivedQuery = query;
+        if (query === 'fail') throw new Error('offline');
+        return [];
+      },
+    },
+  );
+  for (const [query, expectedStatus] of [
+    [{}, 200], [{ query: '  курящ  ' }, 200],
+    [{ query: ['a', 'b'] }, 400], [{ query: { name: 'a' } }, 400],
+    [{ query: 'fail' }, 500],
+  ]) {
+    const res = {
+      status(code) { this.code = code; return this; },
+      json(body) { this.body = body; return this; },
+    };
+    await controller.getTagsBySearch({ query }, res);
+    assert.equal(res.code, expectedStatus);
+    if (!query.query) assert.equal(receivedQuery, '');
+    if (query.query === '  курящ  ') assert.equal(receivedQuery, 'курящ');
+  }
+});
+
+test('condition migration is repeatable and rollback preserves existing user links and IDs', async () => {
+  const migration = require('../db/migrations/20261018000000-add-listing-condition-tags');
+  const tags = [
+    { id: 73, name: 'Для некурящих' },
+    { id: 109, name: 'Питомцы разрешены' },
+    { id: 28, name: 'Рядом с метро' },
+  ];
+  const links = [{ advertId: 1, tagId: 73 }];
+  const queryInterface = {
+    sequelize: {
+      transaction: async (callback) => callback({}),
+      query: async (sql) => sql.startsWith('SELECT') ? tags : undefined,
+    },
+    bulkInsert: async (table, rows) => {
+      assert.equal(table, 'Tags');
+      rows.forEach((row) => tags.push({ ...row, id: tags.length + 200 }));
+    },
+  };
+  await migration.up(queryInterface, Sequelize);
+  const afterFirstRun = structuredClone(tags);
+  assert.equal(tags.length, 5);
+  assert.equal(tags.find(({ name }) => name === 'Для некурящих').id, 73);
+  assert.equal(tags.find(({ name }) => name === 'Рядом с метро').id, 28);
+  await migration.up(queryInterface, Sequelize);
+  assert.deepEqual(tags, afterFirstRun);
+  await migration.down(queryInterface, Sequelize);
+  assert.deepEqual(tags, afterFirstRun);
+  assert.deepEqual(links, [{ advertId: 1, tagId: 73 }]);
+  await migration.up(queryInterface, Sequelize);
+  assert.deepEqual(tags, afterFirstRun);
+});
+
+test('multiple selected tags use HAVING COUNT DISTINCT for an AND match', async () => {
+  const { service, sequelize } = createService();
+  const queries = [];
+  sequelize.query = async (sql) => { queries.push(sql); return []; };
+  await service.getFilteredAdverts({ tags: [{ id: 73 }, { id: 109 }, { id: 73 }] });
+  assert.match(queries[0], /"tagId" IN \(73, 109\)/);
+  assert.match(queries[0], /HAVING COUNT\(DISTINCT\("tagId"\)\) = 2/);
+});

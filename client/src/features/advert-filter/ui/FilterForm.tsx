@@ -1,27 +1,28 @@
 import React, { type FormEvent } from 'react';
-import { Button, ButtonType, ButtonVariant } from '../../../shared/ui/button/Button';
-import { Input } from '../../../shared/ui/input/Input';
-import { Checkbox } from '../../../shared/ui/selection/checkbox/Checkbox';
-import { Select } from '../../../shared/ui/selection/select/Select';
-import {
-  searchConditions,
-  type SearchCondition,
-  type SearchFilterValues,
-} from '../model/searchFilterValues';
+import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
+import { Input } from '@shared/ui/input/Input';
+import { Checkbox } from '@shared/ui/selection/checkbox/Checkbox';
+import { Select } from '@shared/ui/selection/select/Select';
+import { getPrimaryTags, TagCatalogState } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import { TagCatalogFeedback } from '@entities/advert/ui/tag-catalog-feedback/TagCatalogFeedback';
+import type { SearchFilterValues } from '../model/searchFilterValues';
 import { inputFields } from './inputFields';
 import styles from './FilterForm.module.scss';
 
-type FilterFormProps = {
+interface FilterFormProps {
   idPrefix: string;
+  tagCatalog: TagCatalog;
   inDrawer?: boolean;
   draft: SearchFilterValues;
   onChange: (draft: SearchFilterValues) => void;
   onApply: (event: FormEvent<HTMLFormElement>) => void;
   onReset: () => void;
-};
+}
 
 export function FilterForm({
   idPrefix,
+  tagCatalog,
   inDrawer = false,
   draft,
   onChange,
@@ -32,7 +33,7 @@ export function FilterForm({
     onChange({ ...draft, [field]: value });
   };
 
-  const setCondition = (condition: SearchCondition, checked: boolean): void => {
+  const setCondition = (condition: string, checked: boolean): void => {
     onChange({
       ...draft,
       conditions: checked
@@ -73,19 +74,21 @@ export function FilterForm({
           />
         ))}
       </div>
+      <TagCatalogFeedback catalog={tagCatalog} />
       <div className={styles.filters__conditions}>
-        {searchConditions.map((condition, index) => (
+        {getPrimaryTags(tagCatalog.tags).map((tag) => (
           <Checkbox
-            key={condition}
-            id={`${idPrefix}-condition-${index}`}
-            label={condition}
-            checked={draft.conditions.includes(condition)}
-            onChange={(event) => setCondition(condition, event.target.checked)}
+            key={tag.id}
+            id={`${idPrefix}-condition-${tag.id}`}
+            label={tag.name}
+            disabled={tagCatalog.state !== TagCatalogState.Ready}
+            checked={draft.conditions.includes(tag.name)}
+            onChange={(event) => setCondition(tag.name, event.target.checked)}
           />
         ))}
       </div>
       <div className={styles.filters__actions}>
-        <Button className={styles.filters__submit} type={ButtonType.Submit}>
+        <Button className={styles.filters__submit} type={ButtonType.Submit} disabled={tagCatalog.state !== TagCatalogState.Ready}>
           Показать объявления
         </Button>
         <Button variant={ButtonVariant.Text} onClick={onReset}>

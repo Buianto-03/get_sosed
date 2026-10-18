@@ -2,6 +2,7 @@
 
 .listing_create_form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: tokens.$space-5;
 }
@@ -21,8 +22,13 @@
 
 .listing_create_form__stepper,
 .listing_create_form__form {
+  min-width: 0;
   width: min(100%, 800px);
   margin-inline: auto;
+}
+
+.listing_create_form__stepper {
+  overflow-x: auto;
 }
 
 .listing_create_form__form {

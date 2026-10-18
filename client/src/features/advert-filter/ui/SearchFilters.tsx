@@ -1,20 +1,23 @@
 import React, { useCallback, useEffect, useId, useState, type FormEvent } from 'react';
 import { LuSlidersHorizontal } from 'react-icons/lu';
-import { Button, ButtonVariant } from '../../../shared/ui/button/Button';
-import { Drawer } from '../../../shared/ui/overlay/Drawer';
+import { Button, ButtonVariant } from '@shared/ui/button/Button';
+import { Drawer } from '@shared/ui/overlay/Drawer';
+import { TagCatalogState } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import { emptySearchFilters, type SearchFilterValues } from '../model/searchFilterValues';
 import { FilterForm } from './FilterForm';
 import styles from './SearchFilters.module.scss';
 
 export { emptySearchFilters } from '../model/searchFilterValues';
-export type { SearchCondition, SearchFilterValues } from '../model/searchFilterValues';
+export type { SearchFilterValues } from '../model/searchFilterValues';
 
-type SearchFiltersProps = {
+interface SearchFiltersProps {
+  tagCatalog: TagCatalog;
   applied: SearchFilterValues;
   onApply: (filters: SearchFilterValues) => void;
-};
+}
 
-export function SearchFilters({ applied, onApply }: SearchFiltersProps): JSX.Element {
+export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersProps): JSX.Element {
   const id = useId();
   const [draft, setDraft] = useState<SearchFilterValues>(applied);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -26,6 +29,7 @@ export function SearchFilters({ applied, onApply }: SearchFiltersProps): JSX.Ele
 
   const apply = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
+    if (tagCatalog.state !== TagCatalogState.Ready) return;
     onApply(draft);
     closeDrawer();
   };
@@ -44,6 +48,7 @@ export function SearchFilters({ applied, onApply }: SearchFiltersProps): JSX.Ele
           <strong>Фильтры</strong>
         </div>
         <FilterForm
+          tagCatalog={tagCatalog}
           idPrefix={`${id}-desktop`}
           draft={draft}
           onChange={setDraft}
@@ -65,6 +70,7 @@ export function SearchFilters({ applied, onApply }: SearchFiltersProps): JSX.Ele
         title="Фильтры и условия"
       >
         <FilterForm
+          tagCatalog={tagCatalog}
           idPrefix={`${id}-drawer`}
           inDrawer
           draft={draft}

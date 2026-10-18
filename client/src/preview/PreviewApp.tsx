@@ -43,6 +43,7 @@ import {
 } from '../features/advert-filter/ui/SearchFilters';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
 import { toProfileListings } from './helper';
+import { previewTagCatalog } from './tag-catalog';
 
 type ScreenId = PreviewScreen;
 
@@ -539,6 +540,7 @@ function SearchScreen({
         <p>Выбирайте варианты по цене, месту и условиям.</p>
       </div>
       <SearchFilters
+        tagCatalog={previewTagCatalog}
         applied={appliedFilters}
         onApply={setAppliedFilters}
       />
@@ -881,6 +883,7 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
 
   return (
     <ListingCreatePage
+      tagCatalog={previewTagCatalog}
       initialStep={initialStep}
       initialDraft={initialDraft}
       initialAttemptedSteps={initialAttemptedSteps}

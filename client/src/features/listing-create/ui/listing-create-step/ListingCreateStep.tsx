@@ -1,4 +1,5 @@
 import React from 'react';
+import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import type { ListingCreatePublishState, ListingDraft } from '../../model';
 import { PhotosStep } from '../photos-step/PhotosStep';
@@ -9,6 +10,7 @@ import styles from './ListingCreateStep.module.scss';
 
 export interface ListingCreateStepProps {
   step: number;
+  tagCatalog: TagCatalog;
   draft: ListingDraft;
   photos: UploadAreaPhoto[];
   publishState: ListingCreatePublishState;
@@ -24,6 +26,7 @@ export interface ListingCreateStepProps {
 
 export function ListingCreateStep({
   step,
+  tagCatalog,
   draft,
   photos,
   publishState,
@@ -52,6 +55,7 @@ export function ListingCreateStep({
     case 2:
       content = (
         <PriceRulesStep
+          tagCatalog={tagCatalog}
           draft={draft}
           showErrors={showPriceErrors}
           onFieldChange={onFieldChange}

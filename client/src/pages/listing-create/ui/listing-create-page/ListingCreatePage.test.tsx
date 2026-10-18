@@ -1,7 +1,21 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ListingCondition, TagCatalogState } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import { ListingCreatePage } from './ListingCreatePage';
+
+const tagCatalog: TagCatalog = {
+  tags: [
+    { id: 73, name: ListingCondition.NonSmoking },
+    { id: 29, name: ListingCondition.PetsAllowed },
+    { id: 56, name: ListingCondition.QuietEvenings },
+    { id: 112, name: ListingCondition.Workspace },
+  ],
+  state: TagCatalogState.Ready,
+  error: null,
+  reload: () => undefined,
+};
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -11,7 +25,7 @@ afterEach(() => {
 
 describe('ListingCreatePage', () => {
   it('validates forward navigation and preserves fields when a step is revisited', () => {
-    render(<ListingCreatePage />);
+    render(<ListingCreatePage tagCatalog={tagCatalog} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
     expect(screen.getByRole('heading', { name: 'Расскажите о комнате' })).toBeInTheDocument();
@@ -67,7 +81,7 @@ describe('ListingCreatePage', () => {
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL });
 
-    const { unmount } = render(<ListingCreatePage initialStep={3} />);
+    const { unmount } = render(<ListingCreatePage tagCatalog={tagCatalog} initialStep={3} />);
     fireEvent.change(screen.getByLabelText('Выбрать фото · выбор файлов'), {
       target: {
         files: [
@@ -101,6 +115,7 @@ describe('ListingCreatePage', () => {
       .mockResolvedValueOnce(undefined);
     render(
       <ListingCreatePage
+        tagCatalog={tagCatalog}
         initialStep={4}
         initialDraft={{
           title: 'Светлая комната',
@@ -120,4 +135,27 @@ describe('ListingCreatePage', () => {
     expect(await screen.findByText('Объявление опубликовано в preview')).toBeInTheDocument();
     expect(onPublish).toHaveBeenCalledTimes(2);
   });
+
+  it('receives all four API conditions and keeps selection and input across retry', () => {
+    const reload = vi.fn();
+    const { rerender } = render(<ListingCreatePage tagCatalog={tagCatalog} initialStep={2} />);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(4);
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' }), {
+      target: { value: '32000' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }));
+    rerender(<ListingCreatePage
+      tagCatalog={{ ...tagCatalog, state: TagCatalogState.Error, error: 'Сеть недоступна', reload }}
+      initialStep={2}
+    />);
+    expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
+    expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Повторить загрузку условий' }));
+    expect(reload).toHaveBeenCalledOnce();
+    rerender(<ListingCreatePage tagCatalog={tagCatalog} initialStep={2} />);
+    expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).toBeChecked();
+    expect(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' })).toHaveValue(32000);
+  });
+
 });
