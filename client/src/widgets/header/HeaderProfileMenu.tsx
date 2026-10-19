@@ -22,6 +22,8 @@ export function HeaderProfileMenu({ user, onSignOut, availableRoutes }: HeaderPr
   const navigate = useNavigate();
   const profileSectionActive =
     location.pathname === headerRoutes.profile ||
+    location.pathname.startsWith(`${headerRoutes.profile}/`) ||
+    location.pathname === headerRoutes.chat ||
     location.pathname === headerRoutes.post ||
     location.pathname.startsWith(`${RoutePattern.Messages}/`);
 

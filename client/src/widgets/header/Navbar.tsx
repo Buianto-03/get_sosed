@@ -19,7 +19,7 @@ import {
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
-import { UserStatus } from '@entities/session/model/auth';
+import { UserStatus } from '@entities/session/model/authModel';
 import { routes } from '@shared/config/routes';
 import { logoutThunk } from '@features/logout/thunks';
 
