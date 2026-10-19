@@ -6,7 +6,7 @@ import { Surface } from '@shared/ui/surface/Surface';
 import styles from './ListingContactCard.module.scss';
 
 export interface ListingContactData {
-  price: number;
+  price: number | null;
   author: string;
   authorCity?: string;
 }
@@ -15,6 +15,7 @@ interface ListingContactCardProps {
   contact: ListingContactData;
   saved: boolean;
   contactDisabled: boolean;
+  saveDisabled?: boolean;
   onContact: () => void;
   onSavedChange: (saved: boolean) => void;
 }
@@ -23,6 +24,7 @@ export function ListingContactCard({
   contact,
   saved,
   contactDisabled,
+  saveDisabled = false,
   onContact,
   onSavedChange,
 }: ListingContactCardProps): JSX.Element {
@@ -30,7 +32,7 @@ export function ListingContactCard({
     <aside className={styles.listingContactCard} aria-label="Связь с автором">
       <Surface className={styles.listingContactCard__surface}>
         <strong className={styles.listingContactCard__price}>
-          {contact.price.toLocaleString('ru-RU')} ₽
+          {contact.price === null ? 'Цена не указана' : `${contact.price.toLocaleString('ru-RU')} ₽`}
         </strong>
         <p className={styles.listingContactCard__note}>Период и предмет аренды уточняются у автора</p>
         <div className={styles.listingContactCard__author}>
@@ -44,6 +46,7 @@ export function ListingContactCard({
             className={styles.listingContactCard__button}
             variant={ButtonVariant.Secondary}
             aria-pressed={saved}
+            disabled={saveDisabled}
             onClick={() => onSavedChange(!saved)}
           >
             <LuHeart aria-hidden="true" fill={saved ? 'currentColor' : 'none'} />

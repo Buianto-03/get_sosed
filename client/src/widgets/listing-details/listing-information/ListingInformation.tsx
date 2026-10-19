@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { LuBedDouble, LuMapPin, LuRuler, LuLayers } from 'react-icons/lu';
 import { Chip, ChipSize } from '@shared/ui/chip/Chip';
 import { Surface, SurfaceElement } from '@shared/ui/surface/Surface';
@@ -14,17 +14,20 @@ export interface ListingInformationData {
     city?: string;
     district?: string;
     metro?: string;
+    address?: string;
   };
 }
 
 interface ListingInformationProps {
   information: ListingInformationData;
+  map?: ReactNode;
+  interested?: ReactNode;
 }
 
-export function ListingInformation({ information }: ListingInformationProps): JSX.Element {
+export function ListingInformation({ information, map, interested }: ListingInformationProps): JSX.Element {
   const { rooms, area, floor, description, tags, location } = information;
   const place = [location.city, location.district].filter(Boolean).join(', ');
-  const address = [place, location.metro].filter(Boolean).join(' · ');
+  const address = [place, location.address, location.metro].filter(Boolean).join(' · ');
 
   return (
     <div className={styles.listingInformation}>
@@ -47,13 +50,11 @@ export function ListingInformation({ information }: ListingInformationProps): JS
       <Surface as={SurfaceElement.Section} className={styles.listingInformation__panel}>
         <h2 className={styles.listingInformation__heading}>Расположение</h2>
         {address && <p className={styles.listingInformation__address}><LuMapPin aria-hidden="true" />{address}</p>}
-        <div className={styles.listingInformation__map} aria-label="Место для карты">Карта</div>
+        <div className={styles.listingInformation__map}>{map ?? <p>Карта недоступна</p>}</div>
       </Surface>
       <Surface as={SurfaceElement.Section} className={styles.listingInformation__panel}>
         <h2 className={styles.listingInformation__heading}>Заинтересованные пользователи</h2>
-        <p className={styles.listingInformation__description}>
-          Здесь будут отображаться пользователи, которым интересно это объявление.
-        </p>
+        {interested ?? <p className={styles.listingInformation__description}>Нет данных о заинтересованных пользователях.</p>}
       </Surface>
     </div>
   );
