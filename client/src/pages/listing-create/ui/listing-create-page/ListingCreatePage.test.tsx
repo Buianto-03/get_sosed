@@ -29,20 +29,27 @@ describe('ListingCreatePage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
     expect(screen.getByRole('heading', { name: 'Расскажите о комнате' })).toBeInTheDocument();
-    expect(screen.getByText('Укажите название комнаты.')).toBeInTheDocument();
+    expect(screen.getByText('Укажите название комнаты (до 100 символов).')).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Название объявления' }), {
       target: { value: 'Светлая комната' },
     });
-    fireEvent.change(screen.getByRole('combobox', { name: 'Город' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Город' }), {
       target: { value: 'Москва' },
     });
-    fireEvent.change(screen.getByRole('combobox', { name: 'Метро' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Метро' }), {
       target: { value: 'Сокол' },
     });
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Площадь комнаты, м²' }), {
       target: { value: '18' },
     });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Адрес' }), {
+      target: { value: 'Улица, 1' },
+    });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Количество комнат' }), {
+      target: { value: '2' },
+    });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Этаж' }), { target: { value: '3' } });
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
 
     expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
@@ -50,7 +57,9 @@ describe('ListingCreatePage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
     expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
-    expect(screen.getByText('Укажите стоимость аренды.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Укажите стоимость аренды целым положительным числом.'),
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' }), {
       target: { value: '30000' },
@@ -60,8 +69,8 @@ describe('ListingCreatePage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
 
-    expect(screen.getByRole('heading', { name: 'Проверьте объявление' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+    expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByRole('heading', { name: 'Добавьте фотографии' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
     expect(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' })).toHaveValue(30000);
@@ -113,11 +122,19 @@ describe('ListingCreatePage', () => {
       .fn()
       .mockRejectedValueOnce(new Error('Network'))
       .mockResolvedValueOnce(undefined);
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: () => 'blob:photo',
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
     render(
       <ListingCreatePage
         tagCatalog={tagCatalog}
-        initialStep={4}
+        initialStep={3}
         initialDraft={{
+          address: 'Улица, 1',
+          rooms: '2',
+          floor: '3',
           title: 'Светлая комната',
           city: 'Москва',
           metro: 'Сокол',
@@ -129,10 +146,14 @@ describe('ListingCreatePage', () => {
       />,
     );
 
+    fireEvent.change(screen.getByLabelText('Выбрать фото · выбор файлов'), {
+      target: { files: [new File(['image'], 'photo.jpg', { type: 'image/jpeg' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     fireEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
     expect(await screen.findByText('Не удалось опубликовать объявление')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
-    expect(await screen.findByText('Объявление опубликовано в preview')).toBeInTheDocument();
+    expect(await screen.findByText('Объявление опубликовано')).toBeInTheDocument();
     expect(onPublish).toHaveBeenCalledTimes(2);
   });
 
@@ -144,10 +165,17 @@ describe('ListingCreatePage', () => {
       target: { value: '32000' },
     });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }));
-    rerender(<ListingCreatePage
-      tagCatalog={{ ...tagCatalog, state: TagCatalogState.Error, error: 'Сеть недоступна', reload }}
-      initialStep={2}
-    />);
+    rerender(
+      <ListingCreatePage
+        tagCatalog={{
+          ...tagCatalog,
+          state: TagCatalogState.Error,
+          error: 'Сеть недоступна',
+          reload,
+        }}
+        initialStep={2}
+      />,
+    );
     expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
@@ -157,5 +185,12 @@ describe('ListingCreatePage', () => {
     expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).toBeChecked();
     expect(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' })).toHaveValue(32000);
   });
+});
 
+it('revalidates every step before publishing even when the review was opened directly', () => {
+  const onPublish = vi.fn();
+  render(<ListingCreatePage tagCatalog={tagCatalog} initialStep={4} onPublish={onPublish} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+  expect(onPublish).not.toHaveBeenCalled();
+  expect(screen.getByText('Проверьте все шаги: обязательные поля, числа, условия и фотографии.')).toBeInTheDocument();
 });

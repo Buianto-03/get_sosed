@@ -15,8 +15,8 @@ export function PhotosStep({ photos, onPhotosChange }: PhotosStepProps): JSX.Ele
       <UploadArea
         id="listing-photos"
         label="Фотографии комнаты"
-        maxFiles={8}
-        maxFileSizeMb={5}
+        maxFiles={10}
+        maxFileSizeMb={10}
         value={photos}
         onChange={onPhotosChange}
       />

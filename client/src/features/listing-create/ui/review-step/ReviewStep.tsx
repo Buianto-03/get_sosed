@@ -1,12 +1,14 @@
 import React from 'react';
+import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import { ListingCard, ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
-import type { ListingCreatePublishState, ListingDraft } from '../../model';
+import { ListingCreatePublishState, type ListingDraft } from '../../model';
 import styles from './ReviewStep.module.scss';
 
 export interface ReviewStepProps {
   draft: ListingDraft;
+  tagCatalog: TagCatalog;
   photos: UploadAreaPhoto[];
   publishState: ListingCreatePublishState;
   saved: boolean;
@@ -15,6 +17,7 @@ export interface ReviewStepProps {
 
 export function ReviewStep({
   draft,
+  tagCatalog,
   photos,
   publishState,
   saved,
@@ -33,14 +36,31 @@ export function ReviewStep({
           imageAlt: mainPhoto?.file.name ?? 'Главное фото объявления',
           city: draft.city,
           metro: draft.metro ? `м. ${draft.metro}` : '',
-          tags: draft.rules,
+          tags: draft.tagIds.map(
+            (id) => tagCatalog.tags.find((tag) => tag.id === id)?.name ?? `#${id}`,
+          ),
         }}
         variant={ListingCardVariant.Profile}
         saved={saved}
+        saveDisabled
         onSavedChange={onSavedChange}
         onOpen={() => undefined}
       />
       <dl className={styles.review_step__details}>
+        <div>
+          <dt>Адрес</dt>
+          <dd>
+            {[draft.city, draft.district, draft.address, draft.metro].filter(Boolean).join(', ')}
+          </dd>
+        </div>
+        <div>
+          <dt>Комнаты</dt>
+          <dd>{draft.rooms}</dd>
+        </div>
+        <div>
+          <dt>Этаж</dt>
+          <dd>{draft.floor}</dd>
+        </div>
         <div>
           <dt>Площадь комнаты</dt>
           <dd>{draft.area ? `${draft.area} м²` : 'Не указана'}</dd>
@@ -54,17 +74,19 @@ export function ReviewStep({
           <dd>{draft.description || 'Не добавлено'}</dd>
         </div>
       </dl>
-      {publishState === 'error' && (
+      {publishState === ListingCreatePublishState.Error && (
         <Alert variant={AlertVariant.Error} title="Не удалось опубликовать объявление">
           Проверьте данные и попробуйте ещё раз.
         </Alert>
       )}
-      {publishState === 'success' && (
-        <Alert variant={AlertVariant.Success} title="Объявление опубликовано в preview">
-          Это локальный preview: данные не отправлялись на сервер.
+      {publishState === ListingCreatePublishState.Success && (
+        <Alert variant={AlertVariant.Success} title="Объявление опубликовано">
+          Объявление доступно на сайте.
         </Alert>
       )}
-      {publishState === 'idle' && <p>Публикация в preview не отправляет данные на сервер.</p>}
+      {publishState === ListingCreatePublishState.Idle && (
+        <p>Проверьте сведения перед публикацией.</p>
+      )}
     </div>
   );
 }

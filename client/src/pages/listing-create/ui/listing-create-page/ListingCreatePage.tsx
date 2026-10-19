@@ -1,10 +1,16 @@
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import React, { useEffect, useRef, useState } from 'react';
 import { TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreateForm } from '@features/listing-create/ui/listing-create-form/ListingCreateForm';
 import { ListingCreateStep } from '@features/listing-create/ui/listing-create-step/ListingCreateStep';
-import type { ListingCreatePublishState, ListingDraft } from '@features/listing-create/model';
+import {
+  ListingCreatePublishState,
+  validateRoom,
+  validatePrice,
+  type ListingDraft,
+} from '@features/listing-create/model';
 import styles from './ListingCreatePage.module.scss';
 
 export interface ListingCreatePageProps {
@@ -23,7 +29,11 @@ const emptyDraft: ListingDraft = {
   area: '',
   price: '',
   description: '',
-  rules: [],
+  tagIds: [],
+  district: '',
+  address: '',
+  rooms: '',
+  floor: '',
 };
 
 export function ListingCreatePage({
@@ -31,7 +41,7 @@ export function ListingCreatePage({
   initialStep = 1,
   initialDraft,
   initialAttemptedSteps = [],
-  initialPublishState = 'idle',
+  initialPublishState = ListingCreatePublishState.Idle,
   onPublish,
 }: ListingCreatePageProps): JSX.Element {
   const [draft, setDraft] = useState<ListingDraft>(() => ({ ...emptyDraft, ...initialDraft }));
@@ -39,6 +49,8 @@ export function ListingCreatePage({
   const [photos, setPhotos] = useState<UploadAreaPhoto[]>([]);
   const [publishState, setPublishState] = useState(initialPublishState);
   const [reviewSaved, setReviewSaved] = useState(false);
+  const [validationError, setValidationError] = useState('');
+  const publishing = useRef(false);
   const photosRef = useRef<UploadAreaPhoto[]>([]);
 
   useEffect(
@@ -60,44 +72,70 @@ export function ListingCreatePage({
   const canContinue = (step: number): boolean => {
     setAttemptedSteps((current) => (current.includes(step) ? current : [...current, step]));
     if (step === 1) {
-      return Boolean(draft.title.trim() && draft.city && draft.metro && Number(draft.area) > 0);
+      return Object.keys(validateRoom(draft)).length === 0;
     }
     if (step === 2) {
-      return tagCatalog.state === TagCatalogState.Ready && Boolean(Number(draft.price) > 0 && draft.description.trim());
+      return (
+        tagCatalog.state === TagCatalogState.Ready &&
+        Object.keys(validatePrice(draft)).length === 0 &&
+        draft.tagIds.every((id) => tagCatalog.tags.some((tag) => tag.id === id))
+      );
+    }
+    if (step === 3) {
+      const valid =
+        photos.length >= 1 &&
+        photos.length <= 10 &&
+        photos.every(
+          (photo) =>
+            photo.file.size <= 10 * 1024 * 1024 &&
+            ['image/jpeg', 'image/png', 'image/webp'].includes(photo.file.type),
+        );
+      setValidationError(valid ? '' : 'Добавьте от 1 до 10 фото JPG/PNG/WebP до 10 МБ каждое.');
+      return valid;
     }
     return true;
   };
 
-  const updateDraft = (field: keyof Omit<ListingDraft, 'rules'>, value: string): void => {
+  const updateDraft = (field: keyof Omit<ListingDraft, 'tagIds'>, value: string): void => {
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
-  const updateRule = (rule: string, checked: boolean): void => {
+  const updateRule = (rule: number, checked: boolean): void => {
     setDraft((current) => ({
       ...current,
-      rules: checked
-        ? [...current.rules, rule]
-        : current.rules.filter((selectedRule) => selectedRule !== rule),
+      tagIds: checked
+        ? [...new Set([...current.tagIds, rule])]
+        : current.tagIds.filter((selectedRule) => selectedRule !== rule),
     }));
   };
 
   const publishListing = async (): Promise<void> => {
-    if (publishState === 'loading' || !onPublish) return;
-    setPublishState('loading');
+    if (publishing.current || !onPublish) return;
+    const valid = [1, 2, 3].map(canContinue).every(Boolean);
+    if (!valid) {
+      setValidationError('Проверьте все шаги: обязательные поля, числа, условия и фотографии.');
+      return;
+    }
+    setValidationError('');
+    publishing.current = true;
+    setPublishState(ListingCreatePublishState.Loading);
     try {
       await onPublish(draft, photos);
-      setPublishState('success');
+      setPublishState(ListingCreatePublishState.Success);
     } catch {
-      setPublishState('error');
+      setPublishState(ListingCreatePublishState.Error);
+    } finally {
+      publishing.current = false;
     }
   };
 
   return (
     <main className={styles.listing_create_page}>
+      {validationError && <Alert variant={AlertVariant.Error}>{validationError}</Alert>}
       <ListingCreateForm
         initialStep={initialStep}
-        isPublishing={publishState === 'loading'}
-        isPublished={publishState === 'success'}
+        isPublishing={publishState === ListingCreatePublishState.Loading}
+        isPublished={publishState === ListingCreatePublishState.Success}
         canContinue={canContinue}
         onPublish={onPublish ? publishListing : undefined}
       >
@@ -112,7 +150,7 @@ export function ListingCreatePage({
             showPriceErrors={attemptedSteps.includes(2)}
             saved={reviewSaved}
             onFieldChange={updateDraft}
-            onCityChange={(city) => setDraft((current) => ({ ...current, city, metro: '' }))}
+            onCityChange={(city) => setDraft((current) => ({ ...current, city }))}
             onRuleChange={updateRule}
             onPhotosChange={handlePhotosChange}
             onSavedChange={setReviewSaved}

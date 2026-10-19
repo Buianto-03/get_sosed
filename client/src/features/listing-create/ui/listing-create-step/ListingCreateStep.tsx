@@ -17,9 +17,9 @@ export interface ListingCreateStepProps {
   showRoomErrors: boolean;
   showPriceErrors: boolean;
   saved: boolean;
-  onFieldChange: (field: keyof Omit<ListingDraft, 'rules'>, value: string) => void;
+  onFieldChange: (field: keyof Omit<ListingDraft, 'tagIds'>, value: string) => void;
   onCityChange: (city: string) => void;
-  onRuleChange: (rule: string, checked: boolean) => void;
+  onRuleChange: (rule: number, checked: boolean) => void;
   onPhotosChange: (photos: UploadAreaPhoto[]) => void;
   onSavedChange: (saved: boolean) => void;
 }
@@ -69,6 +69,7 @@ export function ListingCreateStep({
     case 4:
       content = (
         <ReviewStep
+          tagCatalog={tagCatalog}
           draft={draft}
           photos={photos}
           publishState={publishState}

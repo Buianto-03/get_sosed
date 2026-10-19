@@ -33,6 +33,7 @@ export function ListingCreateForm({
   if (currentStep === steps.length) actionLabel = isPublished ? 'Опубликовано' : 'Опубликовать';
 
   const navigateToStep = (targetStep: number): void => {
+    if (isPublishing || isPublished) return;
     if (targetStep <= currentStep) {
       setCurrentStep(targetStep);
       return;
@@ -76,7 +77,7 @@ export function ListingCreateForm({
         <div className={styles.listing_create_form__actions}>
           <Button
             variant={ButtonVariant.Secondary}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || isPublishing || isPublished}
             onClick={() => setCurrentStep((step) => Math.max(1, step - 1))}
           >
             Назад

@@ -5,15 +5,15 @@ import { Textarea } from '@shared/ui/textarea/Textarea';
 import { getPrimaryTags, TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import { TagCatalogFeedback } from '@entities/advert/ui/tag-catalog-feedback/TagCatalogFeedback';
-import type { ListingDraft } from '../../model';
+import { validatePrice, type ListingDraft } from '../../model';
 import styles from './PriceRulesStep.module.scss';
 
 export interface PriceRulesStepProps {
   draft: ListingDraft;
   tagCatalog: TagCatalog;
   showErrors: boolean;
-  onFieldChange: (field: keyof Omit<ListingDraft, 'rules'>, value: string) => void;
-  onRuleChange: (rule: string, checked: boolean) => void;
+  onFieldChange: (field: keyof Omit<ListingDraft, 'tagIds'>, value: string) => void;
+  onRuleChange: (rule: number, checked: boolean) => void;
 }
 
 export function PriceRulesStep({
@@ -23,6 +23,7 @@ export function PriceRulesStep({
   onFieldChange,
   onRuleChange,
 }: PriceRulesStepProps): JSX.Element {
+  const errors = showErrors ? validatePrice(draft) : {};
   return (
     <div className={styles.price_rules_step}>
       <h2>Цена и правила</h2>
@@ -36,7 +37,7 @@ export function PriceRulesStep({
           onChange={(event) => onFieldChange('price', event.target.value)}
           hint="Укажите полную ежемесячную стоимость."
           required
-          error={showErrors && !(Number(draft.price) > 0) ? 'Укажите стоимость аренды.' : undefined}
+          error={errors.price}
         />
         <Textarea
           id="listing-description"
@@ -47,9 +48,7 @@ export function PriceRulesStep({
           rows={5}
           hint="Расскажите о комнате и условиях проживания."
           required
-          error={
-            showErrors && !draft.description.trim() ? 'Добавьте описание объявления.' : undefined
-          }
+          error={errors.description}
         />
         <fieldset className={styles.price_rules_step__rules}>
           <legend>Условия проживания</legend>
@@ -60,8 +59,8 @@ export function PriceRulesStep({
               id={`listing-rule-${rule.id}`}
               label={rule.name}
               disabled={tagCatalog.state !== TagCatalogState.Ready}
-              checked={draft.rules.includes(rule.name)}
-              onChange={(event) => onRuleChange(rule.name, event.target.checked)}
+              checked={draft.tagIds.includes(rule.id)}
+              onChange={(event) => onRuleChange(rule.id, event.target.checked)}
             />
           ))}
         </fieldset>

@@ -3,7 +3,7 @@ import React from 'react';
 import axios from 'axios';
 import { Form, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
-import { UserStatus } from '@entities/session/model/auth';
+import { UserStatus } from '@entities/session/model/authModel';
 import { YANDEX_API_KEY } from '@shared/config/env';
 import { postAdvertThunk } from './thunks';
 import type { ApiResponse } from './model/geocode';
