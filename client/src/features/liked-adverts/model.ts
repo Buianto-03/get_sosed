@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { SavedStatus, type LikedAdvert, type SavedRoot, type SavedState } from '@entities/advert/model/likedAdvertsModel';
-import type { AdvertType } from '@entities/advert/model/advert';
+import type { AdvertType } from '@entities/advert/model/advertsModel';
 import {
   savedMutationStarted, savedAdvertConfirmed, savedRemovalConfirmed,
   savedMutationFailed,

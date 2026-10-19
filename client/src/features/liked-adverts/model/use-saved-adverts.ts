@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
-import type { AdvertType } from '@entities/advert/model/advert';
-import { UserStatus } from '@entities/session/model/auth';
+import type { AdvertType } from '@entities/advert/model/advertsModel';
+import { UserStatus } from '@entities/session/model/authModel';
 import { routes } from '@shared/config/routes';
 import { selectSavedAdverts } from '@entities/advert/model/likedAdvertsSelectors';
 import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';

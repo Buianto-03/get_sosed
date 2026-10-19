@@ -20,7 +20,7 @@ import {
 import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
 import LikeProfile from '@entities/like/ui/LikeProfile';
 import PhotosCarousel from '@shared/ui/PhotosCarousel';
-import { UserStatus } from '@entities/session/model/auth';
+import { UserStatus } from '@entities/session/model/authModel';
 import YMap from '@shared/ui/YMap';
 import { getAdvertByIdThunk } from '@entities/advert/model/advertsThunk';
 import { routes } from '@shared/config/routes';
