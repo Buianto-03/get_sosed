@@ -1,8 +1,11 @@
-import { InputType } from '../../../shared/ui/input/Input';
+import { InputType } from '@shared/ui/input/Input';
 import type { SearchFilterValues } from '../model/searchFilterValues';
 
 type InputField = {
-  name: keyof Pick<SearchFilterValues, 'priceTo' | 'roomsFrom' | 'district' | 'metro'>;
+  name: keyof Pick<
+    SearchFilterValues,
+    'priceFrom' | 'priceTo' | 'roomsFrom' | 'roomsTo' | 'district' | 'metro'
+  >;
   idSuffix: string;
   label: string;
   placeholder: string;
@@ -11,6 +14,22 @@ type InputField = {
 };
 
 export const inputFields: InputField[] = [
+  {
+    name: 'priceFrom',
+    idSuffix: 'price-from',
+    label: 'Цена от, ₽',
+    placeholder: 'Без ограничения',
+    type: InputType.Number,
+    min: '0',
+  },
+  {
+    name: 'roomsTo',
+    idSuffix: 'rooms-to',
+    label: 'Комнат до',
+    placeholder: 'Без ограничения',
+    type: InputType.Number,
+    min: '0',
+  },
   {
     name: 'priceTo',
     idSuffix: 'price',

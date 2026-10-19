@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 import advertService from '@entities/advert/api/advertService';
 import { useTagCatalog } from '@entities/advert/model/use-tag-catalog';
 import { TagCatalogState } from '@entities/advert/model/tag-catalog';
-import type { TagType } from '@entities/advert/model/advert';
+import type { TagType } from '@entities/advert/model/advertsModel';
 import { readFilters, writeFilters } from './model/filters';
 import type { AppliedFilters } from './model/filters';
 

@@ -2,8 +2,7 @@ import React, { type FormEvent } from 'react';
 import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
 import { Input } from '@shared/ui/input/Input';
 import { Checkbox } from '@shared/ui/selection/checkbox/Checkbox';
-import { Select } from '@shared/ui/selection/select/Select';
-import { getPrimaryTags, TagCatalogState } from '@entities/advert/model/tag-catalog';
+import { getPrimaryTags, getTagLabel, TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import { TagCatalogFeedback } from '@entities/advert/ui/tag-catalog-feedback/TagCatalogFeedback';
 import type { SearchFilterValues } from '../model/searchFilterValues';
@@ -29,16 +28,16 @@ export function FilterForm({
   onApply,
   onReset,
 }: FilterFormProps): JSX.Element {
-  const setField = (field: keyof Omit<SearchFilterValues, 'conditions'>, value: string): void => {
+  const setField = (field: keyof Omit<SearchFilterValues, 'tagIds'>, value: string): void => {
     onChange({ ...draft, [field]: value });
   };
 
-  const setCondition = (condition: string, checked: boolean): void => {
+  const setCondition = (condition: number, checked: boolean): void => {
     onChange({
       ...draft,
-      conditions: checked
-        ? [...draft.conditions, condition]
-        : draft.conditions.filter((item) => item !== condition),
+      tagIds: checked
+        ? [...new Set([...draft.tagIds, condition])]
+        : draft.tagIds.filter((item) => item !== condition),
     });
   };
 
@@ -50,14 +49,10 @@ export function FilterForm({
       onSubmit={onApply}
     >
       <div className={styles.filters__fields}>
-        <Select
+        <Input
           id={`${idPrefix}-city`}
           label="Город"
-          placeholder="Все города"
-          options={[
-            { value: 'Москва', label: 'Москва' },
-            { value: 'Санкт-Петербург', label: 'Санкт-Петербург' },
-          ]}
+          placeholder="Любой город"
           value={draft.city}
           onChange={(event) => setField('city', event.target.value)}
         />
@@ -82,13 +77,40 @@ export function FilterForm({
             id={`${idPrefix}-condition-${tag.id}`}
             label={tag.name}
             disabled={tagCatalog.state !== TagCatalogState.Ready}
-            checked={draft.conditions.includes(tag.name)}
-            onChange={(event) => setCondition(tag.name, event.target.checked)}
+            checked={draft.tagIds.includes(tag.id)}
+            onChange={(event) => setCondition(tag.id, event.target.checked)}
           />
         ))}
       </div>
+      <details>
+        <summary>Все условия проживания</summary>
+        {tagCatalog.tags
+          .filter(
+            (tag) => !getPrimaryTags(tagCatalog.tags).some((primary) => primary.id === tag.id),
+          )
+          .map((tag) => (
+            <Checkbox
+              key={tag.id}
+              id={`${idPrefix}-tag-${tag.id}`}
+              label={getTagLabel(tagCatalog.tags, tag.id)}
+              checked={draft.tagIds.includes(tag.id)}
+              onChange={(event) => setCondition(tag.id, event.target.checked)}
+            />
+          ))}
+      </details>
+      <div className={styles.filters__conditions} aria-label="Выбранные условия">
+        {draft.tagIds.map((tagId) => (
+          <Button
+            key={tagId}
+            variant={ButtonVariant.Text}
+            onClick={() => setCondition(tagId, false)}
+          >
+            {getTagLabel(tagCatalog.tags, tagId)} ×
+          </Button>
+        ))}
+      </div>
       <div className={styles.filters__actions}>
-        <Button className={styles.filters__submit} type={ButtonType.Submit} disabled={tagCatalog.state !== TagCatalogState.Ready}>
+        <Button className={styles.filters__submit} type={ButtonType.Submit}>
           Показать объявления
         </Button>
         <Button variant={ButtonVariant.Text} onClick={onReset}>

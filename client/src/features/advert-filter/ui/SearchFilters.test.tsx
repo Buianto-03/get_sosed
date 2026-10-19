@@ -20,9 +20,11 @@ const tagCatalog: TagCatalog = {
 describe('SearchFilters', () => {
   it('applies the draft only after submission and resets it locally', () => {
     const onApply = vi.fn();
-    render(<SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />);
+    render(
+      <SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />,
+    );
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Город' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Город' }), {
       target: { value: 'Москва' },
     });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }));
@@ -32,18 +34,20 @@ describe('SearchFilters', () => {
     expect(onApply).toHaveBeenLastCalledWith({
       ...emptySearchFilters,
       city: 'Москва',
-      conditions: ['Питомцы разрешены'],
+      tagIds: [29],
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры' }));
     expect(onApply).toHaveBeenLastCalledWith(emptySearchFilters);
-    expect(screen.getByRole('combobox', { name: 'Город' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('');
     expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).not.toBeChecked();
   });
 
   it('closes the drawer on Escape and restores scrolling and focus', () => {
     const onApply = vi.fn();
-    render(<SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />);
+    render(
+      <SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />,
+    );
     const trigger = screen.getByRole('button', { name: 'Фильтры и условия' });
 
     trigger.focus();
@@ -64,26 +68,40 @@ describe('SearchFilters', () => {
     const { rerender } = render(
       <SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />,
     );
-    fireEvent.change(screen.getByRole('combobox', { name: 'Город' }), { target: { value: 'Москва' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Город' }), {
+      target: { value: 'Москва' },
+    });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }));
-    expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }).id).toContain('condition-29');
-    rerender(<SearchFilters
-      tagCatalog={{ ...tagCatalog, state: TagCatalogState.Error, error: 'Сеть недоступна', reload }}
-      applied={emptySearchFilters}
-      onApply={onApply}
-    />);
+    expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }).id).toContain(
+      'condition-29',
+    );
+    rerender(
+      <SearchFilters
+        tagCatalog={{
+          ...tagCatalog,
+          state: TagCatalogState.Error,
+          error: 'Сеть недоступна',
+          reload,
+        }}
+        applied={emptySearchFilters}
+        onApply={onApply}
+      />,
+    );
     expect(screen.getByRole('alert')).toHaveTextContent('Сеть недоступна');
-    expect(screen.getByRole('button', { name: 'Показать объявления' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Показать объявления' })).toBeEnabled();
     expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Повторить загрузку условий' }));
     expect(reload).toHaveBeenCalledOnce();
-    rerender(<SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />);
-    expect(screen.getByRole('combobox', { name: 'Город' })).toHaveValue('Москва');
+    rerender(
+      <SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />,
+    );
+    expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('Москва');
     expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Показать объявления' }));
     expect(onApply).toHaveBeenLastCalledWith({
-      ...emptySearchFilters, city: 'Москва', conditions: ['Питомцы разрешены'],
+      ...emptySearchFilters,
+      city: 'Москва',
+      tagIds: [29],
     });
   });
-
 });
