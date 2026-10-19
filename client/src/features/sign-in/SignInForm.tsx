@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '@app/store/hooks';
-import type { LoginForm } from '@entities/session/model/auth';
+import type { LoginForm } from '@entities/session/model/authModel';
 import { routes } from '@shared/config/routes';
 import { getAuthenticationPath, getPostAuthDestination } from '@shared/lib/navigation/safe-return-to';
 import { signinThunk } from './thunks';

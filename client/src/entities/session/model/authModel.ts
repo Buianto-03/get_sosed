@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 export const userPorfileSchema = z.object({
   about: z.string().nullable(),
+  city: z.string().nullable().optional(),
+  intent: z.string().nullable().optional(),
+  habits: z.array(z.string()).optional(),
   age: z.number().nullable(),
   gender: z.string().nullable(),
   photo: z.string().nullable(),
@@ -19,7 +22,7 @@ export const userSchema = z.object({
   email: z.string(),
   id: z.number(),
   roleId: z.number(),
-  UserProfile: userPorfileSchema.optional(),
+  UserProfile: userPorfileSchema.nullable().optional(),
   UserPhotos: userPhotoSchema.array().optional(),
 });
 
@@ -58,7 +61,7 @@ export const signUpSchema = z.object({
   name: z.string(),
   email: z.string(),
   password: z.string(),
-  gender: z.string(),
+  gender: z.string().optional(),
 });
 
 export type SignUpSchemaT = z.infer<typeof signUpSchema>;
