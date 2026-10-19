@@ -7,7 +7,7 @@ import App from '@app/App';
 import { store } from '@app/store/store';
 import { configureApiAuth } from '@shared/api/client';
 import { API_URL } from '@shared/config/env';
-import { authSchema } from '@entities/session/model/auth';
+import { authSchema } from '@entities/session/model/authModel';
 import { clearAuth, setAccessToken } from '@entities/session/model/authSlice';
 import '@shared/styles/foundations.module.scss';
 

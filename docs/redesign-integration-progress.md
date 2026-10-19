@@ -2,7 +2,7 @@
 
 Дата исходной проверки: 16 октября 2026 года. Основной документ — [план интеграции](redesign-migration-plan.md).
 
-**Выполнены M01–M07. M08: код готов, WIP до применения миграции и API/БД-проверки. M09 выполнена по коду и автоматическим проверкам; следующая задача — M10.** M07 проверена автоматически без живой БД. API/БД-контракты остаются непроверенными на работающем сервере из-за недоступного локального окружения.
+**M01–M28 выполнены. Все новые страницы подключены к рабочему приложению.** На development-БД применена миграция полей профиля, подтверждены каталог M08 и регистрация M11; новые API/БД/WebSocket-сценарии проверены. Следующий этап — Q01/Q02, затем Q03. Старые исходные UI-файлы сохранены. Последняя запись — раздел 18; прежние разделы отражают состояние на момент выполнения отдельных задач.
 
 ## 1. Исходное состояние
 
@@ -60,110 +60,38 @@
 
 Клиент использует `/api` по умолчанию, а WebSocket — origin страницы с путём `/ws`. Vite проксирует `/api`, `/images`, `/ws` на порт 3000; переопределения описаны в [env.ts](../client/src/shared/config/env.ts). Проверки публикации и карты дополнительно зависят от настройки геокодирования; его runtime-доступность в M01 не проверена.
 
-Отсутствие локального backend допускается критерием M01. Оно оставляет непроверенными серверные сценарии M11/M18/M22/M24/M27/M28; эти задачи пока имеют TODO, а не DONE или автоматически BLOCKED.
+Отсутствие локального backend допускается критерием M01. Оно оставляет непроверенными серверные сценарии M11/M18/M22/M24/M27/M28. M11 позднее реализована по коду и имеет WIP до runtime-проверки; M18/M22/M24/M27/M28 пока TODO.
 
-## 4. Текущие контракты по исходникам
+## 4. Текущие контракты
 
-Все HTTP-адреса ниже содержат `/api`, который монтируется в [server/src/app.js](../server/src/app.js). Axios-сервисы используют относительные пути без этого префикса. Указанные статусы взяты из обработчиков, не из полученных HTTP-ответов.
+Обновлено после M28. Клиентские сервисы используют относительные пути без `/api`.
 
-### Авторизация и регистрация
-
-Источники: [authRouter.js](../server/src/router/authRouter.js), [tokensRouter.js](../server/src/router/tokensRouter.js), [authService.ts](../client/src/entities/session/api/authService.ts), [auth.ts](../client/src/entities/session/model/auth.ts), [HTTP-клиент](../client/src/shared/api/client.ts).
-
-| Запрос | Фактическая обработка и ответ | Отличие целевого поведения |
-| --- | --- | --- |
-| POST `/api/auth/login` | JSON `{email,password}`. Успех 200 `{user,accessToken}` и refresh-cookie; неверные данные 401. User читается с UserProfile, hashpass удаляется. | Перенос на SignInCard и возврат по returnTo ещё не выполнены — M03/M10. |
-| POST `/api/auth/signup` | Multipart: name/email/password, gender, файл `file`. Сервер проверяет длину пароля от 9, создаёт User, затем безусловно читает `req.file.buffer`, создаёт UserProfile и возвращает 200 `{user,accessToken}` с cookie. | Без file обработчик падает после создания User. Проверки цифры в пароле на сервере нет; нужны M11/M12. |
-| Повторная регистрация email | `findOrCreate` при существующем User даёт 403. | Axios считает каждый 403 основанием refresh; для конфликта email нужен отдельный 409 в M11. |
-| GET `/api/tokens/refresh` | Refresh-cookie; возвращает 200 `{user,accessToken}` с актуальным UserProfile и новой cookie. Ошибка внутри handler даёт 501; проверка cookie выполняется middleware. | Новые поля профиля должны пройти client schema после M18. Runtime refresh не проверен. |
-| GET `/api/auth/logout` | Очищает refresh-cookie, возвращает 200 без JSON. | Новый layout должен ожидать logoutThunk и отображать ошибку — M06. |
-
-Клиентская authSchema требует `user.id/name/email/roleId` и строковый accessToken. UserProfile необязателен, но `null` сейчас не принимается; его поля about/age/gender/photo/phoneNumber допускают null. signUpSchema всё ещё требует gender, хотя thunk уже принимает произвольный FormData. AuthService заменяет исходные ошибки на общие `Login error`/`Signup error`; для различимого сообщения о занятом email обработку нужно уточнить в M12.
-
-### Профиль
-
-Источники: [userRouter.js](../server/src/router/userRouter.js), [userController.js](../server/src/controllers/userController.js), [userService.js](../server/src/service/userService.js), [UserProfile](../server/db/models/userprofile.js), [userProfileService.ts](../client/src/features/edit-profile/userProfileService.ts), [новая форма](../client/src/features/edit-profile/ui/profile-edit-form/ProfileEditForm.tsx).
-
-| Запрос / данные | Фактический контракт | Что требуется далее |
-| --- | --- | --- |
-| PATCH `/api/users/:userId` | Multipart, файл `photo`; автор определяется из токена. req.body передаётся в существующий UserProfile.update; затем возвращается User с UserProfile. При исключении controller только логирует ошибку и не отправляет ответ. | M18: явные ответы об ошибках, проверка route ID, allowlist полей, согласованное обновление User и UserProfile. |
-| Клиентский вызов PATCH | Берёт `id` из FormData для URL, возвращает `Promise<void>`, тело ответа игнорируется. Старая форма потом вызывает checkAuthThunk. | M20: разобрать ответ userSchema и обновить пользователя без потери accessToken. |
-| Сохраняемые поля | User: name/email/roleId; UserProfile: about/age/gender/photo/phoneNumber. Текущий editUser обновляет только UserProfile. | name новой формы сейчас не обновляется; city/intent/habits отсутствуют в модели и миграциях — M18. |
-| Новая форма preview | name/city/intent/description/habits; avatarFile имеет File/null/undefined. | description → about; habits → JSON-массив; удаление через removePhoto ещё не поддерживается. Возраст/телефон добавить в новую форму по M20. |
-| Чтение профиля | Текущая сессия из login/refresh; отдельного профиля по GET `/users/:id` нет. | Не использовать этот GET для профиля: сейчас он возвращает список диалогов. |
-| Собственные объявления | GET `/api/adverts/mine` отсутствует. | Добавить в M18 перед динамическим `/:advertId`. |
-
-Схемы UserProfiles/Adverts/Locations проверены по файлам миграций, а не через живую БД. Новая миграция city/intent/habits ещё не существует; применённое состояние любой пользовательской БД неизвестно.
-
-### Объявления и фотографии
-
-Источники: [advertRouter.js](../server/src/router/advertRouter.js), [advertController.js](../server/src/controllers/advertController.js), [advertService.js](../server/src/service/advertService.js), [advert.ts](../client/src/entities/advert/model/advert.ts), [клиентский сервис](../client/src/entities/advert/api/advertService.ts), [ListingDraft](../client/src/features/listing-create/model.ts).
-
-| Запрос | Фактический ответ / обработка | Разрыв |
-| --- | --- | --- |
-| GET `/api/adverts` | 200, массив Advert с User, Location, AdvertPhotos; сортировка id ASC. В этом методе hashpass удаляется. | tags не включаются; это не сортировка свежих по createdAt — M07/M13. |
-| GET `/api/adverts/:advertId` | 201, объект Advert с User/Location/AdvertPhotos; для отсутствующей записи возможно 201 с null. | Нужны 200/404; tags не включаются, разрешённые поля автора не ограничены — M07. |
-| POST `/api/adverts/filters` | 200, массив Advert с User/Location/AdvertPhotos и tags. | Client advertSchema не описывает tags и отбрасывает их при parse — M07. |
-| GET `/api/adverts/top` | 200, до четырёх объявлений по числу лайков; фото и Location включены. | Не использовать как свежую подборку — M13. |
-| GET `/api/adverts/liked` | Защищённый запрос; 200, массив `{id,userId,advertId,Advert}`. Вложенный Advert загружается с User/Location. | Фото и tags не включены; ими нельзя заполнить новые карточки без M07. |
-| POST `/api/adverts` | Защищённый multipart, до 10 файлов `files`; поля title/body/price/floor/square/rooms/city/district/address/metro/coordinates. userId берётся из токена. Создаёт Advert и Location, затем обрабатывает фото. | tagIds не читаются. Проверка наличия фото выполняется после создания объявления; фото сохраняются через не ожидаемый forEach(async). Ответ 201 содержит User/Location без готового массива фото — M22. |
-
-Клиентский advertSchema сейчас требует числовые price/floor/rooms/square, непустую по типу Location со строковыми city/district/address/metro/coordinates и автора с id/name/email. AdvertPhotos допускается отсутствующим/null. Миграции не запрещают null во многих этих столбцах; какие null реально есть в БД, не проверено. Разрешение отсутствующих координат из M23 требует целевого изменения схемы и потребителей в M07, иначе успешный POST может завершиться ошибкой Zod на клиенте.
-
-Текущий ListingDraft содержит только title/city/metro/area/price/description/rules. Нет rooms/floor/address/district; rules — строки. Условия продолжения требуют метро, а наличие фото перед отправкой не проверяется. M21 добавляет реальные поля/валидацию, M23 преобразует `area → square`, `description → body`, выбранные ID → JSON `tagIds`, реальные File → повторяющееся `files`.
-
-Лимиты по исходникам:
-
-| Место | Текущее поведение | Целевой контракт |
-| --- | --- | --- |
-| PhotosStep | Явно передаёт `maxFiles={8}`, `maxFileSizeMb={5}`. | M21: явно 1–10 фото до 10 МБ, JPG/PNG/WebP. |
-| UploadArea defaults | 8 файлов, 10 МБ, любые MIME `image/*`. | Общий компонент остаётся настраиваемым; ограничения сценария передаются props. |
-| Серверный multer | `upload.array('files',10)`, лимит 10 МБ на файл, проверка MIME через includes('image'). В ветке неподходящего MIME callback не вызывается. | M22: одинаковый контракт, проверка декодирования и явное завершение отклонённого запроса. |
-
-### Теги и фильтры
-
-Источники: [filters.ts](../client/src/features/advert-filter/model/filters.ts), [SearchFilterValues](../client/src/features/advert-filter/model/searchFilterValues.ts), серверный advertService и [seeder тегов](../server/db/seeders/20240827092605-Tags.js).
-
-| Запрос / хранение | Текущий контракт |
+| Сценарий | Контракт |
 | --- | --- |
-| GET `/api/adverts/tags?query=<строка>` | 200, массив `{id,name,...}`; поиск через iLike. Для всего каталога передавать явно пустую строку query. |
-| URL поиска | city/district/metro, priceFrom/priceTo, roomsFrom/roomsTo, tags как строка числовых ID через запятую. readFilters превращает отсутствующие/неположительные числа в 0. |
-| POST фильтров | Числовые границы и строки местоположения, `tags: [{id,name:''}]`. Сервер удаляет повторные ID и требует совпадения всех выбранных тегов. |
-| Новые preview-фильтры | Только верхняя цена/нижние комнаты и строковые conditions, без priceFrom/roomsTo и произвольных tag ID. Требуется M15. |
-| Набор быстрых условий | В seeders есть «Для некурящих» и «Питомцы разрешены». «Тихие вечера» и «С рабочим местом» не найдены; состояние живого каталога не проверено. Требуется M08. |
+| POST `/api/auth/signup` | Multipart name/email/password; file/gender необязательны. Пароль от 9 символов + цифра. User/UserProfile создаются в транзакции. Без фото photo/gender null, habits []. 200 `{user,accessToken}` и refresh-cookie; 400 неверный ввод, 409/EMAIL_ALREADY_EXISTS занятый email. hashpass не возвращается. |
+| POST `/api/auth/login`, GET `/api/tokens/refresh` | 200 `{user,accessToken}` и cookie, пользователь содержит UserProfile с новыми полями. Реальные login/refresh проверены. |
+| GET `/api/auth/logout` | Очищает refresh-cookie; клиент очищает сессию/избранное/чат. |
+| PATCH `/api/users/:userId` | Защищённый multipart, URL ID обязан совпадать с сессией. Allowlist: name в User; about/city/intent/habits/age/phoneNumber/gender в UserProfile. habits — JSON-массив строк, пустые age/phoneNumber → null. Ответ — обновлённый User с UserProfile без токена/hashpass. |
+| Фото профиля | Не передано — сохранить; `photo: File` — заменить; `removePhoto=true` — удалить. File+removePhoto одновременно → 400. JPG/PNG/WebP до 5 МБ в сценарии профиля; после успешной замены/удаления удаляется прежний собственный webp. |
+| GET `/api/adverts` | Массив полных Advert DTO: user(id/name/email), location, tags(id/name), AdvertPhotos по id ASC. Главная отдельно сортирует createdAt DESC и берёт 3; поиск не перезаписывается. Nullable-поля допускаются схемой. |
+| GET `/api/adverts/:advertId` | 200 полный DTO, 404 неверный/отсутствующий ID. Клиентские статусы detail отделены от поиска и защищены detailRequestId. |
+| GET `/api/adverts/mine` | Защищённый; только текущий userId, createdAt/id DESC, тот же DTO. Route расположен до динамического ID. |
+| GET `/api/adverts/top` | Популярные по числу лайков. Главная не использует их как свежие. |
+| GET `/api/adverts/liked` | Защищённый; массив `{id,userId,advertId,Advert}` с полным вложенным DTO. M09 — единый источник savedIds/cards во всех экранах. |
+| POST `/api/adverts/filters` | Старые city/district/metro, числовые границы priceFrom/priceTo/roomsFrom/roomsTo, `tags:[{id,name:''}]`. Совпадение всех выбранных tag ID. |
+| GET `/api/adverts/tags?query=` | `{id,name}` по id ASC, query необязателен/пуст для всего каталога; неверный тип → 400. Одинаковые имена с разными ID сохраняются. Быстрые условия выбирают минимум ID; дополнительные фильтры различают (#ID), старый query не меняется. |
+| POST `/api/adverts` | Защищённый multipart: title/body/price/rooms/floor/square/city/address/district/metro, JSON tagIds, 1–10 File в `files`, optional coordinates. Автор из сессии. Декодирование JPG/PNG/WebP до 10 МБ, валидация полей/ID; транзакция всех записей и ожидаемые файлы. 201 полный DTO с фотографиями, 4xx неверный ввод/файлы/теги, 500 ошибка записи с rollback/очисткой. |
+| GET `/api/likes/:advertId` | Заинтересованные люди, отдельный запрос от объявления. Ошибка не скрывает детали. |
+| POST/DELETE `/api/likes/:advertId` | Защищённые; POST 201 новый/200 существующий Like; DELETE 200 `{advertId,deleted}` при наличии и отсутствии. Подтверждённое изменение обновляет общее избранное и текущих заинтересованных. |
+| GET `/api/users/:userId` | Защищённый список диалогов текущего пользователя, чужой ID → 403. Сообщения сортируются createdAt/id DESC, сохраняется последнее на пару. Это не профиль. |
+| GET `/api/users/:userId/summary` | Защищённый краткий собеседник: id/name и UserProfile.photo; отсутствующий ID → 404. Позволяет начать первый диалог. |
+| `/ws` | Upgrade по refresh-cookie только для /ws. Один клиентский socket на сессию, сервер поддерживает несколько вкладок пользователя. |
+| История | INITIALIZE `{receiverId}` → SET_MESSAGES `{receiverId,payload:[Chat]}` по id ASC. Истории в state разделены по собеседнику, live/history объединяются по message.id. |
+| Отправка | ADD_MESSAGE `{receiverId,text}` → сохранение в БД и событие участникам, включая все подключённые вкладки. Offline-получатель прочитает запись при подключении. В событиях нет hashpass; createdAt сохраняется, когда передан. |
+| Ошибки чата | CHAT_ERROR `{receiverId,payload}`; malformed/input/DB errors не обрывают handler без ответа. `sendMessage=false` сохраняет draft; `true` подтверждает передачу в socket, не запись/доставку. Server ack/delivery ticks отсутствуют. |
+| SPA fallback | Канонические/неизвестные браузерные пути получают built index, затем client router/NotFound. Неизвестный /api и /images → 404; обычный HTTP /ws → 426. Preview entry не собирается в основной build. |
 
-Фильтрация по реальным ID уже существует; изобретать новый API только для внешнего вида не требуется. При создании объявления связи AdvertTags сейчас не записываются — это отдельная часть M22.
-
-### Избранное и заинтересованные пользователи
-
-Источники: [likeRouter.js](../server/src/router/likeRouter.js), [likeService.js](../server/src/service/likeService.js), [клиентский LikeService](../client/src/entities/like/api/likeService.ts), [likeSchema](../client/src/entities/like/model/like.ts), [likedAdvertsSlice](../client/src/entities/advert/model/likedAdvertsSlice.ts).
-
-| Запрос / состояние | Фактический контракт | Разрыв |
-| --- | --- | --- |
-| GET `/api/likes/:advertId` | Публичный, 200 массив Like с User и UserProfile; используется для заинтересованных людей. | Не является множеством избранного текущего пользователя — M09/M17. |
-| POST `/api/likes/:advertId` | Защищённый, 201 Like при создании, 200 существующий Like при повторе. | Исправлено M09, реальный API/БД ещё не проверен. |
-| DELETE `/api/likes/:advertId` | Защищённый, всегда 200 `{ advertId, deleted: boolean }`. | Отдельный parser и reducers обновлены M09; реальная БД ещё не проверена. |
-| GET избранного | `/api/adverts/liked`, схема включает вложенный Advert. | M09: единые items/savedIds, loading/error, pending по ID, session guard и синхронизация мутаций. |
-
-В M09 реализовано поведение повторов: POST возвращает существующий Like с 200 либо новый с 201; DELETE всегда возвращает 200 `{advertId,deleted:boolean}`. Клиентский DELETE-parser/thunk и reducers обновлены вместе, удаление из избранного производится по advertId; в списке заинтересованных дополнительно проверяется текущий userId. Транспорт лайков не должен зависеть от UI или соседних entities.
-
-### Диалоги и WebSocket
-
-Источники: [userService.js](../server/src/service/userService.js), [chatListService.ts](../client/src/entities/chat/api/chatListService.ts), [protocol.ts](../client/src/entities/chat/model/protocol.ts), [socket.ts](../client/src/entities/chat/model/socket.ts), [connection.js](../server/src/ws/connection.js), [App.tsx](../client/src/app/App.tsx).
-
-| Операция | Фактический контракт |
-| --- | --- |
-| GET `/api/users/:userId` | Сейчас публичный, возвращает массив сообщений, сгруппированных в коде по паре sender/receiver. Клиент читает id/senderId/receiverId/message и sender/receiver с id/name/email. Это не профиль пользователя. |
-| Выбор последнего сообщения | В SQL нет order; JS сохраняет первый встретившийся элемент пары. Последний текст и порядок диалогов не гарантированы — M24. |
-| Данные нового собеседника | Отдельного `/summary` нет. Прямой новый диалог может не найти имя в chatList — M24/M26/M27. |
-| Подключение `/ws` | Сервер проверяет refresh-cookie. Один клиентский chatSocket подключается/отключается из App при изменении сессии. Runtime handshake не проверен. |
-| Клиент → сервер: история | `{type:'INITIALIZE',payload:{receiverId}}`. Ответ: `{type:'SET_MESSAGES',receiverId,payload:[Chat]}`. |
-| Клиент → сервер: сообщение | `{type:'ADD_MESSAGE',payload:{receiverId,text}}`. Сервер сохраняет Chat и рассылает событие ADD_MESSAGE с записью отправителю и подключённому получателю. В этой ветке сохранение не требует присутствия получателя online. |
-| Другие входящие события | SET_USERS с массивом пользователей, NEW_MESSAGE со старой альтернативной ветки SEND_MESSAGE. Текущий клиент отправляет ADD_MESSAGE, не SEND_MESSAGE. |
-| Client Chat | id/senderId/receiverId/message. Сохраняется в messagesByUser по ID собеседника; дедупликация по message.id. createdAt из серверных записей текущая Zod-схема отбрасывает. |
-| Результат sendMessage | Boolean означает успешный вызов send на открытом socket, а не подтверждённую запись в БД. Отдельного request ID/ack/error-события текущий протокол не содержит. |
-
-Связь с объявлением в модели Chats отсутствует. В preview ChatPage advert/price/time обязательны, а callback открытия использует ID диалога; M25 разделяет эти данные. Время не подставляется произвольно, контекст M27 передаётся через проверенный query и не объявляется постоянной связью чата.
+Миграция `20261018010000-add-profile-fields.js` добавляет nullable city/intent и JSONB habits default []; старые миграции не менялись. Применена в локальной development-БД без сброса и seed. Каталог M08 уже присутствовал; его записи и AdvertTags не переписывались.
 
 ## 5. Сверка плана и уточнения M01
 
@@ -212,27 +140,27 @@ client/docs/screenshots/b04-profile-desktop.png
 | M05 | Независимые overlays | DONE |
 | M06 | Новая оболочка приложения | DONE |
 | M07 | Чтение объявлений и фотографии | DONE |
-| M08 | Настоящие теги условий | WIP: код готов, нужна проверка БД |
-| M09 | Единое состояние избранного | DONE: код и автоматические проверки |
-| M10 | Новый вход | TODO |
-| M11 | Регистрация без фото на сервере | TODO |
-| M12 | Новая регистрация | TODO |
-| M13 | Главная с реальными объявлениями | TODO |
-| M14 | О сервисе | TODO |
-| M15 | Фильтры, URL и каталог тегов | TODO |
-| M16 | Новая страница поиска | TODO |
-| M17 | Новое объявление, карта и контакт | TODO |
-| M18 | Данные профиля и собственные объявления | TODO |
-| M19 | Рабочий профиль | TODO |
-| M20 | Редактирование профиля | TODO |
-| M21 | Поля и валидация публикации | TODO |
-| M22 | Серверная публикация с фото/тегами | TODO |
-| M23 | Публикация через API | TODO |
-| M24 | Список диалогов и собеседник | TODO |
-| M25 | ChatPage без демонстрационных предположений | TODO |
-| M26 | Маршрут списка сообщений | TODO |
-| M27 | История и отправка сообщений | TODO |
-| M28 | Реальные сценарии и production-навигация | TODO |
+| M08 | Настоящие теги условий | DONE |
+| M09 | Единое состояние избранного | DONE |
+| M10 | Новый вход | DONE |
+| M11 | Регистрация без фото на сервере | DONE |
+| M12 | Новая регистрация | DONE |
+| M13 | Главная с реальными объявлениями | DONE |
+| M14 | О сервисе | DONE |
+| M15 | Фильтры, URL и каталог тегов | DONE |
+| M16 | Новая страница поиска | DONE |
+| M17 | Новое объявление, карта и контакт | DONE |
+| M18 | Данные профиля и собственные объявления | DONE |
+| M19 | Рабочий профиль | DONE |
+| M20 | Редактирование профиля | DONE |
+| M21 | Поля и валидация публикации | DONE |
+| M22 | Серверная публикация с фото/тегами | DONE |
+| M23 | Публикация через API | DONE |
+| M24 | Список диалогов и собеседник | DONE |
+| M25 | ChatPage без демонстрационных предположений | DONE |
+| M26 | Маршрут списка сообщений | DONE |
+| M27 | История и отправка сообщений | DONE |
+| M28 | Реальные сценарии и production-навигация | DONE |
 | Q01 | Визуальная сверка и адаптив | TODO |
 | Q02 | Доступность и состояния | TODO |
 | Q03 | Очистка и закрепление нового UI | TODO |
@@ -253,7 +181,13 @@ client/docs/screenshots/b04-profile-desktop.png
 
 | Исходный файл и функция | Назначение логики | Новый файл/функция или переиспользованный модуль | Проверка переноса | Готовность удаления в Q03 |
 | --- | --- | --- | --- | --- |
-| Заполняется исполнителями M06/M10–M27 при разборе старых компонентов | Ещё не проверено | Ещё не определено | Не выполнена | Нет |
+| features/sign-in/SignInForm.tsx: handleSubmit | Значения, ошибка, loading, signinThunk.unwrap | features/sign-in/ui/sign-in-form/SignInForm.tsx + helper.ts; thunk переиспользован | auth-pages.test.tsx: ошибка/retry, pending/double submit, успех | После живого сценария и Q01/Q02 |
+| features/sign-in/SignInForm.tsx: переходы | returnTo, регистрация и назначение | Новый SignInForm, существующий safe-return-to | Полный query/hash и переход между формами | После живого сценария и Q01/Q02 |
+| features/sign-up/SignUpForm.tsx: валидация | Длина/цифра пароля, совпадение | features/sign-up/ui/sign-up-form/helper.ts | auth-pages.test.tsx | После живого сценария и Q01/Q02 |
+| features/sign-up/SignUpForm.tsx: отправка | FormData, unwrap, состояние ошибки, сессия | Новый SignUpForm; существующий signupThunk, AuthService сохраняет код конфликта | Нет file/gender/confirmation, 409, сеть/retry | После живого сценария и Q01/Q02 |
+| features/sign-up/SignUpForm.tsx: поля пола/фото | Убраны из стартовой формы по M11/M12 | Сервер допускает отсутствие; профильная загрузка будет в M18/M20 | signup.test.js: null и совместимый старый multipart | После API/БД-проверки |
+| pages/sign-in/SignInPage.tsx, pages/sign-up/SignUpPage.tsx | Сборка форм | Новые SignInRoute/SignUpRoute внутри того же слайса | Проверки новых страниц + router | После живых сценариев и Q01/Q02 |
+| pages/welcome/WelcomePage.tsx | Статический баннер и описание; запросов не было | pages/welcome/ui/home-route/HomeRoute.tsx: MainBanner/HowItWorks и свежая подборка | home-page.test.tsx + браузер | После Q01/Q02 |
 
 Файл становится кандидатом на удаление только после заполнения реестра, проверки сценария и отсутствия потребителей. Отсутствие импортов, новая похожая форма и сохранность старого кода в истории Git сами по себе не подтверждают перенос логики.
 
@@ -315,7 +249,7 @@ ProtectedRoute теперь показывает UI kit Spinner на Pending. Г
 
 ### Клиент и совместимость
 
-- `entities/advert/model/advert.ts`: необязательные tags с tagSchema; nullable title/body/price/userId/floor/rooms/square, name/email автора и строковые поля Location подтверждены исходными миграциями. User/Location допускают null как отсутствующие связи. ID и timestamps объявления остаются обязательными, неверные типы отклоняются.
+- `entities/advert/model/advertsModel.ts`: необязательные tags с tagSchema; nullable title/body/price/userId/floor/rooms/square, name/email автора и строковые поля Location подтверждены исходными миграциями. User/Location допускают null как отсутствующие связи. ID и timestamps объявления остаются обязательными, неверные типы отклоняются.
 - `shared/config/media.ts`: getMediaUrl использует origin API для относительного пути, origin страницы при относительном API_URL, сохраняет абсолютный HTTP(S)-адрес и возвращает undefined для пустого значения.
 - `entities/advert/model/photo.ts`: photoSchema применяет helper при разборе ответа. Поэтому нормализация автоматически работает для list/detail/filters/top/create в advertService и вложенного Advert в likedAdvertSchema; дополнительные запросы и отдельные преобразования по страницам не добавлены.
 - AdvertCard, AdvertPage и LikedAdverts минимально адаптированы к nullable-полям; карта не создаётся без координат, переход к диалогу отключён без userId. Галерея пропускает отсутствующие URL и вместо фиктивного `/path/to/default/image.jpg` использует нейтральное состояние без фотографии.
@@ -407,7 +341,7 @@ M09 (единое избранное) выполнена после M07; сле�
 - `node --test server/tests/*.test.js` — 10 тестов PASS, включая 3 новых проверки повторных POST/DELETE, изоляции удаления по пользователю и ошибок мутаций. Серверные сервисы в этих тестах используют подменённые модели, реальных записей в БД нет.
 - GET `http://127.0.0.1:3000/api/adverts/liked`: curl code 7, HTTP 000. Рабочий API недоступен. Не выполнен ручной сценарий поиск → детали → профиль → удаление с настоящими учётными записями. После настройки окружения проверить этот сценарий, повторные запросы и смену аккаунта; не считать автоматические проверки подтверждением работы PostgreSQL.
 
-Следующая задача реализации — M10, подключение нового входа.
+M10–M14 реализованы позднее; актуальное продолжение — M15 (см. раздел 17).
 
 
 ### Уточнение архитектуры M09
@@ -430,3 +364,84 @@ feature. Store и виджет профиля импортируют состо�
 загрузка списка — в likedAdvertsThunk.ts, схема ответа, enum и интерфейсы
 состояния/payload — в likedAdvertsModel.ts. Импорты потребителей обновлены.
 Сценарии сохранения/удаления, связывающие разные сущности, остаются в feature.
+
+
+## 17. Подключение страниц M10–M14 — 18 октября
+
+### Реализация
+
+- M10: `/sign-in` монтирует новый SignInRoute и feature-контейнер SignInForm с SignInCard. Email/password валидируются; отправка использует прежний signinThunk.unwrap. Ref блокирует повтор даже до следующего React-render. При ошибке ввод сохраняется, после успеха действует безопасное назначение M03.
+- M11: `server/src/service/signupService.js` валидирует поля, допускает отсутствие фото и пола, до вставки обрабатывает переданное фото; User/UserProfile создаются в одной Sequelize-транзакции. Без файла sharp/mkdir не вызываются, photo/gender равны null. При ошибке записи/профиля транзакция откатывается, созданный файл удаляется с best effort. Сервер проверяет длину пароля от 9 и цифру. Email unique conflict — 409/EMAIL_ALREADY_EXISTS, неверные поля/фото — 400, прочие ошибки — 500/SIGNUP_FAILED; hashpass не передаётся в сессию.
+- M12: `/sign-up` монтирует SignUpRoute/новый SignUpForm с SignUpCard. FormData содержит только name/email/password; подтверждение пароля не отправляется. AuthService не заменяет ошибку signup общим Error; thunk сохраняет различимость 409/EMAIL_ALREADY_EXISTS через rejectWithValue. После успеха setSession обновляет шапку, затем открывается returnTo или профиль. Возврат между формами сохраняет назначение.
+- M13: `/` монтирует HomeRoute. GET `/adverts` через advertService загружается в состояние страницы; createdAt DESC, при равенстве id DESC, первые три. `/top` не используется. Поисковая выдача в Redux не перезаписывается. Cleanup-effect игнорирует ответ после ухода/нового запроса. Helper переводит DTO в карточки. Нет цены — «Цена не указана», нет фото — существующий placeholder. Избранное работает через M09; pending блокирует сердце, ошибки отображаются рядом, GET избранного можно повторить. FreshListings различает loading/error/retry/empty.
+- M14: `/about` монтирует AboutPage с AboutBanner/AboutSteps; CTA открывает `/listings`. Шапка и футер показывают ссылку, active state сохраняется. Неизвестные и прежние адреса используют прежнюю NotFoundPage с сохранением URL.
+
+Старые SignInPage, SignUpPage, SignInForm, SignUpForm и WelcomePage сохранены в исходниках до Q03. Preview остаётся отдельным источником демонстрационных данных, рабочие страницы его не импортируют. Существующие API/БД-данные не изменялись, миграции и seed не запускались.
+
+### Проверки
+
+- `cd client && npm test`: **37 файлов / 122 теста PASS**. Новые `app/router/auth-pages.test.tsx` и `home-page.test.tsx` проверяют реальные формы/композицию с store и подставленными HTTP/service-ответами: валидацию, pending/double submit, ошибку/retry, сессию, returnTo, состав FormData, конфликт email, свежесть/ID карточек, независимость от поиска, пустой список, избранное и гостевой переход.
+- `cd client && npm run lint`: PASS, FSD boundaries OK.
+- `cd client && npm run build`: PASS; прежние предупреждения Sass legacy JS API, Rollup PURE/outDir и размера bundle остаются.
+- `node --test server/tests/*.test.js`: **15 PASS**. Пять новых signup-тестов с подставленными Sequelize/fs/sharp проверяют отсутствие фото/пола, валидацию, duplicate/racing email, совместимый multipart и ошибки обработки/записи/профиля. Это не проверка транзакции в PostgreSQL.
+- Браузер рабочего Vite-приложения: вход, регистрация, главная и About на 1440/390 px без горизонтального переполнения; главная проверена с ошибкой недоступного API. About открывается напрямую и после reload, ссылки header/footer имеют aria-current=page. Неизвестный адрес показывает единственный NotFoundPage и не меняется. Данные/пустота/сохранение карточек проверены автоматически, визуальная сверка этих состояний с живыми данными остаётся для Q01.
+- API `127.0.0.1:3000` недоступен. Для M11 остаются регистрация без file/gender → login → refresh, проверка ответов и rollback в настоящей БД на отдельном аккаунте. M10/M12 требуют сквозной проверки этих же сценариев; здесь завершён код с автоматическими проверками. M11 пока **WIP**.
+
+**Продолжение:** M15 — подключить фильтры к URL и реальным tag ID; M16 — подключить новую страницу поиска. Каталог M08 требует применения миграции в рабочем окружении до runtime-проверки. Профиль/публикация/чат остаются на старых страницах до своих задач; Q01/Q02/Q03 не выполнены.
+
+
+## 18. Все оставшиеся страницы — M15–M28
+
+### Подключённые экраны
+
+| Маршрут | Рабочий компонент | Перенесённая логика |
+| --- | --- | --- |
+| /listings | pages/search/ui/search-route/SearchRoute | URL filters/draft, POST выдачи, requestId, pagination по 8, общий count, избранное, возврат к query |
+| /listings/:listingId | pages/advert-details/ui/listing-route/ListingRoute | GET деталей, независимый detailStatus/requestId, галерея/характеристики/адрес/карта, отдельные заинтересованные, контакт/избранное |
+| /profile | pages/profile/ui/profile-route/ProfileRoute | Сессия → props, /mine и избранное с самостоятельными статусами/retry, переходы |
+| /profile/edit | pages/profile/ui/profile-edit-route/ProfileEditRoute | Данные сессии, PATCH FormData, saving/error, три режима аватара, возраст/телефон, updateUser без потери токена |
+| /listings/new | pages/listing-create/ui/listing-create-route/ListingCreateRoute | 4 шага, все поля/теги/фото, повторная валидация перед отправкой, optional geocode, postAdvertThunk.unwrap, ID ответа |
+| /messages | pages/chat/ui/messages-route/MessagesRoute | Защищённый список, ни один диалог не выбран автоматически, loading/error/retry, переход по receiverId |
+| /messages/:receiverId | тот же MessagesRoute | Summary для первого диалога, проверка ID/себя, отдельная история, socket open/close/send, optional listing только при совпадении автора |
+
+Главная, About, вход, регистрация и NotFound остаются на новых компонентах M02/M10–M14. Все канонические маршруты используют новый UI. Header/footer/profile/mobile ссылки включены для реализованных маршрутов; список и переписка используют chat-layout без footer.
+
+### Реестр переноса для Q03
+
+| Источник | Назначение | Проверка | Удаление источника |
+| --- | --- | --- | --- |
+| Filter.tsx: applied/draft/read/write URL | SearchRoute + SearchFilters/FilterForm и helpers filters/searchFilterValues | round-trip query, неизвестный #ID, ввод не делает запрос, возврат из деталей, Drawer | Только после Q01/Q02 |
+| AdvertList: выдача/loadCards; PopularCard: карточки/save | SearchRoute/SearchResults и общее избранное M09; популярные не подменяют свежие | Общий count/8/load more, stale-response тест | Только после Q01/Q02 |
+| AdvertPage: GET/likes/photos/map/contact/save/back | ListingRoute + новые ListingDetails slots + shared/ui/y-map | Некорректный ID, retry, независимые detail state, реальное объявление и возврат к фильтрам | Только после Q01/Q02 |
+| AccountPage/ProfileCard/LikedAdverts: session/edit/saved; встроенный ChatList | ProfileRoute/ProfilePage/ProfileEditRoute; чат перенесён в /messages | API /mine, error vs empty, подтверждённое избранное, переходы | Только после Q01/Q02 |
+| ProfileForm: FormData/thunk/age/about/phoneNumber | ProfileEditRoute + расширенная ProfileEditForm, typed PATCH, updateUser | Ошибка с сохранением ввода, возраст/телефон, фото/File/null/undefined, refresh | Только после Q01/Q02 |
+| PostAdvertForm: геокодирование/FormData/POST и переход | ListingCreateRoute, publicationData, geocodeAddress и прежний postAdvertThunk | Живые фото/теги, целые числа/нет метро, четыре шага браузером, валидация/rollback | Только после Q01/Q02 |
+| ChatList/ChatComponent/ChatPage старого слоя pages | MessagesRoute + новый ChatPage, chatListModel/Thunk/Slice/Selectors, session socket | Первый диалог/без listing, live events/history, offline/reconnect, reload/Back | Только после Q01/Q02 |
+
+Исходные UI-файлы не удалялись. Изменённые Redux-модули advert/session/chat приведены к принятому соглашению Model/Thunk/Slice/Selectors; переименованы исходные model-файлы и обновлены импорты, feature/model.ts не переименовывались.
+
+### Сервер и данные
+
+- Миграция профиля применена в development без сброса; новые поля подтверждены реальными signup/PATCH/refresh.
+- publishAdvertService проверяет ввод/декодирование до вставки, проверяет tag ID в транзакции и ждёт всех файлов по порядку. Ошибка второй записи фото проверена адресным тестом: записи и собственные файлы очищаются.
+- profileService принимает allowlist, проверяет длины/типы и владельца URL, сохраняет неотправленные поля и возвращает только безопасный User. Старое фото удаляется после commit, новое — при rollback.
+- Список диалогов защищён владельцем, summary отделён, сервер выбирает последнее сообщение пары. WebSocket обрабатывает JSON/ошибки в одном handler, сохраняет офлайн-получателю, не раскрывает hashpass и поддерживает несколько вкладок.
+- Живая БД выявила дубли имён тегов с разными ID. Поддержка уточнена без удаления/слияния записей: быстрые условия по минимальному ID, остальные варианты подписаны (#ID). Старые URL/AdvertTags сохранены. В тесте проверяется отсутствие потери ID.
+- Express fallback отделён от API/images/ws; лишний proxy всех неизвестных /api на Yandex удалён. Геокодирование и SDK используют собственные адреса. Старт сервера больше не требует существования каталога advert-1.
+
+### Проверки
+
+- `cd client && npm test`: **39 файлов / 133 теста PASS** после заключительного прогона. Новые connected-pages тесты проверяют состав фильтра из query/неизвестный ID/отсутствие запросов на ввод, детали/retry/возврат, профильные error vs empty, сохранение ввода и accessToken, первый диалог без фальшивого listing и отправку false/true без optimistic-дубля. Reducer/socket-тесты проверяют stale detail/session, merge history/live и события старого socket после смены сессии. Публикация повторно валидируется при прямом открытии обзора.
+- `cd client && npm run lint`: PASS, FSD boundaries OK. `npm run build`: PASS, основной graph содержит только новые экраны; preview не собирается. `emptyOutDir: true` очищает только generated server/dist.
+- `node --test server/tests/*.test.js`: **20 PASS**. Добавлены адресные проверки публикации/тегов/чисел/фото/отката второй записи, allowlist профиля и выбора последней строки диалога.
+- `cd server && node tests/redesign-live.cjs`: PASS на настоящей development-БД. Signup без file/gender, повтор email, login/refresh/logout; PATCH всех новых полей и сохранить/заменить/удалить фото; запрещённый чужой PATCH/list; 404 summary; невалидные/no-photo запросы без пустой записи; 201 с двумя фото/тегами и немедленное повторное чтение; /mine только свои; фильтр по нескольким tag ID; повторы like POST/DELETE; два WebSocket пользователя, сообщение/ответ, offline-получатель и история после reconnect. Тест использует только синтетические записи; по умолчанию автоматически запускает redesign-cleanup.cjs, KEEP_REDESIGN_SMOKE=1 сохраняет их лишь для браузерной проверки.
+- `cd server && node tests/redesign-routes.cjs`: PASS. Все канонические и неизвестные браузерные адреса получают built SPA; API/images/ws не получают index. Production маршрутизация проверена через локальный Express с production-сборкой, без переключения DB-конфига на production.
+- Браузер реального localhost: поиск → город Казань → карточка → детали → к прежнему query; вход синтетического аккаунта → профиль/свои объявления → редактирование; /messages → диалог → reload; публикация всех четырёх шагов без метро с File → /listings/{returnedId}. На 1440/390 px осмотрены данные/композиции; на 320 px измерено отсутствие горизонтального переполнения новых страниц. Мобильный Drawer показывает старый tag ID 14 и не очищает URL. Гость после выхода отправляется на вход с назначением.
+- После браузерной проверки удалены **2 созданных тестовых аккаунта, 2 собственных тестовых объявления, их сообщения/связи/фото**. Скрипт cleanup проверяет IDs и синтетические email до удаления; существующие пользовательские записи не менялись.
+
+### Ограничения и следующий этап
+
+- Карта требует VITE_YANDEX_API_KEY и координаты. Без них показывается честное состояние недоступности; геокодирование не блокирует публикацию. Сетевая работа реального геокодера/карты в этой проверке не подтверждена.
+- true от sendMessage означает запись в открытый socket, а не server ack. Серверные события добавляют подтверждённые сообщения, ошибки соединения сохраняют введённый текст при false; гарантии доставки/идемпотентности отправки и ticks не добавлялись.
+- Снимки и проверка 1440/390/320 здесь относятся к интеграции. Итоговая сверка с актуальным дизайн-эталоном Q01 и полная проверка доступности Q02 ещё не выполнены. Старый UI удаляется только в Q03 после этой приёмки.
+- Следующая задача — **Q01**. Все страницы уже подключены; дальнейшие задачи не должны возвращать старые экраны или удалять исходники до сверки переноса.
