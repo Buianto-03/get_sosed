@@ -1,4 +1,4 @@
-import type { TagType } from './advert';
+import type { TagType } from './advertsModel';
 
 export enum ListingCondition {
   NonSmoking = 'Для некурящих',
@@ -24,21 +24,24 @@ const conditionNames: string[] = Object.values(ListingCondition);
 
 export function getPrimaryTags(tags: TagType[]): TagType[] {
   return conditionNames.flatMap((name) => {
-    const tag = tags.find((item) => item.name === name);
+    const tag = tags.filter((item) => item.name === name).sort((a, b) => a.id - b.id)[0];
     return tag ? [tag] : [];
   });
 }
 
 export function getTagCatalogError(tags: TagType[]): string | null {
-  const missing = conditionNames.filter((name) => (
-    !tags.some((tag) => tag.name === name)
-  ));
+  const missing = conditionNames.filter((name) => !tags.some((tag) => tag.name === name));
   if (missing.length > 0) return `В каталоге отсутствуют условия: ${missing.join(', ')}.`;
 
-  const duplicated = conditionNames.filter((name) => (
-    tags.filter((tag) => tag.name === name).length > 1
-  ));
-  return duplicated.length > 0
-    ? `В каталоге повторяются условия: ${duplicated.join(', ')}.`
+  return new Set(tags.map((tag) => tag.id)).size !== tags.length
+    ? 'В каталоге повторяются ID условий.'
     : null;
+}
+
+export function getTagLabel(tags: TagType[], id: number): string {
+  const tag = tags.find((item) => item.id === id);
+  if (!tag) return `#${id}`;
+  return tags.filter((item) => item.name === tag.name).length > 1
+    ? `${tag.name} (#${id})`
+    : tag.name;
 }

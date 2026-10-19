@@ -1,8 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import advertService from '../api/advertService';
-import type { TagType } from './advert';
-import { getPrimaryTags, ListingCondition, TagCatalogState } from './tag-catalog';
+import type { TagType } from './advertsModel';
+import { getPrimaryTags, getTagLabel, ListingCondition, TagCatalogState } from './tag-catalog';
 import { useTagCatalog } from './use-tag-catalog';
 
 const tags: TagType[] = [
@@ -40,7 +40,7 @@ describe('useTagCatalog', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('reports missing or ambiguous primary conditions rather than guessing IDs', async () => {
+  it('reports missing conditions and preserves duplicate names with stable IDs', async () => {
     vi.spyOn(advertService, 'getTagsBySearch')
       .mockResolvedValueOnce(tags.filter(({ name }) => name !== 'С рабочим местом'))
       .mockResolvedValueOnce([...tags, { id: 888, name: ListingCondition.Workspace }]);
@@ -48,8 +48,10 @@ describe('useTagCatalog', () => {
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Error));
     expect(result.current.error).toContain('отсутствуют условия: С рабочим местом');
     act(() => result.current.reload());
-    await waitFor(() => expect(result.current.error).toContain('повторяются условия'));
-    expect(result.current.state).toBe(TagCatalogState.Error);
+    await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
+    expect(getPrimaryTags(result.current.tags).find((tag) => tag.name === String(ListingCondition.Workspace))?.id).toBe(418);
+    expect(getTagLabel(result.current.tags, 888)).toBe('С рабочим местом (#888)');
+    expect(result.current.tags.some((tag) => tag.id === 888)).toBe(true);
   });
 
   it('ignores a stale response after retry', async () => {

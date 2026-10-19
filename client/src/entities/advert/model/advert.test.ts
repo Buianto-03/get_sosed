@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advertSchema } from './advert';
+import { advertSchema } from './advertsModel';
 
 const advert = {
   id: 1,

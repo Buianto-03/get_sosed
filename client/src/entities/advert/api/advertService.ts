@@ -1,11 +1,16 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
-import { advertSchema, tagSchema } from '../model/advert';
-import type { AdvertType, FilterType, TagType } from '../model/advert';
+import { advertSchema, tagSchema } from '../model/advertsModel';
+import type { AdvertType, FilterType, TagType } from '../model/advertsModel';
 import { likedAdvertSchema, type LikedAdvert } from '../model/likedAdvertsModel';
 
 class AdvertService {
   constructor(private client: AxiosInstance) {}
+
+  async getMine(): Promise<AdvertType[]> {
+    const response = await this.client.get('/adverts/mine');
+    return advertSchema.array().parse(response.data);
+  }
 
   async getLikedAdverts(): Promise<LikedAdvert[]> {
     const response = await this.client.get('/adverts/liked');

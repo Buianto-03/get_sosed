@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { advertSchema } from './advert';
+import { advertSchema } from './advertsModel';
 
 export const likedAdvertSchema = z.object({
   id: z.number(),

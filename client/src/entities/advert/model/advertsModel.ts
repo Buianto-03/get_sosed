@@ -17,20 +17,24 @@ export const advertSchema = z.object({
   square: z.number().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  user: z.object({
-    id: z.number(),
-    name: z.string().nullable(),
-    email: z.string().nullable(),
-  }).nullable(),
-  location: z.object({
-    id: z.number(),
-    city: z.string().nullable(),
-    district: z.string().nullable(),
-    address: z.string().nullable(),
-    metro: z.string().nullable(),
-    coordinates: z.string().nullable(),
-    advertId: z.number(),
-  }).nullable(),
+  user: z
+    .object({
+      id: z.number(),
+      name: z.string().nullable(),
+      email: z.string().nullable(),
+    })
+    .nullable(),
+  location: z
+    .object({
+      id: z.number(),
+      city: z.string().nullable(),
+      district: z.string().nullable(),
+      address: z.string().nullable(),
+      metro: z.string().nullable(),
+      coordinates: z.string().nullable(),
+      advertId: z.number(),
+    })
+    .nullable(),
   tags: z.array(tagSchema).optional(),
   AdvertPhotos: z.array(photoSchema).nullable().optional(),
 });
@@ -50,6 +54,14 @@ export type FilterType = {
 
 export type TagType = z.infer<typeof tagSchema>;
 
+export enum AdvertDetailStatus {
+  Idle = 'idle',
+  Loading = 'loading',
+  Ready = 'ready',
+  NotFound = 'not-found',
+  Error = 'error',
+}
+
 export type AdvertSliceT = {
   adverts: AdvertType[];
   chosenAdvert: AdvertType | null;
@@ -58,6 +70,8 @@ export type AdvertSliceT = {
   loading: boolean;
   error: string | null;
   filterRequestId: string | null;
+  detailStatus: AdvertDetailStatus;
+  detailRequestId: string | null;
 };
 
 export type PostAdvertType = {

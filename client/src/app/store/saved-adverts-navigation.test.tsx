@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { clearAuth } from '@entities/session/model/authSlice';
-import type { AdvertType } from '@entities/advert/model/advert';
+import type { AdvertType } from '@entities/advert/model/advertsModel';
 import likeService from '@entities/like/api/likeService';
 import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
 import { store } from './store';

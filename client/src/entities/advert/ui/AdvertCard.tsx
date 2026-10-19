@@ -1,7 +1,7 @@
 import { Box, Image, Text, IconButton, Flex, Badge, Icon } from '@chakra-ui/react';
 import { BiHeart, BiCamera, BiUser } from 'react-icons/bi';
 import React from 'react';
-import type { AdvertType } from '../model/advert';
+import type { AdvertType } from '../model/advertsModel';
 
 interface AdverProps {
   saved: boolean;

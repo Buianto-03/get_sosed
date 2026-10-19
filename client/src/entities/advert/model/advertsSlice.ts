@@ -5,7 +5,7 @@ import {
   getFilteredAdvertsThunk,
   getTopAdvertsThunk,
 } from './advertsThunk';
-import type { AdvertSliceT } from './advert';
+import { AdvertDetailStatus, type AdvertSliceT } from './advertsModel';
 
 const initialState: AdvertSliceT = {
   adverts: [],
@@ -15,6 +15,8 @@ const initialState: AdvertSliceT = {
   loading: false,
   error: null,
   filterRequestId: null,
+  detailStatus: AdvertDetailStatus.Idle,
+  detailRequestId: null,
 };
 
 export const advertSlice = createSlice({
@@ -48,8 +50,20 @@ export const advertSlice = createSlice({
           state.error = 'Не удалось загрузить объявления.';
         }
       })
+      .addCase(getAdvertByIdThunk.pending, (state, action) => {
+        state.chosenAdvert = null;
+        state.detailStatus = AdvertDetailStatus.Loading;
+        state.detailRequestId = action.meta.requestId;
+      })
       .addCase(getAdvertByIdThunk.fulfilled, (state, action) => {
+        if (state.detailRequestId !== action.meta.requestId) return;
         state.chosenAdvert = action.payload;
+        state.detailStatus = AdvertDetailStatus.Ready;
+      })
+      .addCase(getAdvertByIdThunk.rejected, (state, action) => {
+        if (state.detailRequestId !== action.meta.requestId) return;
+        state.detailStatus =
+          action.payload === 404 ? AdvertDetailStatus.NotFound : AdvertDetailStatus.Error;
       })
       .addCase(getTopAdvertsThunk.fulfilled, (state, action) => {
         state.populars = action.payload;
