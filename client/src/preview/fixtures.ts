@@ -122,6 +122,7 @@ export const profileFixture = {
 };
 
 export const postFixture = {
+  district: 'Сокол', address: 'Ленинградский проспект, 1', rooms: '2', floor: '3',
   title: 'Светлая комната в квартире у парка',
   city: 'Москва',
   metro: 'Сокол',

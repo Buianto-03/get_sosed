@@ -18,6 +18,7 @@ import { ProfileEditForm } from '@features/edit-profile/ui/profile-edit-form/Pro
 import { ProfilePage, type ProfileDetails } from '@pages/profile/ui/profile-page/ProfilePage';
 import { AlertVariant } from '@shared/ui/feedback/Alert';
 import { ChatPage, type ChatMessage } from '@pages/chat/ui/chat-page/ChatPage';
+import { ListingCreatePublishState } from '@features/listing-create/model';
 import { ListingCreatePage } from '@pages/listing-create/ui/listing-create-page/ListingCreatePage';
 import {
   longAdvert,
@@ -510,7 +511,7 @@ function SearchScreen({
       && (!appliedFilters.roomsFrom || advert.rooms >= Number(appliedFilters.roomsFrom))
       && includes(advert.district, appliedFilters.district)
       && includes(advert.metro, appliedFilters.metro)
-      && appliedFilters.conditions.every((condition) => advert.tags.includes(condition))
+      && appliedFilters.tagIds.every((tagId) => advert.tags.includes(previewTagCatalog.tags.find((tag) => tag.id === tagId)?.name ?? ''))
     );
   });
   const visibleAdverts = variant === 'partial' ? filteredAdverts.slice(0, 2) : filteredAdverts;
@@ -815,8 +816,10 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
     const messages = messagesByConversation[conversation.id] ?? conversation.messages;
     return {
       ...conversation,
+      receiverId: index + 1,
+      listing: { id: previewAdverts[index].id, title: conversation.advert, price: previewAdverts[index].price, imageUrl: previewAdverts[index].image },
       lastMessage: messages[messages.length - 1]?.text ?? conversation.lastMessage,
-      messages,
+      messages: messages.map((message) => ({ ...message, text: variant === 'long' && message.id === 'm2' ? longMessage : message.text })),
       price: previewAdverts[index].price,
       imageUrl: previewAdverts[index].image,
     };
@@ -827,7 +830,6 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
       conversations={conversations}
       selectedConversationId={selectedConversationId}
       empty={isEmpty}
-      longMessage={variant === 'long' ? longMessage : undefined}
       onSelectConversation={setSelectedConversationId}
       onBackToList={() => setSelectedConversationId(null)}
       onSendMessage={(conversationId, message) => {
@@ -850,7 +852,7 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
   let initialStep = stepMatch ? Number(stepMatch[1]) : 1;
   if (['publish-loading', 'publish-error', 'published'].includes(variant)) initialStep = 4;
 
-  const initialDraft = { ...postFixture, rules: ['Для некурящих', 'Тихие вечера'] };
+  const initialDraft = { ...postFixture, tagIds: previewTagCatalog.tags.filter((tag) => ['Для некурящих', 'Тихие вечера'].includes(tag.name)).map((tag) => tag.id) };
   if (variant === 'step-1-error') {
     initialDraft.title = '';
     initialDraft.city = '';
@@ -866,10 +868,10 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
     initialDraft.description = longAdvert.description;
   }
 
-  let initialPublishState: 'idle' | 'loading' | 'error' | 'success' = 'idle';
-  if (variant === 'publish-loading') initialPublishState = 'loading';
-  if (variant === 'publish-error') initialPublishState = 'error';
-  if (variant === 'published') initialPublishState = 'success';
+  let initialPublishState = ListingCreatePublishState.Idle;
+  if (variant === 'publish-loading') initialPublishState = ListingCreatePublishState.Loading;
+  if (variant === 'publish-error') initialPublishState = ListingCreatePublishState.Error;
+  if (variant === 'published') initialPublishState = ListingCreatePublishState.Success;
   let initialAttemptedSteps: number[] = [];
   if (variant === 'step-1-error') initialAttemptedSteps = [1];
   if (variant === 'step-2-error') initialAttemptedSteps = [2];
