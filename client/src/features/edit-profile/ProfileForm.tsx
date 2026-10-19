@@ -4,8 +4,8 @@ import {
 } from '@chakra-ui/react';
 import { z } from 'zod';
 import { useAppDispatch } from '@app/store/hooks';
-import type { BackendUserT } from '@entities/session/model/auth';
-import { checkAuthThunk } from '@entities/session/model/thunks';
+import type { BackendUserT } from '@entities/session/model/authModel';
+import { checkAuthThunk } from '@entities/session/model/authThunk';
 import { editUserProfileThunk } from './thunks';
 
 const profileSchema = z.object({

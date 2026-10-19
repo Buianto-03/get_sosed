@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useState } from 'react';
 import { LuArrowLeft } from 'react-icons/lu';
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Avatar, AvatarSize } from '@shared/ui/avatar/Avatar';
 import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
 import { FilePicker, FilePickerAccept } from '@shared/ui/file-picker/FilePicker';
@@ -17,18 +18,30 @@ export type ProfileEditData = {
   description?: string;
   habits?: readonly string[];
   avatarUrl?: string;
+  age?: string;
+  phoneNumber?: string;
 };
 
 export interface ProfileEditFormProps {
   profile: ProfileEditData | null;
   onSave: (profile: ProfileEditData, avatarFile: File | null | undefined) => void;
   onCancel: () => void;
+  saving?: boolean;
+  error?: string;
 }
 
-export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormProps): JSX.Element {
+export function ProfileEditForm({
+  profile,
+  onSave,
+  onCancel,
+  saving = false,
+  error,
+}: ProfileEditFormProps): JSX.Element {
   const id = useId();
   const [values, setValues] = useState<ProfileEditValues>({
     name: profile?.name ?? '',
+    age: profile?.age ?? '',
+    phoneNumber: profile?.phoneNumber ?? '',
     city: profile?.city ?? '',
     intent: profile?.intent ?? '',
     description: profile?.description ?? '',
@@ -70,12 +83,15 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
   };
 
   const submit = (): void => {
+    if (saving) return;
     const nextErrors = validateProfileEdit(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || photoError) return;
     onSave(
       {
         name: values.name.trim(),
+        age: values.age,
+        phoneNumber: values.phoneNumber,
         city: values.city.trim(),
         intent: values.intent.trim(),
         description: values.description.trim(),
@@ -112,89 +128,111 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
             submit();
           }}
         >
-          <div className={styles.avatarSection}>
-            <Avatar
-              name={values.name || 'Новый пользователь'}
-              src={visibleAvatarUrl}
-              size={AvatarSize.Xl}
-            />
-            <div className={styles.avatarActions}>
-              <strong>Фото профиля</strong>
-              <p>JPG, PNG или WebP, до 5 МБ.</p>
-              <div className={styles.avatarButtons}>
-                <FilePicker
-                  id={`${id}-avatar`}
-                  label="Выбрать фото"
-                  accept={[FilePickerAccept.Jpeg, FilePickerAccept.Png, FilePickerAccept.Webp]}
-                  onFilesSelected={selectPhoto}
-                />
-                {visibleAvatarUrl && (
-                  <Button
-                    variant={ButtonVariant.Text}
-                    onClick={() => {
-                      setAvatarFile(null);
-                      setPhotoError('');
-                    }}
-                  >
-                    Удалить фото
-                  </Button>
+          <fieldset disabled={saving} className={styles.profile__fieldset}>
+            <div className={styles.avatarSection}>
+              <Avatar
+                name={values.name || 'Новый пользователь'}
+                src={visibleAvatarUrl}
+                size={AvatarSize.Xl}
+              />
+              <div className={styles.avatarActions}>
+                <strong>Фото профиля</strong>
+                <p>JPG, PNG или WebP, до 5 МБ.</p>
+                <div className={styles.avatarButtons}>
+                  <FilePicker
+                    id={`${id}-avatar`}
+                    label="Выбрать фото"
+                    accept={[FilePickerAccept.Jpeg, FilePickerAccept.Png, FilePickerAccept.Webp]}
+                    onFilesSelected={selectPhoto}
+                  />
+                  {visibleAvatarUrl && (
+                    <Button
+                      variant={ButtonVariant.Text}
+                      onClick={() => {
+                        setAvatarFile(null);
+                        setPhotoError('');
+                      }}
+                    >
+                      Удалить фото
+                    </Button>
+                  )}
+                </div>
+                {photoError && (
+                  <p className={styles.photoError} role="alert">
+                    {photoError}
+                  </p>
                 )}
               </div>
-              {photoError && (
-                <p className={styles.photoError} role="alert">
-                  {photoError}
-                </p>
-              )}
             </div>
-          </div>
-          <div className={styles.fields}>
-            <Input
-              id={`${id}-name`}
-              label="Имя"
-              required
-              autoComplete="name"
-              value={values.name}
-              error={errors.name}
-              onChange={(event) => change('name', event.target.value)}
-            />
-            <Input
-              id={`${id}-city`}
-              label="Город"
-              required
-              autoComplete="address-level2"
-              value={values.city}
-              error={errors.city}
-              onChange={(event) => change('city', event.target.value)}
-            />
-            <Input
-              id={`${id}-intent`}
-              label="Что вы ищете"
-              value={values.intent}
-              onChange={(event) => change('intent', event.target.value)}
-            />
-            <Textarea
-              id={`${id}-description`}
-              label="О себе"
-              required
-              rows={5}
-              maxLength={501}
-              value={values.description}
-              error={errors.description}
-              hint="От 10 до 500 символов."
-              onChange={(event) => change('description', event.target.value)}
-            />
-            <Input
-              id={`${id}-habits`}
-              label="Привычки и предпочтения"
-              hint="Разделяйте привычки запятой."
-              value={values.habits}
-              error={errors.habits}
-              onChange={(event) => change('habits', event.target.value)}
-            />
-          </div>
+            <div className={styles.fields}>
+              <Input
+                id={`${id}-name`}
+                label="Имя"
+                required
+                autoComplete="name"
+                value={values.name}
+                error={errors.name}
+                onChange={(event) => change('name', event.target.value)}
+              />
+              <Input
+                id={`${id}-city`}
+                label="Город"
+                required
+                autoComplete="address-level2"
+                value={values.city}
+                error={errors.city}
+                onChange={(event) => change('city', event.target.value)}
+              />
+              <Input
+                id={`${id}-intent`}
+                label="Что вы ищете"
+                value={values.intent}
+                onChange={(event) => change('intent', event.target.value)}
+              />
+              <Textarea
+                id={`${id}-description`}
+                label="О себе"
+                required
+                rows={5}
+                maxLength={501}
+                value={values.description}
+                error={errors.description}
+                hint="От 10 до 500 символов."
+                onChange={(event) => change('description', event.target.value)}
+              />
+              <Input
+                id={`${id}-habits`}
+                label="Привычки и предпочтения"
+                hint="Разделяйте привычки запятой."
+                value={values.habits}
+                error={errors.habits}
+                onChange={(event) => change('habits', event.target.value)}
+              />
+            </div>
+            <details>
+              <summary>Дополнительные сведения</summary>
+              <Input
+                id={`${id}-age`}
+                label="Возраст"
+                value={values.age}
+                error={errors.age}
+                onChange={(event) => change('age', event.target.value)}
+              />
+              <Input
+                id={`${id}-phone`}
+                label="Телефон"
+                value={values.phoneNumber}
+                error={errors.phoneNumber}
+                onChange={(event) => change('phoneNumber', event.target.value)}
+              />
+            </details>
+          </fieldset>
+          {error && <Alert variant={AlertVariant.Error}>{error}</Alert>}
           <div className={styles.actions}>
-            <Button type={ButtonType.Submit}>Сохранить изменения</Button>
-            <Button variant={ButtonVariant.Secondary} onClick={onCancel}>
+            <Button type={ButtonType.Submit} loading={saving}>
+              Сохранить изменения
+            </Button>
+            <Button variant={ButtonVariant.Secondary} disabled={saving} onClick={onCancel}>
               Отменить
             </Button>
           </div>
