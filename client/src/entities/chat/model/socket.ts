@@ -15,11 +15,14 @@ class ChatSocket {
 
   private retries = 0;
 
-  connect(listener: SocketListener): void {
+  private onConnection: ((connected: boolean) => void) | null = null;
+
+  connect(listener: SocketListener, onConnection?: (connected: boolean) => void): void {
     const receiver = this.activeReceiver;
     this.disconnect();
     this.activeReceiver = receiver;
     this.listener = listener;
+    this.onConnection = onConnection ?? null;
     this.open();
   }
 
@@ -28,10 +31,13 @@ class ChatSocket {
     const socket = new WebSocket(WS_URL);
     this.socket = socket;
     socket.onopen = () => {
+      if (this.socket !== socket) return;
+      this.onConnection?.(true);
       this.retries = 0;
       if (this.activeReceiver !== null) this.initialize(this.activeReceiver);
     };
     socket.onmessage = (event: MessageEvent) => {
+      if (this.socket !== socket) return;
       try {
         const parsed = incomingMessageSchema.safeParse(JSON.parse(event.data as string));
         if (parsed.success) this.listener?.(parsed.data);
@@ -42,6 +48,7 @@ class ChatSocket {
     socket.onclose = () => {
       if (!this.listener || this.socket !== socket) return;
       this.socket = null;
+      this.onConnection?.(false);
       const delay = Math.min(1000 * 2 ** this.retries, 10000);
       this.retries += 1;
       this.retryTimer = window.setTimeout(() => this.open(), delay);
@@ -50,8 +57,10 @@ class ChatSocket {
 
   private send(action: OutgoingMessage): boolean {
     if (this.socket?.readyState !== WebSocket.OPEN) return false;
-    this.socket.send(JSON.stringify(action));
-    return true;
+    try {
+      this.socket.send(JSON.stringify(action));
+      return true;
+    } catch { return false; }
   }
 
   private initialize(receiverId: number): void {
@@ -73,6 +82,8 @@ class ChatSocket {
 
   disconnect(): void {
     this.listener = null;
+    this.onConnection?.(false);
+    this.onConnection = null;
     this.activeReceiver = null;
     if (this.retryTimer !== null) window.clearTimeout(this.retryTimer);
     this.retryTimer = null;

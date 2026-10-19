@@ -2,17 +2,19 @@ import React from 'react';
 import { Avatar } from '@shared/ui/avatar/Avatar';
 import styles from './ConversationRow.module.scss';
 
-export type ConversationRowProps = {
+export interface ConversationRowProps {
   name: string;
-  listingTitle: string;
+  listingTitle?: string;
+  avatarUrl?: string;
   lastMessage: string;
-  time: string;
+  time?: string;
   active?: boolean;
   onSelect?: () => void;
-};
+}
 
 export function ConversationRow({
   name,
+  avatarUrl,
   listingTitle,
   lastMessage,
   time,
@@ -26,13 +28,13 @@ export function ConversationRow({
       aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
-      <Avatar name={name} />
+      <Avatar name={name} src={avatarUrl} />
       <span className={styles.details}>
         <strong>{name}</strong>
-        <span className={styles.listing}>{listingTitle}</span>
+        {listingTitle && <span className={styles.listing}>{listingTitle}</span>}
         <span className={styles.message}>{lastMessage}</span>
       </span>
-      <time>{time}</time>
+      {time && <time>{time}</time>}
     </button>
   );
 }

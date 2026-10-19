@@ -1,9 +1,14 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
-import { chatListSchema, type ChatListType } from '../model/chatList';
+import { chatListSchema, summarySchema, type UserSummary, type ChatListType } from '../model/chatListModel';
 
 class ChatListService {
   constructor(private client: AxiosInstance) {}
+
+  async getSummary(id: number): Promise<UserSummary> {
+    const response = await this.client.get(`/users/${id}/summary`);
+    return summarySchema.parse(response.data);
+  }
 
   async getChatList(id: ChatListType['senderId']): Promise<ChatListType[]> {
     try {

@@ -4,9 +4,9 @@ import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import ChatComponent from '@widgets/chat-window/ChatComponent';
 import ChatInput from '@features/send-message/ChatInput';
-import { UserStatus } from '@entities/session/model/auth';
+import { UserStatus } from '@entities/session/model/authModel';
 import { chatSocket } from '@entities/chat/model/socket';
-import { getReceiverListThunk } from '@entities/chat/model/thunks';
+import { getReceiverListThunk } from '@entities/chat/model/chatListThunk';
 
 export default function ChatPage(): JSX.Element {
   const { receiverId } = useParams<{ receiverId: string }>();
