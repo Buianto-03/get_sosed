@@ -6,6 +6,8 @@ This repository has independent client and server npm packages. The React, TypeS
 
 Consult `client/ARCH.md` when making client architecture decisions. Update it when a change alters the documented principles or boundaries.
 
+Consult `server/ARCH.md` when making server changes. Follow its responsibility boundaries and dependency injection rules. Update it when a change alters the documented architecture.
+
 ## Build, Test, and Development Commands
 
 - `cd client && npm run dev` starts Vite for development (API requests expect the server on port 3000).
