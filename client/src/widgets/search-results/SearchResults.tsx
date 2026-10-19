@@ -23,16 +23,20 @@ export type SearchResultListing = {
   id: string;
   listing: ListingCardData;
   saved: boolean;
+  saveDisabled?: boolean;
+  saveError?: string;
 };
 
-export type SearchResultsProps = {
+export interface SearchResultsProps {
   listings: readonly SearchResultListing[];
   state?: SearchResultsState;
   onOpenListing: (id: string) => void;
   onSaveListing: (id: string, saved: boolean) => void;
   onResetFilters: () => void;
   onRetry: () => void;
-};
+  totalCount?: number;
+  onLoadMore?: () => void;
+}
 
 export function SearchResults({
   listings,
@@ -41,11 +45,13 @@ export function SearchResults({
   onSaveListing,
   onResetFilters,
   onRetry,
+  totalCount = listings.length,
+  onLoadMore,
 }: SearchResultsProps): JSX.Element {
   const currentState = state === SearchResultsState.Ready && listings.length === 0
     ? SearchResultsState.Empty
     : state;
-  let countLabel = formatResultCount(listings.length);
+  let countLabel = formatResultCount(totalCount);
   if (currentState === SearchResultsState.Empty) countLabel = formatResultCount(0);
   if (currentState === SearchResultsState.Loading) countLabel = 'Загрузка…';
   if (currentState === SearchResultsState.Error) countLabel = 'Ошибка загрузки';
@@ -60,18 +66,20 @@ export function SearchResults({
       {currentState === SearchResultsState.Ready && (
         <>
           <div className={styles.results__grid}>
-            {listings.map(({ id, listing, saved }) => (
+            {listings.map(({ id, listing, saved, saveDisabled, saveError }) => (
               <ListingCard
                 key={id}
                 listing={listing}
                 variant={ListingCardVariant.Search}
                 saved={saved}
+                saveDisabled={saveDisabled}
+                saveError={saveError}
                 onSavedChange={(nextSaved) => onSaveListing(id, nextSaved)}
                 onOpen={() => onOpenListing(id)}
               />
             ))}
           </div>
-          <div className={styles.results__map}>Карта объявлений</div>
+          {listings.length < totalCount && onLoadMore && <Button onClick={onLoadMore}>Показать ещё</Button>}
         </>
       )}
 

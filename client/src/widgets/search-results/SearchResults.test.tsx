@@ -36,7 +36,7 @@ describe('SearchResults', () => {
     const actions = renderResults();
     expect(screen.getByRole('status')).toHaveTextContent('2 варианта');
     expect(screen.getAllByRole('article')).toHaveLength(2);
-    expect(screen.getByText('Карта объявлений')).toBeInTheDocument();
+    expect(screen.queryByText('Карта объявлений')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Сохранить объявление' }));
     fireEvent.click(screen.getAllByRole('button', { name: 'Подробнее' })[0]);

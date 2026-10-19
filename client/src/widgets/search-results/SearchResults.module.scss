@@ -35,6 +35,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: tokens.$space-5;
+  margin-bottom: tokens.$space-5;
 }
 
 .results__map {
