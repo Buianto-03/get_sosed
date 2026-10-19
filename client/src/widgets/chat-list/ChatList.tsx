@@ -2,9 +2,9 @@ import React from 'react';
 import { Box, Avatar, AvatarBadge, Stack, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@app/store/hooks';
-import type { ChatListType } from '@entities/chat/model/chatList';
+import type { ChatListType } from '@entities/chat/model/chatListModel';
 import { routes } from '@shared/config/routes';
-import { UserStatus } from '@entities/session/model/auth';
+import { UserStatus } from '@entities/session/model/authModel';
 
 type ChatListProps = {
   online: { id: number; name: string }[];
