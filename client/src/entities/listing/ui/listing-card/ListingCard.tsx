@@ -13,7 +13,7 @@ export enum ListingCardVariant {
 
 export type ListingCardData = {
   title: string;
-  price: number;
+  price: number | null;
   imageUrl?: string;
   imageAlt?: string;
   city?: string;
@@ -22,13 +22,15 @@ export type ListingCardData = {
   tags?: readonly string[];
 };
 
-export type ListingCardProps = {
+export interface ListingCardProps {
   listing: ListingCardData;
   variant?: ListingCardVariant;
   saved: boolean;
   onSavedChange: (saved: boolean) => void;
   onOpen: () => void;
-};
+  saveDisabled?: boolean;
+  saveError?: string;
+}
 
 export function ListingCard({
   listing,
@@ -36,6 +38,8 @@ export function ListingCard({
   saved,
   onSavedChange,
   onOpen,
+  saveDisabled = false,
+  saveError,
 }: ListingCardProps): JSX.Element {
   const location = [listing.city, listing.district, listing.metro].filter(Boolean).join(' · ');
 
@@ -58,15 +62,21 @@ export function ListingCard({
       </button>
       <div className={styles.content}>
         <div className={styles.topline}>
-          <strong>{listing.price.toLocaleString('ru-RU')} ₽</strong>
+          <strong>
+            {listing.price === null
+              ? 'Цена не указана'
+              : `${listing.price.toLocaleString('ru-RU')} ₽`}
+          </strong>
           <IconButton
             className={[styles.saveButton, saved && styles.saved].filter(Boolean).join(' ')}
             icon={<LuHeart aria-hidden="true" />}
             label={saved ? 'Убрать из избранного' : 'Сохранить объявление'}
+            disabled={saveDisabled}
             aria-pressed={saved}
             onClick={() => onSavedChange(!saved)}
           />
         </div>
+        {saveError && <p role="alert">{saveError}</p>}
         <h3>{listing.title}</h3>
         {location && <p className={styles.location}>{location}</p>}
         {Boolean(listing.tags?.length) && (
