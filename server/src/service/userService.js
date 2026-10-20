@@ -19,6 +19,7 @@ class UserService {
   getUsers() {
     return this.user.findAll({
       order: [['id', 'ASC']],
+      attributes: { exclude: ['hashpass'] },
       include: 'UserProfile',
     });
   }
@@ -28,16 +29,22 @@ class UserService {
       where: {
         [Sequelize.Op.or]: [{ senderId: id }, { receiverId: id }],
       },
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
       include: [
         {
           model: this.user,
           as: 'receiver',
           attributes: ['id', 'name', 'email'],
+          include: [{ model: this.userProfile, attributes: ['photo'] }],
         },
         {
           model: this.user,
           as: 'sender',
           attributes: ['id', 'name', 'email'],
+          include: [{ model: this.userProfile, attributes: ['photo'] }],
         },
       ],
     });
@@ -64,6 +71,13 @@ class UserService {
   //       return false;
   //     }
   //   }
+
+  async getSummary(id) {
+    return this.user.findByPk(id, {
+      attributes: ['id', 'name'],
+      include: [{ model: this.userProfile, attributes: ['photo'] }],
+    });
+  }
 
   async editUser(newData, id) {
     // console.log('data --->', newData, 'id --->', id);
