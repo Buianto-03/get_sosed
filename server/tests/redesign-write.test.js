@@ -270,3 +270,48 @@ test('conversation list queries latest messages first and returns one latest row
     [4, 3],
   );
 });
+
+test('profile photo preparation skips absent photos and rejects conflicting or oversized uploads before decoding', async () => {
+  let decodes = 0;
+  const service = load('../src/service/profileService.js', {
+    crypto: {},
+    'fs/promises': {},
+    sharp: () => { decodes += 1; throw new Error('unexpected decode'); },
+    '../../db/models': {},
+  });
+  assert.equal(await service.preparePhoto(undefined, false), undefined);
+  assert.equal(await service.preparePhoto(undefined, true), undefined);
+  for (const [file, removePhoto] of [
+    [{ size: 10, buffer: Buffer.from('photo') }, true],
+    [{ size: 5 * 1024 * 1024 + 1, buffer: Buffer.from('photo') }, false],
+  ]) {
+    await assert.rejects(service.preparePhoto(file, removePhoto),
+      (error) => error.status === 400 && error.code === 'INVALID_PROFILE_DATA');
+  }
+  assert.equal(decodes, 0);
+});
+
+test('profile photo preparation converts uploads at the size limit to WebP and rejects undecodable images', async () => {
+  const source = Buffer.from('source');
+  const image = Buffer.from('webp');
+  let invalidImage = false;
+  const service = load('../src/service/profileService.js', {
+    crypto: {},
+    'fs/promises': {},
+    sharp: (buffer) => {
+      assert.equal(buffer, source);
+      return { webp: () => ({ toBuffer: async () => {
+        if (invalidImage) {
+          throw new Error('decode failed');
+        }
+        return image;
+      } }) };
+    },
+    '../../db/models': {},
+  });
+  const file = { size: 5 * 1024 * 1024, buffer: source };
+  assert.equal(await service.preparePhoto(file, false), image);
+  invalidImage = true;
+  await assert.rejects(service.preparePhoto(file, false),
+    (error) => error.status === 400 && error.code === 'INVALID_PROFILE_DATA');
+});

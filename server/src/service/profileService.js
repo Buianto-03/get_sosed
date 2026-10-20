@@ -76,89 +76,143 @@ class ProfileService {
     return values;
   }
 
-  async editProfile(id, body, file) {
-    const values = this.parseProfile(body);
-    if (file && body.removePhoto === 'true') throw invalid();
-    let image;
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) throw invalid();
-      try {
-        image = await sharp(file.buffer).webp().toBuffer();
-      } catch {
-        throw invalid();
-      }
+  async preparePhoto(file, removePhoto) {
+    if (file && removePhoto) {
+      throw invalid();
     }
+    if (!file) {
+      return undefined;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      throw invalid();
+    }
+    try {
+      return await sharp(file.buffer).webp().toBuffer();
+    } catch {
+      throw invalid();
+    }
+  }
+
+  async getUserForUpdate(id, transaction) {
+    const user = await this.user.findByPk(id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!user) {
+      throw Object.assign(new Error('User not found'), {
+        status: 404,
+        code: 'USER_NOT_FOUND',
+      });
+    }
+    return user;
+  }
+
+  async getOrCreateProfile(id, transaction) {
+    const [profile] = await this.userProfile.findOrCreate({
+      where: { userId: id },
+      defaults: { photo: null },
+      transaction,
+    });
+    return profile;
+  }
+
+  getProfileUser(id, transaction) {
+    return this.user.findByPk(id, {
+      attributes: ['id', 'name', 'email', 'roleId'],
+      include: [
+        {
+          model: this.userProfile,
+          attributes: [
+            'about',
+            'city',
+            'intent',
+            'habits',
+            'age',
+            'gender',
+            'photo',
+            'phoneNumber',
+          ],
+        },
+      ],
+      transaction,
+    });
+  }
+
+  createPhotoPaths(id) {
+    const directory = `./public/images/users/user-${id}`;
+    const fileName = `${randomUUID()}.webp`;
+    return {
+      directory,
+      filePath: `${directory}/${fileName}`,
+      url: `/images/users/user-${id}/${fileName}`,
+    };
+  }
+
+  async writePhoto({ directory, filePath }, image) {
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(filePath, image);
+  }
+
+  async removePreviousPhoto(id, photoUrl) {
+    if (
+      !photoUrl ||
+      !new RegExp(`^/images/users/user-${id}/[^/]+\\.webp$`).test(photoUrl)
+    ) {
+      return;
+    }
+    try {
+      await fs.rm(`./public${photoUrl}`, { force: true });
+    } catch (error) {
+      console.error('Cannot remove previous profile photo:', error);
+    }
+  }
+
+  async removeCreatedPhoto(filePath) {
+    if (!filePath) {
+      return;
+    }
+    try {
+      await fs.rm(filePath, { force: true });
+    } catch (error) {
+      console.error('Cannot remove profile photo after rollback:', error);
+    }
+  }
+
+  async editProfile(id, body, file) {
+    const { name, ...profileValues } = this.parseProfile(body);
+    const removePhoto = body.removePhoto === 'true';
+    const image = await this.preparePhoto(file, removePhoto);
     let createdFile;
     let previousPhoto;
     try {
       const updated = await this.sequelize.transaction(async (transaction) => {
-        const user = await this.user.findByPk(id, {
-          transaction,
-          lock: transaction.LOCK.UPDATE,
-        });
-        if (!user)
-          throw Object.assign(new Error('User not found'), {
-            status: 404,
-            code: 'USER_NOT_FOUND',
-          });
-        if (values.name !== undefined) {
-          await user.update({ name: values.name }, { transaction });
-          delete values.name;
+        const user = await this.getUserForUpdate(id, transaction);
+
+        if (name !== undefined) {
+          await user.update({ name }, { transaction });
         }
-        const [profile] = await this.userProfile.findOrCreate({
-          where: { userId: id },
-          defaults: { photo: null },
-          transaction,
-        });
-        if (image || body.removePhoto === 'true') previousPhoto = profile.photo;
+
+        const profile = await this.getOrCreateProfile(id, transaction);
+        if (image || removePhoto) {
+          previousPhoto = profile.photo;
+        }
+
         if (image) {
-          const directory = `./public/images/users/user-${id}`;
-          const name = `${randomUUID()}.webp`;
-          createdFile = `${directory}/${name}`;
-          await fs.mkdir(directory, { recursive: true });
-          await fs.writeFile(createdFile, image);
-          values.photo = `/images/users/user-${id}/${name}`;
-        } else if (body.removePhoto === 'true') values.photo = null;
-        await profile.update(values, { transaction });
-        const updated = await this.user.findByPk(id, {
-          attributes: ['id', 'name', 'email', 'roleId'],
-          include: [
-            {
-              model: this.userProfile,
-              attributes: [
-                'about',
-                'city',
-                'intent',
-                'habits',
-                'age',
-                'gender',
-                'photo',
-                'phoneNumber',
-              ],
-            },
-          ],
-          transaction,
-        });
-        return updated;
+          const photo = this.createPhotoPaths(id);
+          createdFile = photo.filePath;
+          await this.writePhoto(photo, image);
+          profileValues.photo = photo.url;
+        } else if (removePhoto) {
+          profileValues.photo = null;
+        }
+        await profile.update(profileValues, { transaction });
+        return this.getProfileUser(id, transaction);
       });
-      if (
-        previousPhoto &&
-        new RegExp(`^/images/users/user-${id}/[^/]+\\.webp$`).test(
-          previousPhoto,
-        )
-      ) {
-        await fs
-          .rm(`./public${previousPhoto}`, { force: true })
-          .catch((error) => {
-            console.error('Cannot remove previous profile photo:', error);
-          });
-      }
+      await this.removePreviousPhoto(id, previousPhoto);
       return updated;
     } catch (error) {
-      if (createdFile)
-        await fs.rm(createdFile, { force: true }).catch((error) => {
-          console.error('Cannot remove profile photo after rollback:', error);
-        });
+      await this.removeCreatedPhoto(createdFile);
       throw error;
     }
   }
