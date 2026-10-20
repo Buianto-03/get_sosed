@@ -1,11 +1,39 @@
 const signupService = require('../service/signupService');
+const loginService = require('../service/loginService');
 const generateTokens = require('../utils/generateTokens');
 const cookiesConfig = require('../configs/cookiesConfig');
 
 class AuthController {
-  constructor(signupService) {
+  constructor(signupService, loginService) {
     this.signupService = signupService;
+    this.loginService = loginService;
   }
+
+  login = async (req, res) => {
+    try {
+      const user = await this.loginService.login(req.body);
+      const { accessToken, refreshToken } = generateTokens({ user });
+      res
+        .cookie('refreshToken', refreshToken, cookiesConfig)
+        .json({ accessToken, user });
+    } catch (error) {
+      const isExpectedError = error.status === 401 && error.code === 'INVALID_CREDENTIALS';
+      if (!isExpectedError) console.error('Cannot log in user:', error);
+      res.status(isExpectedError ? 401 : 500).json({
+        code: isExpectedError ? 'INVALID_CREDENTIALS' : 'LOGIN_FAILED',
+        message: isExpectedError ? 'Invalid email or password' : 'Cannot log in user',
+      });
+    }
+  };
+
+  logout = (req, res) => {
+    try {
+      res.clearCookie('refreshToken').sendStatus(200);
+    } catch (error) {
+      console.error('Cannot log out user:', error);
+      res.status(500).json({ code: 'LOGOUT_FAILED', message: 'Cannot log out user' });
+    }
+  };
 
   signup = async (req, res) => {
     try {
@@ -34,4 +62,4 @@ class AuthController {
   };
 }
 
-module.exports = new AuthController(signupService);
+module.exports = new AuthController(signupService, loginService);
