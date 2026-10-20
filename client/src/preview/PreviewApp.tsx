@@ -796,17 +796,21 @@ function ProfileScreen({
       error: null,
       onRetry: () => undefined,
     }}
-    onCreateListing={() => onNavigate('post')}
-    onEditProfile={() => {
-      setReturnVariant(variant);
-      setEditingSource(visibleProfile);
-      onSelectVariant('editing');
+    navigation={{
+      onCreateListing: () => onNavigate('post'),
+      onEditProfile: () => {
+        setReturnVariant(variant);
+        setEditingSource(visibleProfile);
+        onSelectVariant('editing');
+      },
+      onFindListings: () => onNavigate('search'),
     }}
-    onFindListings={() => onNavigate('search')}
-    onOpenListing={() => onNavigate('detail')}
-    onSaveListing={(id, saved) => setSavedIds((current) => saved
-      ? [...current.filter((item) => item !== id), id]
-      : current.filter((item) => item !== id))}
+    listingActions={{
+      onOpen: () => onNavigate('detail'),
+      onToggleSaved: (id) => setSavedIds((current) => current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]),
+    }}
   />;
 }
 

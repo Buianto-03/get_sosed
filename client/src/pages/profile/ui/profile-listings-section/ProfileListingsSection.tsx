@@ -33,6 +33,11 @@ export interface ProfileCollection {
   };
 }
 
+export interface ProfileListingActions {
+  onOpen: (id: string) => void;
+  onToggleSaved: (id: string) => void;
+}
+
 interface ProfileListingsSectionProps {
   headingId: string;
   title: string;
@@ -44,8 +49,7 @@ interface ProfileListingsSectionProps {
     onAction: () => void;
     icon: React.ReactNode;
   };
-  onOpenListing: (id: string) => void;
-  onSaveListing: (id: string, saved: boolean) => void;
+  actions: ProfileListingActions;
 }
 
 export function ProfileListingsSection({
@@ -53,8 +57,7 @@ export function ProfileListingsSection({
   title,
   collection,
   emptyState,
-  onOpenListing,
-  onSaveListing,
+  actions,
 }: ProfileListingsSectionProps): JSX.Element {
   return (
     <section className={styles.collection} aria-labelledby={headingId}>
@@ -85,8 +88,8 @@ export function ProfileListingsSection({
                 saved={saved}
                 saveDisabled={saveDisabled}
                 saveError={saveError}
-                onSavedChange={(nextSaved) => onSaveListing(id, nextSaved)}
-                onOpen={() => onOpenListing(id)}
+                onSavedChange={() => actions.onToggleSaved(id)}
+                onOpen={() => actions.onOpen(id)}
               />
             ))}
           </div>

@@ -7,6 +7,7 @@ import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import {
   ProfileListingsSection,
   type ProfileCollection,
+  type ProfileListingActions,
 } from '../profile-listings-section/ProfileListingsSection';
 import styles from './ProfilePage.module.scss';
 
@@ -24,28 +25,27 @@ export type ProfileDetails = {
   avatarUrl?: string;
 };
 
+export interface ProfileNavigation {
+  onCreateListing: () => void;
+  onEditProfile: () => void;
+  onFindListings: () => void;
+  onMessages?: () => void;
+}
+
 export interface ProfilePageProps {
   profile: ProfileDetails | null;
   favorites: ProfileCollection;
   myListings: ProfileCollection;
-  onCreateListing: () => void;
-  onEditProfile: () => void;
-  onFindListings: () => void;
-  onOpenListing: (id: string) => void;
-  onSaveListing: (id: string, saved: boolean) => void;
-  onMessages?: () => void;
+  navigation: ProfileNavigation;
+  listingActions: ProfileListingActions;
 }
 
 export function ProfilePage({
   profile,
   favorites,
   myListings,
-  onCreateListing,
-  onEditProfile,
-  onFindListings,
-  onOpenListing,
-  onSaveListing,
-  onMessages,
+  navigation,
+  listingActions,
 }: ProfilePageProps): JSX.Element {
   const collections = [
     {
@@ -55,7 +55,7 @@ export function ProfilePage({
       emptyTitle: 'Пока нет сохранённых объявлений',
       emptyDescription: 'Сохраняйте понравившиеся объявления, чтобы вернуться к ним позже.',
       emptyAction: 'Найти объявления',
-      onEmptyAction: onFindListings,
+      onEmptyAction: navigation.onFindListings,
       icon: <LuHeart />,
     },
     {
@@ -65,7 +65,7 @@ export function ProfilePage({
       emptyTitle: 'Здесь будут ваши объявления',
       emptyDescription: 'Расскажите о жилье, чтобы найти подходящего соседа.',
       emptyAction: 'Разместить объявление',
-      onEmptyAction: onCreateListing,
+      onEmptyAction: navigation.onCreateListing,
       icon: <LuPlus />,
     },
   ];
@@ -79,14 +79,14 @@ export function ProfilePage({
             Профиль
           </Heading>
         </div>
-        <Button className={styles.createButton} onClick={onCreateListing}>
+        <Button className={styles.createButton} onClick={navigation.onCreateListing}>
           <LuPlus aria-hidden="true" />
           Разместить объявление
         </Button>
       </div>
 
-      {onMessages && (
-        <Button variant={ButtonVariant.Secondary} onClick={onMessages}>
+      {navigation.onMessages && (
+        <Button variant={ButtonVariant.Secondary} onClick={navigation.onMessages}>
           Сообщения
         </Button>
       )}
@@ -99,7 +99,7 @@ export function ProfilePage({
           tags={profile.habits ? [...profile.habits] : []}
           variant={PersonSummaryVariant.Profile}
           action={
-            <Button variant={ButtonVariant.Secondary} onClick={onEditProfile}>
+            <Button variant={ButtonVariant.Secondary} onClick={navigation.onEditProfile}>
               Изменить профиль
             </Button>
           }
@@ -110,7 +110,7 @@ export function ProfilePage({
           description="Добавьте город, пару слов о себе и привычки, чтобы будущим соседям было проще познакомиться с вами."
           icon={<LuUser />}
           action={
-            <Button variant={ButtonVariant.Secondary} onClick={onEditProfile}>
+            <Button variant={ButtonVariant.Secondary} onClick={navigation.onEditProfile}>
               Заполнить профиль
             </Button>
           }
@@ -130,8 +130,7 @@ export function ProfilePage({
             onAction: collection.onEmptyAction,
             icon: collection.icon,
           }}
-          onOpenListing={onOpenListing}
-          onSaveListing={onSaveListing}
+          actions={listingActions}
         />
       ))}
     </main>

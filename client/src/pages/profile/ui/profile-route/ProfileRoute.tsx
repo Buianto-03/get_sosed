@@ -17,7 +17,9 @@ export default function ProfileRoute(): JSX.Element | null {
   const navigate = useNavigate();
   const userId = user.status === UserStatus.Logged ? user.id : null;
   const mine = useMyAdverts(userId);
-  if (user.status !== UserStatus.Logged) return null;
+  if (user.status !== UserStatus.Logged) {
+    return null;
+  }
   const cards = (items: AdvertType[]): ProfileListing[] =>
     items.map((advert) => ({
       ...toProfileListing(advert),
@@ -51,16 +53,22 @@ export default function ProfileRoute(): JSX.Element | null {
             },
           },
         }}
-        onMessages={() => navigate(routes.messages)}
-        onCreateListing={() => navigate(routes.listingCreate)}
-        onEditProfile={() => navigate(routes.profileEdit)}
-        onFindListings={() => navigate(routes.listings)}
-        onOpenListing={(id) => navigate(routes.listingDetails(id))}
-        onSaveListing={(id) => {
-          const advert = [...mine.items, ...saved.items.map((item) => item.Advert)].find(
-            (item) => item.id === Number(id),
-          );
-          if (advert) saved.toggle(advert);
+        navigation={{
+          onMessages: () => navigate(routes.messages),
+          onCreateListing: () => navigate(routes.listingCreate),
+          onEditProfile: () => navigate(routes.profileEdit),
+          onFindListings: () => navigate(routes.listings),
+        }}
+        listingActions={{
+          onOpen: (id) => navigate(routes.listingDetails(id)),
+          onToggleSaved: (id) => {
+            const advert = [...mine.items, ...saved.items.map((item) => item.Advert)].find(
+              (item) => item.id === Number(id),
+            );
+            if (advert) {
+              saved.toggle(advert);
+            }
+          },
         }}
       />
     </div>
