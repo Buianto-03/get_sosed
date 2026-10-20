@@ -10,6 +10,24 @@ const {
   AdvertTags,
 } = require('../../db/models');
 
+function invalidPagination() {
+  return Object.assign(new Error('Invalid pagination parameters'), {
+    status: 400,
+    code: 'INVALID_PAGINATION',
+  });
+}
+
+function parsePageValue(value) {
+  if (
+    !['string', 'number'].includes(typeof value) ||
+    !/^[1-9]\d*$/.test(String(value)) ||
+    !Number.isSafeInteger(Number(value))
+  ) {
+    throw invalidPagination();
+  }
+  return Number(value);
+}
+
 class AdvertService {
   constructor(advert, location, tags, user, like, advertPhoto, advertTag) {
     this.advert = advert;
@@ -84,6 +102,27 @@ class AdvertService {
     return advertWithUserAndLocation;
   }
 
+  async getMine(userId, { page = 1, limit = 12 } = {}) {
+    const currentPage = parsePageValue(page);
+    const pageSize = parsePageValue(limit);
+    const offset = (currentPage - 1) * pageSize;
+    if (pageSize > 50 || !Number.isSafeInteger(offset)) {
+      throw invalidPagination();
+    }
+    const { rows, count } = await this.advert.findAndCountAll({
+      where: { userId },
+      limit: pageSize,
+      offset,
+      distinct: true,
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+      include: this.getReadIncludes(),
+    });
+    return { items: rows, total: count, page: currentPage, limit: pageSize };
+  }
+
   async getAdverts() {
     return this.advert.findAll({
       order: [['id', 'ASC']],
@@ -115,11 +154,13 @@ class AdvertService {
   async getFilteredAdverts(filters) {
     const whereClause = {};
     const locationClause = {};
-    const selectedTagIds = [...new Set((filters.tags || [])
-      .map(({ id }) => Number(id))
-      .filter((id) => Number.isInteger(id) && id > 0))];
-
-    // console.log({ filters });
+    const selectedTagIds = [
+      ...new Set(
+        (filters.tags || [])
+          .map(({ id }) => Number(id))
+          .filter((id) => Number.isInteger(id) && id > 0),
+      ),
+    ];
 
     if (filters.city) locationClause.city = filters.city;
     if (filters.district) locationClause.district = filters.district;
@@ -135,10 +176,7 @@ class AdvertService {
       }
     }
 
-    // if (filters.rooms) {
-    //   whereClause.rooms = Number(filters.rooms);
-    // }
-    if(filters.roomsFrom || filters.roomsTo) {
+    if (filters.roomsFrom || filters.roomsTo) {
       whereClause.rooms = {};
       if (filters.roomsFrom !== undefined) {
         whereClause.rooms[Op.gte] = Number(filters.roomsFrom);
@@ -154,7 +192,10 @@ class AdvertService {
           where: { tagId: { [Op.in]: selectedTagIds } },
           group: ['advertId'],
           having: Sequelize.where(
-            Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('tagId'))),
+            Sequelize.fn(
+              'COUNT',
+              Sequelize.fn('DISTINCT', Sequelize.col('tagId')),
+            ),
             selectedTagIds.length,
           ),
         });
@@ -163,9 +204,10 @@ class AdvertService {
 
       const adverts = await this.advert.findAll({
         where: whereClause,
-        include: this.getReadIncludes(Object.keys(locationClause).length ? locationClause : undefined),
+        include: this.getReadIncludes(
+          Object.keys(locationClause).length ? locationClause : undefined,
+        ),
       });
-      // console.log(JSON.stringify(adverts, null, 2));
       return adverts;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);
@@ -190,10 +232,6 @@ class AdvertService {
       throw error;
     }
   }
-
-  // getTagsLikeStr(str) {
-  //   // where: { tagName: { [Op.like]: `%${str}%` } }
-  // }
 
   async getTagsLikeStr(str) {
     try {
