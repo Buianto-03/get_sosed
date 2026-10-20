@@ -1,17 +1,19 @@
 const advertService = require('../service/advertService');
-const sharp = require('sharp');
+const publishAdvertService = require('../service/publishAdvertService');
 const fs = require('fs/promises');
 
 class AdvertController {
-  constructor(service) {
-    this.service = service;
+  constructor(advertService, publishAdvertService) {
+    this.advertService = advertService;
+    this.publishAdvertService = publishAdvertService;
   }
 
   getAdverts = async (req, res) => {
     try {
-      const adverts = await this.service.getAdverts();
+      const adverts = await this.advertService.getAdverts();
       res.status(200).json(adverts);
     } catch (error) {
+      console.error('Cannot read adverts:', error.message);
       res.status(500).json({ message: 'server error' });
     }
   };
@@ -22,7 +24,7 @@ class AdvertController {
       if (!Number.isSafeInteger(advertId) || advertId <= 0) {
         return res.status(404).json({ message: 'Advert not found' });
       }
-      const advert = await this.service.getAdvertById(advertId);
+      const advert = await this.advertService.getAdvertById(advertId);
       if (!advert) {
         return res.status(404).json({ message: 'Advert not found' });
       }
@@ -32,54 +34,64 @@ class AdvertController {
     }
   };
 
+  getMine = async (req, res) => {
+    try {
+      return res.json(await this.advertService.getMine(res.locals.user.id, req.query));
+    } catch (error) {
+      if (error.status === 400 && error.code === 'INVALID_PAGINATION') {
+        return res.status(400).json({ code: error.code, message: error.message });
+      }
+      console.error('Cannot load own adverts:', error);
+      return res.status(500).json({
+        code: 'OWN_ADVERTS_LOAD_FAILED',
+        message: 'Cannot load own adverts',
+      });
+    }
+  };
+
   createAdvert = async (req, res) => {
     try {
-      const newAdvert = await this.service.addAdvert({
-        ...req.body,
-        userId: res.locals.user.id,
-      });
-
-      if (!req.files.length) {
-        return res.status(400).json({ message: 'File not found' });
-      }
-
-      await fs.mkdir(`./public/images/adverts/advert-${newAdvert.id}`);
-      req.files.forEach(async (file, i) => {
-        const name = `advert${newAdvert.id}-${i}.webp`;
-        const outputBuffer = await sharp(file.buffer).webp().toBuffer();
-        await fs.writeFile(
-          `./public/images/adverts/advert-${newAdvert.id}/${name}`,
-          outputBuffer,
+      return res
+        .status(201)
+        .json(
+          await this.publishAdvertService.publishAdvert(
+            req.body,
+            req.files,
+            res.locals.user.id,
+          ),
         );
-        await this.service.newAdvertPhotos(newAdvert.id, `/images/adverts/advert-${newAdvert.id}/${name}`)
-      });
-
-      res.status(201).json(newAdvert);
     } catch (error) {
-      console.log(error);
-      res.sendStatus(500);
+      const isExpectedError = error.status === 400 && error.code === 'INVALID_ADVERT_DATA';
+      const status = isExpectedError || (error.status >= 500 && error.status < 600)
+        ? error.status
+        : 500;
+      if (!isExpectedError) {
+        console.error('Cannot publish advert:', error);
+      }
+      return res
+        .status(status)
+        .json({
+          code: isExpectedError ? error.code : 'ADVERT_PUBLISH_FAILED',
+          message: isExpectedError ? error.message : 'Cannot publish advert',
+        });
     }
   };
 
   deletePost = async (req, res) => {
     const { postId } = req.params;
-    const success = await this.service.deletePost(postId);
+    const success = await this.advertService.deletePost(postId);
     res.sendStatus(success ? 204 : 500);
   };
 
   patchUser = async (req, res) => {
     const { userId } = req.params;
-    const updatedUser = await this.service.editUser(req.body, userId);
+    const updatedUser = await this.advertService.editUser(req.body, userId);
     res.json(updatedUser);
   };
   getFilteredAdverts = async (req, res) => {
-  // console.log(req.body);
-  
     try {
-      const filters = req.body;// post (есть свойство tags)
-      // console.log(filters.tags);
-      // const filters = req.query; // get (есть свойство tags)
-      const filteredAdverts = await this.service.getFilteredAdverts(filters);
+      const filters = req.body;
+      const filteredAdverts = await this.advertService.getFilteredAdverts(filters);
       res.json(filteredAdverts);
     } catch (error) {
       console.log('Ошибка при фильтрации объявлений:', error);
@@ -95,7 +107,7 @@ class AdvertController {
       return res.status(400).json({ error: 'query must be a string' });
     }
     try {
-      const tags = await this.service.getTagsLikeStr(query.trim());
+      const tags = await this.advertService.getTagsLikeStr(query.trim());
       return res.status(200).json(tags);
     } catch (error) {
       return res.status(500).json({ error: 'Ошибка при поиске тегов' });
@@ -106,9 +118,7 @@ class AdvertController {
     const { id } = res.locals.user;
 
     try {
-      const likedAdverts = await this.service.likedAdverts(id);
-      // console.log(JSON.parse(JSON.stringify(likedAdverts)));
-
+      const likedAdverts = await this.advertService.likedAdverts(id);
       res.status(200).json(likedAdverts);
     } catch (error) {
       console.log(error);
@@ -120,30 +130,14 @@ class AdvertController {
 
   getTopAdvertsByLikes = async (req, res) => {
     try {
-      const topAdverts = await this.service.getTopAdvertsByLikes();
+      const topAdverts = await this.advertService.getTopAdvertsByLikes();
       res.status(200).json(topAdverts);
     } catch (error) {
-      res
-        .status(500)
-        .json({ error: 'Ошибка при получении топ-объявлений' });
+      res.status(500).json({ error: 'Ошибка при получении топ-объявлений' });
     }
   };
-
-  // searchAdverts = async (req, res) => {
-  //   try {
-  //     const { filter } = req.query;
-  //     const searchAdverts = await this.service.searchAdverts(filter);
-  //     res.json(searchAdverts);
-  //   } catch (error) {
-  //     console.error('Ошибка при поиске объявлений:', error);
-  //     res
-  //       .status(500)
-  //       .json({ error: 'Ошибка на сервере при поиске объявлений' });
-  //   }
-  // };
-  // get m
 }
 
-const advertController = new AdvertController(advertService);
+const advertController = new AdvertController(advertService, publishAdvertService);
 
 module.exports = advertController;
