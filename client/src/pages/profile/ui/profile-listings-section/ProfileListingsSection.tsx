@@ -45,8 +45,7 @@ interface ProfileListingsSectionProps {
   emptyState: {
     title: string;
     description: string;
-    actionLabel: string;
-    onAction: () => void;
+    action: React.ReactNode;
     icon: React.ReactNode;
   };
   actions: ProfileListingActions;
@@ -98,11 +97,7 @@ export function ProfileListingsSection({
             title={emptyState.title}
             description={emptyState.description}
             icon={emptyState.icon}
-            action={
-              <Button variant={ButtonVariant.Secondary} onClick={emptyState.onAction}>
-                {emptyState.actionLabel}
-              </Button>
-            }
+            action={emptyState.action}
           />
         ))}
       {!collection.loading && !collection.error && collection.pagination?.hasMore && (

@@ -40,10 +40,7 @@ export default function HomeRoute(): JSX.Element {
 
   return (
     <main className={styles.home__page}>
-      <MainBanner
-        onFindHousing={() => navigate(routes.listings)}
-        onCreateListing={() => navigate(routes.listingCreate)}
-      />
+      <MainBanner onFindHousing={() => navigate(routes.listings)} />
       {saved.status === SavedStatus.Error && (
         <div>
           <Alert variant={AlertVariant.Error}>Не удалось загрузить избранное.</Alert>

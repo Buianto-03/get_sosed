@@ -1,16 +1,15 @@
 import React from 'react';
-import { Button, ButtonVariant } from '../../shared/ui/button/Button';
+import { CreateListingButton } from '@features/listing-create/ui/create-listing-button/CreateListingButton';
+import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import styles from './MainBanner.module.scss';
 
-export type MainBannerProps = {
+export interface MainBannerProps {
   onFindHousing: () => void;
-  onCreateListing: () => void;
   description?: string;
-};
+}
 
 export function MainBanner({
   onFindHousing,
-  onCreateListing,
   description = 'Ищи жильё для совместного проживания и знакомься с будущими соседями.',
 }: MainBannerProps): JSX.Element {
   return (
@@ -22,9 +21,7 @@ export function MainBanner({
           <p className={styles.description}>{description}</p>
           <div className={styles.actions}>
             <Button onClick={onFindHousing}>Найти жильё</Button>
-            <Button variant={ButtonVariant.Secondary} onClick={onCreateListing}>
-              Разместить объявление
-            </Button>
+            <CreateListingButton variant={ButtonVariant.Secondary} />
           </div>
         </div>
         <img className={styles.photo} src="/mainPhoto.jpg" alt="Гостиная в квартире" />

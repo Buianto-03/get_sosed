@@ -471,7 +471,6 @@ function HomeScreen({
     <main className="preview-page preview-home-page">
       <MainBanner
         onFindHousing={() => onNavigate('search')}
-        onCreateListing={() => onNavigate('post')}
         description={variant === 'long' ? longAdvert.description : undefined}
       />
       <FreshListings
@@ -797,7 +796,6 @@ function ProfileScreen({
       onRetry: () => undefined,
     }}
     navigation={{
-      onCreateListing: () => onNavigate('post'),
       onEditProfile: () => {
         setReturnVariant(variant);
         setEditingSource(visibleProfile);

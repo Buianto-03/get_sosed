@@ -1,6 +1,7 @@
 import React from 'react';
 import { LuHeart, LuPlus, LuUser } from 'react-icons/lu';
 import { PersonSummary, PersonSummaryVariant } from '@entities/person/ui/PersonSummary';
+import { CreateListingButton } from '@features/listing-create/ui/create-listing-button/CreateListingButton';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
@@ -26,7 +27,6 @@ export type ProfileDetails = {
 };
 
 export interface ProfileNavigation {
-  onCreateListing: () => void;
   onEditProfile: () => void;
   onFindListings: () => void;
   onMessages?: () => void;
@@ -54,8 +54,11 @@ export function ProfilePage({
       title: 'Избранное',
       emptyTitle: 'Пока нет сохранённых объявлений',
       emptyDescription: 'Сохраняйте понравившиеся объявления, чтобы вернуться к ним позже.',
-      emptyAction: 'Найти объявления',
-      onEmptyAction: navigation.onFindListings,
+      emptyAction: (
+        <Button variant={ButtonVariant.Secondary} onClick={navigation.onFindListings}>
+          Найти объявления
+        </Button>
+      ),
       icon: <LuHeart />,
     },
     {
@@ -64,8 +67,7 @@ export function ProfilePage({
       title: 'Мои объявления',
       emptyTitle: 'Здесь будут ваши объявления',
       emptyDescription: 'Расскажите о жилье, чтобы найти подходящего соседа.',
-      emptyAction: 'Разместить объявление',
-      onEmptyAction: navigation.onCreateListing,
+      emptyAction: <CreateListingButton variant={ButtonVariant.Secondary} />,
       icon: <LuPlus />,
     },
   ];
@@ -79,10 +81,7 @@ export function ProfilePage({
             Профиль
           </Heading>
         </div>
-        <Button className={styles.createButton} onClick={navigation.onCreateListing}>
-          <LuPlus aria-hidden="true" />
-          Разместить объявление
-        </Button>
+        <CreateListingButton className={styles.createButton} withIcon />
       </div>
 
       {navigation.onMessages && (
@@ -126,8 +125,7 @@ export function ProfilePage({
           emptyState={{
             title: collection.emptyTitle,
             description: collection.emptyDescription,
-            actionLabel: collection.emptyAction,
-            onAction: collection.onEmptyAction,
+            action: collection.emptyAction,
             icon: collection.icon,
           }}
           actions={listingActions}

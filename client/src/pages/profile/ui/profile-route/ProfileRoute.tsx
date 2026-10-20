@@ -55,7 +55,6 @@ export default function ProfileRoute(): JSX.Element | null {
         }}
         navigation={{
           onMessages: () => navigate(routes.messages),
-          onCreateListing: () => navigate(routes.listingCreate),
           onEditProfile: () => navigate(routes.profileEdit),
           onFindListings: () => navigate(routes.listings),
         }}
