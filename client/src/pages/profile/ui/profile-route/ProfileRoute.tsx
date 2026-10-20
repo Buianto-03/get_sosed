@@ -29,21 +29,28 @@ export default function ProfileRoute(): JSX.Element | null {
     <div className={styles.profile__route}>
       <ProfilePage
         profile={toProfile(user)}
-        favorites={cards(saved.items.map((item) => item.Advert))}
-        myListings={cards(mine.items)}
-        favoritesLoading={saved.status === SavedStatus.Loading || saved.status === SavedStatus.Idle}
-        favoritesError={saved.error}
-        myListingsLoading={mine.loading}
-        myListingsError={mine.error}
-        myListingsTotal={mine.total}
-        myListingsHasMore={mine.hasMore}
-        myListingsLoadingMore={mine.loadingMore}
-        myListingsLoadMoreError={mine.loadMoreError}
-        onLoadMoreMine={() => {
-          void mine.loadMore();
+        favorites={{
+          items: cards(saved.items.map((item) => item.Advert)),
+          total: saved.items.length,
+          loading: saved.status === SavedStatus.Loading || saved.status === SavedStatus.Idle,
+          error: saved.error ?? null,
+          onRetry: saved.reload,
         }}
-        onRetryMine={mine.retry}
-        onRetryFavorites={saved.reload}
+        myListings={{
+          items: cards(mine.items),
+          total: mine.total,
+          loading: mine.loading,
+          error: mine.error ?? null,
+          onRetry: mine.retry,
+          pagination: {
+            hasMore: mine.hasMore,
+            loading: mine.loadingMore,
+            error: mine.loadMoreError || null,
+            onLoadMore: () => {
+              void mine.loadMore();
+            },
+          },
+        }}
         onMessages={() => navigate(routes.messages)}
         onCreateListing={() => navigate(routes.listingCreate)}
         onEditProfile={() => navigate(routes.profileEdit)}

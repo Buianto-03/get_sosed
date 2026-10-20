@@ -30,26 +30,29 @@ export type ProfileListing = {
   saveError?: string;
 };
 
+export interface ProfileCollection {
+  items: readonly ProfileListing[];
+  total: number;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
+  pagination?: {
+    hasMore: boolean;
+    loading: boolean;
+    error: string | null;
+    onLoadMore: () => void;
+  };
+}
+
 export interface ProfilePageProps {
   profile: ProfileDetails | null;
-  favorites: readonly ProfileListing[];
-  myListings: readonly ProfileListing[];
+  favorites: ProfileCollection;
+  myListings: ProfileCollection;
   onCreateListing: () => void;
   onEditProfile: () => void;
   onFindListings: () => void;
   onOpenListing: (id: string) => void;
   onSaveListing: (id: string, saved: boolean) => void;
-  favoritesLoading?: boolean;
-  favoritesError?: string | null;
-  myListingsLoading?: boolean;
-  myListingsError?: string | null;
-  myListingsTotal?: number;
-  myListingsHasMore?: boolean;
-  myListingsLoadingMore?: boolean;
-  myListingsLoadMoreError?: string;
-  onLoadMoreMine?: () => void;
-  onRetryFavorites?: () => void;
-  onRetryMine?: () => void;
   onMessages?: () => void;
 }
 
@@ -62,28 +65,18 @@ export function ProfilePage({
   onFindListings,
   onOpenListing,
   onSaveListing,
-  favoritesLoading,
-  favoritesError,
-  myListingsLoading,
-  myListingsError,
-  myListingsTotal,
-  myListingsHasMore,
-  myListingsLoadingMore,
-  myListingsLoadMoreError,
-  onLoadMoreMine,
-  onRetryFavorites,
-  onRetryMine,
   onMessages,
 }: ProfilePageProps): JSX.Element {
   const collections = [
     {
       id: 'favorites',
-      loading: favoritesLoading,
-      error: favoritesError,
-      retry: onRetryFavorites,
+      pagination: favorites.pagination,
+      loading: favorites.loading,
+      error: favorites.error,
+      retry: favorites.onRetry,
       title: 'Избранное',
-      listings: favorites,
-      total: favorites.length,
+      listings: favorites.items,
+      total: favorites.total,
       emptyTitle: 'Пока нет сохранённых объявлений',
       emptyDescription: 'Сохраняйте понравившиеся объявления, чтобы вернуться к ним позже.',
       emptyAction: 'Найти объявления',
@@ -92,12 +85,13 @@ export function ProfilePage({
     },
     {
       id: 'my-listings',
-      loading: myListingsLoading,
-      error: myListingsError,
-      retry: onRetryMine,
+      pagination: myListings.pagination,
+      loading: myListings.loading,
+      error: myListings.error,
+      retry: myListings.onRetry,
       title: 'Мои объявления',
-      listings: myListings,
-      total: myListingsTotal ?? myListings.length,
+      listings: myListings.items,
+      total: myListings.total,
       emptyTitle: 'Здесь будут ваши объявления',
       emptyDescription: 'Расскажите о жилье, чтобы найти подходящего соседа.',
       emptyAction: 'Разместить объявление',
@@ -203,20 +197,19 @@ export function ProfilePage({
                 }
               />
             ))}
-          {collection.id === 'my-listings' &&
-            !collection.loading &&
+          {!collection.loading &&
             !collection.error &&
-            myListingsHasMore && (
+            collection.pagination?.hasMore && (
             <div className={styles.collection__pagination}>
-              {myListingsLoadMoreError && (
-                <Alert variant={AlertVariant.Error}>{myListingsLoadMoreError}</Alert>
+              {collection.pagination.error && (
+                <Alert variant={AlertVariant.Error}>{collection.pagination.error}</Alert>
               )}
               <Button
                 variant={ButtonVariant.Secondary}
-                loading={myListingsLoadingMore}
-                onClick={onLoadMoreMine}
+                loading={collection.pagination.loading}
+                onClick={collection.pagination.onLoadMore}
               >
-                {myListingsLoadMoreError ? 'Повторить загрузку' : 'Показать ещё'}
+                {collection.pagination.error ? 'Повторить загрузку' : 'Показать ещё'}
               </Button>
             </div>
           )}

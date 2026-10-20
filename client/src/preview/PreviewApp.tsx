@@ -782,8 +782,20 @@ function ProfileScreen({
 
   return <ProfilePage
     profile={visibleProfile}
-    favorites={toProfileListings(favorites, savedIds)}
-    myListings={toProfileListings(myAdverts, savedIds)}
+    favorites={{
+      items: toProfileListings(favorites, savedIds),
+      total: favorites.length,
+      loading: false,
+      error: null,
+      onRetry: () => undefined,
+    }}
+    myListings={{
+      items: toProfileListings(myAdverts, savedIds),
+      total: myAdverts.length,
+      loading: false,
+      error: null,
+      onRetry: () => undefined,
+    }}
     onCreateListing={() => onNavigate('post')}
     onEditProfile={() => {
       setReturnVariant(variant);
