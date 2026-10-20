@@ -19,6 +19,19 @@ module.exports = {
       about: {
         type: Sequelize.TEXT,
       },
+      city: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      intent: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      habits: {
+        type: Sequelize.JSONB,
+        allowNull: false,
+        defaultValue: [],
+      },
       age: {
         type: Sequelize.INTEGER,
       },

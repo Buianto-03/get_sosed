@@ -8,6 +8,9 @@ module.exports = {
       [
         {
           userId: 1,
+          city: 'Москва',
+          intent: 'Ищу соседа для совместной аренды',
+          habits: JSON.stringify(['Не курю', 'Учусь']),
           about: 'Я студент, ищу соседа',
           age: 20,
           gender: 'male',
@@ -19,6 +22,9 @@ module.exports = {
 
         {
           userId: 2,
+          city: 'Москва',
+          intent: 'Ищу комнату',
+          habits: JSON.stringify(['Не курю', 'Работаю в офисе']),
           about: 'Недавно переехал, ищу соседа',
           age: 20,
           gender: 'male',
@@ -29,6 +35,9 @@ module.exports = {
         },
         {
           userId: 3,
+          city: 'Москва',
+          intent: 'Ищу соседа для совместной аренды',
+          habits: JSON.stringify(['Работаю из дома', 'Люблю порядок']),
           about: 'Хочу сэкономить, ищу соседа',
           age: 20,
           gender: 'male',
@@ -39,6 +48,9 @@ module.exports = {
         },
         {
           userId: 4,
+          city: 'Москва',
+          intent: 'Ищу соседей',
+          habits: JSON.stringify(['Без животных', 'Рано встаю']),
           about: 'Ищу соседей',
           age: 20,
           gender: 'female',
@@ -49,6 +61,9 @@ module.exports = {
         },
         {
           userId: 5,
+          city: 'Москва',
+          intent: 'Ищу квартиру с соседом',
+          habits: JSON.stringify(['Не курю', 'Люблю тишину']),
           about: 'Ищу квартиру с соседом',
           age: 20,
           gender: 'female',

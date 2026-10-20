@@ -91,7 +91,7 @@
 | Ошибки чата | CHAT_ERROR `{receiverId,payload}`; malformed/input/DB errors не обрывают handler без ответа. `sendMessage=false` сохраняет draft; `true` подтверждает передачу в socket, не запись/доставку. Server ack/delivery ticks отсутствуют. |
 | SPA fallback | Канонические/неизвестные браузерные пути получают built index, затем client router/NotFound. Неизвестный /api и /images → 404; обычный HTTP /ws → 426. Preview entry не собирается в основной build. |
 
-Миграция `20261018010000-add-profile-fields.js` добавляет nullable city/intent и JSONB habits default []; старые миграции не менялись. Применена в локальной development-БД без сброса и seed. Каталог M08 уже присутствовал; его записи и AdvertTags не переписывались.
+Поля nullable city/intent и JSONB habits (NOT NULL, default []) включены в исходную миграцию `20240822080439-create-user-profile.js`; отдельная миграция добавления полей удалена, поскольку БД используется только локально. В локальной development-БД эти поля уже были добавлены прежней миграцией без сброса и seed; перенос в исходную миграцию не меняет существующую БД. Каталог M08 уже присутствовал; его записи и AdvertTags не переписывались.
 
 ## 5. Сверка плана и уточнения M01
 
