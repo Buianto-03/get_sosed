@@ -15,7 +15,7 @@ The server uses Express for HTTP, Sequelize with PostgreSQL for persistence, and
 
 For example, `PATCH /api/users/:userId` passes through access-token verification and photo-upload parsing, then `UserController.patchUser` verifies ownership and calls `profileService.editProfile`. The service validates fields, processes the photo, and updates the database; the controller returns the updated user or an HTTP error.
 
-Some existing modules, including inline authentication handlers in `authRouter.js`, do not yet follow this separation fully. Treat the responsibilities above as the rule for new and modified logic; the existing exceptions are not a pattern to copy.
+Authentication routes delegate to `AuthController`. Login credential checks and database reads belong to `LoginService`; registration belongs to `SignupService`. The controller generates tokens, sets or clears the refresh cookie, and sends HTTP responses. Logout currently only clears the cookie and does not need a service.
 
 ## Code Style
 
@@ -67,6 +67,12 @@ Some existing modules, including inline authentication handlers in `authRouter.j
 - Query only the fields needed for the operation and exclude password hashes from public responses.
 - Use stable ordering and pagination for collection endpoints. Include a unique tie-breaker when sorting by a non-unique field.
 
+## Own Advert Pagination
+
+`GET /api/adverts/mine` authenticates the request and selects the owner from `res.locals.user.id`. The optional `page` and `limit` query parameters are positive integers, defaulting to `1` and `12`; `limit` must not exceed `50`. Reject invalid scalar values, arrays, and unsafe offsets with `400 { code: 'INVALID_PAGINATION', message: 'Invalid pagination parameters' }` before querying the database.
+
+Return `{ items, total, page, limit }`. Apply the owner filter to both the rows and the total count. Use `findAndCountAll` with `distinct: true` so tag joins do not inflate the count; bound the row query with `limit`/`offset` and sort by `createdAt DESC, id DESC`. A page past the end returns empty `items` and the actual total. The client and manual integration checks consume this paginated object rather than the former array response.
+
 ## File Operations
 
 - Validate file count, size, MIME type, and successful image decoding before accepting uploaded images.
@@ -86,6 +92,8 @@ Some existing modules, including inline authentication handlers in `authRouter.j
 
 Pass services to server controller classes through constructor parameters and store them on the instance. Controller methods must use these instance dependencies instead of calling imported services directly. Instantiate controllers with the concrete services at the module's composition point. Preserve constructor injection when modifying existing controllers so dependencies remain explicit and can be replaced in tests.
 
-- Pass models to services through constructor parameters or factory arguments so they can be replaced in tests.
+- Implement server services as PascalCase classes with ordinary instance methods for application operations. Do not implement services as standalone workflow functions, plain objects of functions, or factory functions. Small pure helper functions may remain outside the class.
+- Pass database connections, models, and collaborating services through constructor parameters and store them on the instance. Methods must use these instance dependencies. Import concrete dependencies to instantiate the service at the module's composition point, and export that instance with `module.exports`.
+- Call service operations through their instance, such as `signupService.signup(body, file)`. Do not detach methods that use `this`; replace dependencies through the constructor in tests.
 - Avoid circular dependencies between modules.
 - Keep reusable business operations in services so HTTP controllers and WebSocket handlers use the same rules.
