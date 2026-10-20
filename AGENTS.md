@@ -18,6 +18,8 @@ Consult `server/ARCH.md` when making server changes. Follow its responsibility b
 
 ## Coding Style & Naming Conventions
 
+Always use braces for `if` and `else` bodies, including single-line statements and early returns. This rule applies to both client and server code.
+
 Format with two spaces, single quotes, semicolons, and trailing commas. Root and `client/.prettierrc` settings plus ESLint enforce style. Use PascalCase for components, camelCase for functions and variables, and kebab-case feature/page directories. Declare React component props with `interface`. Move component-specific helper functions to a sibling `helper.ts` file at the same directory level as the component. Name CSS/SCSS classes with BEM: `block__element_modifier` (for example, `.listing_card__title_featured`). Keep logic in its FSD slice.
 
 ### Entity Redux Files

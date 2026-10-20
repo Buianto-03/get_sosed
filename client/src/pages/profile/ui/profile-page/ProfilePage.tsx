@@ -43,6 +43,11 @@ export interface ProfilePageProps {
   favoritesError?: string | null;
   myListingsLoading?: boolean;
   myListingsError?: string | null;
+  myListingsTotal?: number;
+  myListingsHasMore?: boolean;
+  myListingsLoadingMore?: boolean;
+  myListingsLoadMoreError?: string;
+  onLoadMoreMine?: () => void;
   onRetryFavorites?: () => void;
   onRetryMine?: () => void;
   onMessages?: () => void;
@@ -61,6 +66,11 @@ export function ProfilePage({
   favoritesError,
   myListingsLoading,
   myListingsError,
+  myListingsTotal,
+  myListingsHasMore,
+  myListingsLoadingMore,
+  myListingsLoadMoreError,
+  onLoadMoreMine,
   onRetryFavorites,
   onRetryMine,
   onMessages,
@@ -73,6 +83,7 @@ export function ProfilePage({
       retry: onRetryFavorites,
       title: 'Избранное',
       listings: favorites,
+      total: favorites.length,
       emptyTitle: 'Пока нет сохранённых объявлений',
       emptyDescription: 'Сохраняйте понравившиеся объявления, чтобы вернуться к ним позже.',
       emptyAction: 'Найти объявления',
@@ -86,6 +97,7 @@ export function ProfilePage({
       retry: onRetryMine,
       title: 'Мои объявления',
       listings: myListings,
+      total: myListingsTotal ?? myListings.length,
       emptyTitle: 'Здесь будут ваши объявления',
       emptyDescription: 'Расскажите о жилье, чтобы найти подходящего соседа.',
       emptyAction: 'Разместить объявление',
@@ -152,7 +164,7 @@ export function ProfilePage({
               <span id={collection.id}>{collection.title}</span>
             </Heading>
             {collection.listings.length > 0 && (
-              <span className={styles.count}>{collection.listings.length}</span>
+              <span className={styles.count}>{collection.total}</span>
             )}
           </div>
           {collection.loading && <Spinner label={`Загрузка: ${collection.title}`} />}
@@ -191,6 +203,23 @@ export function ProfilePage({
                 }
               />
             ))}
+          {collection.id === 'my-listings' &&
+            !collection.loading &&
+            !collection.error &&
+            myListingsHasMore && (
+            <div className={styles.collection__pagination}>
+              {myListingsLoadMoreError && (
+                <Alert variant={AlertVariant.Error}>{myListingsLoadMoreError}</Alert>
+              )}
+              <Button
+                variant={ButtonVariant.Secondary}
+                loading={myListingsLoadingMore}
+                onClick={onLoadMoreMine}
+              >
+                {myListingsLoadMoreError ? 'Повторить загрузку' : 'Показать ещё'}
+              </Button>
+            </div>
+          )}
         </section>
       ))}
     </main>

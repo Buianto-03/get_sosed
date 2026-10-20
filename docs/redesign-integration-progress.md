@@ -75,7 +75,7 @@
 | Фото профиля | Не передано — сохранить; `photo: File` — заменить; `removePhoto=true` — удалить. File+removePhoto одновременно → 400. JPG/PNG/WebP до 5 МБ в сценарии профиля; после успешной замены/удаления удаляется прежний собственный webp. |
 | GET `/api/adverts` | Массив полных Advert DTO: user(id/name/email), location, tags(id/name), AdvertPhotos по id ASC. Главная отдельно сортирует createdAt DESC и берёт 3; поиск не перезаписывается. Nullable-поля допускаются схемой. |
 | GET `/api/adverts/:advertId` | 200 полный DTO, 404 неверный/отсутствующий ID. Клиентские статусы detail отделены от поиска и защищены detailRequestId. |
-| GET `/api/adverts/mine` | Защищённый; только текущий userId, createdAt/id DESC, тот же DTO. Route расположен до динамического ID. |
+| GET `/api/adverts/mine?page=1&limit=12` | Защищённый; только текущий userId, createdAt/id DESC. Ответ `{ items, total, page, limit }`, limit ≤ 50; items содержит общий DTO. Route расположен до динамического ID. Профиль догружает страницы кнопкой «Показать ещё». |
 | GET `/api/adverts/top` | Популярные по числу лайков. Главная не использует их как свежие. |
 | GET `/api/adverts/liked` | Защищённый; массив `{id,userId,advertId,Advert}` с полным вложенным DTO. M09 — единый источник savedIds/cards во всех экранах. |
 | POST `/api/adverts/filters` | Старые city/district/metro, числовые границы priceFrom/priceTo/roomsFrom/roomsTo, `tags:[{id,name:''}]`. Совпадение всех выбранных tag ID. |

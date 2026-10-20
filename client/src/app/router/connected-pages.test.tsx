@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -14,7 +14,7 @@ import chatService from '@entities/chat/api/chatListService';
 import profileService from '@features/edit-profile/userProfileService';
 import { chatSocket } from '@entities/chat/model/socket';
 import { setMessages, addMessage } from '@entities/chat/model/chatListSlice';
-import { advertSchema } from '@entities/advert/model/advertsModel';
+import { advertSchema, type AdvertPageType } from '@entities/advert/model/advertsModel';
 import { clearAuth, setSession } from '@entities/session/model/authSlice';
 import axiosInstance from '@shared/api/client';
 import { store } from '../store/store';
@@ -92,7 +92,7 @@ function open(path: string, state?: object): ReturnType<typeof render> {
 beforeEach(() => {
   store.dispatch(clearAuth());
   vi.spyOn(axiosInstance, 'get').mockResolvedValue({ data: [] });
-  vi.spyOn(advertService, 'getMine').mockResolvedValue([]);
+  vi.spyOn(advertService, 'getMine').mockResolvedValue({ items: [], total: 0, page: 1, limit: 12 });
   vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue([
     { id: 1, name: 'Для некурящих' },
     { id: 2, name: 'Питомцы разрешены' },
@@ -154,7 +154,7 @@ it('shows own-list errors independently from empty favorites and retries the pro
   login();
   vi.spyOn(advertService, 'getMine')
     .mockRejectedValueOnce(new Error('offline'))
-    .mockResolvedValue([advert]);
+    .mockResolvedValue({ items: [advert], total: 1, page: 1, limit: 12 });
   open('/profile');
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'Не удалось загрузить ваши объявления',
@@ -163,6 +163,87 @@ it('shows own-list errors independently from empty favorites and retries the pro
   expect(screen.queryByText('Здесь будут ваши объявления')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
   expect(await screen.findByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
+});
+
+it('loads more own adverts without duplicate requests or cards and retains the first page after an error', async () => {
+  login();
+  const first = Array.from({ length: 12 }, (_, index) => ({
+    ...advert,
+    id: 100 + index,
+    title: `Моё объявление ${index + 1}`,
+  }));
+  const second = [
+    first[11],
+    { ...advert, id: 112, title: 'Моё объявление 13' },
+    { ...advert, id: 113, title: 'Моё объявление 14' },
+  ];
+  const get = vi
+    .spyOn(advertService, 'getMine')
+    .mockResolvedValueOnce({ items: first, total: 14, page: 1, limit: 12 })
+    .mockRejectedValueOnce(new Error('offline'))
+    .mockResolvedValueOnce({ items: second, total: 14, page: 2, limit: 12 });
+  open('/profile');
+  await screen.findByRole('heading', { name: 'Моё объявление 12' });
+  const collection = within(screen.getByRole('region', { name: 'Мои объявления' }));
+  expect(collection.getByText('14')).toBeInTheDocument();
+  const more = collection.getByRole('button', { name: 'Показать ещё' });
+  fireEvent.click(more);
+  fireEvent.click(more);
+  expect(get).toHaveBeenCalledTimes(2);
+  expect(await collection.findByRole('alert')).toHaveTextContent(
+    'Не удалось загрузить следующие объявления',
+  );
+  expect(collection.getAllByRole('heading', { name: /^Моё объявление/ })).toHaveLength(12);
+  fireEvent.click(collection.getByRole('button', { name: 'Повторить загрузку' }));
+  await collection.findByRole('heading', { name: 'Моё объявление 14' });
+  expect(collection.getAllByRole('heading', { name: /^Моё объявление/ })).toHaveLength(14);
+  expect(collection.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
+  expect(get.mock.calls.map(([page]) => page)).toEqual([1, 2, 2]);
+});
+
+it('ignores a late next-page response after the profile owner changes', async () => {
+  login();
+  const first = Array.from({ length: 12 }, (_, index) => ({
+    ...advert,
+    id: 100 + index,
+    title: `Старое объявление ${index + 1}`,
+  }));
+  let resolveNext!: (page: AdvertPageType) => void;
+  const pending = new Promise<AdvertPageType>((resolve) => {
+    resolveNext = resolve;
+  });
+  const get = vi
+    .spyOn(advertService, 'getMine')
+    .mockResolvedValueOnce({ items: first, total: 13, page: 1, limit: 12 })
+    .mockReturnValueOnce(pending)
+    .mockResolvedValueOnce({
+      items: [{ ...advert, id: 901, title: 'Объявление нового пользователя' }],
+      total: 1,
+      page: 1,
+      limit: 12,
+    });
+  open('/profile');
+  await screen.findByRole('heading', { name: 'Старое объявление 1' });
+  fireEvent.click(screen.getByRole('button', { name: 'Показать ещё' }));
+  act(() => {
+    store.dispatch(setSession({ user: { ...user, id: 2 }, accessToken: 'new-token' }));
+  });
+  await screen.findByRole('heading', { name: 'Объявление нового пользователя' });
+  expect(screen.queryByRole('heading', { name: 'Старое объявление 1' })).not.toBeInTheDocument();
+  await act(async () => {
+    resolveNext({
+      items: [{ ...advert, id: 113, title: 'Позднее объявление' }],
+      total: 13,
+      page: 2,
+      limit: 12,
+    });
+    await pending;
+  });
+  expect(screen.queryByRole('heading', { name: 'Позднее объявление' })).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: 'Объявление нового пользователя' }),
+  ).toBeInTheDocument();
+  expect(get.mock.calls.map(([page]) => page)).toEqual([1, 2, 1]);
 });
 
 it('keeps profile input on failure, updates the session from the API response and retains the access token', async () => {

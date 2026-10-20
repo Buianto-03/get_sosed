@@ -41,6 +41,15 @@ export const advertSchema = z.object({
 
 export type AdvertType = z.infer<typeof advertSchema>;
 
+export const advertPageSchema = z.object({
+  items: advertSchema.array(),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive().max(50),
+});
+
+export type AdvertPageType = z.infer<typeof advertPageSchema>;
+
 export type FilterType = {
   priceFrom: number;
   priceTo: number;

@@ -44,6 +44,12 @@
   gap: tokens.$space-3;
 }
 
+.collection__pagination {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-3;
+}
+
 .collectionTitle {
   overflow-wrap: anywhere;
 }
