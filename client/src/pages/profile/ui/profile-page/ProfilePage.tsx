@@ -1,17 +1,19 @@
 import React from 'react';
-import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
-import { Spinner } from '@shared/ui/feedback/Spinner';
 import { LuHeart, LuPlus, LuUser } from 'react-icons/lu';
 import { PersonSummary, PersonSummaryVariant } from '@entities/person/ui/PersonSummary';
-import {
-  ListingCard,
-  ListingCardVariant,
-  type ListingCardData,
-} from '@entities/listing/ui/listing-card/ListingCard';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
+import {
+  ProfileListingsSection,
+  type ProfileCollection,
+} from '../profile-listings-section/ProfileListingsSection';
 import styles from './ProfilePage.module.scss';
+
+export type {
+  ProfileListing,
+  ProfileCollection,
+} from '../profile-listings-section/ProfileListingsSection';
 
 export type ProfileDetails = {
   name: string;
@@ -21,28 +23,6 @@ export type ProfileDetails = {
   habits?: readonly string[];
   avatarUrl?: string;
 };
-
-export type ProfileListing = {
-  id: string;
-  listing: ListingCardData;
-  saved: boolean;
-  saveDisabled?: boolean;
-  saveError?: string;
-};
-
-export interface ProfileCollection {
-  items: readonly ProfileListing[];
-  total: number;
-  loading: boolean;
-  error: string | null;
-  onRetry: () => void;
-  pagination?: {
-    hasMore: boolean;
-    loading: boolean;
-    error: string | null;
-    onLoadMore: () => void;
-  };
-}
 
 export interface ProfilePageProps {
   profile: ProfileDetails | null;
@@ -70,13 +50,8 @@ export function ProfilePage({
   const collections = [
     {
       id: 'favorites',
-      pagination: favorites.pagination,
-      loading: favorites.loading,
-      error: favorites.error,
-      retry: favorites.onRetry,
+      data: favorites,
       title: 'Избранное',
-      listings: favorites.items,
-      total: favorites.total,
       emptyTitle: 'Пока нет сохранённых объявлений',
       emptyDescription: 'Сохраняйте понравившиеся объявления, чтобы вернуться к ним позже.',
       emptyAction: 'Найти объявления',
@@ -85,13 +60,8 @@ export function ProfilePage({
     },
     {
       id: 'my-listings',
-      pagination: myListings.pagination,
-      loading: myListings.loading,
-      error: myListings.error,
-      retry: myListings.onRetry,
+      data: myListings,
       title: 'Мои объявления',
-      listings: myListings.items,
-      total: myListings.total,
       emptyTitle: 'Здесь будут ваши объявления',
       emptyDescription: 'Расскажите о жилье, чтобы найти подходящего соседа.',
       emptyAction: 'Разместить объявление',
@@ -148,72 +118,21 @@ export function ProfilePage({
       )}
 
       {collections.map((collection) => (
-        <section key={collection.id} className={styles.collection} aria-labelledby={collection.id}>
-          <div className={styles.collectionHeading}>
-            <Heading
-              level={HeadingLevel.H2}
-              size={HeadingSize.Lg}
-              className={styles.collectionTitle}
-            >
-              <span id={collection.id}>{collection.title}</span>
-            </Heading>
-            {collection.listings.length > 0 && (
-              <span className={styles.count}>{collection.total}</span>
-            )}
-          </div>
-          {collection.loading && <Spinner label={`Загрузка: ${collection.title}`} />}
-          {!collection.loading && collection.error && (
-            <>
-              <Alert variant={AlertVariant.Error}>{collection.error}</Alert>
-              <Button onClick={collection.retry}>Повторить</Button>
-            </>
-          )}
-          {!collection.loading &&
-            !collection.error &&
-            (collection.listings.length > 0 ? (
-              <div className={styles.listingGrid}>
-                {collection.listings.map(({ id, listing, saved, saveDisabled, saveError }) => (
-                  <ListingCard
-                    key={id}
-                    listing={listing}
-                    variant={ListingCardVariant.Profile}
-                    saved={saved}
-                    saveDisabled={saveDisabled}
-                    saveError={saveError}
-                    onSavedChange={(nextSaved) => onSaveListing(id, nextSaved)}
-                    onOpen={() => onOpenListing(id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title={collection.emptyTitle}
-                description={collection.emptyDescription}
-                icon={collection.icon}
-                action={
-                  <Button variant={ButtonVariant.Secondary} onClick={collection.onEmptyAction}>
-                    {collection.emptyAction}
-                  </Button>
-                }
-              />
-            ))}
-          {!collection.loading &&
-            !collection.error &&
-            collection.pagination?.hasMore && (
-            <div className={styles.collection__pagination}>
-              {collection.pagination.error && (
-                <Alert variant={AlertVariant.Error}>{collection.pagination.error}</Alert>
-              )}
-              <Button
-                variant={ButtonVariant.Secondary}
-                loading={collection.pagination.loading}
-                onClick={collection.pagination.onLoadMore}
-              >
-                {collection.pagination.error ? 'Повторить загрузку' : 'Показать ещё'}
-              </Button>
-            </div>
-          )}
-        </section>
+        <ProfileListingsSection
+          key={collection.id}
+          headingId={collection.id}
+          title={collection.title}
+          collection={collection.data}
+          emptyState={{
+            title: collection.emptyTitle,
+            description: collection.emptyDescription,
+            actionLabel: collection.emptyAction,
+            onAction: collection.onEmptyAction,
+            icon: collection.icon,
+          }}
+          onOpenListing={onOpenListing}
+          onSaveListing={onSaveListing}
+        />
       ))}
     </main>
   );

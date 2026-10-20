@@ -1,0 +1,54 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.collection {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-5;
+}
+
+.collection__heading {
+  display: flex;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
+.collection__pagination {
+  display: grid;
+  justify-items: start;
+  gap: tokens.$space-3;
+}
+
+.collection__title {
+  overflow-wrap: anywhere;
+}
+
+.collection__count {
+  display: inline-grid;
+  min-width: 30px;
+  min-height: 30px;
+  place-items: center;
+  padding: 0 tokens.$space-2;
+  border-radius: 999px;
+  background: tokens.$color-soft;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  font-weight: 700;
+}
+
+.collection__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-5;
+}
+
+@container (max-width: 1000px) {
+  .collection__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 620px) {
+  .collection__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
