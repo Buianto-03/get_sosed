@@ -11,9 +11,9 @@ class LikeService {
     let likes = await this.like.findAll({
       where: { advertId },
       include: {
-        model: User,
+        model: this.user,
         include: {
-          model: UserProfile,
+          model: this.userProfile,
         },
       },
     });

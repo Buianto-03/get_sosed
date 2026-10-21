@@ -63,45 +63,6 @@ class AdvertService {
     ];
   }
 
-  async addAdvert(formData) {
-    const {
-      title,
-      body,
-      price,
-      floor,
-      square,
-      rooms,
-      city,
-      district,
-      address,
-      metro,
-      userId,
-      coordinates,
-    } = formData;
-
-    const advert = await this.advert.create({
-      title,
-      body,
-      price,
-      floor,
-      square,
-      rooms,
-      userId,
-    });
-    await this.location.create({
-      city,
-      district,
-      address,
-      metro,
-      coordinates,
-      advertId: advert.id,
-    });
-    const advertWithUserAndLocation = await this.advert.findByPk(advert.id, {
-      include: this.getReadIncludes(),
-    });
-    return advertWithUserAndLocation;
-  }
-
   async getMine(userId, { page = 1, limit = 12 } = {}) {
     const currentPage = parsePageValue(page);
     const pageSize = parsePageValue(limit);
@@ -143,29 +104,32 @@ class AdvertService {
     });
   }
 
-  async newAdvertPhotos(adverId, photo) {
-    const newAdvertPhotos = await this.advertPhoto.create({
-      photo: photo,
-      advertId: adverId,
-    });
-    return newAdvertPhotos;
-  }
-
-  async getFilteredAdverts(filters) {
-    const whereClause = {};
-    const locationClause = {};
-    const selectedTagIds = [
+  getSelectedTagIds(tags) {
+    return [
       ...new Set(
-        (filters.tags || [])
+        (tags || [])
           .map(({ id }) => Number(id))
           .filter((id) => Number.isInteger(id) && id > 0),
       ),
     ];
+  }
 
-    if (filters.city) locationClause.city = filters.city;
-    if (filters.district) locationClause.district = filters.district;
-    if (filters.metro) locationClause.metro = filters.metro;
+  getLocationWhere(filters) {
+    const locationClause = {};
+    if (filters.city) {
+      locationClause.city = filters.city;
+    }
+    if (filters.district) {
+      locationClause.district = filters.district;
+    }
+    if (filters.metro) {
+      locationClause.metro = filters.metro;
+    }
+    return locationClause;
+  }
 
+  getAdvertWhere(filters) {
+    const whereClause = {};
     if (filters.priceFrom || filters.priceTo) {
       whereClause.price = {};
       if (filters.priceFrom !== undefined) {
@@ -185,21 +149,33 @@ class AdvertService {
         whereClause.rooms[Op.lte] = Number(filters.roomsTo);
       }
     }
+    return whereClause;
+  }
+
+  async getAdvertIdsByTags(tagIds) {
+    const matches = await this.advertTag.findAll({
+      attributes: ['advertId'],
+      where: { tagId: { [Op.in]: tagIds } },
+      group: ['advertId'],
+      having: Sequelize.where(
+        Sequelize.fn(
+          'COUNT',
+          Sequelize.fn('DISTINCT', Sequelize.col('tagId')),
+        ),
+        tagIds.length,
+      ),
+    });
+    return matches.map(({ advertId }) => advertId);
+  }
+
+  async getFilteredAdverts(filters) {
+    const selectedTagIds = this.getSelectedTagIds(filters.tags);
+    const locationClause = this.getLocationWhere(filters);
+    const whereClause = this.getAdvertWhere(filters);
     try {
       if (selectedTagIds.length > 0) {
-        const matches = await this.advertTag.findAll({
-          attributes: ['advertId'],
-          where: { tagId: { [Op.in]: selectedTagIds } },
-          group: ['advertId'],
-          having: Sequelize.where(
-            Sequelize.fn(
-              'COUNT',
-              Sequelize.fn('DISTINCT', Sequelize.col('tagId')),
-            ),
-            selectedTagIds.length,
-          ),
-        });
-        whereClause.id = { [Op.in]: matches.map(({ advertId }) => advertId) };
+        const advertIds = await this.getAdvertIdsByTags(selectedTagIds);
+        whereClause.id = { [Op.in]: advertIds };
       }
 
       const adverts = await this.advert.findAll({
@@ -211,24 +187,6 @@ class AdvertService {
       return adverts;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);
-      throw error;
-    }
-  }
-
-  async searchAdverts(filter) {
-    try {
-      const adverts = await this.advert.findAll({
-        where: {
-          name: {
-            [Op.iLike]: `%${filter}%`,
-          },
-        },
-        include: this.getReadIncludes(),
-        order: [['name', 'ASC']],
-      });
-      return adverts;
-    } catch (error) {
-      console.error('Ошибка при поиске объявлений:', error);
       throw error;
     }
   }
@@ -249,7 +207,7 @@ class AdvertService {
 
   async getTopAdvertsByLikes() {
     try {
-      const topAdverts = await Advert.findAll({
+      const topAdverts = await this.advert.findAll({
         attributes: [
           'id',
           'title',

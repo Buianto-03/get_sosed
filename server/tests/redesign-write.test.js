@@ -435,34 +435,49 @@ test('profile updates use injected models and keep all database operations in th
 });
 
 test('conversation list queries latest messages first and returns one latest row per other participant', async () => {
-  const rows = [
-    { id: 4, senderId: 1, receiverId: 2 },
-    { id: 3, senderId: 3, receiverId: 1 },
-    { id: 2, senderId: 2, receiverId: 1 },
-  ];
-  const service = load('../src/service/userService.js', {
+  const exported = load('../src/service/userService.js', {
     sequelize: Sequelize,
-    '../../db/models': {
-      User: {},
-      UserProfile: {},
-      Chat: {
-        findAll: async (options) => {
-          assert.equal(
-            JSON.stringify(options.order),
-            JSON.stringify([
-              ['createdAt', 'DESC'],
-              ['id', 'DESC'],
-            ]),
-          );
-          return rows;
-        },
-      },
-    },
+    '../../db/models': {},
   });
-  assert.deepEqual(
-    Array.from(await service.getReceiverUsers(1), (row) => row.id),
-    [4, 3],
-  );
+  const user = {};
+  const userProfile = {};
+  const createdAt = '2026-10-21T10:00:00.000Z';
+  const latest = { id: 4, senderId: 1, receiverId: 2, createdAt };
+  const otherLatest = { id: 3, senderId: 3, receiverId: 1, createdAt };
+  const reverse = { id: 2, senderId: 2, receiverId: 1, createdAt };
+  const sameDirection = { id: 1, senderId: 1, receiverId: 2, createdAt };
+  const cases = [
+    { rows: [], expected: [] },
+    { rows: [latest, sameDirection], expected: [latest] },
+    { rows: [latest, reverse], expected: [latest] },
+    { rows: [latest, otherLatest, reverse, sameDirection], expected: [latest, otherLatest] },
+  ];
+  for (const { rows, expected } of cases) {
+    const chat = {
+      findAll: async (options) => {
+        assert.deepEqual(
+          Array.from(options.where[Sequelize.Op.or], (condition) => ({ ...condition })),
+          [{ senderId: 1 }, { receiverId: 1 }],
+        );
+        assert.deepEqual(
+          Array.from(options.order, (order) => Array.from(order)),
+          [['createdAt', 'DESC'], ['id', 'DESC']],
+        );
+        assert.deepEqual(Array.from(options.include, ({ as }) => as), ['receiver', 'sender']);
+        for (const participant of options.include) {
+          assert.equal(participant.model, user);
+          assert.deepEqual(Array.from(participant.attributes), ['id', 'name', 'email']);
+          assert.equal(participant.include[0].model, userProfile);
+          assert.deepEqual(Array.from(participant.include[0].attributes), ['photo']);
+        }
+        return rows;
+      },
+    };
+    const service = new exported.constructor(user, userProfile, chat);
+    const result = Array.from(await service.getReceiverUsers(1));
+    assert.deepEqual(result, expected);
+    result.forEach((message, index) => assert.equal(message, expected[index]));
+  }
 });
 
 test('profile photo preparation skips absent photos and rejects conflicting or oversized uploads before decoding', async () => {
