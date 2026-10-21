@@ -88,23 +88,30 @@ class PublishAdvertService {
     return result;
   }
 
-  async publishAdvert(body, files, userId) {
-    const values = this.parseAdvert(body);
-    if (!Array.isArray(files) || files.length < 1 || files.length > 10)
+  async preparePhotos(files) {
+    if (!Array.isArray(files) || files.length < 1 || files.length > 10) {
       throw invalid('Add 1–10 photos');
+    }
     const images = [];
     for (const file of files) {
       if (
         !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype) ||
         file.size > 10 * 1024 * 1024
-      )
+      ) {
         throw invalid('Invalid photo');
+      }
       try {
         images.push(await sharp(file.buffer).webp().toBuffer());
       } catch {
         throw invalid('Cannot decode photo');
       }
     }
+    return images;
+  }
+
+  async publishAdvert(body, files, userId) {
+    const values = this.parseAdvert(body);
+    const images = await this.preparePhotos(files);
     let directory;
     try {
       return await this.sequelize.transaction(async (transaction) => {

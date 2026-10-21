@@ -30,10 +30,12 @@ const fields = {
 function publication(options = {}) {
   const rows = [];
   const images = [];
+  const sideEffects = [];
   let writes = 0;
   const db = {
     sequelize: {
       transaction: async (callback) => {
+        sideEffects.push('transaction');
         try {
           return await callback({});
         } catch (error) {
@@ -65,15 +67,28 @@ function publication(options = {}) {
     '../../db/models': {},
     './advertService': {},
     sharp: () => ({
-      webp: () => ({ toBuffer: async () => Buffer.from('image') }),
+      webp: () => ({
+        toBuffer: async () => {
+          if (options.invalidPhoto) {
+            throw Error('Cannot decode input');
+          }
+          return Buffer.from('image');
+        },
+      }),
     }),
     'fs/promises': {
-      mkdir: async () => undefined,
+      mkdir: async () => {
+        sideEffects.push('mkdir');
+      },
       writeFile: async () => {
+        sideEffects.push('writeFile');
         writes += 1;
-        if (options.failSecond && writes === 2) throw Error('disk full');
+        if (options.failSecond && writes === 2) {
+          throw Error('disk full');
+        }
       },
       rm: async () => {
+        sideEffects.push('rm');
         images.length = 0;
       },
     },
@@ -87,7 +102,7 @@ function publication(options = {}) {
     db.AdvertPhoto,
     { getReadIncludes: () => [] },
   );
-  return { service, rows, images };
+  return { service, rows, images, sideEffects };
 }
 const photos = [1, 2].map(() => ({
   mimetype: 'image/png',
@@ -120,6 +135,35 @@ test('publication validates numeric fields, actual tag IDs and photos before lea
   );
   assert.equal(rows.length, 0);
   assert.equal(unknown.rows.length, 0);
+});
+test('publication rejects invalid photos before opening a transaction or touching files', async () => {
+  const cases = [
+    { files: undefined, message: 'Add 1–10 photos' },
+    { files: {}, message: 'Add 1–10 photos' },
+    { files: [], message: 'Add 1–10 photos' },
+    { files: Array(11).fill(photos[0]), message: 'Add 1–10 photos' },
+    {
+      files: [{ ...photos[0], mimetype: 'image/gif' }],
+      message: 'Invalid photo',
+    },
+    {
+      files: [{ ...photos[0], size: 10 * 1024 * 1024 + 1 }],
+      message: 'Invalid photo',
+    },
+    { files: photos, invalidPhoto: true, message: 'Cannot decode photo' },
+  ];
+  for (const { files, invalidPhoto, message } of cases) {
+    const env = publication({ invalidPhoto });
+    await assert.rejects(
+      env.service.publishAdvert(fields, files, 7),
+      (error) =>
+        error.status === 400 &&
+        error.code === 'INVALID_ADVERT_DATA' &&
+        error.message === message,
+    );
+    assert.deepEqual(env.sideEffects, []);
+    assert.deepEqual(env.rows, []);
+  }
 });
 test('publication awaits ordered photo writes, deduplicates tags and scopes author to session', async () => {
   const { service, rows } = publication();
