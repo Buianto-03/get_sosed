@@ -31,33 +31,67 @@ function publication(options = {}) {
   const rows = [];
   const images = [];
   const sideEffects = [];
+  const locations = [];
+  const tagBatches = [];
+  const transaction = {};
+  const readIncludes = [];
   let writes = 0;
   const db = {
     sequelize: {
       transaction: async (callback) => {
         sideEffects.push('transaction');
         try {
-          return await callback({});
+          return await callback(transaction);
         } catch (error) {
           rows.length = 0;
+          locations.length = 0;
+          tagBatches.length = 0;
           throw error;
         }
       },
     },
     Tags: {
-      findAll: async () => (options.unknown ? [] : [{ id: 1 }, { id: 2 }]),
+      findAll: async (query) => {
+        assert.equal(query.transaction, transaction);
+        return options.unknown
+          ? []
+          : query.where.id[Sequelize.Op.in].map((id) => ({ id }));
+      },
     },
     Advert: {
-      create: async (values) => {
+      create: async (values, query) => {
+        assert.equal(query.transaction, transaction);
         rows.push(values);
         return { id: 42 };
       },
-      findByPk: async () => ({ id: 42, photos: [...images] }),
+      findByPk: async (id, query) => {
+        assert.equal(id, 42);
+        assert.equal(query.transaction, transaction);
+        assert.equal(query.include, readIncludes);
+        return { id, photos: [...images] };
+      },
     },
-    Location: { create: async () => undefined },
-    AdvertTags: { bulkCreate: async () => undefined },
+    Location: {
+      create: async (values, query) => {
+        assert.equal(query.transaction, transaction);
+        if (options.locationError) {
+          throw options.locationError;
+        }
+        locations.push(values);
+      },
+    },
+    AdvertTags: {
+      bulkCreate: async (values, query) => {
+        assert.equal(query.transaction, transaction);
+        if (options.tagsError) {
+          throw options.tagsError;
+        }
+        tagBatches.push(values);
+      },
+    },
     AdvertPhoto: {
-      create: async (values) => {
+      create: async (values, query) => {
+        assert.equal(query.transaction, transaction);
         images.push(values.photo);
       },
     },
@@ -100,9 +134,9 @@ function publication(options = {}) {
     db.Tags,
     db.AdvertTags,
     db.AdvertPhoto,
-    { getReadIncludes: () => [] },
+    { getReadIncludes: () => readIncludes },
   );
-  return { service, rows, images, sideEffects };
+  return { service, rows, images, sideEffects, locations, tagBatches };
 }
 const photos = [1, 2].map(() => ({
   mimetype: 'image/png',
@@ -178,6 +212,43 @@ test('publication awaits ordered photo writes, deduplicates tags and scopes auth
     '/images/adverts/advert-42/photo-0.webp',
     '/images/adverts/advert-42/photo-1.webp',
   ]);
+});
+test('publication uses one transaction for all related queries and skips empty tag links', async () => {
+  for (const tagIds of ['[1,1,2]', '[]']) {
+    const env = publication();
+    await env.service.publishAdvert({ ...fields, tagIds, userId: '999' }, photos, 7);
+    assert.equal(env.sideEffects.filter((effect) => effect === 'transaction').length, 1);
+    assert.equal(env.rows[0].userId, 7);
+    assert.equal(env.rows[0].city, undefined);
+    assert.equal(env.rows[0].tagIds, undefined);
+    assert.equal(env.locations.length, 1);
+    assert.equal(env.locations[0].advertId, 42);
+    assert.equal(env.locations[0].city, 'Казань');
+    assert.equal(env.locations[0].address, 'Улица, 1');
+    if (tagIds === '[]') {
+      assert.equal(env.tagBatches.length, 0);
+    } else {
+      assert.equal(env.tagBatches.length, 1);
+      assert.deepEqual(
+        Array.from(env.tagBatches[0], ({ tagId, advertId }) => ({ tagId, advertId })),
+        [{ tagId: 1, advertId: 42 }, { tagId: 2, advertId: 42 }],
+      );
+    }
+  }
+});
+test('publication rolls back related records and preserves location and tag-link errors before writing photos', async () => {
+  for (const operation of ['locationError', 'tagsError']) {
+    const failure = new Error(operation);
+    const env = publication({ [operation]: failure });
+    await assert.rejects(
+      env.service.publishAdvert(fields, photos, 7),
+      (error) => error === failure,
+    );
+    assert.deepEqual(env.rows, []);
+    assert.deepEqual(env.locations, []);
+    assert.deepEqual(env.tagBatches, []);
+    assert.deepEqual(env.sideEffects, ['transaction']);
+  }
 });
 test('a second-photo disk failure rolls back database records and removes request-owned files', async () => {
   const { service, rows, images } = publication({ failSecond: true });

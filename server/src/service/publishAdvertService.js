@@ -109,40 +109,62 @@ class PublishAdvertService {
     return images;
   }
 
+  async validateTagIds(tagIds, transaction) {
+    const tags = await this.tags.findAll({
+      where: { id: { [Op.in]: tagIds } },
+      transaction,
+    });
+    if (tags.length !== tagIds.length) {
+      throw invalid('Unknown tag ID');
+    }
+  }
+
+  async createAdvertWithRelations(values, userId, transaction) {
+    const {
+      city,
+      address,
+      district,
+      metro,
+      coordinates,
+      tagIds,
+      ...fields
+    } = values;
+    const advert = await this.advert.create(
+      { ...fields, userId },
+      { transaction },
+    );
+    await this.location.create(
+      { city, address, district, metro, coordinates, advertId: advert.id },
+      { transaction },
+    );
+    if (tagIds.length) {
+      await this.advertTags.bulkCreate(
+        tagIds.map((tagId) => ({ tagId, advertId: advert.id })),
+        { transaction },
+      );
+    }
+    return advert;
+  }
+
+  getPublishedAdvert(advertId, transaction) {
+    return this.advert.findByPk(advertId, {
+      include: this.advertService.getReadIncludes(),
+      transaction,
+    });
+  }
+
   async publishAdvert(body, files, userId) {
     const values = this.parseAdvert(body);
     const images = await this.preparePhotos(files);
     let directory;
     try {
       return await this.sequelize.transaction(async (transaction) => {
-        const tags = await this.tags.findAll({
-          where: { id: { [Op.in]: values.tagIds } },
+        await this.validateTagIds(values.tagIds, transaction);
+        const advert = await this.createAdvertWithRelations(
+          values,
+          userId,
           transaction,
-        });
-        if (tags.length !== values.tagIds.length)
-          throw invalid('Unknown tag ID');
-        const {
-          city,
-          address,
-          district,
-          metro,
-          coordinates,
-          tagIds,
-          ...fields
-        } = values;
-        const advert = await this.advert.create(
-          { ...fields, userId },
-          { transaction },
         );
-        await this.location.create(
-          { city, address, district, metro, coordinates, advertId: advert.id },
-          { transaction },
-        );
-        if (tagIds.length)
-          await this.advertTags.bulkCreate(
-            tagIds.map((tagId) => ({ tagId, advertId: advert.id })),
-            { transaction },
-          );
         directory = `./public/images/adverts/advert-${advert.id}`;
         await fs.mkdir(directory, { recursive: true });
         for (let index = 0; index < images.length; index += 1) {
@@ -156,10 +178,7 @@ class PublishAdvertService {
             { transaction },
           );
         }
-        return this.advert.findByPk(advert.id, {
-          include: this.advertService.getReadIncludes(),
-          transaction,
-        });
+        return this.getPublishedAdvert(advert.id, transaction);
       });
     } catch (error) {
       if (directory)
