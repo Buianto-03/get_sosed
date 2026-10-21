@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const Sequelize = require('sequelize');
-function load(file, dependencies) {
+function load(file, dependencies, globals = {}) {
   const filename = path.resolve(__dirname, file);
   const sandbox = {
     module: { exports: {} },
@@ -12,6 +12,7 @@ function load(file, dependencies) {
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },
+    ...globals,
   };
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, { filename });
   return sandbox.module.exports;
@@ -35,17 +36,23 @@ function publication(options = {}) {
   const tagBatches = [];
   const transaction = {};
   const readIncludes = [];
+  const files = new Set();
+  const logs = [];
   let writes = 0;
   const db = {
     sequelize: {
       transaction: async (callback) => {
         sideEffects.push('transaction');
         try {
-          return await callback(transaction);
+          const result = await callback(transaction);
+          sideEffects.push('commit');
+          return result;
         } catch (error) {
           rows.length = 0;
           locations.length = 0;
           tagBatches.length = 0;
+          images.length = 0;
+          sideEffects.push('rollback');
           throw error;
         }
       },
@@ -68,6 +75,10 @@ function publication(options = {}) {
         assert.equal(id, 42);
         assert.equal(query.transaction, transaction);
         assert.equal(query.include, readIncludes);
+        sideEffects.push('read');
+        if (options.readError) {
+          throw options.readError;
+        }
         return { id, photos: [...images] };
       },
     },
@@ -92,6 +103,10 @@ function publication(options = {}) {
     AdvertPhoto: {
       create: async (values, query) => {
         assert.equal(query.transaction, transaction);
+        sideEffects.push('photoRecord');
+        if (options.photoError) {
+          throw options.photoError;
+        }
         images.push(values.photo);
       },
     },
@@ -111,22 +126,38 @@ function publication(options = {}) {
       }),
     }),
     'fs/promises': {
-      mkdir: async () => {
+      mkdir: async (directory, args) => {
         sideEffects.push('mkdir');
+        assert.equal(directory, './public/images/adverts/advert-42');
+        assert.equal(args.recursive, true);
+        if (options.mkdirError) {
+          throw options.mkdirError;
+        }
       },
-      writeFile: async () => {
+      writeFile: async (filePath) => {
         sideEffects.push('writeFile');
+        files.add(filePath);
         writes += 1;
         if (options.failSecond && writes === 2) {
           throw Error('disk full');
         }
       },
-      rm: async () => {
+      rm: async (directory, args) => {
         sideEffects.push('rm');
-        images.length = 0;
+        assert.equal(directory, './public/images/adverts/advert-42');
+        assert.equal(args.recursive, true);
+        assert.equal(args.force, true);
+        if (options.cleanupError) {
+          throw options.cleanupError;
+        }
+        for (const filePath of files) {
+          if (filePath.startsWith(`${directory}/`)) {
+            files.delete(filePath);
+          }
+        }
       },
     },
-  });
+  }, { console: { error: (...args) => logs.push(args) } });
   const service = new exported.constructor(
     db.sequelize,
     db.Advert,
@@ -136,7 +167,7 @@ function publication(options = {}) {
     db.AdvertPhoto,
     { getReadIncludes: () => readIncludes },
   );
-  return { service, rows, images, sideEffects, locations, tagBatches };
+  return { service, rows, images, sideEffects, locations, tagBatches, files, logs };
 }
 const photos = [1, 2].map(() => ({
   mimetype: 'image/png',
@@ -200,7 +231,7 @@ test('publication rejects invalid photos before opening a transaction or touchin
   }
 });
 test('publication awaits ordered photo writes, deduplicates tags and scopes author to session', async () => {
-  const { service, rows } = publication();
+  const { service, rows, files, sideEffects } = publication();
   assert.equal(service.parseAdvert(fields).tagIds.length, 2);
   const result = await service.publishAdvert(
     { ...fields, userId: '999' },
@@ -211,6 +242,14 @@ test('publication awaits ordered photo writes, deduplicates tags and scopes auth
   assert.deepEqual(result.photos, [
     '/images/adverts/advert-42/photo-0.webp',
     '/images/adverts/advert-42/photo-1.webp',
+  ]);
+  assert.deepEqual([...files], [
+    './public/images/adverts/advert-42/photo-0.webp',
+    './public/images/adverts/advert-42/photo-1.webp',
+  ]);
+  assert.deepEqual(sideEffects, [
+    'transaction', 'mkdir', 'writeFile', 'photoRecord',
+    'writeFile', 'photoRecord', 'read', 'commit',
   ]);
 });
 test('publication uses one transaction for all related queries and skips empty tag links', async () => {
@@ -247,14 +286,54 @@ test('publication rolls back related records and preserves location and tag-link
     assert.deepEqual(env.rows, []);
     assert.deepEqual(env.locations, []);
     assert.deepEqual(env.tagBatches, []);
-    assert.deepEqual(env.sideEffects, ['transaction']);
+    assert.deepEqual(env.sideEffects, ['transaction', 'rollback']);
   }
 });
 test('a second-photo disk failure rolls back database records and removes request-owned files', async () => {
-  const { service, rows, images } = publication({ failSecond: true });
+  const { service, rows, images, files, sideEffects } = publication({ failSecond: true });
   await assert.rejects(service.publishAdvert(fields, photos, 7), /disk full/);
   assert.equal(rows.length, 0);
   assert.equal(images.length, 0);
+  assert.equal(files.size, 0);
+  assert.deepEqual(sideEffects, [
+    'transaction', 'mkdir', 'writeFile', 'photoRecord',
+    'writeFile', 'rollback', 'rm',
+  ]);
+});
+test('publication cleans up only its directory after mkdir, photo-record and final-read failures', async () => {
+  for (const operation of ['mkdirError', 'photoError', 'readError']) {
+    const failure = new Error(operation);
+    const env = publication({ [operation]: failure });
+    const otherFile = './public/images/adverts/advert-99/photo-0.webp';
+    env.files.add(otherFile);
+    await assert.rejects(
+      env.service.publishAdvert(fields, photos, 7),
+      (error) => error === failure,
+    );
+    assert.deepEqual(env.rows, []);
+    assert.deepEqual(env.images, []);
+    assert.deepEqual(env.locations, []);
+    assert.deepEqual(env.tagBatches, []);
+    assert.deepEqual([...env.files], [otherFile]);
+    assert.deepEqual(env.sideEffects.slice(-2), ['rollback', 'rm']);
+    assert.deepEqual(env.logs, []);
+  }
+});
+test('publication logs cleanup failures without replacing the original photo-record error', async () => {
+  const failure = new Error('photo record failed');
+  const cleanupError = new Error('cannot remove files');
+  const env = publication({ photoError: failure, cleanupError });
+  await assert.rejects(
+    env.service.publishAdvert(fields, photos, 7),
+    (error) => error === failure,
+  );
+  assert.deepEqual(env.rows, []);
+  assert.deepEqual(env.images, []);
+  assert.deepEqual(env.sideEffects.slice(-2), ['rollback', 'rm']);
+  assert.deepEqual([...env.files], ['./public/images/adverts/advert-42/photo-0.webp']);
+  assert.deepEqual(env.logs, [
+    ['Cannot remove advert photos after rollback:', cleanupError],
+  ]);
 });
 test('profile allowlist preserves omitted fields and rejects malformed habits and incompatible photo modes', async () => {
   const service = load('../src/service/profileService.js', {

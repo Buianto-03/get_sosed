@@ -153,6 +153,39 @@ class PublishAdvertService {
     });
   }
 
+  createPhotoPaths(advertId, index) {
+    const directory = `./public/images/adverts/advert-${advertId}`;
+    const fileName = `photo-${index}.webp`;
+    return {
+      directory,
+      filePath: `${directory}/${fileName}`,
+      url: `/images/adverts/advert-${advertId}/${fileName}`,
+    };
+  }
+
+  async saveAdvertPhotos(advertId, images, directory, transaction) {
+    await fs.mkdir(directory, { recursive: true });
+    for (let index = 0; index < images.length; index += 1) {
+      const photo = this.createPhotoPaths(advertId, index);
+      await fs.writeFile(photo.filePath, images[index]);
+      await this.advertPhoto.create(
+        { advertId, photo: photo.url },
+        { transaction },
+      );
+    }
+  }
+
+  async removeCreatedPhotos(directory) {
+    if (!directory) {
+      return;
+    }
+    try {
+      await fs.rm(directory, { recursive: true, force: true });
+    } catch (error) {
+      console.error('Cannot remove advert photos after rollback:', error);
+    }
+  }
+
   async publishAdvert(body, files, userId) {
     const values = this.parseAdvert(body);
     const images = await this.preparePhotos(files);
@@ -165,28 +198,12 @@ class PublishAdvertService {
           userId,
           transaction,
         );
-        directory = `./public/images/adverts/advert-${advert.id}`;
-        await fs.mkdir(directory, { recursive: true });
-        for (let index = 0; index < images.length; index += 1) {
-          const name = `photo-${index}.webp`;
-          await fs.writeFile(`${directory}/${name}`, images[index]);
-          await this.advertPhoto.create(
-            {
-              advertId: advert.id,
-              photo: `/images/adverts/advert-${advert.id}/${name}`,
-            },
-            { transaction },
-          );
-        }
+        directory = this.createPhotoPaths(advert.id, 0).directory;
+        await this.saveAdvertPhotos(advert.id, images, directory, transaction);
         return this.getPublishedAdvert(advert.id, transaction);
       });
     } catch (error) {
-      if (directory)
-        await fs
-          .rm(directory, { recursive: true, force: true })
-          .catch((error) => {
-            console.error('Cannot remove advert photos after rollback:', error);
-          });
+      await this.removeCreatedPhotos(directory);
       throw error;
     }
   }
