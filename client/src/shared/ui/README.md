@@ -18,6 +18,16 @@ UI kit lives in `src/shared/ui`. The independent visual catalog is in `src/previ
 
 Enum values are declared and exported next to the component that uses them. Use an enum for finite variant/orientation/size/element props; ordinary booleans, text and data collections remain boolean, string and object props.
 
+`Tooltip` (`tooltip/Tooltip.tsx`) displays a text `content` on hover or keyboard focus and closes on Escape. `TooltipPlacement` exposes `Top` (default), `Bottom`, `Left`, and `Right`; the tooltip flips and stays within the viewport when space is limited. It renders in a portal and remains visible while hovered. Pass one focusable child that forwards native focus/blur handlers and `aria-describedby` (for example, `Button`, `IconButton`, or a native link). Existing descriptions and handlers are preserved. `disabled` or blank content suppresses the tooltip. Use plain text for content; interactive content belongs in a dialog or menu. `className` styles the trigger wrapper.
+
+```tsx
+import { Tooltip } from '@shared/ui/tooltip/Tooltip';
+
+<Tooltip content="Сохранить объявление в избранное">
+  <IconButton icon={<LuHeart />} label="В избранное" />
+</Tooltip>
+```
+
 ## Folder and styling rules
 
 - Keep each component in its own folder: `shared/ui/<component>/<Component>.tsx`, `<Component>.module.scss` and `<Component>.test.tsx` when the component has behavior worth verifying. A tightly related component family may share a directory only when that grouping is intentional, as with `selection` and `overlay`.

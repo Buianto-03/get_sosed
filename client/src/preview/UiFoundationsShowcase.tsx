@@ -1,5 +1,6 @@
 import React from 'react';
 import { LuHeart, LuSearch } from 'react-icons/lu';
+import { Tooltip, TooltipPlacement } from '@shared/ui/tooltip/Tooltip';
 import {
   Button,
   ButtonSize,
@@ -250,6 +251,11 @@ export function UiFoundationsShowcase(): JSX.Element {
                 { label: 'Удалить', onSelect: () => undefined },
               ]}
             />
+            {Object.values(TooltipPlacement).map((placement) => (
+              <Tooltip key={placement} content="Сохраните объявление, чтобы вернуться к нему позже" placement={placement}>
+                <Button variant={ButtonVariant.Secondary}>Tooltip · {placement}</Button>
+              </Tooltip>
+            ))}
           </div>
           <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Подтвердите действие">
             <Text variant={TextVariant.Body}>

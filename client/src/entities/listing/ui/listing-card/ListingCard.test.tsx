@@ -35,7 +35,7 @@ describe('ListingCard', () => {
     expect(screen.getByText(/25\s000 ₽/)).toBeInTheDocument();
     expect(screen.getByText('Москва · Аэропорт · м. Сокол')).toBeInTheDocument();
     expect(screen.getByText('Тихие вечера')).toBeInTheDocument();
-    expect(screen.getByAltText('Гостиная в квартире')).toBeInTheDocument();
+    expect(screen.getByAltText('Гостиная в квартире 1')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Сохранить объявление' }));
     expect(screen.getByRole('button', { name: 'Убрать из избранного' })).toHaveAttribute('aria-pressed', 'true');
@@ -51,5 +51,22 @@ describe('ListingCard', () => {
     expect(screen.getByText('Фото не добавлено')).toBeInTheDocument();
     expect(screen.queryByLabelText('Условия')).not.toBeInTheDocument();
     expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+  });
+
+  it('switches photos without opening the listing and opens it from the photo', () => {
+    const onOpen = vi.fn();
+    render(
+      <CardHarness
+        data={{ ...listing, photos: ['/first.webp', '/second.webp', '/third.webp'] }}
+        onOpen={onOpen}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Следующее фото' }));
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/second.webp');
+    expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    expect(onOpen).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: `Открыть объявление: ${listing.title}` }));
+    expect(onOpen).toHaveBeenCalledOnce();
   });
 });

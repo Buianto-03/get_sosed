@@ -11,7 +11,9 @@ export function toHomeCard(advert: AdvertType): ListingCardData {
   return {
     title: advert.title?.trim() || 'Объявление без названия',
     price: advert.price,
-    imageUrl: advert.AdvertPhotos?.find((photo) => photo.photo)?.photo,
+    photos: (advert.AdvertPhotos ?? [])
+      .map((photo) => photo.photo)
+      .filter((src): src is string => Boolean(src)),
     city: advert.location?.city ?? undefined,
     district: advert.location?.district ?? undefined,
     metro: advert.location?.metro ?? undefined,

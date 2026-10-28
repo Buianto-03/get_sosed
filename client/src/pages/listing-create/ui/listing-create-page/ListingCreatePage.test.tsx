@@ -100,7 +100,7 @@ describe('ListingCreatePage', () => {
       },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
-    expect(screen.getByRole('img', { name: 'bedroom.jpg' })).toHaveAttribute('src', 'blob:bedroom');
+    expect(screen.getByRole('img', { name: 'bedroom.jpg 1' })).toHaveAttribute('src', 'blob:bedroom');
     expect(revokeObjectURL).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
@@ -111,7 +111,7 @@ describe('ListingCreatePage', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:bedroom');
 
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
-    expect(screen.getByRole('img', { name: 'kitchen.jpg' })).toHaveAttribute('src', 'blob:kitchen');
+    expect(screen.getByRole('img', { name: 'kitchen.jpg 1' })).toHaveAttribute('src', 'blob:kitchen');
 
     unmount();
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:kitchen');

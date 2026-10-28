@@ -1,8 +1,9 @@
 import React from 'react';
-import { LuHeart, LuImageOff } from 'react-icons/lu';
+import { LuHeart } from 'react-icons/lu';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { IconButton } from '@shared/ui/button/IconButton';
 import { Chip, ChipSize, ChipVariant } from '@shared/ui/chip/Chip';
+import { Carousel } from '@shared/ui/carousel/Carousel';
 import styles from './ListingCard.module.scss';
 
 export enum ListingCardVariant {
@@ -15,6 +16,7 @@ export type ListingCardData = {
   title: string;
   price: number | null;
   imageUrl?: string;
+  photos?: readonly string[];
   imageAlt?: string;
   city?: string;
   district?: string;
@@ -45,21 +47,13 @@ export function ListingCard({
 
   return (
     <article className={[styles.card, styles[variant]].join(' ')}>
-      <button
-        className={styles.imageButton}
-        type="button"
-        onClick={onOpen}
-        aria-label={`Открыть объявление: ${listing.title}`}
-      >
-        {listing.imageUrl ? (
-          <img src={listing.imageUrl} alt={listing.imageAlt || listing.title} />
-        ) : (
-          <span className={styles.imagePlaceholder}>
-            <LuImageOff aria-hidden="true" />
-            Фото не добавлено
-          </span>
-        )}
-      </button>
+      <Carousel
+        className={styles.card__carousel}
+        photos={listing.photos ?? (listing.imageUrl ? [listing.imageUrl] : [])}
+        imageAlt={listing.imageAlt || listing.title}
+        openLabel={`Открыть объявление: ${listing.title}`}
+        onOpen={onOpen}
+      />
       <div className={styles.content}>
         <div className={styles.topline}>
           <strong>

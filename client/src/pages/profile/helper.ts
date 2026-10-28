@@ -20,7 +20,9 @@ export function toProfileListing(advert: AdvertType): ProfileListing {
     listing: {
       title: advert.title || 'Объявление',
       price: advert.price,
-      imageUrl: advert.AdvertPhotos?.find((photo) => photo.photo)?.photo,
+      photos: (advert.AdvertPhotos ?? [])
+        .map((photo) => photo.photo)
+        .filter((src): src is string => Boolean(src)),
       city: advert.location?.city ?? undefined,
       district: advert.location?.district ?? undefined,
       metro: advert.location?.metro ?? undefined,
