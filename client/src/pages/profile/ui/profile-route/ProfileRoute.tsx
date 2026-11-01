@@ -1,11 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@app/store/hooks';
 import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
 import type { AdvertType } from '@entities/advert/model/advertsModel';
 import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
 import { UserStatus } from '@entities/session/model/authModel';
 import { routes } from '@shared/config/routes';
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { ProfilePage, type ProfileListing } from '../profile-page/ProfilePage';
 import { toProfile, toProfileListing } from '../../helper';
 import { useMyAdverts } from './use-my-adverts';
@@ -15,6 +16,8 @@ export default function ProfileRoute(): JSX.Element | null {
   const user = useAppSelector((state) => state.auth.user);
   const saved = useSavedAdverts();
   const navigate = useNavigate();
+  const location = useLocation();
+  const profileSaved = (location.state as { profileSaved?: boolean } | null)?.profileSaved;
   const userId = user.status === UserStatus.Logged ? user.id : null;
   const mine = useMyAdverts(userId);
   if (user.status !== UserStatus.Logged) {
@@ -29,6 +32,7 @@ export default function ProfileRoute(): JSX.Element | null {
     }));
   return (
     <div className={styles.profile__route}>
+      {profileSaved && <Alert variant={AlertVariant.Success}>Профиль сохранён.</Alert>}
       <ProfilePage
         profile={toProfile(user)}
         favorites={{

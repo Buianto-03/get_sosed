@@ -1,7 +1,9 @@
 import React, { type ReactNode, useState } from 'react';
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import { Stepper } from '@shared/ui/stepper/Stepper';
+import { useListingCreateFormFocus } from './use-listing-create-form-focus';
 import styles from './ListingCreateForm.module.scss';
 
 const steps = [
@@ -17,6 +19,7 @@ export interface ListingCreateFormProps {
   isPublished?: boolean;
   canContinue?: (step: number) => boolean;
   onPublish?: () => void;
+  validationError?: string;
   children: (step: number) => ReactNode;
 }
 
@@ -26,27 +29,45 @@ export function ListingCreateForm({
   isPublished = false,
   canContinue,
   onPublish,
+  validationError,
   children,
 }: ListingCreateFormProps): JSX.Element {
   const [currentStep, setCurrentStep] = useState(initialStep);
+  const { formRef, requestFeedbackFocus, requestStepErrorFocus } = useListingCreateFormFocus(currentStep, isPublishing);
+  const validateStep = (step: number): boolean => {
+    const valid = !canContinue || canContinue(step);
+    if (!valid) {
+      requestStepErrorFocus();
+    }
+    return valid;
+  };
   let actionLabel = 'Продолжить';
-  if (currentStep === steps.length) actionLabel = isPublished ? 'Опубликовано' : 'Опубликовать';
+  if (currentStep === steps.length) {
+    actionLabel = isPublished ? 'Опубликовано' : 'Опубликовать';
+  }
 
   const navigateToStep = (targetStep: number): void => {
-    if (isPublishing || isPublished) return;
+    if (isPublishing || isPublished) {
+      return;
+    }
     if (targetStep <= currentStep) {
       setCurrentStep(targetStep);
       return;
     }
 
     for (let step = currentStep; step < targetStep; step += 1) {
-      if (canContinue && !canContinue(step)) return;
+      if (!validateStep(step)) {
+        setCurrentStep(step);
+        return;
+      }
     }
     setCurrentStep(targetStep);
   };
 
   const continueToNextStep = (): void => {
-    if (canContinue && !canContinue(currentStep)) return;
+    if (!validateStep(currentStep)) {
+      return;
+    }
     setCurrentStep((step) => Math.min(steps.length, step + 1));
   };
 
@@ -68,11 +89,15 @@ export function ListingCreateForm({
         label="Шаги публикации"
       />
       <form
+        ref={formRef}
+        aria-busy={isPublishing || undefined}
         className={styles.listing_create_form__form}
         onSubmit={(event) => event.preventDefault()}
         noValidate
         aria-label={`Шаг ${currentStep}: ${steps[currentStep - 1].label}`}
       >
+        {validationError && <Alert variant={AlertVariant.Error}>{validationError}</Alert>}
+        {isPublishing && <p role="status">Публикуем объявление…</p>}
         {children(currentStep)}
         <div className={styles.listing_create_form__actions}>
           <Button
@@ -87,6 +112,7 @@ export function ListingCreateForm({
             loading={isPublishing}
             onClick={() => {
               if (currentStep === steps.length) {
+                requestFeedbackFocus();
                 onPublish?.();
                 return;
               }

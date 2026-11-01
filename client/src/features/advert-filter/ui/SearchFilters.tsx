@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useId, useState, type FormEvent } from '
 import { LuSlidersHorizontal } from 'react-icons/lu';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Drawer } from '@shared/ui/overlay/Drawer';
-import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import {
   emptySearchFilters,
@@ -36,7 +35,9 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
     event.preventDefault();
     const validation = validateSearch(draft);
     setError(validation);
-    if (validation) return;
+    if (validation) {
+      return;
+    }
     onApply(draft);
     closeDrawer();
   };
@@ -50,7 +51,6 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
 
   return (
     <div className={styles.filters}>
-      {error && <Alert variant={AlertVariant.Error}>{error}</Alert>}
       <section className={styles.filters__panel} aria-label="Фильтры поиска">
         <div className={styles.filters__heading}>
           <LuSlidersHorizontal aria-hidden="true" />
@@ -59,6 +59,7 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
         <FilterForm
           tagCatalog={tagCatalog}
           idPrefix={`${id}-desktop`}
+          error={drawerOpen ? undefined : error}
           draft={draft}
           onChange={setDraft}
           onApply={apply}
@@ -77,6 +78,7 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
         <FilterForm
           tagCatalog={tagCatalog}
           idPrefix={`${id}-drawer`}
+          error={error}
           inDrawer
           draft={draft}
           onChange={setDraft}

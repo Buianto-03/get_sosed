@@ -12,13 +12,13 @@ export type MenuItem = {
   disabled?: boolean;
 };
 
-export type MenuProps = {
+export interface MenuProps {
   label: string;
   trigger: ReactNode;
   items: MenuItem[];
   placement?: MenuPlacement;
   className?: string;
-};
+}
 
 export function Menu({
   label,
@@ -38,10 +38,14 @@ export function Menu({
     );
 
   useEffect(() => {
-    if (!open) return undefined;
-    enabledItems()[0]?.focus();
+    if (!open) {
+      return undefined;
+    }
+    (enabledItems()[0] ?? menuRef.current)?.focus();
     const handlePointerDown = (event: MouseEvent): void => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
     };
     document.addEventListener('mousedown', handlePointerDown);
     return () => document.removeEventListener('mousedown', handlePointerDown);
@@ -52,6 +56,9 @@ export function Menu({
     const currentIndex = enabled.indexOf(document.activeElement as HTMLButtonElement);
     if (event.key === 'Escape') {
       event.preventDefault();
+      setOpen(false);
+      triggerRef.current?.focus();
+    } else if (event.key === 'Tab') {
       setOpen(false);
       triggerRef.current?.focus();
     } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

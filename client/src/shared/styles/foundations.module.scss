@@ -24,6 +24,7 @@
   --gs-color-surface: #{tokens.$color-surface};
   --gs-color-soft: #{tokens.$color-soft};
   --gs-color-border: #{tokens.$color-border};
+  --gs-color-control-border: #{tokens.$color-control-border};
   --gs-color-highlight: #{tokens.$color-highlight};
   --gs-color-focus: #{tokens.$color-focus};
   --gs-color-danger: #{tokens.$color-danger};
@@ -105,4 +106,5 @@
 :global(select:focus-visible) {
   outline: 3px solid var(--gs-color-focus);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--gs-color-surface);
 }

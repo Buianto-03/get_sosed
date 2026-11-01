@@ -18,6 +18,37 @@ function ModalHarness({ onClose }: { onClose: () => void }): JSX.Element {
 }
 
 describe('overlay components', () => {
+  it('does not reset dialog focus when its callback or content changes', () => {
+    const { rerender, unmount } = render(
+      <Modal open onClose={() => undefined} title="Фото 1"><button type="button">Следующее</button></Modal>,
+    );
+    const action = screen.getByRole('button', { name: 'Следующее' });
+    action.focus();
+    rerender(<Modal open onClose={() => undefined} title="Фото 2"><button type="button">Следующее</button></Modal>);
+    expect(action).toHaveFocus();
+    expect(document.body.style.overflow).toBe('hidden');
+    unmount();
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  it('makes the background inert and uses the page heading when the opener is removed', () => {
+    const { rerender } = render(<><main><h1>Жильё</h1><button type="button">Открыть фото</button></main><Modal open={false} onClose={() => undefined} title="Фото">Снимок</Modal></>);
+    screen.getByRole('button').focus();
+    rerender(<><main><h1>Жильё</h1></main><Modal open onClose={() => undefined} title="Фото">Снимок</Modal></>);
+    expect(screen.getByRole('main').parentElement?.inert).toBe(true);
+    rerender(<><main><h1>Жильё</h1></main><Modal open={false} onClose={() => undefined} title="Фото">Снимок</Modal></>);
+    expect(screen.getByRole('heading', { name: 'Жильё' })).toHaveFocus();
+    expect(screen.getByRole('main').parentElement?.inert).toBeFalsy();
+  });
+
+  it('closes a menu on Tab and allows native traversal from its trigger', () => {
+    render(<Menu label="Меню" trigger="Меню" items={[{ label: 'Профиль', onSelect: vi.fn() }]} />);
+    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Tab' });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Меню' })).toHaveFocus();
+  });
+
   it('closes modal on Escape, locks scroll, and restores focus', () => {
     const onClose = vi.fn();
     render(<ModalHarness onClose={onClose} />);

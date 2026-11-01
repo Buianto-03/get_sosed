@@ -1,5 +1,13 @@
 @use '../../styles/tokens' as tokens;
 
+.stepper__number {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
 .steps {
   display: flex;
   margin: 0;

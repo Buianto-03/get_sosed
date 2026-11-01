@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { LuCheck } from 'react-icons/lu';
 import styles from './Stepper.module.scss';
 
@@ -21,19 +21,25 @@ export type StepOption = {
   disabled?: boolean;
 };
 
-export type StepperProps = {
+export interface StepperProps {
   steps: StepOption[];
   currentStep: number;
   onStepChange?: (step: number) => void;
   orientation?: StepperOrientation;
   label?: string;
   className?: string;
-};
+}
 
 function getStepStatus(stepNumber: number, currentStep: number, disabled: boolean): StepStatus {
-  if (disabled) return StepStatus.Disabled;
-  if (stepNumber < currentStep) return StepStatus.Completed;
-  if (stepNumber === currentStep) return StepStatus.Current;
+  if (disabled) {
+    return StepStatus.Disabled;
+  }
+  if (stepNumber < currentStep) {
+    return StepStatus.Completed;
+  }
+  if (stepNumber === currentStep) {
+    return StepStatus.Current;
+  }
   return StepStatus.Upcoming;
 }
 
@@ -58,6 +64,7 @@ export function Stepper({
   label = 'Шаги',
   className,
 }: StepperProps): JSX.Element {
+  const id = useId();
   return (
     <nav
       className={[styles.stepper, styles[orientation], className].filter(Boolean).join(' ')}
@@ -75,10 +82,14 @@ export function Stepper({
                 className={styles.stepButton}
                 type="button"
                 aria-label={buttonLabel}
+                aria-describedby={`${id}-${step.id}-number`}
                 aria-current={status === StepStatus.Current ? 'step' : undefined}
                 disabled={status === StepStatus.Disabled || !onStepChange}
                 onClick={() => onStepChange?.(stepNumber)}
               >
+                <span id={`${id}-${step.id}-number`} className={styles.stepper__number}>
+                  Шаг {stepNumber} из {steps.length}.
+                </span>
                 <span className={styles.marker} aria-hidden="true">
                   {status === StepStatus.Completed ? <LuCheck /> : stepNumber}
                 </span>

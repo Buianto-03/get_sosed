@@ -8,7 +8,7 @@ export enum FilePickerAccept {
   Webp = 'image/webp',
 }
 
-export type FilePickerProps = {
+export interface FilePickerProps {
   id: string;
   label: string;
   onFilesSelected: (files: File[]) => void;
@@ -16,7 +16,7 @@ export type FilePickerProps = {
   multiple?: boolean;
   disabled?: boolean;
   className?: string;
-};
+}
 
 export function FilePicker({
   id,
@@ -39,6 +39,8 @@ export function FilePicker({
         accept={accept.join(',')}
         multiple={multiple}
         disabled={disabled}
+        tabIndex={-1}
+        aria-hidden="true"
         aria-label={`${label} · выбор файлов`}
         onChange={(event) => {
           onFilesSelected(Array.from(event.currentTarget.files ?? []));

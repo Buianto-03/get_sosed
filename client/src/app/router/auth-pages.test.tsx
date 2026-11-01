@@ -35,13 +35,13 @@ function open(path: string): void {
   );
 }
 function fillSignIn(): void {
-  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'anna@example.com' } });
-  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'password1' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'anna@example.com' } });
+  fireEvent.change(screen.getByLabelText(/^Пароль/), { target: { value: 'password1' } });
 }
 function fillSignUp(): void {
   fillSignIn();
-  fireEvent.change(screen.getByLabelText('Имя'), { target: { value: 'Анна' } });
-  fireEvent.change(screen.getByLabelText('Повторите пароль'), { target: { value: 'password1' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Имя' }), { target: { value: 'Анна' } });
+  fireEvent.change(screen.getByLabelText(/^Повторите пароль/), { target: { value: 'password1' } });
 }
 beforeEach(() => {
   store.dispatch(clearAuth());
@@ -71,7 +71,7 @@ it('submits sign-in once while pending and returns to the complete destination a
     email: 'anna@example.com',
     password: 'password1',
   });
-  expect(screen.getByLabelText('Email')).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Email' })).toBeDisabled();
   expect(screen.getByTestId('location')).toHaveTextContent('/sign-in');
   await act(async () => {
     resolve({ data: session });
@@ -93,7 +93,8 @@ it('keeps values and allows retry after a failed sign-in', async () => {
   fillSignIn();
   fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось войти');
-  expect(screen.getByLabelText('Email')).toHaveValue('anna@example.com');
+  expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('anna@example.com');
+  expect(screen.getByRole('alert')).toHaveFocus();
   expect(store.getState().auth.user.status).toBe(UserStatus.Guest);
   fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
   await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/profile'));
@@ -105,14 +106,16 @@ it('validates fields and carries returnTo between authentication pages', () => {
   open('/sign-in?returnTo=%2Flistings%2Fnew');
   fireEvent.click(screen.getByRole('button', { name: 'Войти' }));
   expect(screen.getByText('Введите корректный email.')).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Email' })).toHaveFocus();
   expect(post).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
   expect(screen.getByTestId('location')).toHaveTextContent('/sign-up?returnTo=%2Flistings%2Fnew');
   fillSignUp();
-  fireEvent.change(screen.getByLabelText('Повторите пароль'), { target: { value: 'other' } });
+  fireEvent.change(screen.getByLabelText(/^Повторите пароль/), { target: { value: 'other' } });
   fireEvent.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
   expect(screen.getByText('Пароли не совпадают.')).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'no-digits-here' } });
+  expect(screen.getByLabelText(/^Повторите пароль/)).toHaveFocus();
+  fireEvent.change(screen.getByLabelText(/^Пароль/), { target: { value: 'no-digits-here' } });
   fireEvent.click(screen.getByRole('button', { name: 'Зарегистрироваться' }));
   expect(screen.getByText('Не менее 9 символов и одна цифра.')).toBeInTheDocument();
   expect(post).not.toHaveBeenCalled();
@@ -134,7 +137,8 @@ it('registers without gender/photo/confirmation, reports occupied email and inst
   const submit = screen.getByRole('button', { name: 'Зарегистрироваться' });
   fireEvent.click(submit);
   expect(await screen.findByText('Этот email уже зарегистрирован.')).toBeInTheDocument();
-  expect(screen.getByLabelText('Имя')).toHaveValue('Анна');
+  expect(screen.getByRole('textbox', { name: 'Имя' })).toHaveValue('Анна');
+  expect(screen.getByRole('textbox', { name: 'Email' })).toHaveFocus();
   expect(store.getState().auth.user.status).toBe(UserStatus.Guest);
   const [url, data] = post.mock.calls[0];
   expect(url).toBe('/auth/signup');

@@ -57,6 +57,7 @@
 
 .header {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   gap: tokens.$space-4;
@@ -72,8 +73,8 @@
 
 .closeButton {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   place-items: center;
   border: 0;
@@ -94,6 +95,7 @@
 }
 
 .body {
+  min-height: 0;
   overflow: auto;
   padding: tokens.$space-6;
 }

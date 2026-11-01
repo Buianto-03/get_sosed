@@ -18,6 +18,20 @@ const tagCatalog: TagCatalog = {
 };
 
 describe('SearchFilters', () => {
+  it('keeps a range error inside the open drawer and focuses it without applying', () => {
+    const onApply = vi.fn();
+    render(<SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Фильтры и условия' }));
+    const dialog = screen.getByRole('dialog');
+    fireEvent.change(within(dialog).getByRole('spinbutton', { name: 'Цена от, ₽' }), { target: { value: '50000' } });
+    fireEvent.change(within(dialog).getByRole('spinbutton', { name: 'Цена до, ₽' }), { target: { value: '1000' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Показать объявления' }));
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Цена от не может быть больше цены до.');
+    expect(within(dialog).getByRole('alert')).toHaveFocus();
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
   it('applies the draft only after submission and resets it locally', () => {
     const onApply = vi.fn();
     render(

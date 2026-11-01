@@ -1,6 +1,7 @@
-import React, { useEffect, useId, useRef, type ReactNode } from 'react';
+import React, { useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { LuX } from 'react-icons/lu';
+import { useDialogBehavior } from './use-dialog-behavior';
 import styles from './Dialog.module.scss';
 
 export enum DialogSize {
@@ -19,7 +20,7 @@ export enum DialogSide {
   Right = 'right',
 }
 
-export type DialogProps = {
+export interface DialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -29,16 +30,7 @@ export type DialogProps = {
   side?: DialogSide;
   closeLabel?: string;
   className?: string;
-};
-
-const focusableSelector = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(',');
+}
 
 export function Dialog({
   open,
@@ -52,58 +44,11 @@ export function Dialog({
   className,
 }: DialogProps): JSX.Element | null {
   const titleId = useId();
-  const panelRef = useRef<HTMLElement>(null);
+  const panelRef = useDialogBehavior({ open, onClose });
 
-  useEffect(() => {
-    if (!open) return undefined;
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const panel = panelRef.current;
-    const firstFocusable = panel?.querySelector<HTMLElement>(focusableSelector);
-    (firstFocusable ?? panel)?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (event.key !== 'Tab' || !panel) return;
-
-      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(focusableSelector));
-      if (focusable.length === 0) {
-        event.preventDefault();
-        panel.focus();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (
-        event.shiftKey &&
-        (document.activeElement === first || document.activeElement === panel)
-      ) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [open, onClose]);
-
-  if (!open || typeof document === 'undefined') return null;
+  if (!open || typeof document === 'undefined') {
+    return null;
+  }
 
   const panelClasses = [
     styles.panel,
@@ -122,7 +67,9 @@ export function Dialog({
         .join(' ')}
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
       }}
     >
       <section

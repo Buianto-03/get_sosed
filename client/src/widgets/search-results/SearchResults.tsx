@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { LuSearch } from 'react-icons/lu';
+import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
 import {
   ListingCard,
   ListingCardVariant,
@@ -48,13 +49,21 @@ export function SearchResults({
   totalCount = listings.length,
   onLoadMore,
 }: SearchResultsProps): JSX.Element {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const requestFocus = useFocusAfterUpdate();
   const currentState = state === SearchResultsState.Ready && listings.length === 0
     ? SearchResultsState.Empty
     : state;
   let countLabel = formatResultCount(totalCount);
-  if (currentState === SearchResultsState.Empty) countLabel = formatResultCount(0);
-  if (currentState === SearchResultsState.Loading) countLabel = 'Загрузка…';
-  if (currentState === SearchResultsState.Error) countLabel = 'Ошибка загрузки';
+  if (currentState === SearchResultsState.Empty) {
+    countLabel = formatResultCount(0);
+  }
+  if (currentState === SearchResultsState.Loading) {
+    countLabel = 'Загрузка…';
+  }
+  if (currentState === SearchResultsState.Error) {
+    countLabel = 'Ошибка загрузки';
+  }
 
   return (
     <section className={styles.results} aria-labelledby="search-results-heading">
@@ -63,9 +72,13 @@ export function SearchResults({
         <span className={styles.results__count} role="status">{countLabel}</span>
       </div>
 
-      {currentState === SearchResultsState.Ready && (
+      {listings.length > 0 && currentState !== SearchResultsState.Ready && (
+        <p>Показаны предыдущие результаты поиска.</p>
+      )}
+
+      {listings.length > 0 && (
         <>
-          <div className={styles.results__grid}>
+          <div ref={gridRef} className={styles.results__grid} aria-busy={currentState === SearchResultsState.Loading}>
             {listings.map(({ id, listing, saved, saveDisabled, saveError }) => (
               <ListingCard
                 key={id}
@@ -79,12 +92,18 @@ export function SearchResults({
               />
             ))}
           </div>
-          {listings.length < totalCount && onLoadMore && <Button onClick={onLoadMore}>Показать ещё</Button>}
+          {listings.length < totalCount && onLoadMore && (
+            <Button disabled={currentState !== SearchResultsState.Ready} onClick={() => {
+              const addedFrom = listings.length;
+              requestFocus(() => gridRef.current?.children[addedFrom]?.querySelector('button'));
+              onLoadMore();
+            }}>Показать ещё</Button>
+          )}
         </>
       )}
 
-      {currentState === SearchResultsState.Loading && (
-        <div className={styles.results__grid} role="status" aria-label="Загрузка объявлений">
+      {currentState === SearchResultsState.Loading && listings.length === 0 && (
+        <div className={styles.results__grid} aria-hidden="true">
           {[0, 1, 2].map((item) => (
             <div className={styles.results__skeletonCard} key={item}>
               <Skeleton height={170} />

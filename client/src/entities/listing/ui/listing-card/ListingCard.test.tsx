@@ -28,6 +28,19 @@ function CardHarness({ data, onOpen }: { data: ListingCardData; onOpen: () => vo
 }
 
 describe('ListingCard', () => {
+  it('disables saving while pending and enables it after completion', () => {
+    const onSavedChange = vi.fn();
+    const { rerender } = render(<ListingCard listing={listing} saved={false} onSavedChange={onSavedChange} onOpen={vi.fn()} />);
+    const save = screen.getByRole('button', { name: 'Сохранить объявление' });
+    rerender(<ListingCard listing={listing} saved={false} saveDisabled onSavedChange={onSavedChange} onOpen={vi.fn()} />);
+    expect(save).toBeDisabled();
+    fireEvent.click(save);
+    expect(onSavedChange).not.toHaveBeenCalled();
+    rerender(<ListingCard listing={listing} saved onSavedChange={onSavedChange} onOpen={vi.fn()} />);
+    expect(save).toBeEnabled();
+    expect(save).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('shows listing details and handles save and open actions', () => {
     const onOpen = vi.fn();
     render(<CardHarness data={listing} onOpen={onOpen} />);

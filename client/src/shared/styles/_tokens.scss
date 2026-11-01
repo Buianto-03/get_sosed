@@ -1,14 +1,15 @@
 // GETSOSED Warm Neutral foundations. Import with `@use` from SCSS Modules.
 $color-ink: #1f2933;
-$color-muted: #64707a;
-$color-accent: #a16207;
+$color-muted: #5c6872;
+$color-accent: #995d07;
 $color-accent-hover: #92400e;
 $color-page: #faf7f2;
 $color-surface: #fffdf9;
 $color-soft: #f3ece2;
 $color-border: #e8dfd2;
+$color-control-border: #8b7964;
 $color-highlight: #fff0d6;
-$color-focus: #c98f42;
+$color-focus: $color-accent;
 $color-danger: #b42318;
 $color-danger-surface: #fef3f2;
 $color-success: #276738;
@@ -46,4 +47,4 @@ $radius-md: 9px;
 $radius-lg: 15px;
 $radius-xl: 16px;
 $shadow-card: 0 12px 32px rgb(55 45 31 / 9%);
-$focus-ring: 0 0 0 3px rgb(201 143 66 / 40%);
+$focus-ring: 0 0 0 3px rgba($color-focus, 0.4);

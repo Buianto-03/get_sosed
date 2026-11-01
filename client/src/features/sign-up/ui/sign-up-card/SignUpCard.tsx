@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import { useFormFeedback } from '@shared/lib/forms/use-form-feedback';
 import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
 import { Alert, type AlertVariant } from '@shared/ui/feedback/Alert';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
@@ -40,16 +41,19 @@ export function SignUpCard({
   onBrowseListings,
 }: SignUpCardProps): JSX.Element {
   const id = useId();
+  const { formRef, requestFeedbackFocus } = useFormFeedback(loading);
 
   return (
     <div className={styles.signUpCard}>
       <Surface padding={SurfacePadding.None} className={styles.signUpCard__surface}>
         <form
+          ref={formRef}
           className={styles.signUpCard__form}
           aria-busy={loading || undefined}
           noValidate
           onSubmit={(event) => {
             event.preventDefault();
+            requestFeedbackFocus();
             onSubmit();
           }}
         >
@@ -62,6 +66,7 @@ export function SignUpCard({
           <Input
             id={`${id}-name`}
             label="Имя"
+            required
             autoComplete="name"
             placeholder="Как вас зовут"
             value={values.name}
@@ -72,6 +77,7 @@ export function SignUpCard({
           <Input
             id={`${id}-email`}
             label="Email"
+            required
             type={InputType.Email}
             autoComplete="email"
             placeholder="Введите ваш email"
@@ -83,6 +89,7 @@ export function SignUpCard({
           <Input
             id={`${id}-password`}
             label="Пароль"
+            required
             type={InputType.Password}
             autoComplete="new-password"
             placeholder="Придумайте пароль"
@@ -94,6 +101,7 @@ export function SignUpCard({
           <Input
             id={`${id}-confirm-password`}
             label="Повторите пароль"
+            required
             type={InputType.Password}
             autoComplete="new-password"
             placeholder="Повторите пароль"

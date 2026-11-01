@@ -31,7 +31,7 @@ import {
   profileFixture,
 } from './fixtures';
 import { previewRoutes, type PreviewScreen } from './routes';
-import { SiteLayout } from '../app/layouts/SiteLayout';
+import { SiteLayout } from '../app/layouts/site-layout/SiteLayout';
 import { type ListingCardData } from '../entities/listing/ui/listing-card/ListingCard';
 import { MainBanner } from '../widgets/main-banner/MainBanner';
 import { FreshListings } from '../widgets/fresh-listings/FreshListings';

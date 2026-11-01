@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Spinner } from '@shared/ui/feedback/Spinner';
 import {
@@ -9,6 +10,7 @@ import {
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
+import { getCollectionFocusTarget } from './helper';
 import styles from './ProfileListingsSection.module.scss';
 
 export type ProfileListing = {
@@ -58,8 +60,18 @@ export function ProfileListingsSection({
   emptyState,
   actions,
 }: ProfileListingsSectionProps): JSX.Element {
+  const sectionRef = useRef<HTMLElement>(null);
+  const requestFocus = useFocusAfterUpdate();
   return (
-    <section className={styles.collection} aria-labelledby={headingId}>
+    <section
+      ref={sectionRef}
+      className={styles.collection}
+      aria-labelledby={headingId}
+      onFocusCapture={(event) => {
+        const focusedControl = event.target as HTMLElement;
+        requestFocus(() => getCollectionFocusTarget(sectionRef.current, focusedControl));
+      }}
+    >
       <div className={styles.collection__heading}>
         <Heading level={HeadingLevel.H2} size={HeadingSize.Lg} className={styles.collection__title}>
           <span id={headingId}>{title}</span>

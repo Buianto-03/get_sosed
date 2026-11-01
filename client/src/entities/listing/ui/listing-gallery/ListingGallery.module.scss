@@ -37,6 +37,16 @@
   outline-offset: -3px;
 }
 
+.photo:focus-visible::after {
+  position: absolute;
+  inset: 0;
+  border: 6px solid tokens.$color-surface;
+  outline: 3px solid tokens.$color-focus;
+  outline-offset: -3px;
+  content: '';
+  pointer-events: none;
+}
+
 .photo img {
   display: block;
   width: 100%;

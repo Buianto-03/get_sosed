@@ -1,4 +1,3 @@
-import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import React, { useEffect, useRef, useState } from 'react';
 import { TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
@@ -65,7 +64,9 @@ export function ListingCreatePage({
   const handlePhotosChange = (nextPhotos: UploadAreaPhoto[]): void => {
     const nextUrls = new Set(nextPhotos.map((photo) => photo.previewUrl));
     photosRef.current.forEach((photo) => {
-      if (!nextUrls.has(photo.previewUrl)) URL.revokeObjectURL(photo.previewUrl);
+      if (!nextUrls.has(photo.previewUrl)) {
+        URL.revokeObjectURL(photo.previewUrl);
+      }
     });
     photosRef.current = nextPhotos;
     setPhotos(nextPhotos);
@@ -112,7 +113,9 @@ export function ListingCreatePage({
   };
 
   const publishListing = async (): Promise<void> => {
-    if (publishing.current || !onPublish) return;
+    if (publishing.current || !onPublish) {
+      return;
+    }
     const valid = [1, 2, 3].map(canContinue).every(Boolean);
     if (!valid) {
       setValidationError('Проверьте все шаги: обязательные поля, числа, условия и фотографии.');
@@ -133,8 +136,8 @@ export function ListingCreatePage({
 
   return (
     <main className={styles.listing_create_page}>
-      {validationError && <Alert variant={AlertVariant.Error}>{validationError}</Alert>}
       <ListingCreateForm
+        validationError={validationError}
         initialStep={initialStep}
         isPublishing={publishState === ListingCreatePublishState.Loading}
         isPublished={publishState === ListingCreatePublishState.Success}

@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LuImage, LuStar, LuTrash2 } from 'react-icons/lu';
+import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
 import { ButtonSize } from '../button/Button';
 import { IconButton } from '../button/IconButton';
 import { FilePicker, FilePickerAccept } from '../file-picker/FilePicker';
+import { getPhotoRemovalFocusTarget } from './helper';
 import styles from './UploadArea.module.scss';
 
 export interface UploadAreaPhoto {
@@ -49,6 +51,8 @@ export function UploadArea({
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
   const photosRef = useRef<UploadAreaPhoto[]>(uncontrolledPhotos);
+  const rootRef = useRef<HTMLElement>(null);
+  const requestFocus = useFocusAfterUpdate();
   photosRef.current = uncontrolledPhotos;
 
   useEffect(
@@ -61,7 +65,9 @@ export function UploadArea({
   );
 
   const updatePhotos = (nextPhotos: UploadAreaPhoto[]): void => {
-    if (!isControlled) setUncontrolledPhotos(nextPhotos);
+    if (!isControlled) {
+      setUncontrolledPhotos(nextPhotos);
+    }
     onChange?.(nextPhotos);
   };
 
@@ -101,8 +107,13 @@ export function UploadArea({
   };
 
   const removePhoto = (photo: UploadAreaPhoto): void => {
-    if (!isControlled) URL.revokeObjectURL(photo.previewUrl);
+    if (!isControlled) {
+      URL.revokeObjectURL(photo.previewUrl);
+    }
     const nextPhotos = photos.filter((item) => item.id !== photo.id);
+    const index = photos.findIndex((item) => item.id === photo.id);
+    const nextPhotoId = nextPhotos[Math.min(index, nextPhotos.length - 1)]?.id;
+    requestFocus(() => getPhotoRemovalFocusTarget(rootRef.current, photo.id, nextPhotoId));
     const nextMainPhotoId = photo.isMain
       ? nextPhotos[0]?.id
       : nextPhotos.find((item) => item.isMain)?.id;
@@ -125,7 +136,7 @@ export function UploadArea({
   };
 
   return (
-    <section className={[styles.root, className].filter(Boolean).join(' ')} aria-label={label}>
+    <section ref={rootRef} className={[styles.root, className].filter(Boolean).join(' ')} aria-label={label}>
       <div
         className={[styles.dropzone, dragging && styles.dragging].filter(Boolean).join(' ')}
         onDragEnter={(event) => {
@@ -134,7 +145,9 @@ export function UploadArea({
         }}
         onDragOver={(event) => event.preventDefault()}
         onDragLeave={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDragging(false);
+          }
         }}
         onDrop={handleDrop}
       >
@@ -163,7 +176,7 @@ export function UploadArea({
           {photos.map((photo) => {
             const { isMain } = photo;
             return (
-              <li key={photo.id} className={styles.photo}>
+              <li key={photo.id} className={styles.photo} data-photo-id={photo.id}>
                 <img className={styles.thumbnail} src={photo.previewUrl} alt="" />
                 {isMain && (
                   <span className={styles.mainBadge}>

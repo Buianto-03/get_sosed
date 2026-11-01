@@ -40,7 +40,10 @@ describe('UploadArea', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Удалить фото: bedroom.jpg' }));
     expect(screen.queryByText('bedroom.jpg')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Главное фото: kitchen.jpg' })).toHaveFocus();
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:photo-preview');
+    fireEvent.click(screen.getByRole('button', { name: 'Удалить фото: kitchen.jpg' }));
+    expect(screen.getByRole('button', { name: 'Выбрать фото' })).toHaveFocus();
   });
 
   it('shows validation errors for unsupported files and excessive file size', () => {
@@ -91,9 +94,21 @@ describe('UploadArea', () => {
     );
     expect(screen.getByText('bedroom.jpg')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Удалить фото: bedroom.jpg' }));
+    const remove = screen.getByRole('button', { name: 'Удалить фото: bedroom.jpg' });
+    remove.focus();
+    fireEvent.click(remove);
     expect(onChange).toHaveBeenLastCalledWith([]);
     expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    rerender(
+      <UploadArea id="controlled-photos" label="Фотографии" value={selectedPhotos} onChange={onChange} />,
+    );
+    expect(remove).toHaveFocus();
+
+    rerender(
+      <UploadArea id="controlled-photos" label="Фотографии" value={[]} onChange={onChange} />,
+    );
+    expect(screen.getByRole('button', { name: 'Выбрать фото' })).toHaveFocus();
 
     unmount();
     expect(revokeObjectURL).not.toHaveBeenCalled();

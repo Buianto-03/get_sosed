@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { LuChevronLeft, LuChevronRight, LuImageOff } from 'react-icons/lu';
 import { IconButton } from '@shared/ui/button/IconButton';
 import { Modal, ModalSize } from '@shared/ui/overlay/Modal';
+import { getGalleryScrollBehavior } from './helper';
 import styles from './ListingGallery.module.scss';
 
 export type ListingPhoto = {
@@ -10,9 +11,9 @@ export type ListingPhoto = {
   alt: string;
 };
 
-export type ListingGalleryProps = {
+export interface ListingGalleryProps {
   photos: readonly ListingPhoto[];
-};
+}
 
 export function ListingGallery({ photos }: ListingGalleryProps): JSX.Element {
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ export function ListingGallery({ photos }: ListingGalleryProps): JSX.Element {
     const normalizedIndex = (nextIndex + photos.length) % photos.length;
     setActiveIndex(normalizedIndex);
     galleryRef.current?.children[normalizedIndex]?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: getGalleryScrollBehavior(),
       block: 'nearest',
       inline: 'start',
     });
@@ -31,13 +32,19 @@ export function ListingGallery({ photos }: ListingGalleryProps): JSX.Element {
 
   const handleScroll = (): void => {
     const gallery = galleryRef.current;
-    if (!gallery || gallery.clientWidth === 0) return;
+    if (!gallery || gallery.clientWidth === 0) {
+      return;
+    }
     setActiveIndex(Math.round(gallery.scrollLeft / gallery.clientWidth));
   };
 
   let layout = styles.multiple;
-  if (photos.length === 1) layout = styles.single;
-  if (photos.length === 2) layout = styles.double;
+  if (photos.length === 1) {
+    layout = styles.single;
+  }
+  if (photos.length === 2) {
+    layout = styles.double;
+  }
 
   if (photos.length === 0) {
     return (

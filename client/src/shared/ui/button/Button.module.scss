@@ -104,6 +104,10 @@
   }
 
   .spinner {
-    animation-duration: 1400ms;
+    animation: none;
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
   }
 }

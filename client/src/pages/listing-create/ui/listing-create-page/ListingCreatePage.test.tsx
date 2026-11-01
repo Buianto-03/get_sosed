@@ -1,8 +1,10 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ListingCondition, TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import type { ListingDraft } from '@features/listing-create/model';
+import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreatePage } from './ListingCreatePage';
 
 const tagCatalog: TagCatalog = {
@@ -24,12 +26,48 @@ afterEach(() => {
 });
 
 describe('ListingCreatePage', () => {
+  it('opens the first invalid intermediate step when jumping ahead from a completed step', () => {
+    render(<ListingCreatePage tagCatalog={tagCatalog} initialDraft={{
+      title: 'Комната', city: 'Казань', address: 'Улица, 1', metro: 'Центр', area: '18', rooms: '2', floor: '3',
+    }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
+    expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' })).toHaveFocus();
+    expect(screen.queryByRole('heading', { name: 'Проверьте объявление' })).not.toBeInTheDocument();
+  });
+
+  it('blocks duplicate publication and retains the same File for a retry after failure', async () => {
+    let rejectPublish: (reason: Error) => void = () => undefined;
+    const onPublish = vi.fn<[ListingDraft, UploadAreaPhoto[]], Promise<void>>().mockImplementationOnce(() => new Promise((resolve, reject) => {
+      rejectPublish = reject;
+    })).mockResolvedValueOnce(undefined);
+    const file = new File(['photo bytes'], 'room.webp', { type: 'image/webp' });
+    const photos = [{ id: 'room', file, previewUrl: 'blob:room', isMain: true }];
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    render(<ListingCreatePage tagCatalog={tagCatalog} initialStep={4} initialPhotos={photos} initialDraft={{
+      title: 'Комната', city: 'Казань', address: 'Улица, 1', metro: 'Центр', area: '18', rooms: '2', floor: '3', price: '25000', description: 'Рядом с метро',
+    }} onPublish={onPublish} />);
+    const publish = screen.getByRole('button', { name: 'Опубликовать' });
+    fireEvent.click(publish);
+    fireEvent.click(publish);
+    expect(onPublish).toHaveBeenCalledTimes(1);
+    expect(publish).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Публикуем объявление');
+    await act(async () => { rejectPublish(new Error('Offline')); });
+    expect(screen.getByRole('alert')).toHaveFocus();
+    fireEvent.click(publish);
+    expect(onPublish).toHaveBeenCalledTimes(2);
+    expect(onPublish.mock.calls[1][1][0].file).toBe(file);
+    await screen.findByText('Объявление опубликовано');
+  });
+
   it('validates forward navigation and preserves fields when a step is revisited', () => {
     render(<ListingCreatePage tagCatalog={tagCatalog} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
     expect(screen.getByRole('heading', { name: 'Расскажите о комнате' })).toBeInTheDocument();
     expect(screen.getByText('Укажите название комнаты (до 100 символов).')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Название объявления' })).toHaveFocus();
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Название объявления' }), {
       target: { value: 'Светлая комната' },
@@ -53,6 +91,7 @@ describe('ListingCreatePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
 
     expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Цена и правила' })).toHaveFocus();
     expect(screen.queryByRole('textbox', { name: 'Название объявления' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
@@ -69,9 +108,8 @@ describe('ListingCreatePage', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Публикация, предстоит' }));
 
-    expect(screen.getByRole('heading', { name: 'Цена и правила' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
     expect(screen.getByRole('heading', { name: 'Добавьте фотографии' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
     expect(screen.getByRole('spinbutton', { name: 'Цена за месяц, ₽' })).toHaveValue(30000);
     expect(screen.getByRole('textbox', { name: 'Описание' })).toHaveValue('Рядом с метро');

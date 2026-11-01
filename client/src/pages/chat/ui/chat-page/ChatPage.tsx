@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { LuArrowLeft, LuMessagesSquare } from 'react-icons/lu';
 import { ConversationRow } from '@entities/chat/ui/ConversationRow';
 import { ListingContextCard } from '@entities/listing/ui/listing-context-card/ListingContextCard';
@@ -63,10 +63,30 @@ export function ChatPage({
   const hasActiveConversation = Boolean(activeConversation);
   const [draft, setDraft] = useState('');
   const [sendError, setSendError] = useState(false);
+  const inputId = useId();
+  const [announcement, setAnnouncement] = useState('');
+  const seenMessages = useRef<{ conversation: string | null; ids: Set<string> }>({
+    conversation: selectedConversationId,
+    ids: new Set(activeConversation?.messages.map((message) => message.id)),
+  });
+  const wasHistoryLoading = useRef(historyLoading);
   const messageListRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   const lastMessageId = activeConversation?.messages[activeConversation.messages.length - 1]?.id;
   const messageCount = activeConversation?.messages.length ?? 0;
+
+  useEffect(() => {
+    const messages = activeConversation?.messages ?? [];
+    const previous = seenMessages.current;
+    if (previous.conversation === selectedConversationId && !historyLoading && !wasHistoryLoading.current) {
+      const incoming = messages.filter((message) => message.from === 'them' && !previous.ids.has(message.id));
+      setAnnouncement(incoming.map((message) => `${activeConversation?.name}: ${message.text}`).join(' '));
+    } else {
+      setAnnouncement('');
+    }
+    seenMessages.current = { conversation: selectedConversationId, ids: new Set(messages.map((message) => message.id)) };
+    wasHistoryLoading.current = historyLoading;
+  }, [activeConversation?.messages, activeConversation?.name, historyLoading, selectedConversationId]);
 
   useEffect(() => {
     const list = messageListRef.current;
@@ -111,6 +131,7 @@ export function ChatPage({
 
   return (
     <main className={styles.chat}>
+      <span className={styles.chat__announcement} role="status" aria-atomic="true">{announcement}</span>
       <div className={styles.chat__heading}>
         <Heading level={HeadingLevel.H1} size={HeadingSize.Xl}>
           Сообщения
@@ -195,6 +216,10 @@ export function ChatPage({
                 ref={messageListRef}
                 className={styles.chat__messages}
                 aria-label="Сообщения"
+                role="region"
+                // Keyboard users must be able to scroll history independently of the composer.
+                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                tabIndex={0}
                 onScroll={(event) => {
                   const list = event.currentTarget;
                   followLatest.current = list.scrollHeight - list.clientHeight - list.scrollTop < 8;
@@ -234,7 +259,7 @@ export function ChatPage({
               )}
               <form className={styles.chat__composer} onSubmit={sendMessage}>
                 <Input
-                  id="chat-message-input"
+                  id={`${inputId}-message`}
                   label="Сообщение"
                   fieldClassName={styles.chat__composer_field}
                   autoComplete="off"

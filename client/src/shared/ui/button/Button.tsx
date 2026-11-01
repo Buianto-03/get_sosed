@@ -20,13 +20,13 @@ export enum ButtonType {
   Reset = 'reset',
 }
 
-export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> & {
+export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   type?: ButtonType;
   loading?: boolean;
   children: ReactNode;
-};
+}
 
 export function Button({
   variant = ButtonVariant.Primary,

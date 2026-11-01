@@ -35,17 +35,18 @@ axiosInstance.interceptors.response.use(
     }
 
     previousRequest.sent = true;
+    let accessToken: string;
     try {
       refreshPromise ??= authBridge.refreshAccessToken().finally(() => {
         refreshPromise = undefined;
       });
-      const accessToken = await refreshPromise;
-      previousRequest.headers.Authorization = `Bearer ${accessToken}`;
-      return await axiosInstance(previousRequest);
+      accessToken = await refreshPromise;
     } catch (refreshError) {
       authBridge.onUnauthorized();
       return Promise.reject(refreshError);
     }
+    previousRequest.headers.Authorization = `Bearer ${accessToken}`;
+    return axiosInstance(previousRequest);
   },
 );
 

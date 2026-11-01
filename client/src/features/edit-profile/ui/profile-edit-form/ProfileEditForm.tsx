@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useState } from 'react';
+import { useFormFeedback } from '@shared/lib/forms/use-form-feedback';
 import { LuArrowLeft } from 'react-icons/lu';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Avatar, AvatarSize } from '@shared/ui/avatar/Avatar';
@@ -38,6 +39,7 @@ export function ProfileEditForm({
   error,
 }: ProfileEditFormProps): JSX.Element {
   const id = useId();
+  const { formRef, requestFeedbackFocus } = useFormFeedback(saving);
   const [values, setValues] = useState<ProfileEditValues>({
     name: profile?.name ?? '',
     age: profile?.age ?? '',
@@ -69,7 +71,9 @@ export function ProfileEditForm({
 
   const selectPhoto = (files: File[]): void => {
     const file = files[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setPhotoError('Выберите фото в формате JPG, PNG или WebP.');
       return;
@@ -83,10 +87,14 @@ export function ProfileEditForm({
   };
 
   const submit = (): void => {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
     const nextErrors = validateProfileEdit(values);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0 || photoError) return;
+    if (Object.keys(nextErrors).length > 0 || photoError) {
+      return;
+    }
     onSave(
       {
         name: values.name.trim(),
@@ -121,10 +129,13 @@ export function ProfileEditForm({
       </div>
       <Surface padding={SurfacePadding.None} className={styles.surface}>
         <form
+          ref={formRef}
+          aria-busy={saving || undefined}
           className={styles.form}
           noValidate
           onSubmit={(event) => {
             event.preventDefault();
+            requestFeedbackFocus();
             submit();
           }}
         >
@@ -151,6 +162,10 @@ export function ProfileEditForm({
                       onClick={() => {
                         setAvatarFile(null);
                         setPhotoError('');
+                        document
+                          .getElementById(`${id}-avatar`)
+                          ?.parentElement?.querySelector('button')
+                          ?.focus();
                       }}
                     >
                       Удалить фото
@@ -228,6 +243,7 @@ export function ProfileEditForm({
             </details>
           </fieldset>
           {error && <Alert variant={AlertVariant.Error}>{error}</Alert>}
+          {saving && <p role="status">Сохраняем профиль…</p>}
           <div className={styles.actions}>
             <Button type={ButtonType.Submit} loading={saving}>
               Сохранить изменения

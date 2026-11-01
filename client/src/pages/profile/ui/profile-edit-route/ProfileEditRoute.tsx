@@ -19,9 +19,13 @@ export default function ProfileEditRoute(): JSX.Element | null {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const pending = useRef(false);
-  if (user.status !== UserStatus.Logged) return null;
+  if (user.status !== UserStatus.Logged) {
+    return null;
+  }
   const save = async (profile: ProfileEditData, avatar: File | null | undefined): Promise<void> => {
-    if (pending.current) return;
+    if (pending.current) {
+      return;
+    }
     pending.current = true;
     setSaving(true);
     setError('');
@@ -34,12 +38,16 @@ export default function ProfileEditRoute(): JSX.Element | null {
     data.set('habits', JSON.stringify(profile.habits ?? []));
     data.set('age', profile.age ?? '');
     data.set('phoneNumber', profile.phoneNumber ?? '');
-    if (avatar instanceof File) data.set('photo', avatar);
-    if (avatar === null) data.set('removePhoto', 'true');
+    if (avatar instanceof File) {
+      data.set('photo', avatar);
+    }
+    if (avatar === null) {
+      data.set('removePhoto', 'true');
+    }
     try {
       const updated = await dispatch(editUserProfileThunk(data)).unwrap();
       dispatch(updateUser(updated));
-      navigate(routes.profile);
+      navigate(routes.profile, { state: { profileSaved: true } });
     } catch {
       setError('Не удалось сохранить профиль. Попробуйте ещё раз.');
     } finally {

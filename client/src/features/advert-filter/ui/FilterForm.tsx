@@ -1,4 +1,6 @@
 import React, { type FormEvent } from 'react';
+import { useFormFeedback } from '@shared/lib/forms/use-form-feedback';
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
 import { Input } from '@shared/ui/input/Input';
 import { Checkbox } from '@shared/ui/selection/checkbox/Checkbox';
@@ -17,6 +19,7 @@ interface FilterFormProps {
   onChange: (draft: SearchFilterValues) => void;
   onApply: (event: FormEvent<HTMLFormElement>) => void;
   onReset: () => void;
+  error?: string;
 }
 
 export function FilterForm({
@@ -27,7 +30,9 @@ export function FilterForm({
   onChange,
   onApply,
   onReset,
+  error,
 }: FilterFormProps): JSX.Element {
+  const { formRef, requestFeedbackFocus } = useFormFeedback();
   const setField = (field: keyof Omit<SearchFilterValues, 'tagIds'>, value: string): void => {
     onChange({ ...draft, [field]: value });
   };
@@ -43,11 +48,16 @@ export function FilterForm({
 
   return (
     <form
+      ref={formRef}
       className={[styles.filters__form, inDrawer && styles.filters__form_drawer]
         .filter(Boolean)
         .join(' ')}
-      onSubmit={onApply}
+      onSubmit={(event) => {
+        requestFeedbackFocus();
+        onApply(event);
+      }}
     >
+      {error && <Alert variant={AlertVariant.Error}>{error}</Alert>}
       <div className={styles.filters__fields}>
         <Input
           id={`${idPrefix}-city`}
@@ -93,6 +103,7 @@ export function FilterForm({
               key={tag.id}
               id={`${idPrefix}-tag-${tag.id}`}
               label={getTagLabel(tagCatalog.tags, tag.id)}
+              disabled={tagCatalog.state !== TagCatalogState.Ready}
               checked={draft.tagIds.includes(tag.id)}
               onChange={(event) => setCondition(tag.id, event.target.checked)}
             />
