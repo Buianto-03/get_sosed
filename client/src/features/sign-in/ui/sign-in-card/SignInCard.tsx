@@ -56,7 +56,9 @@ export function SignInCard({
           }}
         >
           <div className={styles.signInCard__intro}>
-            <Heading level={HeadingLevel.H2} size={HeadingSize.Xl}>Войти</Heading>
+            <Heading level={HeadingLevel.H1} size={HeadingSize.Xl}>
+              Войти
+            </Heading>
             <p>Войдите, чтобы писать авторам и сохранять объявления.</p>
           </div>
           <Input

@@ -54,7 +54,9 @@ export function SignUpCard({
           }}
         >
           <div className={styles.signUpCard__intro}>
-            <Heading level={HeadingLevel.H2} size={HeadingSize.Xl}>Регистрация</Heading>
+            <Heading level={HeadingLevel.H1} size={HeadingSize.Xl}>
+              Регистрация
+            </Heading>
             <p>Создайте профиль, чтобы общаться и размещать объявления.</p>
           </div>
           <Input

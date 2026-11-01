@@ -28,3 +28,9 @@
 .sm {
   font-size: tokens.$font-size-lg;
 }
+
+@container (max-width: 680px) {
+  .xl {
+    font-size: 27px;
+  }
+}

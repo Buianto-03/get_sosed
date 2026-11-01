@@ -73,22 +73,24 @@ export function ProfilePage({
   ];
 
   return (
-    <main className={styles.page}>
-      <div className={styles.heading}>
+    <main className={styles.profile}>
+      <div className={styles.profile__heading}>
         <div>
-          <p className={styles.eyebrow}>Личный кабинет</p>
+          <p className={styles.profile__eyebrow}>Личный кабинет</p>
           <Heading level={HeadingLevel.H1} size={HeadingSize.Xl}>
-            Профиль
+            Мой профиль
           </Heading>
         </div>
-        <CreateListingButton className={styles.createButton} withIcon />
+        <div className={styles.profile__actions}>
+          {navigation.onMessages && (
+            <Button variant={ButtonVariant.Secondary} onClick={navigation.onMessages}>
+              Сообщения
+            </Button>
+          )}
+          <CreateListingButton className={styles.profile__create} withIcon />
+        </div>
       </div>
 
-      {navigation.onMessages && (
-        <Button variant={ButtonVariant.Secondary} onClick={navigation.onMessages}>
-          Сообщения
-        </Button>
-      )}
       {profile ? (
         <PersonSummary
           name={profile.name}
@@ -116,21 +118,23 @@ export function ProfilePage({
         />
       )}
 
-      {collections.map((collection) => (
-        <ProfileListingsSection
-          key={collection.id}
-          headingId={collection.id}
-          title={collection.title}
-          collection={collection.data}
-          emptyState={{
-            title: collection.emptyTitle,
-            description: collection.emptyDescription,
-            action: collection.emptyAction,
-            icon: collection.icon,
-          }}
-          actions={listingActions}
-        />
-      ))}
+      <div className={styles.profile__collections}>
+        {collections.map((collection) => (
+          <ProfileListingsSection
+            key={collection.id}
+            headingId={collection.id}
+            title={collection.title}
+            collection={collection.data}
+            emptyState={{
+              title: collection.emptyTitle,
+              description: collection.emptyDescription,
+              action: collection.emptyAction,
+              icon: collection.icon,
+            }}
+            actions={listingActions}
+          />
+        ))}
+      </div>
     </main>
   );
 }

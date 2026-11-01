@@ -21,6 +21,7 @@
 .details h3 {
   color: tokens.$color-ink;
   font-size: tokens.$font-size-md;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
@@ -39,8 +40,9 @@
 }
 
 .profile {
+  min-height: 212px;
   align-items: flex-start;
-  padding: tokens.$space-5;
+  padding: tokens.$space-7;
   border: 1px solid tokens.$color-border;
   border-radius: tokens.$radius-lg;
   background: tokens.$color-surface;
@@ -52,6 +54,14 @@
 }
 
 .profile .details h3 {
+  font-size: 29px;
+}
+
+.profile > :first-child {
+  width: 76px;
+  height: 76px;
+  background: tokens.$color-highlight;
+  color: tokens.$color-accent;
   font-size: tokens.$font-size-xl;
 }
 
@@ -61,11 +71,12 @@
 
 @container (max-width: 600px) {
   .profile {
+    min-height: 0;
     flex-wrap: wrap;
     padding: tokens.$space-4;
   }
 
-  .action {
+  .profile .action {
     flex: 0 0 100%;
     width: 100%;
     margin-left: 0;

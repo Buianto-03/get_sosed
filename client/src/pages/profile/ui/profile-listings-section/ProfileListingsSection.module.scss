@@ -1,6 +1,7 @@
 @use '../../../../shared/styles/tokens' as tokens;
 
 .collection {
+  container-type: inline-size;
   display: grid;
   min-width: 0;
   gap: tokens.$space-5;

@@ -17,6 +17,7 @@ export interface ListingCreatePageProps {
   tagCatalog: TagCatalog;
   initialStep?: number;
   initialDraft?: Partial<ListingDraft>;
+  initialPhotos?: UploadAreaPhoto[];
   initialAttemptedSteps?: number[];
   initialPublishState?: ListingCreatePublishState;
   onPublish?: (draft: ListingDraft, photos: UploadAreaPhoto[]) => Promise<void> | void;
@@ -40,18 +41,19 @@ export function ListingCreatePage({
   tagCatalog,
   initialStep = 1,
   initialDraft,
+  initialPhotos = [],
   initialAttemptedSteps = [],
   initialPublishState = ListingCreatePublishState.Idle,
   onPublish,
 }: ListingCreatePageProps): JSX.Element {
   const [draft, setDraft] = useState<ListingDraft>(() => ({ ...emptyDraft, ...initialDraft }));
   const [attemptedSteps, setAttemptedSteps] = useState<number[]>(initialAttemptedSteps);
-  const [photos, setPhotos] = useState<UploadAreaPhoto[]>([]);
+  const [photos, setPhotos] = useState<UploadAreaPhoto[]>(initialPhotos);
   const [publishState, setPublishState] = useState(initialPublishState);
   const [reviewSaved, setReviewSaved] = useState(false);
   const [validationError, setValidationError] = useState('');
   const publishing = useRef(false);
-  const photosRef = useRef<UploadAreaPhoto[]>([]);
+  const photosRef = useRef<UploadAreaPhoto[]>(initialPhotos);
 
   useEffect(
     () => () => {

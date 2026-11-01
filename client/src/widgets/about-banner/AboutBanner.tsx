@@ -16,7 +16,7 @@ export function AboutBanner({ description, onBrowseListings }: AboutBannerProps)
           <p className={styles.aboutBanner__eyebrow}>О сервисе</p>
           <Heading
             className={styles.aboutBanner__title}
-            level={HeadingLevel.H2}
+            level={HeadingLevel.H1}
             size={HeadingSize.Display}
           >
             Комфортный дом начинается с людей
@@ -26,7 +26,9 @@ export function AboutBanner({ description, onBrowseListings }: AboutBannerProps)
             Смотреть объявления
           </Button>
         </div>
-        <img className={styles.aboutBanner__photo} src="/mainPhoto.jpg" alt="Интерьер квартиры" />
+        <div className={styles.aboutBanner__media}>
+          <img className={styles.aboutBanner__photo} src="/redesign-hero.jpg" alt="Интерьер квартиры" />
+        </div>
       </section>
     </div>
   );

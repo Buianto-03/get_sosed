@@ -13,18 +13,24 @@ export function MainBanner({
   description = 'Ищи жильё для совместного проживания и знакомься с будущими соседями.',
 }: MainBannerProps): JSX.Element {
   return (
-    <div className={styles.container}>
-      <section className={styles.banner} aria-labelledby="main-banner-title">
-        <div className={styles.copy}>
-          <p className={styles.eyebrow}>Жильё и люди рядом</p>
-          <h2 id="main-banner-title">Твоё место. Твои люди.</h2>
-          <p className={styles.description}>{description}</p>
-          <div className={styles.actions}>
+    <div className={styles.main_banner}>
+      <section className={styles.main_banner__content} aria-labelledby="main-banner-title">
+        <div className={styles.main_banner__copy}>
+          <p className={styles.main_banner__eyebrow}>Жильё и люди рядом</p>
+          <h1 id="main-banner-title">
+            Твоё место.
+            <br />
+            Твои люди.
+          </h1>
+          <p className={styles.main_banner__description}>{description}</p>
+          <div className={styles.main_banner__actions}>
             <Button onClick={onFindHousing}>Найти жильё</Button>
             <CreateListingButton variant={ButtonVariant.Secondary} />
           </div>
         </div>
-        <img className={styles.photo} src="/mainPhoto.jpg" alt="Гостиная в квартире" />
+        <div className={styles.main_banner__media}>
+          <img className={styles.main_banner__photo} src="/redesign-hero.jpg" alt="Интерьер квартиры" />
+        </div>
       </section>
     </div>
   );

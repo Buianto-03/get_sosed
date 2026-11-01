@@ -1,29 +1,29 @@
 @use '../../shared/styles/tokens' as tokens;
 
-.container {
+.main_banner {
   container-type: inline-size;
   width: 100%;
 }
 
-.banner {
+.main_banner__content {
   display: grid;
-  min-height: 390px;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  min-height: 315px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   overflow: hidden;
   border-radius: tokens.$radius-xl;
   background: tokens.$color-soft;
 }
 
-.copy {
+.main_banner__copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: tokens.$space-10 clamp(24px, 5cqi, 70px);
+  padding: 36px;
 }
 
-.eyebrow {
+.main_banner__eyebrow {
   margin: 0;
   color: tokens.$color-accent;
   font-size: tokens.$font-size-xs;
@@ -33,27 +33,26 @@
   text-transform: uppercase;
 }
 
-.copy h2 {
+.main_banner__copy h1 {
   max-width: 650px;
   margin: tokens.$space-3 0;
   color: tokens.$color-ink;
-  font-size: tokens.$font-size-display;
+  font-size: 43px;
   font-weight: 650;
   letter-spacing: -0.045em;
-  line-height: 1.03;
+  line-height: tokens.$line-height-tight;
   overflow-wrap: anywhere;
 }
 
-.description {
-  max-width: 520px;
+.main_banner__description {
   margin: 0;
   color: tokens.$color-muted;
-  font-size: tokens.$font-size-lg;
-  line-height: tokens.$line-height-relaxed;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
   overflow-wrap: anywhere;
 }
 
-.actions {
+.main_banner__actions {
   display: flex;
   max-width: 100%;
   flex-wrap: wrap;
@@ -61,60 +60,68 @@
   margin-top: tokens.$space-6;
 }
 
-.actions > * {
+.main_banner__actions > * {
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-.photo {
+.main_banner__media {
+  position: relative;
+  min-height: 315px;
+}
+
+.main_banner__photo {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 390px;
   object-fit: cover;
   object-position: center;
 }
 
 @container (max-width: 760px) {
-  .banner {
+  .main_banner__content {
     display: flex;
     flex-direction: column;
     border-radius: tokens.$radius-lg;
   }
 
-  .copy {
+  .main_banner__copy {
     padding: tokens.$space-6 tokens.$space-5;
   }
 
-  .copy h2 {
-    font-size: clamp(2rem, 8cqi, 2.75rem);
+  .main_banner__copy h1 {
+    font-size: 31px;
   }
 
-  .description {
-    font-size: tokens.$font-size-md;
+  .main_banner__description {
+    font-size: tokens.$font-size-sm;
   }
 
-  .actions {
+  .main_banner__actions {
     gap: tokens.$space-2;
   }
 
-  .photo {
-    height: auto;
+  .main_banner__media {
     min-height: 0;
     max-height: 280px;
     aspect-ratio: 1.65;
+  }
+
+  .main_banner__photo {
     object-position: center 55%;
   }
 }
 
 @container (max-width: 390px) {
-  .actions {
+  .main_banner__actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .actions > * {
+  .main_banner__actions > * {
     width: 100%;
   }
 }

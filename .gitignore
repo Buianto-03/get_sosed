@@ -133,3 +133,4 @@ dist
 docs/*
 !docs/redesign-migration-plan.md
 !docs/redesign-integration-progress.md
+!docs/redesign-visual-qa.md

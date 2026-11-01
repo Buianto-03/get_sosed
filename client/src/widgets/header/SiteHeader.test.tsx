@@ -19,6 +19,13 @@ function renderHeader(props: SiteHeaderProps = {}, initialPath = '/'): void {
 }
 
 describe('SiteHeader', () => {
+  it('does not mark search as active on the publication route', () => {
+    renderHeader({ user: { name: 'Тестовый пользователь' } }, '/listings/new');
+
+    const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
+    expect(within(navigation).getByRole('link', { name: 'Поиск' })).not.toHaveAttribute('aria-current');
+  });
+
   it('marks the active route and navigates from the guest header', () => {
     renderHeader({}, '/listings');
 

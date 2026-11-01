@@ -6,7 +6,12 @@
 
   > h2 {
     margin: 0;
-    font-size: tokens.$font-size-xl;
+    font-size: 29px;
+    font-weight: 700;
+
+    @container (max-width: 680px) {
+      font-size: 22px;
+    }
   }
 
   > p {

@@ -44,7 +44,10 @@ export default function SearchRoute(): JSX.Element {
   else if (result.error) state = SearchResultsState.Error;
   return (
     <main className={styles.search__page}>
-      <h1>Найти жильё</h1>
+      <header className={styles.search__intro}>
+        <h1>Найти жильё</h1>
+        <p>Выбирайте варианты по цене, месту и условиям.</p>
+      </header>
       <SearchFilters
         tagCatalog={catalog}
         applied={applied}

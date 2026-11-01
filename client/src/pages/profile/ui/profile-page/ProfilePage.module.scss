@@ -1,20 +1,20 @@
 @use '../../../../shared/styles/tokens' as tokens;
 
-.page {
+.profile {
   display: grid;
   min-width: 0;
   gap: tokens.$space-10;
   container-type: inline-size;
 }
 
-.heading {
+.profile__heading {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: tokens.$space-4;
 }
 
-.eyebrow {
+.profile__eyebrow {
   margin: 0 0 tokens.$space-2;
   color: tokens.$color-accent;
   font-size: tokens.$font-size-xs;
@@ -23,26 +23,54 @@
   text-transform: uppercase;
 }
 
-.heading h1 {
+.profile__heading h1 {
+  font-size: 42px;
   overflow-wrap: anywhere;
 }
 
-.createButton {
+.profile__create {
   flex: 0 0 auto;
   gap: tokens.$space-2;
 }
 
+.profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3;
+}
+
+.profile__collections {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: tokens.$space-6;
+}
+
+@container (max-width: 1000px) {
+  .profile__collections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @container (max-width: 620px) {
-  .page {
+  .profile__heading h1 {
+    font-size: 27px;
+  }
+
+  .profile {
     gap: tokens.$space-8;
   }
 
-  .heading {
+  .profile__heading {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .createButton {
+  .profile__create {
     align-self: stretch;
+  }
+
+  .profile__actions {
+    flex-direction: column;
   }
 }

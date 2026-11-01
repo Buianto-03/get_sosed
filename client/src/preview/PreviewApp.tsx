@@ -20,6 +20,7 @@ import { AlertVariant } from '@shared/ui/feedback/Alert';
 import { ChatPage, type ChatMessage } from '@pages/chat/ui/chat-page/ChatPage';
 import { ListingCreatePublishState } from '@features/listing-create/model';
 import { ListingCreatePage } from '@pages/listing-create/ui/listing-create-page/ListingCreatePage';
+import { MobileNavigation as SiteMobileNavigation } from '@widgets/mobile-navigation/MobileNavigation';
 import {
   longAdvert,
   longMessage,
@@ -43,7 +44,7 @@ import {
   type SearchFilterValues,
 } from '../features/advert-filter/ui/SearchFilters';
 import { UiFoundationsShowcase } from './UiFoundationsShowcase';
-import { toProfileListings } from './helper';
+import { createPublicationPhotoFixtures, toProfileListings } from './helper';
 import { previewTagCatalog } from './tag-catalog';
 
 type ScreenId = PreviewScreen;
@@ -263,6 +264,31 @@ function PreviewApp(): JSX.Element {
 
   const isVariantValid = activeVariants.some(({ id }) => id === variant);
   const activeVariant = isVariantValid ? variant : activeVariants[0].id;
+  const standalone = new URLSearchParams(window.location.search).get('standalone') === '1';
+  const previewLayout = (
+    <SiteLayout
+      fullscreenChat={screen === 'chat'}
+      bottomNavigation={<MobileNavigation screen={screen} onNavigate={selectScreen} standalone={standalone} />}
+      user={headerMode === 'user' ? { name: profile.name } : undefined}
+      onSignOut={() => {
+        setHeaderMode('guest');
+        selectScreen('home');
+      }}
+    >
+      <ScreenContent
+        screen={screen}
+        variant={activeVariant}
+        onNavigate={selectScreen}
+        onSelectVariant={setVariant}
+        profile={profile}
+        onApplyProfile={applyProfile}
+      />
+    </SiteLayout>
+  );
+
+  if (standalone) {
+    return previewLayout;
+  }
 
   return (
     <main className="preview-app">
@@ -341,24 +367,7 @@ function PreviewApp(): JSX.Element {
           style={{ '--preview-width': `${viewportWidths[viewport]}px` } as React.CSSProperties}
           data-viewport={viewport}
         >
-          <SiteLayout
-            fullscreenChat={screen === 'chat'}
-            bottomNavigation={<MobileNavigation screen={screen} onNavigate={selectScreen} />}
-            user={headerMode === 'user' ? { name: profile.name } : undefined}
-            onSignOut={() => {
-              setHeaderMode('guest');
-              selectScreen('home');
-            }}
-          >
-            <ScreenContent
-              screen={screen}
-              variant={activeVariant}
-              onNavigate={selectScreen}
-              onSelectVariant={setVariant}
-              profile={profile}
-              onApplyProfile={applyProfile}
-            />
-          </SiteLayout>
+          {previewLayout}
         </div>
       </div>
       <p className="preview-footnote">
@@ -369,13 +378,17 @@ function PreviewApp(): JSX.Element {
   );
 }
 
+interface PreviewMobileNavigationProps {
+  screen: ScreenId;
+  onNavigate: (screen: ScreenId) => void;
+  standalone?: boolean;
+}
+
 function MobileNavigation({
   screen,
   onNavigate,
-}: {
-  screen: ScreenId;
-  onNavigate: (screen: ScreenId) => void;
-}): JSX.Element {
+  standalone = false,
+}: PreviewMobileNavigationProps): JSX.Element {
   const items: { id: ScreenId; label: string; icon: JSX.Element }[] = [
     { id: 'home', label: 'Главная', icon: <LuHome aria-hidden="true" /> },
     { id: 'search', label: 'Поиск', icon: <LuSearch aria-hidden="true" /> },
@@ -383,6 +396,21 @@ function MobileNavigation({
     { id: 'chat', label: 'Чаты', icon: <LuMessagesSquare aria-hidden="true" /> },
     { id: 'profile', label: 'Профиль', icon: <LuUser aria-hidden="true" /> },
   ];
+
+  if (standalone) {
+    return (
+      <SiteMobileNavigation
+        items={items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          icon: item.icon,
+          to: previewRoutes[item.id],
+          activePaths: [previewRoutes[item.id]],
+          excludePaths: item.id === 'search' ? [previewRoutes.post] : undefined,
+        }))}
+      />
+    );
+  }
 
   return (
     <nav className="preview-mobile-nav" aria-label="Мобильная навигация">
@@ -861,7 +889,12 @@ function ChatScreen({ variant }: { variant: VariantId }): JSX.Element {
   );
 }
 
-function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
+interface PostScreenProps {
+  variant: VariantId;
+}
+
+function PostScreen({ variant }: PostScreenProps): JSX.Element {
+  const [initialPhotos] = useState(createPublicationPhotoFixtures);
   const stepMatch = variant.match(/^step-(\d)/);
   let initialStep = stepMatch ? Number(stepMatch[1]) : 1;
   if (['publish-loading', 'publish-error', 'published'].includes(variant)) initialStep = 4;
@@ -902,6 +935,7 @@ function PostScreen({ variant }: { variant: VariantId }): JSX.Element {
       tagCatalog={previewTagCatalog}
       initialStep={initialStep}
       initialDraft={initialDraft}
+      initialPhotos={initialPhotos}
       initialAttemptedSteps={initialAttemptedSteps}
       initialPublishState={initialPublishState}
       onPublish={publishPreview}

@@ -21,12 +21,23 @@
 
 .chatContent {
   display: flex;
+  min-height: 0;
   flex-direction: column;
 
   > main {
     display: flex;
+    min-height: 0;
     flex: 1;
     flex-direction: column;
+  }
+}
+
+.shell_chat {
+  height: 100dvh;
+  overflow: hidden;
+
+  > header {
+    flex-shrink: 0;
   }
 }
 

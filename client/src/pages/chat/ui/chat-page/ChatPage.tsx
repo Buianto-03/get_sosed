@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LuArrowLeft, LuMessagesSquare } from 'react-icons/lu';
 import { ConversationRow } from '@entities/chat/ui/ConversationRow';
 import { ListingContextCard } from '@entities/listing/ui/listing-context-card/ListingContextCard';
@@ -8,6 +8,7 @@ import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import { Spinner } from '@shared/ui/feedback/Spinner';
 import { Input } from '@shared/ui/input/Input';
+import { Avatar } from '@shared/ui/avatar/Avatar';
 import styles from './ChatPage.module.scss';
 
 export type ChatMessage = {
@@ -59,10 +60,37 @@ export function ChatPage({
   onSendMessage,
 }: ChatPageProps): JSX.Element {
   const activeConversation = conversations.find(({ id }) => id === selectedConversationId);
+  const hasActiveConversation = Boolean(activeConversation);
   const [draft, setDraft] = useState('');
   const [sendError, setSendError] = useState(false);
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const followLatest = useRef(true);
+  const lastMessageId = activeConversation?.messages[activeConversation.messages.length - 1]?.id;
+  const messageCount = activeConversation?.messages.length ?? 0;
 
   useEffect(() => {
+    const list = messageListRef.current;
+    if (list && followLatest.current) {
+      list.scrollTop = list.scrollHeight;
+    }
+  }, [selectedConversationId, lastMessageId, messageCount]);
+
+  useEffect(() => {
+    const list = messageListRef.current;
+    if (!list || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    const observer = new ResizeObserver(() => {
+      if (followLatest.current) {
+        list.scrollTop = list.scrollHeight;
+      }
+    });
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [selectedConversationId, hasActiveConversation]);
+
+  useEffect(() => {
+    followLatest.current = true;
     setDraft('');
     setSendError(false);
   }, [selectedConversationId]);
@@ -70,24 +98,29 @@ export function ChatPage({
   const sendMessage = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const message = draft.trim();
-    if (!activeConversation || !message) return;
+    if (!activeConversation || !message) {
+      return;
+    }
     const sent = onSendMessage(activeConversation.id, message);
     setSendError(!sent);
-    if (sent) setDraft('');
+    if (sent) {
+      followLatest.current = true;
+      setDraft('');
+    }
   };
 
   return (
-    <main className={styles.page}>
-      <div className={styles.pageHeading}>
+    <main className={styles.chat}>
+      <div className={styles.chat__heading}>
         <Heading level={HeadingLevel.H1} size={HeadingSize.Xl}>
           Сообщения
         </Heading>
       </div>
       <div
-        className={styles.workspace}
+        className={styles.chat__workspace}
         data-mobile-view={selectedConversationId ? 'conversation' : 'list'}
       >
-        <section className={styles.conversationList} aria-label="Диалоги">
+        <section className={styles.chat__conversations} aria-label="Диалоги">
           <Heading level={HeadingLevel.H2} size={HeadingSize.Md}>
             Диалоги
           </Heading>
@@ -102,7 +135,7 @@ export function ChatPage({
             !listError &&
             (empty || conversations.length === 0 ? (
               <EmptyState
-                className={styles.emptyState}
+                className={styles.chat__empty}
                 title="Пока нет сообщений"
                 description="Когда вы начнёте общение, диалоги появятся здесь."
                 icon={<LuMessagesSquare />}
@@ -125,18 +158,19 @@ export function ChatPage({
             ))}
         </section>
 
-        <section className={styles.thread} aria-label="Переписка">
+        <section className={styles.chat__thread} aria-label="Переписка">
           {activeConversation && (
             <>
-              <header className={styles.threadHeader}>
+              <header className={styles.chat__header}>
                 <Button
-                  className={styles.backButton}
+                  className={styles.chat__back}
                   variant={ButtonVariant.Text}
                   onClick={onBackToList}
                 >
                   <LuArrowLeft aria-hidden="true" />К диалогам
                 </Button>
-                <strong>{activeConversation.name}</strong>
+                <Avatar name={activeConversation.name} src={activeConversation.avatarUrl} />
+                <strong title={activeConversation.name}>{activeConversation.name}</strong>
               </header>
               {activeConversation.listing && (
                 <ListingContextCard
@@ -144,7 +178,9 @@ export function ChatPage({
                   price={activeConversation.listing.price}
                   imageUrl={activeConversation.listing.imageUrl}
                   onOpen={() => {
-                    if (activeConversation.listing) onOpenListing?.(activeConversation.listing.id);
+                    if (activeConversation.listing) {
+                      onOpenListing?.(activeConversation.listing.id);
+                    }
                   }}
                 />
               )}
@@ -155,19 +191,27 @@ export function ChatPage({
                   <Button onClick={onRetryHistory}>Повторить загрузку переписки</Button>
                 </>
               )}
-              <div className={styles.messageList} aria-label="Сообщения">
+              <div
+                ref={messageListRef}
+                className={styles.chat__messages}
+                aria-label="Сообщения"
+                onScroll={(event) => {
+                  const list = event.currentTarget;
+                  followLatest.current = list.scrollHeight - list.clientHeight - list.scrollTop < 8;
+                }}
+              >
                 {activeConversation.messages.map((message) => (
                   <p
-                    className={message.from === 'me' ? styles.messageMine : styles.message}
+                    className={message.from === 'me' ? styles.chat__message_mine : styles.chat__message}
                     key={message.id}
                   >
                     {message.text}
                   </p>
                 ))}
               </div>
-              <div className={styles.quickReplies}>
+              <div className={styles.chat__replies}>
                 <Button
-                  className={styles.quickReply}
+                  className={styles.chat__reply}
                   size={ButtonSize.Sm}
                   variant={ButtonVariant.Secondary}
                   onClick={() => setDraft('Здравствуйте!')}
@@ -175,7 +219,7 @@ export function ChatPage({
                   Здравствуйте!
                 </Button>
                 <Button
-                  className={styles.quickReply}
+                  className={styles.chat__reply}
                   size={ButtonSize.Sm}
                   variant={ButtonVariant.Secondary}
                   onClick={() => setDraft('Когда можно посмотреть?')}
@@ -184,21 +228,23 @@ export function ChatPage({
                 </Button>
               </div>
               {sendError && (
-                <Alert className={styles.sendError} variant={AlertVariant.Error}>
+                <Alert className={styles.chat__error} variant={AlertVariant.Error}>
                   Не удалось отправить сообщение. Попробуйте ещё раз.
                 </Alert>
               )}
-              <form className={styles.composer} onSubmit={sendMessage}>
+              <form className={styles.chat__composer} onSubmit={sendMessage}>
                 <Input
                   id="chat-message-input"
                   label="Сообщение"
-                  fieldClassName={styles.composerField}
+                  fieldClassName={styles.chat__composer_field}
                   autoComplete="off"
                   maxLength={10000}
                   value={draft}
                   onChange={(event) => {
                     setDraft(event.target.value);
-                    if (sendError) setSendError(false);
+                    if (sendError) {
+                      setSendError(false);
+                    }
                   }}
                   placeholder="Напишите сообщение"
                 />
@@ -226,7 +272,7 @@ export function ChatPage({
           )}
           {!activeConversation && !selectedConversationId && (
             <EmptyState
-              className={styles.noSelection}
+              className={styles.chat__selection_empty}
               title={empty ? 'Нет выбранного диалога' : 'Выберите диалог'}
               description="Здесь появится переписка с автором объявления."
               icon={<LuMessagesSquare />}

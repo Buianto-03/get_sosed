@@ -20,7 +20,7 @@ export default function AppLayout(): JSX.Element {
   const isLoggedIn = user.status === UserStatus.Logged;
   const availableRoutes: HeaderPage[] = isLoggedIn
     ? ['home', 'search', 'about', 'post', 'profile', 'chat', 'signin']
-    : ['home', 'search', 'about', 'post', 'signin', 'signup'];
+    : ['home', 'search', 'about', 'post', 'profile', 'chat', 'signin', 'signup'];
   const mobileItems: MobileNavigationItem[] = [
     {
       id: 'home',
@@ -44,24 +44,20 @@ export default function AppLayout(): JSX.Element {
       activePaths: [routes.listingCreate],
       icon: <LuPlus aria-hidden="true" />,
     },
-    ...(isLoggedIn
-      ? [
-        {
-          id: 'chat',
-          label: 'Сообщения',
-          to: routes.messages,
-          activePaths: [routes.messages],
-          icon: <LuMessagesSquare aria-hidden="true" />,
-        },
-        {
-          id: 'profile',
-          label: 'Профиль',
-          to: routes.profile,
-          activePaths: [routes.profile],
-          icon: <LuUser aria-hidden="true" />,
-        },
-      ]
-      : []),
+    {
+      id: 'chat',
+      label: 'Чаты',
+      to: routes.messages,
+      activePaths: [routes.messages],
+      icon: <LuMessagesSquare aria-hidden="true" />,
+    },
+    {
+      id: 'profile',
+      label: 'Профиль',
+      to: routes.profile,
+      activePaths: [routes.profile],
+      icon: <LuUser aria-hidden="true" />,
+    },
   ];
 
   const signOut = (): void => {

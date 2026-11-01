@@ -3,16 +3,16 @@ import { LuArrowLeft } from 'react-icons/lu';
 import {
   ListingGallery,
   type ListingPhoto,
-} from '../../entities/listing/ui/listing-gallery/ListingGallery';
-import { Button, ButtonSize, ButtonVariant } from '../../shared/ui/button/Button';
-import { Heading, HeadingLevel, HeadingSize } from '../../shared/ui/heading/Heading';
+} from '@entities/listing/ui/listing-gallery/ListingGallery';
+import { Button, ButtonSize, ButtonVariant } from '@shared/ui/button/Button';
+import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import styles from './ListingHeader.module.scss';
 
-export type ListingHeaderProps = {
+export interface ListingHeaderProps {
   title: string;
   photos: readonly ListingPhoto[];
   onBack: () => void;
-};
+}
 
 export function ListingHeader({ title, photos, onBack }: ListingHeaderProps): JSX.Element {
   return (
@@ -27,7 +27,7 @@ export function ListingHeader({ title, photos, onBack }: ListingHeaderProps): JS
       </Button>
       <Heading
         className={styles.listingHeader__title}
-        level={HeadingLevel.H2}
+        level={HeadingLevel.H1}
         size={HeadingSize.Xl}
       >
         {title}
