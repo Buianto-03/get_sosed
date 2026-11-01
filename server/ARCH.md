@@ -83,6 +83,8 @@ Return `{ items, total, page, limit }`. Apply the owner filter to both the rows 
 
 ## API Contracts
 
+- `server/docs/openapi.yaml` documents the current HTTP API using OpenAPI 3.0.3. Update it alongside changes to routes, request validation, authentication, statuses, or response shapes. `server/docs/README.md` explains viewing the specification, current implementation limitations, and the separate WebSocket chat protocol.
+
 - Use consistent HTTP statuses and a common error response shape with a stable error code and a safe message.
 - Explicitly select response fields instead of returning unrestricted database model instances.
 - Define consistently when absent values are represented by `null`, an omitted field, or an empty collection.

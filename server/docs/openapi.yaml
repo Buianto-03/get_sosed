@@ -1,0 +1,1799 @@
+openapi: 3.0.3
+info:
+  title: Get Sosed API
+  version: 1.0.0
+  description:
+    HTTP API сервиса поиска жилья и соседей. Спецификация отражает текущую
+    реализацию server/src, включая различающиеся форматы ошибок и известные
+    ограничения. Защищённые операции используют JWT Bearer; обновление сессии —
+    HttpOnly cookie refreshToken. WebSocket /ws описан отдельно в README.md,
+    поскольку сообщения WebSocket не входят в HTTP-контракт OpenAPI.
+externalDocs:
+  description: Стандарт OpenAPI 3.0.3
+  url: https://spec.openapis.org/oas/v3.0.3.html
+servers:
+  - url: /
+    description: Текущий origin сервера
+  - url: http://localhost:3000
+    description: Локальный сервер (PORT по умолчанию)
+tags:
+  - name: Auth
+    description: Регистрация, вход и обновление сессии
+  - name: Adverts
+    description: Объявления, фильтры и избранное
+  - name: Users
+    description: Профили и список диалогов
+  - name: Likes
+    description: Лайки объявлений
+security: []
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      operationId: login
+      summary: Войти по email и паролю
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                  writeOnly: true
+            example:
+              email: user@example.com
+              password: password123
+      responses:
+        '200':
+          description:
+            Авторизация успешна; refreshToken устанавливается в cookie.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              description:
+                Устанавливает или обновляет HttpOnly cookie refreshToken
+                (Path=/).
+              schema:
+                type: string
+        '401':
+          description: Неверные учётные данные
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - INVALID_CREDENTIALS
+              example:
+                message: Invalid email or password
+                code: INVALID_CREDENTIALS
+        '500':
+          description: Не удалось войти
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - LOGIN_FAILED
+              example:
+                message: Cannot log in user
+                code: LOGIN_FAILED
+  /api/auth/signup:
+    post:
+      tags:
+        - Auth
+      operationId: signup
+      summary: Зарегистрироваться
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignupInput'
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  description: После trim имя должно быть непустым.
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 9
+                  pattern: '[0-9]'
+                  writeOnly: true
+                gender:
+                  type: string
+                  enum:
+                    - ''
+                    - male
+                    - female
+      description:
+        Успешная регистрация возвращает 200. Фото необязательно. Без фото можно
+        также отправить application/json.
+      responses:
+        '200':
+          description:
+            Авторизация успешна; refreshToken устанавливается в cookie.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              description:
+                Устанавливает или обновляет HttpOnly cookie refreshToken
+                (Path=/).
+              schema:
+                type: string
+        '400':
+          description: Неверные данные или фото
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - INVALID_SIGNUP_DATA
+                      - INVALID_PHOTO
+                      - INVALID_UPLOAD
+              example:
+                message: Invalid signup data
+                code: INVALID_SIGNUP_DATA
+        '409':
+          description: Email уже занят
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - EMAIL_ALREADY_EXISTS
+              example:
+                message: Email already exists
+                code: EMAIL_ALREADY_EXISTS
+        5XX:
+          description: Не удалось зарегистрироваться
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - SIGNUP_FAILED
+              example:
+                message: Cannot sign up user
+                code: SIGNUP_FAILED
+  /api/auth/logout:
+    get:
+      tags:
+        - Auth
+      operationId: logout
+      summary: Выйти из сессии
+      description:
+        Авторизация не требуется. Уже выданный access token остаётся
+        действительным до истечения срока.
+      responses:
+        '200':
+          description: Cookie refreshToken очищена.
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum:
+                  - OK
+          headers:
+            Set-Cookie:
+              description: Удаляет cookie refreshToken.
+              schema:
+                type: string
+        '500':
+          description: Не удалось выйти
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - LOGOUT_FAILED
+              example:
+                message: Cannot log out user
+                code: LOGOUT_FAILED
+  /api/tokens/refresh:
+    get:
+      tags:
+        - Auth
+      operationId: refreshTokens
+      summary: Обновить токены по cookie
+      security:
+        - refreshCookie: []
+      responses:
+        '200':
+          description:
+            Авторизация успешна; refreshToken устанавливается в cookie.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              description:
+                Устанавливает или обновляет HttpOnly cookie refreshToken
+                (Path=/).
+              schema:
+                type: string
+        '401':
+          description:
+            Refresh token отсутствует или недействителен; cookie очищается.
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum:
+                  - Unauthorized
+          headers:
+            Set-Cookie:
+              description: Удаляет refreshToken.
+              schema:
+                type: string
+        '501':
+          description:
+            Ошибка при загрузке пользователя или обновлении токенов (фактический
+            статус реализации).
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum:
+                  - Not Implemented
+  /api/adverts:
+    get:
+      tags:
+        - Adverts
+      operationId: listAdverts
+      summary: Получить все объявления
+      description:
+        GET не применяет фильтры. Для фильтрации используйте POST
+        /api/adverts/filters.
+      responses:
+        '200':
+          description: Объявления по id ASC, без пагинации.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Advert'
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+              example:
+                message: server error
+    post:
+      tags:
+        - Adverts
+      operationId: publishAdvert
+      summary: Опубликовать объявление
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublishAdvertInput'
+      description:
+        Владелец определяется из access token. Фото сохраняются как WebP; ID
+        тегов должны существовать.
+      responses:
+        '201':
+          description: Созданное объявление со связями.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Advert'
+        '400':
+          description: Неверные поля, теги или фотографии
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - INVALID_ADVERT_DATA
+                      - INVALID_UPLOAD
+              example:
+                message: Invalid title
+                code: INVALID_ADVERT_DATA
+        5XX:
+          description: Не удалось опубликовать объявление
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - ADVERT_PUBLISH_FAILED
+              example:
+                message: Cannot publish advert
+                code: ADVERT_PUBLISH_FAILED
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+  /api/adverts/filters:
+    post:
+      tags:
+        - Adverts
+      operationId: filterAdverts
+      summary: Отфильтровать объявления
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvertFilters'
+            example:
+              city: Москва
+              priceFrom: 20000
+              priceTo: 50000
+              tags:
+                - id: 1
+      responses:
+        '200':
+          description: Массив объявлений, без пагинации и гарантии сортировки.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Advert'
+        '500':
+          description: Ошибка фильтрации
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка на сервере при фильтрации объявлений
+  /api/adverts/liked:
+    get:
+      tags:
+        - Adverts
+      operationId: listLikedAdverts
+      summary: Получить свои избранные объявления
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Записи избранного с вложенным Advert.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LikedAdvert'
+        '500':
+          description: Ошибка загрузки избранного
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка при получении избранных объявлений
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+  /api/adverts/top:
+    get:
+      tags:
+        - Adverts
+      operationId: listTopAdverts
+      summary: Получить до четырёх самых популярных объявлений
+      responses:
+        '200':
+          description:
+            По количеству лайков DESC; порядок при равенстве не гарантирован.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopAdvert'
+                maxItems: 4
+        '500':
+          description: Ошибка загрузки популярных объявлений
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка при получении топ-объявлений
+  /api/adverts/tags:
+    get:
+      tags:
+        - Adverts
+      operationId: searchTags
+      summary: Найти теги
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+            default: ''
+          description:
+            Подстрока без учёта регистра (ILIKE). trim; пустая или отсутствующая
+            строка возвращает все теги. SQL-шаблоны % и _ не экранируются.
+      responses:
+        '200':
+          description: Теги по id ASC.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '400':
+          description: query должен быть строкой
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: query must be a string
+        '500':
+          description: Ошибка поиска тегов
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка при поиске тегов
+  /api/adverts/mine:
+    get:
+      tags:
+        - Adverts
+      operationId: listOwnAdverts
+      summary: Получить страницу своих объявлений
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9007199254740991
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 12
+      description:
+        Принимаются только скалярные положительные целые без ведущего нуля.
+        Отклоняются массивы и небезопасное смещение (page - 1) * limit.
+      responses:
+        '200':
+          description:
+            По createdAt DESC, id DESC. За пределами списка items пуст, total
+            сохраняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnAdvertsPage'
+        '400':
+          description: Неверная пагинация
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - INVALID_PAGINATION
+              example:
+                message: Invalid pagination parameters
+                code: INVALID_PAGINATION
+        '500':
+          description: Ошибка загрузки своих объявлений
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - OWN_ADVERTS_LOAD_FAILED
+              example:
+                message: Cannot load own adverts
+                code: OWN_ADVERTS_LOAD_FAILED
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+  /api/adverts/{advertId}:
+    parameters:
+      - name: advertId
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+    get:
+      tags:
+        - Adverts
+      operationId: getAdvert
+      summary: Получить объявление по ID
+      responses:
+        '200':
+          description: Объявление со связями.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Advert'
+        '404':
+          description: Объявление не найдено или ID некорректен
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Advert not found
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+              example:
+                message: server error
+    delete:
+      tags:
+        - Adverts
+      operationId: deleteAdvert
+      summary: Удалить объявление (маршрут неисправен)
+      deprecated: true
+      description:
+        Маршрут зарегистрирован без авторизации. Фактически срабатывает
+        /:postId; метод deletePost отсутствует в сервисе. Не используйте до
+        исправления реализации.
+      responses:
+        default:
+          description:
+            'Надёжный HTTP-ответ отсутствует: необработанный TypeError при
+            вызове отсутствующего advertService.deletePost. Контроллер содержит
+            недостижимые ответы 204/500; они не являются рабочим контрактом.'
+  /api/users:
+    get:
+      tags:
+        - Users
+      operationId: listUsers
+      summary: Получить пользователей
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Полные профили без hashpass; по id ASC.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Ошибка загрузки пользователей
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - USERS_LOAD_FAILED
+              example:
+                message: Cannot load users
+                code: USERS_LOAD_FAILED
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+  /api/users/{userId}/summary:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+    get:
+      tags:
+        - Users
+      operationId: getUserSummary
+      summary: Получить краткую информацию о пользователе
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Имя и фотография пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSummary'
+        '404':
+          description: Пользователь не найден или ID некорректен
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - USER_NOT_FOUND
+              example:
+                message: User not found
+                code: USER_NOT_FOUND
+        '500':
+          description: Ошибка загрузки пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - USER_LOAD_FAILED
+              example:
+                message: Cannot load user
+                code: USER_LOAD_FAILED
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+  /api/users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+    get:
+      tags:
+        - Users
+      operationId: listConversations
+      summary: Получить свои диалоги
+      security:
+        - bearerAuth: []
+      description:
+        userId должен совпадать с ID пользователя из токена. Это список
+        диалогов, а не endpoint получения профиля.
+      responses:
+        '200':
+          description:
+            Последнее сообщение каждого диалога, по createdAt DESC, id DESC.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+        '500':
+          description: Ошибка загрузки диалогов
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - CONVERSATIONS_LOAD_FAILED
+              example:
+                message: Cannot load conversations
+                code: CONVERSATIONS_LOAD_FAILED
+        '403':
+          description:
+            'Нет доступа: неверный access token (HTML) либо userId
+            некорректен/не совпадает с текущим пользователем (JSON).'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - message
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                  message:
+                    type: string
+                    enum:
+                      - Forbidden
+            text/html:
+              schema:
+                type: string
+                enum:
+                  - Invalid access token
+    patch:
+      tags:
+        - Users
+      operationId: updateProfile
+      summary: Обновить свой профиль
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfileInput'
+      description:
+        Изменение разрешено только владельцу. Отправляйте строковые поля формы;
+        habits является JSON-строкой.
+      responses:
+        '200':
+          description: Обновлённый пользователь.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Неверные поля или фото
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - INVALID_PROFILE_DATA
+                      - INVALID_UPLOAD
+              example:
+                message: Invalid profile data
+                code: INVALID_PROFILE_DATA
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - USER_NOT_FOUND
+              example:
+                message: User not found
+                code: USER_NOT_FOUND
+        5XX:
+          description: Ошибка обновления профиля
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - code
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: string
+                    enum:
+                      - PROFILE_UPDATE_FAILED
+              example:
+                message: Cannot update profile
+                code: PROFILE_UPDATE_FAILED
+        '403':
+          description:
+            'Нет доступа: неверный access token (HTML) либо userId
+            некорректен/не совпадает с текущим пользователем (JSON).'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - message
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                  message:
+                    type: string
+                    enum:
+                      - Forbidden
+            text/html:
+              schema:
+                type: string
+                enum:
+                  - Invalid access token
+  /api/likes/{advertId}:
+    parameters:
+      - name: advertId
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+    get:
+      tags:
+        - Likes
+      operationId: listLikes
+      summary: Получить лайки объявления
+      responses:
+        '200':
+          description: Лайки с вложенными User и UserProfile, без hashpass.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Like'
+        '500':
+          description: Ошибка получения лайков
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка получения лайков
+    post:
+      tags:
+        - Likes
+      operationId: addLike
+      summary: Добавить объявление в избранное
+      security:
+        - bearerAuth: []
+      description:
+        Идемпотентное добавление. userId берётся из токена; тело запроса не
+        требуется.
+      responses:
+        '200':
+          description: Лайк уже существовал.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedLike'
+        '201':
+          description: Лайк создан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedLike'
+        '500':
+          description: Ошибка добавления лайка
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка добавления лайка
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+    delete:
+      tags:
+        - Likes
+      operationId: removeLike
+      summary: Удалить свой лайк
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: deleted=false, если лайка не было.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - advertId
+                  - deleted
+                properties:
+                  advertId:
+                    type: integer
+                  deleted:
+                    type: boolean
+        '500':
+          description: Ошибка удаления лайка
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+              example:
+                error: Ошибка удаления лайка
+        '403':
+          $ref: '#/components/responses/InvalidAccessToken'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+  responses:
+    InvalidAccessToken:
+      description:
+        Access token отсутствует или недействителен. Текущая реализация
+        возвращает 403.
+      content:
+        text/html:
+          schema:
+            type: string
+            enum:
+              - Invalid access token
+    InvalidUpload:
+      description: Ошибка загрузки файла
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - message
+              - code
+            properties:
+              message:
+                type: string
+              code:
+                type: string
+                enum:
+                  - INVALID_UPLOAD
+          example:
+            message: JPG/PNG/WebP, at most 10 files of 10 MB each
+            code: INVALID_UPLOAD
+  schemas:
+    Profile:
+      type: object
+      properties:
+        about:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        intent:
+          type: string
+          nullable: true
+        habits:
+          type: array
+          items:
+            type: string
+          nullable: true
+        age:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          example: /images/users/user-1/avatar.webp
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        userId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      description:
+        Поля id, userId и временные метки присутствуют только при загрузке
+        полного профиля. Поля профиля могут быть null.
+      nullable: true
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - roleId
+        - UserProfile
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        name:
+          type: string
+        email:
+          type: string
+        roleId:
+          type: integer
+          nullable: true
+        UserProfile:
+          $ref: '#/components/schemas/Profile'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      description:
+        Пользователь без hashpass. Временные метки и служебные поля профиля
+        зависят от операции; login/signup/PATCH возвращают выбранные поля.
+    UserSummary:
+      type: object
+      required:
+        - id
+        - name
+        - UserProfile
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        name:
+          type: string
+        UserProfile:
+          type: object
+          required:
+            - photo
+          properties:
+            photo:
+              type: string
+              nullable: true
+          nullable: true
+    ConversationParticipant:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - UserProfile
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        name:
+          type: string
+        email:
+          type: string
+        UserProfile:
+          type: object
+          required:
+            - photo
+          properties:
+            photo:
+              type: string
+              nullable: true
+          nullable: true
+    Conversation:
+      type: object
+      required:
+        - id
+        - senderId
+        - receiverId
+        - message
+        - createdAt
+        - updatedAt
+        - sender
+        - receiver
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        senderId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        receiverId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        sender:
+          $ref: '#/components/schemas/ConversationParticipant'
+        receiver:
+          $ref: '#/components/schemas/ConversationParticipant'
+    Session:
+      type: object
+      required:
+        - accessToken
+        - user
+      properties:
+        accessToken:
+          type: string
+          description: 'JWT для Authorization: Bearer <token>.'
+        user:
+          $ref: '#/components/schemas/User'
+    Tag:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        name:
+          type: string
+    Location:
+      type: object
+      required:
+        - id
+        - advertId
+        - city
+        - district
+        - address
+        - metro
+        - coordinates
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        advertId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        city:
+          type: string
+          nullable: true
+        district:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        metro:
+          type: string
+          nullable: true
+        coordinates:
+          type: string
+          description: Строка «широта,долгота».
+          example: 55.75,37.61
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      nullable: true
+    AdvertPhoto:
+      type: object
+      required:
+        - id
+        - advertId
+        - photo
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        advertId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        photo:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Advert:
+      type: object
+      required:
+        - id
+        - title
+        - body
+        - userId
+        - price
+        - floor
+        - square
+        - rooms
+        - createdAt
+        - updatedAt
+        - user
+        - location
+        - AdvertPhotos
+        - tags
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        title:
+          type: string
+          nullable: true
+        body:
+          type: string
+          nullable: true
+        userId:
+          type: integer
+          nullable: true
+        price:
+          type: integer
+          nullable: true
+        floor:
+          type: integer
+          nullable: true
+        square:
+          type: integer
+          nullable: true
+        rooms:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        user:
+          type: object
+          required:
+            - id
+            - name
+            - email
+          properties:
+            id:
+              type: integer
+              minimum: 1
+              maximum: 9007199254740991
+            name:
+              type: string
+            email:
+              type: string
+          nullable: true
+        location:
+          $ref: '#/components/schemas/Location'
+        AdvertPhotos:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvertPhoto'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+    TopAdvert:
+      allOf:
+        - $ref: '#/components/schemas/Advert'
+        - type: object
+          required:
+            - likeCount
+          properties:
+            likeCount:
+              type: string
+              pattern: ^[0-9]+$
+              description: PostgreSQL COUNT возвращает bigint строкой.
+              example: '12'
+    OwnAdvertsPage:
+      type: object
+      required:
+        - items
+        - total
+        - page
+        - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advert'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+    Like:
+      type: object
+      required:
+        - id
+        - userId
+        - advertId
+        - createdAt
+        - updatedAt
+        - User
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        userId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        advertId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        User:
+          $ref: '#/components/schemas/User'
+    CreatedLike:
+      type: object
+      required:
+        - id
+        - userId
+        - advertId
+        - User
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        userId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        advertId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        User:
+          type: object
+          required:
+            - id
+            - name
+            - UserProfile
+          properties:
+            id:
+              type: integer
+              minimum: 1
+              maximum: 9007199254740991
+            name:
+              type: string
+            UserProfile:
+              $ref: '#/components/schemas/Profile'
+    LikedAdvert:
+      type: object
+      required:
+        - id
+        - userId
+        - advertId
+        - createdAt
+        - updatedAt
+        - Advert
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        userId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        advertId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        Advert:
+          $ref: '#/components/schemas/Advert'
+      description:
+        Избранное возвращается массивом записей Like с вложенным Advert.
+    SignupInput:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: После trim имя должно быть непустым.
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 9
+          pattern: '[0-9]'
+          writeOnly: true
+        gender:
+          type: string
+          enum:
+            - ''
+            - male
+            - female
+        file:
+          type: string
+          format: binary
+          description:
+            JPG, PNG или WebP; проверяется возможность декодирования
+            изображения. Необязательно, до 10 MiB.
+    PublishAdvertInput:
+      type: object
+      required:
+        - title
+        - body
+        - city
+        - address
+        - price
+        - square
+        - rooms
+        - floor
+        - files
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        body:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+        address:
+          type: string
+          minLength: 1
+          maxLength: 255
+        district:
+          type: string
+          maxLength: 100
+        metro:
+          type: string
+          maxLength: 100
+        price:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        square:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        rooms:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        floor:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        coordinates:
+          type: string
+          description:
+            'Необязательно: широта от -90 до 90, долгота от -180 до 180 через
+            запятую.'
+          example: 55.75,37.61
+        tagIds:
+          type: string
+          default: '[]'
+          example: '[1,2]'
+          description:
+            JSON-массив положительных safe integer ID существующих тегов.
+            Дубликаты удаляются. Передавать текстовым полем формы.
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+            description:
+              JPG, PNG или WebP; проверяется возможность декодирования
+              изображения.
+          minItems: 1
+          maxItems: 10
+          description:
+            'Повторяемое поле files: 1–10 фотографий, до 10 MiB каждая.'
+    AdvertFilters:
+      type: object
+      properties:
+        city:
+          type: string
+        district:
+          type: string
+        metro:
+          type: string
+        priceFrom:
+          oneOf:
+            - type: integer
+            - type: string
+          description:
+            Приводится через Number(). Верхняя граница 0 не ограничивает
+            результат.
+        priceTo:
+          oneOf:
+            - type: integer
+            - type: string
+          description:
+            Приводится через Number(). Верхняя граница 0 не ограничивает
+            результат.
+        roomsFrom:
+          oneOf:
+            - type: integer
+            - type: string
+          description:
+            Приводится через Number(). Верхняя граница 0 не ограничивает
+            результат.
+        roomsTo:
+          oneOf:
+            - type: integer
+            - type: string
+          description:
+            Приводится через Number(). Верхняя граница 0 не ограничивает
+            результат.
+        tags:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                oneOf:
+                  - type: integer
+                  - type: string
+      description:
+        Локация сравнивается точно. Объявление должно содержать все выбранные
+        теги; некорректные ID тегов игнорируются. Пустой объект возвращает все
+        объявления.
+    ProfileInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        about:
+          type: string
+          maxLength: 500
+        city:
+          type: string
+          maxLength: 100
+        intent:
+          type: string
+          maxLength: 255
+        phoneNumber:
+          type: string
+          maxLength: 32
+          description:
+            Пустая строка очищает значение; иначе 5–32 символа из +, цифр,
+            пробелов, скобок и дефиса.
+        gender:
+          type: string
+          maxLength: 30
+        age:
+          type: string
+          description:
+            Целое число 18–120 строкой, пустая строка очищает возраст.
+          example: '25'
+        habits:
+          type: string
+          example: '["Не курю"]'
+          description:
+            JSON-массив до 20 непустых строк, каждая до 40 символов после trim;
+            дубликаты удаляются.
+        removePhoto:
+          type: string
+          enum:
+            - 'true'
+            - 'false'
+          description: true удаляет фото; нельзя совмещать с photo.
+        photo:
+          type: string
+          format: binary
+          description:
+            JPG, PNG или WebP; проверяется возможность декодирования
+            изображения. До 5 MiB (проверка сервиса; middleware допускает до 10
+            MiB).
+      description:
+        Все поля необязательны. Строки обрезаются trim; пустые строки кроме name
+        превращаются в null. Неуказанные поля сохраняются.

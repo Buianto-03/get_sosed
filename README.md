@@ -1,5 +1,7 @@
 # get-sosed
 
+Документация API сервера: [OpenAPI](server/docs/openapi.yaml) и [инструкция по использованию](server/docs/README.md).
+
 ## Release 0
 
 -- базовая инициализация
