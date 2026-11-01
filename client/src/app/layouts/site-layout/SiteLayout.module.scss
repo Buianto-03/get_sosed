@@ -1,0 +1,22 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.shell {
+  container-type: inline-size;
+  container-name: site-shell;
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: tokens.$color-page;
+  color: tokens.$color-ink;
+  font-family: tokens.$font-family;
+}
+
+.shell_chat {
+  height: 100dvh;
+  overflow: hidden;
+
+  > header {
+    flex-shrink: 0;
+  }
+}

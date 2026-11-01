@@ -1,0 +1,18 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.skip_link {
+  position: fixed;
+  z-index: 1100;
+  top: tokens.$space-3;
+  left: tokens.$space-3;
+  padding: tokens.$space-3 tokens.$space-4;
+  transform: translateY(-200%);
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+
+  &:focus {
+    transform: none;
+    outline: 3px solid tokens.$color-focus;
+  }
+}

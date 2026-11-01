@@ -10,7 +10,7 @@ import { RoutePattern, routes } from '@shared/config/routes';
 import { MobileNavigation } from '@widgets/mobile-navigation/MobileNavigation';
 import type { MobileNavigationItem } from '@widgets/mobile-navigation/MobileNavigation';
 import type { HeaderPage } from '@widgets/header/navigation';
-import { SiteLayout } from '../SiteLayout';
+import { SiteLayout } from '../site-layout/SiteLayout';
 
 export default function AppLayout(): JSX.Element {
   const dispatch = useAppDispatch();
