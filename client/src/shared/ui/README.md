@@ -1,6 +1,6 @@
 # UI kit
 
-UI kit lives in `src/shared/ui`. The independent visual catalog is in `src/preview/UiFoundationsShowcase.tsx`; open the «Показать примеры типографики и контейнеров» section in the design preview to inspect examples and local states.
+UI kit lives in `src/shared/ui`. Its behavior is covered by colocated component tests.
 
 ## Component catalog
 
@@ -14,7 +14,7 @@ UI kit lives in `src/shared/ui`. The independent visual catalog is in `src/previ
 | Overlays | `Modal`, `Drawer`, `Menu` | `DialogSize` (`Sm`, `Md`, `Lg`), `DialogKind` (`Modal`, `Drawer`), `DialogSide` (`Left`, `Right`); `MenuPlacement` (`Start`, `End`). Dialogs support Escape, backdrop and close-button dismissal, focus trapping/restoration, and body scroll lock. Drawer is rendered in a portal over a viewport-sized backdrop. Menu supports arrow keys, Home/End, Escape and outside click. |
 | Feedback | `Spinner`, `Skeleton`, `Alert`, `EmptyState` | `SpinnerSize` (`Sm`, `Md`, `Lg`); `SkeletonShape` (`Text`, `Rectangle`, `Circle`); `AlertVariant` (`Info`, `Success`, `Warning`, `Error`). |
 | Navigation | `Tabs`, `Stepper` | `TabsOrientation` (`Horizontal`, `Vertical`); `StepperOrientation` (`Horizontal`, `Vertical`); derived `StepStatus` (`Completed`, `Current`, `Upcoming`, `Disabled`). Tabs and Stepper are controlled by their parent. |
-| Photo selection | `FilePicker`, `UploadArea` | `FilePickerAccept` (`Images`, `Jpeg`, `Png`, `Webp`). UploadArea validates format, size and count; shows local thumbnails, main-photo selection, deletion and errors. Its optional `onChange` returns selected files, local preview URLs and the main-photo flag. Pass `value` and `onChange` to preserve photos when UploadArea unmounts; the parent then revokes preview URLs when photos are removed or the parent unmounts. Without `value`, UploadArea manages and revokes URLs itself. It does not upload files. |
+| Photo selection | `FilePicker`, `UploadArea` | `FilePickerAccept` (`Images`, `Jpeg`, `Png`, `Webp`). UploadArea validates format, size and count; shows local thumbnails, main-photo selection, deletion and errors. Its optional `onChange` returns selected files, local thumbnail URLs and the main-photo flag. Pass `value` and `onChange` to preserve photos when UploadArea unmounts; the parent then revokes thumbnail URLs when photos are removed or the parent unmounts. Without `value`, UploadArea manages and revokes URLs itself. It does not upload files. |
 
 Enum values are declared and exported next to the component that uses them. Use an enum for finite variant/orientation/size/element props; ordinary booleans, text and data collections remain boolean, string and object props.
 
@@ -27,6 +27,14 @@ import { Tooltip } from '@shared/ui/tooltip/Tooltip';
   <IconButton icon={<LuHeart />} label="В избранное" />
 </Tooltip>
 ```
+
+## Styling integration
+
+The application imports `shared/styles/foundations.scss`:
+local Inter, CSS custom properties and a small native HTML reset. Import it once
+in `main.tsx` as a regular SCSS file so production keeps the global styles.
+The kit does not need ChakraProvider, Emotion, Framer Motion or slick.
+`shared/ui/y-map` is the SDK adapter for Yandex Maps; keep SDK details inside it.
 
 ## Folder and styling rules
 
@@ -43,16 +51,15 @@ states keep their existing visual distinction; they are not normal active contro
 Under `prefers-reduced-motion: reduce`, Spinner and the loading Button keep their
 accessible loading state but stop rotating. Skeleton is static, and the existing
 Input/Textarea/Link/UploadArea/Button/Carousel transitions are disabled by their
-own styles. The preview must not hide missing support with a universal animation
-or transition override. Normal motion remains unchanged.
+own styles. Normal motion remains unchanged.
 
 ### Component conventions
 
 - Keep each component in its own folder: `shared/ui/<component>/<Component>.tsx`, `<Component>.module.scss` and `<Component>.test.tsx` when the component has behavior worth verifying. A tightly related component family may share a directory only when that grouping is intentional, as with `selection` and `overlay`.
-- Use SCSS Modules for component styles. Import design tokens with Sass `@use` from `shared/styles/_tokens.scss`; do not copy token values into component styles. `preview/tokens.module.scss` is only a preview bridge for CSS custom properties.
+- Use SCSS Modules for component styles. Import design tokens with Sass `@use` from `shared/styles/_tokens.scss`; do not copy token values into component styles. The entrypoint imports `shared/styles/foundations.scss` for global styles.
 - Keep component behavior local and presentation-focused. Screen state belongs to the screen or feature; UI kit components receive values and callbacks. Do not add network requests or backend assumptions to the UI kit.
 - Preserve semantic HTML and accessible names. Use native buttons/inputs, visible keyboard focus, ARIA only where native semantics do not express the role or state, and `prefers-reduced-motion` for animation.
-- Keep examples in the preview showcase when a component or meaningful state is added. Update this catalog and `DESIGN.md` with the same change.
+- Update this catalog and `DESIGN.md` when a component or meaningful state is added.
 - Tests should verify user-visible behavior such as selection, keyboard input, disabled states, removal and errors. Name per-component tests after the component; a shared test file is appropriate only for a deliberately grouped family.
 
 ## Keyboard interaction

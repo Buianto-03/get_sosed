@@ -19,6 +19,7 @@ async function run() {
       '/messages',
       '/messages/2',
       '/unknown',
+      '/unknown.html',
       '/advert/1',
     ]) {
       const response = await fetch(origin + path);
@@ -31,7 +32,6 @@ async function run() {
       assert.ok(!(await response.text()).includes('id="root"'), path);
     }
     assert.equal((await fetch(origin + '/ws')).status, 426);
-    assert.equal((await fetch(origin + '/preview.html')).status, 200); // Resolves through SPA -> client NotFound, never preview entry.
     console.log(
       'PASS: all canonical routes and unknown paths receive the built SPA; API/images/ws retain infrastructure responses',
     );

@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ChakraProvider } from '@chakra-ui/react';
 import { Provider } from 'react-redux';
 import axios from 'axios';
 import App from '@app/App';
@@ -9,7 +8,7 @@ import { configureApiAuth } from '@shared/api/client';
 import { API_URL } from '@shared/config/env';
 import { authSchema } from '@entities/session/model/authModel';
 import { clearAuth, setAccessToken } from '@entities/session/model/authSlice';
-import '@shared/styles/foundations.module.scss';
+import '@shared/styles/foundations.scss';
 
 configureApiAuth({
   getAccessToken: () => store.getState().auth.accessToken,
@@ -24,8 +23,6 @@ configureApiAuth({
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <Provider store={store}>
-    <ChakraProvider>
-      <App />
-    </ChakraProvider>
+    <App />
   </Provider>,
 );

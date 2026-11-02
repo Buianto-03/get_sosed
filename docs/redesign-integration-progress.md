@@ -2,7 +2,7 @@
 
 Дата исходной проверки: 16 октября 2026 года. Основной документ — [план интеграции](redesign-migration-plan.md).
 
-**M01–M28 и Q01 выполнены. Все новые страницы подключены к рабочему приложению.** На development-БД применена миграция полей профиля, подтверждены каталог M08 и регистрация M11; новые API/БД/WebSocket-сценарии проверены. Реализация оставшихся исправлений Q02 выполнена; общая приёмка остаётся WIP до проверки физического телефона и скринридера. Q03 не начата, старые UI-файлы сохранены. Последняя запись — раздел 26; прежние разделы отражают состояние на момент выполнения отдельных задач.
+**M01–M28 и Q01 выполнены. Все новые страницы подключены к рабочему приложению.** На development-БД применена миграция полей профиля, подтверждены каталог M08 и регистрация M11; новые API/БД/WebSocket-сценарии проверены. Реализация оставшихся исправлений Q02 выполнена; общая приёмка остаётся WIP до проверки физического телефона и скринридера. Очистка Q03 выполнена 2 ноября по поручению пользователя до оставшейся ручной приёмки Q02; старый UI удалён после сверки переноса. Последняя запись — раздел 27; прежние разделы отражают состояние на момент выполнения отдельных задач.
 
 ## 1. Исходное состояние
 
@@ -14,7 +14,6 @@
 | Инструкции | Прочитаны корневой AGENTS.md, ARCH.md и карточка M01. В `client/`, `server/`, `docs/` дополнительных AGENTS.md не обнаружено. |
 | Зависимости | `client/node_modules` и `server/node_modules` существуют; установка не потребовалась. Node.js `v24.21.0`. |
 | Рабочий frontend | `client/src/main.tsx` → `app/App.tsx` → `app/router/router.tsx` → `app/layouts/BaseLayout.tsx`; старые страницы и Chakra. |
-| Preview | Отдельный `client/preview.html`; новые представления находятся в проектных слоях, демонстрационные данные — в `client/src/preview/`. |
 | Новая инфраструктура | `client/src/shared/config/routes.ts` и `client/src/pages/not-found/` ещё не созданы; по уточнённому плану оба результата относятся к M02. |
 
 Текущее дерево маршрутов проверено в [router.tsx](../client/src/app/router/router.tsx): `/`, `/home`, `/advert/:id`, `/post`, `/account`, `/chat/:receiverId`, `/signin`, `/signup`; неизвестный путь ведёт на `/`. Защищённые страницы отправляют гостя на `/signin` без сохранения назначения. `/about`, отдельного редактирования и индекса сообщений в рабочем router пока нет.
@@ -89,7 +88,7 @@
 | История | INITIALIZE `{receiverId}` → SET_MESSAGES `{receiverId,payload:[Chat]}` по id ASC. Истории в state разделены по собеседнику, live/history объединяются по message.id. |
 | Отправка | ADD_MESSAGE `{receiverId,text}` → сохранение в БД и событие участникам, включая все подключённые вкладки. Offline-получатель прочитает запись при подключении. В событиях нет hashpass; createdAt сохраняется, когда передан. |
 | Ошибки чата | CHAT_ERROR `{receiverId,payload}`; malformed/input/DB errors не обрывают handler без ответа. `sendMessage=false` сохраняет draft; `true` подтверждает передачу в socket, не запись/доставку. Server ack/delivery ticks отсутствуют. |
-| SPA fallback | Канонические/неизвестные браузерные пути получают built index, затем client router/NotFound. Неизвестный /api и /images → 404; обычный HTTP /ws → 426. Preview entry не собирается в основной build. |
+| SPA fallback | Канонические/неизвестные браузерные пути получают built index, затем client router/NotFound. Неизвестный /api и /images → 404; обычный HTTP /ws → 426. |
 
 Поля nullable city/intent и JSONB habits (NOT NULL, default []) включены в исходную миграцию `20240822080439-create-user-profile.js`; отдельная миграция добавления полей удалена, поскольку БД используется только локально. В локальной development-БД эти поля уже были добавлены прежней миграцией без сброса и seed; перенос в исходную миграцию не меняет существующую БД. Каталог M08 уже присутствовал; его записи и AdvertTags не переписывались.
 
@@ -105,7 +104,7 @@
 | Лимит PhotosStep сейчас именно 8 × 5 МБ | Это явные props сценария, отличающиеся от defaults UploadArea 8 × 10 МБ. | M21; целевой 10 × 10 МБ согласовать с M22. |
 | Отклонение файла должно завершать запрос | У multer fileFilter отсутствует callback в не-image ветке. | M22. |
 
-Остальные подтверждённые разрывы уже описаны в плане: недостающие поля публикации и профиля; необязательная регистрационная фотография; несогласованные tags/фото в выдаче; `/mine` и summary отсутствуют; stale state деталей и несинхронное избранное; отдельные preview-стили и привязка Drawer к рамке; неподтверждённые композиции V10–V18.
+Остальные подтверждённые разрывы уже описаны в плане: недостающие поля публикации и профиля; необязательная регистрационная фотография; несогласованные tags/фото в выдаче; `/mine` и summary отсутствуют; stale state деталей и несинхронное избранное; глобальные стили и привязка Drawer к контейнеру; неподтверждённые композиции V10–V18.
 
 ## 6. Исторические снимки
 
@@ -136,7 +135,7 @@ client/docs/screenshots/b04-profile-desktop.png
 | M01 | Контракты, исходные проверки и журнал | DONE |
 | M02 | Новые адреса без поддержки старых путей | DONE |
 | M03 | Назначение после авторизации | DONE |
-| M04 | Общие стили и адаптив вне preview | DONE |
+| M04 | Общие стили и адаптив | DONE |
 | M05 | Независимые overlays | DONE |
 | M06 | Новая оболочка приложения | DONE |
 | M07 | Чтение объявлений и фотографии | DONE |
@@ -195,7 +194,7 @@ client/docs/screenshots/b04-profile-desktop.png
 
 **Сделано:** добавлены `shared/config/routes.ts` с таблицей шаблонов и builders `listingDetails(id)`/`messageThread(receiverId)`; application router переключён на новые пути и возвращает NotFoundPage для прежних адресов и любых неизвестных. Вынесен `pages/not-found` с переходами на главную и поиск. В `AdvertPage` читается `listingId`. Новые пути подключены к существующим страницам там, где новые экраны появятся позднее; бизнес-логика источников сохранена.
 
-Внутренние ссылки профиля, форм авторизации, объявлений, чатов, шапки и футера используют новые адреса. Демонстрационные sample paths и ID отделены в `client/src/preview/routes.ts`; в шапке больше нет тестового ID объявления или чата. Старые пути не имеют redirect/alias и отображают 404 с сохранением исходного URL. Клик по 404 ведёт на выбранное новое назначение.
+Внутренние ссылки профиля, форм авторизации, объявлений, чатов, шапки и футера используют новые адреса. В шапке больше нет тестового ID объявления или чата. Старые пути не имеют redirect/alias и отображают 404 с сохранением исходного URL. Клик по 404 ведёт на выбранное новое назначение.
 
 **Проверки:** `npm test -- --reporter=dot` — PASS, 27 файлов/66 тестов; включены проверки matchRoutes, 404, legacy paths и ID builders. `npm run lint` — PASS, FSD boundaries OK. `npm run build` — PASS. Сборка сохранила уже существующие предупреждения Sass/Rollup и размер JS chunk; новый build error отсутствует.
 
@@ -203,9 +202,9 @@ client/docs/screenshots/b04-profile-desktop.png
 
 ## 11. Выполнение M04 и M06
 
-Проверка M02 показала, что новый router всё ещё рендерил старый BaseLayout. В приложении использовались старые Navbar/Footer, тогда как SiteLayout применялся только в preview. M04 и M06 выполнены досрочно, чтобы основное приложение сразу получило готовую оболочку.
+Проверка M02 показала, что новый router всё ещё рендерил старый BaseLayout. В приложении использовались старые Navbar/Footer; SiteLayout ещё не был подключён к router. M04 и M06 выполнены досрочно, чтобы основное приложение сразу получило готовую оболочку.
 
-**M04:** общие Inter/CSS foundations подключены из `client/src/shared/styles/foundations.module.scss` в обычный app entrypoint. Preview forwarding stylesheet использует те же foundations. SiteLayout стал inline-size container для responsive-правил; в `.shell` зафиксированы цветовая основа и font-family нового интерфейса.
+**M04:** общие Inter/CSS foundations подключены из `client/src/shared/styles/foundations.module.scss` в обычный app entrypoint. SiteLayout стал inline-size container для responsive-правил; в `.shell` зафиксированы цветовая основа и font-family нового интерфейса.
 
 **M06:** новый `client/src/app/layouts/app-layout/AppLayout.tsx` подключён в router вместо BaseLayout. Он передаёт сессию в SiteHeader, вызывает текущий logoutThunk, показывает ошибку выхода, использует новый SiteFooter и мобильную навигацию. SiteHeader/SiteFooter скрывают страницы без смонтированного route; About, редактирование профиля и индекс сообщений добавляются соответствующими M14/M20/M26. Bottom navigation учитывает safe area; диалог открывает fullscreen chat layout без футера. BaseLayout.tsx, Navbar.tsx и старый Footer сохранены до Q03.
 
@@ -225,14 +224,13 @@ ProtectedRoute теперь показывает UI kit Spinner на Pending. Г
 
 ## 13. Выполнение M05
 
-**Сделано:** из `Dialog` удалены `getBoundary`, состояние позиции, обработчик resize/scroll и вычисляемый inline style. Из `Drawer`, `SearchFilters` и preview удалён весь pass-through `getDrawerBoundary`; Drawer теперь использует общие viewport-стили и portal в `document.body`. Escape, закрытие по backdrop, focus trap/restoration и блокировка прокрутки сохранены. Обновлены каталог UI kit и описание поиска в `client/DESIGN.md`.
+**Сделано:** из `Dialog` удалены `getBoundary`, состояние позиции, обработчик resize/scroll и вычисляемый inline style. Из `Drawer` и `SearchFilters` удалён весь pass-through `getDrawerBoundary`; Drawer теперь использует общие viewport-стили и portal в `document.body`. Escape, закрытие по backdrop, focus trap/restoration и блокировка прокрутки сохранены. Обновлены каталог UI kit и описание поиска в `client/DESIGN.md`.
 
-**Тесты:** overlay-тест проверяет, что Drawer внутри элемента `preview-frame` размещается в portal под `document.body`, не получает inline-позиционирование, удерживает Tab-фокус внутри панели и закрывается по backdrop. Существующие проверки Escape, scroll lock, возврата фокуса и SearchFilters проходят. Полный `npm test -- --reporter=dot` — PASS, 30 файлов/88 тестов; после добавления проверки Tab trap отдельно повторён overlay-тест — PASS, 1 файл/3 теста. `npm run lint` — PASS, `FSD boundaries: OK`; `npm run build` — PASS. Сборка сообщает прежние Sass/Rollup/outDir/chunk-size предупреждения.
+**Тесты:** overlay-тест проверяет, что Drawer внутри элемента `content-frame` размещается в portal под `document.body`, не получает inline-позиционирование, удерживает Tab-фокус внутри панели и закрывается по backdrop. Существующие проверки Escape, scroll lock, возврата фокуса и SearchFilters проходят. Полный `npm test -- --reporter=dot` — PASS, 30 файлов/88 тестов; после добавления проверки Tab trap отдельно повторён overlay-тест — PASS, 1 файл/3 теста. `npm run lint` — PASS, `FSD boundaries: OK`; `npm run build` — PASS. Сборка сообщает прежние Sass/Rollup/outDir/chunk-size предупреждения.
 
-**Граница проверки:** SearchFilters пока не подключён к production-странице поиска (это M16), поэтому визуальная проверка Drawer в рабочем пользовательском сценарии запланирована вместе с подключением этого экрана. В M05 проверены независимость компонента от preview-рамки и его поведение в тестах.
+**Граница проверки:** SearchFilters пока не подключён к production-странице поиска (это M16), поэтому визуальная проверка Drawer в рабочем пользовательском сценарии запланирована вместе с подключением этого экрана. В M05 проверены независимость компонента от родительского контейнера и его поведение в тестах.
 
 **Передача следующему исполнителю:** M05 завершена. Следующая задача — M07, чтение объявлений и фотографий с учётом реального API-контракта.
-
 
 ## 14. Выполнение M07 — 18 октября 2026
 
@@ -270,11 +268,9 @@ ProtectedRoute теперь показывает UI kit Spinner на Pending. Г
 
 **Передача следующему исполнителю:** следующая задача — M08, связь условий с настоящими тегами. Существующие seed/data IDs не менять; для недостающих тегов нужна отдельная безопасная data migration.
 
-
 ### Уточнение M07: имена связей объявления
 
 По запросу пользователя поля `advertSchema.User` и `advertSchema.Location` переименованы в `user` и `location`. Потребители и тестовые данные обновлены. В Sequelize связи Advert → User/Location получили соответствующие aliases, и общий include возвращает эти имена во всех ответах объявлений, включая вложенный Advert избранного. Таблицы, столбцы, внешние ключи и связи остальных моделей не изменены; миграция БД не требуется. Серверный тест дополнительно проверяет сериализацию user/location и отсутствие прежних ключей.
-
 
 ## 15. Реализация M08 — 18 октября 2026
 
@@ -288,14 +284,13 @@ ProtectedRoute теперь показывает UI kit Spinner на Pending. Г
 - `entities/advert/model/use-tag-catalog.ts`: общая загрузка, loading/error/reload, защита от позднего ответа после retry или размонтирования. Не использует состояние выдачи объявлений.
 - `entities/advert/ui/tag-catalog-feedback/`: общие сообщения загрузки/ошибки и повтор с новым UI kit. Новые FilterForm/PriceRulesStep получают варианты извне, используют реальные ID для key/id и блокируют чекбоксы во время загрузки/ошибки. В PriceRulesStep добавлено четвёртое условие «Питомцы разрешены».
 - Обязательный tagCatalog проходит через SearchFilters → FilterForm и ListingCreatePage → ListingCreateStep → PriceRulesStep. SearchFilters блокирует применение при ошибке; публикация не пропускает шаг 2 при недоступном каталоге. Retry не пересоздаёт черновик и не сбрасывает поля/выбор.
-- `preview/tag-catalog.ts` содержит отдельный демонстрационный каталог с явно заданными ID; PreviewApp передаёт его через props. В рабочих компонентах нет fallback на демонстрационные варианты.
 - Старый Filter минимально переведён на useTagCatalog: сохраняет URL с числовыми tagIds, поиск произвольных тегов и подпись #ID для неизвестного значения; добавлены loading/error/retry общего каталога. Старый компонент и прежний helper listingRules сохранены.
 - При браузерной проверке обнаружено переполнение публикации на 390 px из-за min-content ширины Stepper/fieldset. Сетка формы ограничена minmax(0,1fr), Stepper прокручивается внутри своей области, fieldset получил min-width:0. Форма укладывается в доступную ширину.
 - ARCH.md описывает механизм каталога и передачу props.
 
 ### Границы последующих задач
 
-M08 подготавливает источник вариантов. Строковые conditions/rules новых представлений ещё используются только в незавершённой композиции/preview: их замена на tagIds и подключение URL выполняется в M15, черновика/обзора публикации — в M21. Запись AdvertTags и FormData с числовыми ID относятся к M22. Новый рабочий поиск/публикация пока не подключены к этим представлениям. Контейнеры M15/M21 должны вызвать useTagCatalog и передать результат, сохранив полный каталог и реальные ID.
+M08 подготавливает источник вариантов. Строковые conditions/rules новых представлений ещё используются только в незавершённой композиции: их замена на tagIds и подключение URL выполняется в M15, черновика/обзора публикации — в M21. Запись AdvertTags и FormData с числовыми ID относятся к M22. Новый рабочий поиск/публикация пока не подключены к этим представлениям. Контейнеры M15/M21 должны вызвать useTagCatalog и передать результат, сохранив полный каталог и реальные ID.
 
 ### Проверки
 
@@ -305,7 +300,6 @@ M08 подготавливает источник вариантов. Строк
 | `cd client && npm run lint` | PASS, FSD boundaries: OK. |
 | `cd client && npm run build` | PASS, TypeScript и Vite. Известные Sass/Rollup/outDir/chunk-size warnings сохраняются. |
 | `node --test server/tests/advert-read.test.js` | PASS: 7 тестов. SQL каталога и AND-фильтра, обработчик query/ошибок, логика миграции при повторном up/down/up на подменённом queryInterface. Это не выполнение SQL миграции на PostgreSQL. |
-| Preview: 1440/390 px | Проверены четыре условия в поиске и шаге 2 публикации; на телефоне выбор «Питомцы разрешены» и применение закрывают Drawer и оставляют соответствующую карточку. Ширина формы публикации после исправления — 324 px при viewport 390 px. Источник — демонстрационный каталог, без API. |
 | GET `http://127.0.0.1:3000/api/adverts/tags?query=` | Соединение не установлено, curl code 7, HTTP 000. |
 | Миграция / реальные ID и AdvertTags в БД | НЕ ПРОВЕРЕНО: конфигурация БД отсутствует, миграция не применялась. |
 
@@ -317,7 +311,6 @@ M08 подготавливает источник вариантов. Строк
 4. Зафиксировать результаты и перевести M08 в DONE. До этого не считать миграцию применённой и сценарий принятым end-to-end.
 
 M09 (единое избранное) выполнена после M07; следующая задача реализации — M10. Код M08 может использоваться в M15/M21 после доступности каталога в окружении.
-
 
 ## 16. M09 — единое избранное (18 октября)
 
@@ -343,7 +336,6 @@ M09 (единое избранное) выполнена после M07; сле�
 
 M10–M14 реализованы позднее; актуальное продолжение — M15 (см. раздел 17).
 
-
 ### Уточнение архитектуры M09
 
 По запросу пользователя Redux-состояние избранного перенесено из features
@@ -355,7 +347,6 @@ feature. Store и виджет профиля импортируют состо�
 Защита requestId, подтверждение после ответа, ошибки и блокировка повторов
 сохранены. Сервер и контракт API при этом переносе не менялись.
 
-
 ### Разделение файлов Redux-состояния
 
 Правило закреплено в AGENTS.md и ARCH.md: каждый Redux-модуль сущности
@@ -364,7 +355,6 @@ feature. Store и виджет профиля импортируют состо�
 загрузка списка — в likedAdvertsThunk.ts, схема ответа, enum и интерфейсы
 состояния/payload — в likedAdvertsModel.ts. Импорты потребителей обновлены.
 Сценарии сохранения/удаления, связывающие разные сущности, остаются в feature.
-
 
 ## 17. Подключение страниц M10–M14 — 18 октября
 
@@ -376,7 +366,7 @@ feature. Store и виджет профиля импортируют состо�
 - M13: `/` монтирует HomeRoute. GET `/adverts` через advertService загружается в состояние страницы; createdAt DESC, при равенстве id DESC, первые три. `/top` не используется. Поисковая выдача в Redux не перезаписывается. Cleanup-effect игнорирует ответ после ухода/нового запроса. Helper переводит DTO в карточки. Нет цены — «Цена не указана», нет фото — существующий placeholder. Избранное работает через M09; pending блокирует сердце, ошибки отображаются рядом, GET избранного можно повторить. FreshListings различает loading/error/retry/empty.
 - M14: `/about` монтирует AboutPage с AboutBanner/AboutSteps; CTA открывает `/listings`. Шапка и футер показывают ссылку, active state сохраняется. Неизвестные и прежние адреса используют прежнюю NotFoundPage с сохранением URL.
 
-Старые SignInPage, SignUpPage, SignInForm, SignUpForm и WelcomePage сохранены в исходниках до Q03. Preview остаётся отдельным источником демонстрационных данных, рабочие страницы его не импортируют. Существующие API/БД-данные не изменялись, миграции и seed не запускались.
+Старые SignInPage, SignUpPage, SignInForm, SignUpForm и WelcomePage сохранены в исходниках до Q03. Существующие API/БД-данные не изменялись, миграции и seed не запускались.
 
 ### Проверки
 
@@ -388,7 +378,6 @@ feature. Store и виджет профиля импортируют состо�
 - API `127.0.0.1:3000` недоступен. Для M11 остаются регистрация без file/gender → login → refresh, проверка ответов и rollback в настоящей БД на отдельном аккаунте. M10/M12 требуют сквозной проверки этих же сценариев; здесь завершён код с автоматическими проверками. M11 пока **WIP**.
 
 **Продолжение:** M15 — подключить фильтры к URL и реальным tag ID; M16 — подключить новую страницу поиска. Каталог M08 требует применения миграции в рабочем окружении до runtime-проверки. Профиль/публикация/чат остаются на старых страницах до своих задач; Q01/Q02/Q03 не выполнены.
-
 
 ## 18. Все оставшиеся страницы — M15–M28
 
@@ -410,15 +399,15 @@ feature. Store и виджет профиля импортируют состо�
 
 | Источник | Назначение | Проверка | Удаление источника |
 | --- | --- | --- | --- |
-| Filter.tsx: applied/draft/read/write URL | SearchRoute + SearchFilters/FilterForm и helpers filters/searchFilterValues | round-trip query, неизвестный #ID, ввод не делает запрос, возврат из деталей, Drawer | Только после Q01/Q02 |
-| AdvertList: выдача/loadCards; PopularCard: карточки/save | SearchRoute/SearchResults и общее избранное M09; популярные не подменяют свежие | Общий count/8/load more, stale-response тест | Только после Q01/Q02 |
-| AdvertPage: GET/likes/photos/map/contact/save/back | ListingRoute + новые ListingDetails slots + shared/ui/y-map | Некорректный ID, retry, независимые detail state, реальное объявление и возврат к фильтрам | Только после Q01/Q02 |
-| AccountPage/ProfileCard/LikedAdverts: session/edit/saved; встроенный ChatList | ProfileRoute/ProfilePage/ProfileEditRoute; чат перенесён в /messages | API /mine, error vs empty, подтверждённое избранное, переходы | Только после Q01/Q02 |
-| ProfileForm: FormData/thunk/age/about/phoneNumber | ProfileEditRoute + расширенная ProfileEditForm, typed PATCH, updateUser | Ошибка с сохранением ввода, возраст/телефон, фото/File/null/undefined, refresh | Только после Q01/Q02 |
-| PostAdvertForm: геокодирование/FormData/POST и переход | ListingCreateRoute, publicationData, geocodeAddress и прежний postAdvertThunk | Живые фото/теги, целые числа/нет метро, четыре шага браузером, валидация/rollback | Только после Q01/Q02 |
-| ChatList/ChatComponent/ChatPage старого слоя pages | MessagesRoute + новый ChatPage, chatListModel/Thunk/Slice/Selectors, session socket | Первый диалог/без listing, live events/history, offline/reconnect, reload/Back | Только после Q01/Q02 |
+| Filter.tsx: applied/draft/read/write URL | SearchRoute + SearchFilters/FilterForm и helpers filters/searchFilterValues | round-trip query, неизвестный #ID, ввод не делает запрос, возврат из деталей, Drawer | Удалено Q03, сверка — §27 |
+| AdvertList: выдача/loadCards; PopularCard: карточки/save | SearchRoute/SearchResults и общее избранное M09; популярные не подменяют свежие | Общий count/8/load more, stale-response тест | Удалено Q03, сверка — §27 |
+| AdvertPage: GET/likes/photos/map/contact/save/back | ListingRoute + новые ListingDetails slots + shared/ui/y-map | Некорректный ID, retry, независимые detail state, реальное объявление и возврат к фильтрам | Удалено Q03, сверка — §27 |
+| AccountPage/ProfileCard/LikedAdverts: session/edit/saved; встроенный ChatList | ProfileRoute/ProfilePage/ProfileEditRoute; чат перенесён в /messages | API /mine, error vs empty, подтверждённое избранное, переходы | Удалено Q03, сверка — §27 |
+| ProfileForm: FormData/thunk/age/about/phoneNumber | ProfileEditRoute + расширенная ProfileEditForm, typed PATCH, updateUser | Ошибка с сохранением ввода, возраст/телефон, фото/File/null/undefined, refresh | Удалено Q03, сверка — §27 |
+| PostAdvertForm: геокодирование/FormData/POST и переход | ListingCreateRoute, publicationData, geocodeAddress и прежний postAdvertThunk | Живые фото/теги, целые числа/нет метро, четыре шага браузером, валидация/rollback | Удалено Q03, сверка — §27 |
+| ChatList/ChatComponent/ChatPage старого слоя pages | MessagesRoute + новый ChatPage, chatListModel/Thunk/Slice/Selectors, session socket | Первый диалог/без listing, live events/history, offline/reconnect, reload/Back | Удалено Q03, сверка — §27 |
 
-Исходные UI-файлы не удалялись. Изменённые Redux-модули advert/session/chat приведены к принятому соглашению Model/Thunk/Slice/Selectors; переименованы исходные model-файлы и обновлены импорты, feature/model.ts не переименовывались.
+При интеграции исходные UI-файлы не удалялись; итоговое удаление после сверки описано в разделе 27. Изменённые Redux-модули advert/session/chat приведены к принятому соглашению Model/Thunk/Slice/Selectors; переименованы исходные model-файлы и обновлены импорты, feature/model.ts не переименовывались.
 
 ### Сервер и данные
 
@@ -432,7 +421,7 @@ feature. Store и виджет профиля импортируют состо�
 ### Проверки
 
 - `cd client && npm test`: **39 файлов / 133 теста PASS** после заключительного прогона. Новые connected-pages тесты проверяют состав фильтра из query/неизвестный ID/отсутствие запросов на ввод, детали/retry/возврат, профильные error vs empty, сохранение ввода и accessToken, первый диалог без фальшивого listing и отправку false/true без optimistic-дубля. Reducer/socket-тесты проверяют stale detail/session, merge history/live и события старого socket после смены сессии. Публикация повторно валидируется при прямом открытии обзора.
-- `cd client && npm run lint`: PASS, FSD boundaries OK. `npm run build`: PASS, основной graph содержит только новые экраны; preview не собирается. `emptyOutDir: true` очищает только generated server/dist.
+- `cd client && npm run lint`: PASS, FSD boundaries OK. `npm run build`: PASS, основной graph содержит только новые экраны. `emptyOutDir: true` очищает только generated server/dist.
 - `node --test server/tests/*.test.js`: **20 PASS**. Добавлены адресные проверки публикации/тегов/чисел/фото/отката второй записи, allowlist профиля и выбора последней строки диалога.
 - `cd server && node tests/redesign-live.cjs`: PASS на настоящей development-БД. Signup без file/gender, повтор email, login/refresh/logout; PATCH всех новых полей и сохранить/заменить/удалить фото; запрещённый чужой PATCH/list; 404 summary; невалидные/no-photo запросы без пустой записи; 201 с двумя фото/тегами и немедленное повторное чтение; /mine только свои; фильтр по нескольким tag ID; повторы like POST/DELETE; два WebSocket пользователя, сообщение/ответ, offline-получатель и история после reconnect. Тест использует только синтетические записи; по умолчанию автоматически запускает redesign-cleanup.cjs, KEEP_REDESIGN_SMOKE=1 сохраняет их лишь для браузерной проверки.
 - `cd server && node tests/redesign-routes.cjs`: PASS. Все канонические и неизвестные браузерные адреса получают built SPA; API/images/ws не получают index. Production маршрутизация проверена через локальный Express с production-сборкой, без переключения DB-конфига на production.
@@ -446,7 +435,6 @@ feature. Store и виджет профиля импортируют состо�
 - Снимки и проверка 1440/390/320 здесь относятся к интеграции. Итоговая сверка с актуальным дизайн-эталоном Q01 и полная проверка доступности Q02 ещё не выполнены. Старый UI удаляется только в Q03 после этой приёмки.
 - Следующая задача — **Q01**. Все страницы уже подключены; дальнейшие задачи не должны возвращать старые экраны или удалять исходники до сверки переноса.
 
-
 ## 19. Q01 — визуальная приёмка (1 ноября 2026)
 
 **Статус: DONE.** Подробная матрица, дефекты, принятые решения, источники и
@@ -456,7 +444,6 @@ feature. Store и виджет профиля импортируют состо�
 - Повторно открыта опубликованная версия 1; через Figma MCP получены профиль
   4:273, сообщения 4:222 и публикация 4:326. Изменений в эталоны не вносилось.
 - Все рабочие экраны и четыре шага проверены на 1440/1024/768/390/320.
-  Редкие состояния проверены отдельным preview, источники подписаны.
 - Исправлены размеры/ресурс/геометрия баннеров, заголовок поиска, типографика,
   desktop-композиция профиля, компактные строки заинтересованных, навигация
   гостя/active state, Stepper, ограничения высоты и прокрутка переписки.
@@ -473,13 +460,10 @@ feature. Store и виджет профиля импортируют состо�
   Cleanup проверил синтетические email/ID и удалил 2 созданных аккаунта и
   2 собственных объявления с их фото, сообщениями и связями. Прежние записи
   и схема не менялись, миграции/seed/reset не запускались.
-- В preview добавлены standalone=1 и photos=sample для повторения визуальных
-  состояний без рамки. Production их не импортирует. DESIGN.md обновлена;
-  ARCH.md описывает текущую компоновку. По просьбе пользователя каталог QA
+- DESIGN.md и ARCH.md обновлены. По просьбе пользователя каталог QA
   оставлен локальным и игнорируется Git.
 
 **Далее: Q02.** Старый UI, ChakraProvider и зависимости остаются до Q03.
-
 
 ## 20. Декомпозиция Q02 для небольших PR (1 ноября 2026)
 
@@ -515,8 +499,7 @@ Q02 разбита на отдельные области ревью. Подро
 После выполнения подзадачи обновить её строку и добавить запись результата
 с проверенными сценариями и оставшимися ограничениями в этот журнал.
 Q02 остаётся WIP и получает DONE только после Q02.15.
-Q03 по-прежнему зависит от завершённой Q02. Каталог снимков не добавляется в Git.
-
+По исходному плану Q03 зависит от завершённой Q02. По отдельному поручению пользователя очистка выполнена до оставшихся ручных проверок; это не закрывает Q02.08/Q02.14/Q02.15. Каталог снимков не добавляется в Git.
 
 ## 21. Q02.01 — исходная матрица доступности (1 ноября 2026)
 
@@ -524,7 +507,7 @@ Q03 по-прежнему зависит от завершённой Q02. Кат
 Это исходный проход для последующих задач, а не полная приёмка Q02.
 
 Среда: Chrome на macOS, рабочий Vite `127.0.0.1:5173`, действующий API;
-независимый UI kit/preview — порт 5174. Публичные страницы проверены как гость.
+Публичные страницы проверены как гость.
 Контрольные размеры: 1440×1000, 390×844, 320×844; для чата запланированы также
 390×450/320×450. Полный проход средством чтения с экрана и экранная клавиатура
 физического телефона не выполнялись. Использованный AX/DOM snapshot не заменяет
@@ -572,7 +555,6 @@ Q03 по-прежнему зависит от завершённой Q02. Кат
 | A06 | UI kit → IconButton «Добавить в избранное»: измеренная область 42×42 px; в исходниках Sm 36×36 | Q02.04; в первых трёх задачах размеры не менять |
 | A07 | `prefers-reduced-motion: reduce` в исходниках Spinner/Button лишь увеличивает период вращения до 2 s/1,4 s | Q02.03; исходный normal в браузере: 0,8 s/0,7 s |
 | A08 | `ListingGallery.changeIndex` всегда вызывает scrollIntoView с behavior:smooth | Q02.03 |
-| A09 | Preview имеет общий override transitions 0,01 ms; он может скрывать отсутствие поддержки reduced motion в компоненте | Q02.03 |
 
 Критерии контраста для Q02.02: обычный текст ≥4,5:1, значимые границы/индикатор
 фокуса ≥3:1. Декоративные разделители и действительно disabled-контролы не
@@ -580,7 +562,6 @@ Q03 по-прежнему зависит от завершённой Q02. Кат
 [W3C Contrast Minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html),
 [W3C Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 Это критерии конкретной проверки, не заявление о соответствии всего приложения WCAG.
-
 
 ## 22. Q02.02 — контраст и видимость состояний (1 ноября 2026)
 
@@ -661,9 +642,6 @@ Emulate CSS prefers-reduced-motion: reduce. В момент измерения r
 - `ListingGallery` читает текущую preference через соседний `helper.ts` при каждом
   переключении: smooth в обычном режиме, auto в reduce. Отдельный поведенческий
   тест проверяет выбор следующего фото и изменение preference после монтирования.
-- Убран универсальный preview override с transition-duration:0,01 ms и !important;
-  оставлено только собственное правило `.preview-button`. Теперь preview не
-  скрывает отсутствие поддержки в компонентах production.
 - Legacy ChatComponent с smooth не входит в рабочий граф; он не редактировался
   ради Q02.03 и остаётся в области Q03. API, WS и схема данных не менялись.
 
@@ -703,21 +681,18 @@ Emulate CSS prefers-reduced-motion: reduce. В момент измерения r
 
 | ID | Подтверждённое поведение до исправления | Изменение и доказательство |
 | --- | --- | --- |
-| Q02.04 | A06: IconButton Sm/Md занимал 36/42 px. Во время запроса избранного native disabled убирал фокус в body. | Sm/Md увеличены до 44 px; в preview измерено 44×44. По просьбе пользователя убрана реализация сохранения фокуса через aria-disabled: избранное использует нативный disabled, пагинация профиля — loading. Дополнительная обработка aria-disabled в Button удалена. Тесты ListingCard и HomeRoute проверяют блокировку повторного сохранения. |
+| Q02.04 | A06: IconButton Sm/Md занимал 36/42 px. Во время запроса избранного native disabled убирал фокус в body. | Sm/Md увеличены до 44 px; измерено 44×44. По просьбе пользователя убрана реализация сохранения фокуса через aria-disabled: избранное использует нативный disabled, пагинация профиля — loading. Дополнительная обработка aria-disabled в Button удалена. Тесты ListingCard и HomeRoute проверяют блокировку повторного сохранения. |
 | Q02.05 | Inline onClose входил в зависимости эффекта Dialog; смена фотографии пересоздавала обработчики и возвращала фокус на «Закрыть». Фон не был inert. | Callback хранится в ref; эффект зависит от open. Фон inert, Tab/Shift+Tab и программный уход фокуса ограничены окном; скрытые/disabled/закрытые details исключаются из обхода. При исчезновении инициатора выбирается h1/main. Тесты Overlay покрывают callback/content, удалённый инициатор, trap, scroll lock, Escape и backdrop. Рабочая галерея возвращает фокус на открывшее второе фото; «Следующее фото» не теряет фокус при переключении. |
 | Q02.06 | Меню оставалось открытым после Tab, пункты оставались лишними остановками в обходе страницы. | Tab закрывает Menu и продолжает нативный обход от триггера. Enter, стрелки, Home/End, Escape, выбор/возврат проверены тестами и на меню профиля. Для Tooltip код менять не потребовалось: браузерный Enter открывает описание без изменения имени, Escape закрывает; hover/переход указателя/blur покрыты существующими тестами. |
 | Q02.07 | Не было пропуска навигации и общего управления фокусом после маршрутизации. | SiteLayout добавляет «К основному содержимому», фокус h1 нового pathname и ожидание асинхронного содержимого. Изменение query фильтров фокус не перехватывает. На телефоне focus-visible имеет scroll-margin с учётом нижней панели и safe area. Тест SiteLayout проверяет смену маршрута и skip-link. |
 
 Общие поля проверены по тестам Input/Textarea/SelectionControls и рабочим
 потребителям. Label/hint/error, required/invalid и переданные aria-describedby
-сохраняются. В preview ArrowRight переключает radio «Комнату» на «Соседа»,
-native Select выбирает Казань. В 36 измеренных рабочих экранах конфликтов ID нет.
+сохраняются. В 36 измеренных рабочих экранах конфликтов ID нет.
 Существующие тесты Tooltip проверяют сохранение внешнего описания/обработчиков,
 перенос указателя на подсказку, отключение, Escape и очистку таймера.
 
-В preview Modal проверены Shift+Tab с закрытия на последнее действие «Понятно»,
-Escape, возврат на «Открыть modal» и восстановление body overflow. В мобильном
-рабочем Drawer доступны закрытие, поля и применение; его содержимое прокручивается.
+В мобильном рабочем Drawer доступны закрытие, поля и применение; его содержимое прокручивается.
 Нижняя панель/guards/состав маршрутов не изменены. ARIA/DOM-проверка не выдаётся
 за проход скринридером.
 
@@ -755,7 +730,7 @@ login 200, через 6 секунд refresh 200. Повтор браузерн�
 
 ## 26. Q02.15 — доступная часть общей приёмки, WIP (1 ноября 2026)
 
-Среда: Chrome/macOS, Vite 5173, preview 5174, локальный API/PostgreSQL;
+Среда: Chrome/macOS, Vite 5173, локальный API/PostgreSQL;
 для настоящего системного выбора файлов использован IAB. Ширина IAB при этой
 проверке не выдаётся за 320/390: responsive-проверки выполнялись отдельно в Chrome.
 
@@ -787,3 +762,92 @@ login 200, через 6 секунд refresh 200. Повтор браузерн�
 
 **Q02 остаётся WIP; Q03 — TODO.** Реализация всех найденных дефектов завершена,
 но непроверенные обязательные условия не заменены результатами тестов или сборки.
+
+## 27. Q03 — удаление старого UI (2 ноября 2026)
+
+**Очистка выполнена. Общая приёмка редизайна остаётся WIP:** физический телефон
+и скринридер из Q02.08/Q02.14/Q02.15 ещё не проверены. Пользователь поручил
+выполнить Q03 до этих проверок. Зависимость Q02 не считается автоматически
+закрытой; ранние записи о сохранении старого UI описывают прежнее состояние.
+
+### Сверка поведения перед удалением
+
+Проверены сами исходники, новые контейнеры/представления, действующий router и
+lazy imports. TypeScript resolver подтвердил, что входящие
+импорты удаляемых файлов находятся только внутри удаляемого графа и его теста.
+Отсутствие потребителей использовалось после сверки поведения, а не вместо неё.
+Пути ниже указаны относительно `client/src`.
+
+| Удалённый источник | Где остались данные и поведение; что заменено осознанно | Подтверждение |
+| --- | --- | --- |
+| `app/layouts/BaseLayout.tsx`, `shared/ui/Loader.tsx` и `Loader.test.tsx` | App/AppLayout, ProtectedRoute и Spinner: восстановление сессии, loading, Outlet и оболочка. Старый wrapper больше не нужен. | ProtectedRoute, SiteLayout, auth-pages tests |
+| `widgets/header/Navbar.tsx`, `widgets/footer/Footer.tsx` | SiteHeader/SiteFooter/MobileNavigation и AppLayout: ссылки, сессия, профиль, logout/error, мобильное меню. Вместо Chakra toast используется Alert. | SiteHeader, SiteLayout, MobileNavigation tests |
+| `pages/welcome/WelcomePage.tsx` | HomeRoute/MainBanner/HowItWorks и AboutPage/AboutBanner/AboutSteps: статическое содержание и переходы. Старые inline-стили/изображения страницы не нужны новой композиции. | home-page и Q01 |
+| `pages/sign-in/SignInPage.tsx`, `features/sign-in/SignInForm.tsx` | SignInRoute и `features/sign-in/ui/sign-in-form`: email/password, signinThunk, ошибка/pending, безопасный returnTo и переход к регистрации. | auth-pages tests |
+| `pages/sign-up/SignUpPage.tsx`, `features/sign-up/SignUpForm.tsx` | SignUpRoute и новый SignUpForm: FormData, пароль ≥9 символов с цифрой, подтверждение, signupThunk, 409, returnTo. Пол и фото при регистрации не требуются новым сценарием; фото редактируется в профиле. Контракт API и прежние поля модели сохранены. | auth-pages; ранее живые signup/PATCH/refresh из разделов 18/25 |
+| `pages/search/MainPage.tsx`, `features/advert-filter/Filter.tsx` | SearchRoute, SearchFilters/FilterForm, filters/searchFilterValues: URL/draft, числа/границы, город/район/метро, любые и неизвестные tag ID. Отдельные асинхронные подсказки заменены полным каталогом с дополнительными тегами; debounce старого input не нужен. | filters, SearchFilters и connected-pages tests |
+| `widgets/advert-feed/AdvertList.tsx`, `widgets/popular-adverts/PopularCard.tsx`, `entities/advert/ui/AdvertCard.tsx` | SearchResults/ListingCard/Carousel: выдача, loadCards, детали, цены/фото/теги, saved/pending/error через общий useSavedAdverts. Популярная подборка не предусмотрена новым экраном: HomeRoute показывает свежие объявления; getTopAdverts API/thunk/model оставлены. Пустая кнопка камеры заменена действующей галереей. | SearchResults, ListingCard, Carousel, home-page, saved-adverts tests |
+| `pages/advert-details/AdvertPage.tsx`, `entities/like/ui/LikeProfile.tsx` | ListingRoute/ListingDetails/PersonSummary: запрос деталей и likes, retry, информация/теги/координаты, сохранение, переход к автору/заинтересованному, возврат к поиску. Hover-popover заменён доступной карточкой человека с явным действием. Возраст/email в компактной карточке не выводятся новой композицией; поля API не удалены. Самому себе написать нельзя. | connected-pages, advert/detail reducers и Q01/Q02 |
+| `shared/ui/PhotosCarousel.tsx`, `shared/ui/YMap.tsx` | ListingGallery/Carousel и `shared/ui/y-map/YMap.tsx`: фото/пустые состояния/кнопки, reduced motion, SDK/координаты и недоступность карты. CDN slick styles и старый Chakra Box больше не нужны. | ListingGallery, Carousel, y-map helper и Q01; реальная сеть Яндекс.Карт по-прежнему не подтверждена |
+| `pages/account/AccountPage.tsx`, `widgets/profile-card/ProfileCard.tsx` | ProfileRoute/ProfilePage/PersonSummary: session/profile/edit/post/saved; список чатов вынесен в `/messages`, ссылка есть в профиле и навигации. Summary показывает город/цель/описание/привычки вместо email/пола/возраста старой карточки. Возраст доступен в форме, данные профиля сохранены в API. | ProfilePage, connected-pages tests |
+| `features/edit-profile/ProfileForm.tsx` | ProfileEditRoute/ProfileEditForm/helper: FormData, editUserProfileThunk, age/about/phone, фото сохранить/заменить/удалить, ошибки с сохранением ввода и отмена. Вместо повторного checkAuth используется типизированный ответ PATCH и updateUser. Возраст/телефон опциональны, диапазон возраста 18–120 соответствует серверу. | ProfileEditForm, connected-pages и живые PATCH/refresh из разделов 18/25 |
+| `widgets/liked-adverts/LikedAdverts.tsx`, `features/remove-like/ConfirmDeleteModal.tsx` | ProfileListingsSection + useSavedAdverts: загрузка/ошибка/retry/пустота, удаление по advertId и подтверждённый результат. Отдельное подтверждение не нужно для обратимого переключения сердечка; повторное сохранение доступно в карточке объявления. API/store/thunks сохранены. | saved-adverts, saved-adverts-navigation, ProfileListingsSection tests |
+| `pages/advert-create/PostAdvertPage.tsx`, `features/create-advert/PostAdvertForm.tsx` | ListingCreateRoute, ListingCreatePage/Form, validation, publicationData, geocodeAddress и postAdvertThunk: все поля/Files/tagIds, главное фото, шаги и ошибки/повтор. Ошибка геокодирования не блокирует публикацию; вместо двухсекундного таймера выполняется переход к полученному ID. Метро опционально. | ListingCreatePage, listing-create validation, connected-pages; живые публикация/rollback из раздела 18 |
+| `pages/chat/ChatPage.tsx`, `widgets/chat-list/ChatList.tsx`, `widgets/chat-window/ChatComponent.tsx`, `features/send-message/ChatInput.tsx` | MessagesRoute/новый ChatPage/ConversationRow + session socket: список/online/history, проверка peer ID, новый диалог по summary, выбор/закрытие диалога, reconnect, send false/true и сохранение черновика, прокрутка истории. Email старой боковой панели заменён именем и контекстом объявления. | ChatPage, connected-pages, socket/chatList tests; живой WS из раздела 18; реальный скринридер остаётся в Q02 |
+| `index.css` | Неиспользуемый шаблон Vite с тёмным фоном и общими стилями кнопок. Ничего не импортировало его; foundations заменяют его роль. | поиск по source/config/HTML |
+
+Итого удалены 30 TSX-файлов (включая тесты старого Loader) и старый `index.css`.
+Нужные API, store, модели, thunks и перенесённые helpers не удалялись.
+Реестр раздела 18 — историческая запись; в столбце «Удаление источника»
+теперь применяется результат сверки этого раздела.
+
+### Провайдер, пакеты и общие стили
+
+- Удалён ChakraProvider. Поиск по source/config/HTML не нашёл оставшихся
+  Chakra/Emotion/Framer Motion/slick потребителей; библиотечный адаптер не нужен.
+  SDK Яндекс.Карт и react-icons/lu остаются действующими зависимостями.
+- Удалены 7 прямых пакетов: @chakra-ui/icons, @chakra-ui/react, @emotion/react,
+  @emotion/styled, framer-motion, react-slick, @types/react-slick. npm удалил
+  153 записи пакетов вместе с транзитивными зависимостями. Версии оставшихся
+  пакетов в lockfile не изменились; установка выполнялась offline без scripts.
+- Базовый native HTML reset теперь принадлежит `shared/styles/foundations.scss`:
+  отступы, шрифт элементов форм, границы, ссылки, блочные изображения/SVG,
+  hidden и text-size-adjust. Он импортируется в основном entrypoint напрямую.
+- При проверке готового CSS обнаружено, что прежний side-effect import
+  `foundations.module.scss` удалялся из production-графа: в dev стили были,
+  а в production отсутствовали @font-face и определения --gs-*. Глобальный
+  файл переведён в обычный SCSS. В итоговой
+  сборке подтверждены reset, @font-face и CSS-переменные. Из index.html убран
+  inline-фон #fafafa, перекрывавший токен страницы #faf7f2.
+- ARCH, DESIGN, README клиента и UI kit описывают фактические маршруты,
+  источники состояния, SDK-адаптер и глобальные стили.
+
+### Проверки
+
+- `npm test`: **47 файлов / 170 тестов PASS**. Проверки рабочих компонентов
+  и маршрутов сохранены. `npm run lint`: PASS, FSD boundaries OK.
+  `npm run build`: PASS; основной JS chunk **379.36 kB** вместо **645.02 kB**
+  (до удаления провайдера); оставшиеся package versions не обновлялись.
+- Автоматическая проверка router подтверждает канонические пути и NotFound
+  для прежних `/home`, `/advert/:id`, `/post`, `/account`, `/chat/:id`,
+  `/signin`, `/signup`.
+- На production `localhost:3000/about` подтверждены Inter, фон #faf7f2,
+  CSS-переменные, один main/h1 и отсутствие горизонтального переполнения.
+  На 320/1440 px проверены `/`, `/about`, `/listings`, `/listings/1`,
+  `/sign-in`, `/sign-up` и старый `/post` (NotFound): в каждом один main/h1,
+  Inter и нет горизонтального переполнения.
+- В production на 390 px: Drawer фильтров → город Москва → выдача → реальные
+  детали → фото в Modal → Escape → возврат к прежнему query; «Показать ещё»
+  переводит фокус к новой карточке. Modal оставляет #root inert и aria-modal=true;
+  закрытие Drawer восстанавливает body scroll. Гостевое сохранение отправляет
+  на вход с returnTo; переход к регистрации сохраняет назначение. Пустые формы
+  показывают ошибки и фокусируют первое неверное поле; регистрация проверена на 320 px.
+- Локальные снимки: [About 1440](redesign-qa/q03-about-production-1440.png),
+  [About 390](redesign-qa/q03-about-production-390.png),
+  [ошибки регистрации 320](redesign-qa/q03-signup-errors-320.png).
+  Матрица — `redesign-qa/q03-regression-matrix.json`; каталог по-прежнему
+  игнорируется Git.
+
+Незакрытые проверки: физический телефон/экранная клавиатура/safe area и реальный
+скринридер (auth, overlays, чат). Q03 не заменяет эти проверки и не означает
+полного завершения редизайна. Данные development-БД в ходе очистки не менялись.

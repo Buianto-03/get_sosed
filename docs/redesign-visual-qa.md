@@ -21,9 +21,6 @@
 - Основная матрица: рабочий Vite-клиент, Express и настоящая development-БД.
   Профиль/избранное/переписка/публикация проверялись на синтетических аккаунтах.
   Карта и заинтересованные — на существующем объявлении с координатами, без изменения его данных.
-- Редкие состояния воспроизведены независимым preview с теми же составными
-  компонентами. Это проверка presentation, а не доказательство HTTP/WS-сценария.
-  Источник каждой строки обозначен. Нормальные маршруты проверены отдельно с API.
 - В Chrome выставлялся настоящий viewport; сохранённые JPEG имеют соответствующую
   ширину. [Измерения](redesign-qa/measurements.json) содержат источник, состояние,
   фактические размеры и файл каждого снимка. Full-page снимок сохраняет всю страницу;
@@ -64,8 +61,6 @@ Figma: [профиль](redesign-qa/reference-figma-profile.png), [чат](redes
 | Публикация: комната `/listings/new` | API / Figma + контракт | [снимок](redesign-qa/post-1-1440.jpg) | [снимок](redesign-qa/post-1-1024.jpg) | [снимок](redesign-qa/post-1-768.jpg) | [снимок](redesign-qa/post-1-390.jpg) | [снимок](redesign-qa/post-1-320.jpg) | PASS |
 | Публикация: цена `/listings/new` | API / проектное решение | [снимок](redesign-qa/post-2-1440.jpg) | [снимок](redesign-qa/post-2-1024.jpg) | [снимок](redesign-qa/post-2-768.jpg) | [снимок](redesign-qa/post-2-390.jpg) | [снимок](redesign-qa/post-2-320.jpg) | PASS |
 | Публикация: фото, пусто `/listings/new` | API / проектное решение | [снимок](redesign-qa/post-3-empty-1440.jpg) | [снимок](redesign-qa/post-3-empty-1024.jpg) | [снимок](redesign-qa/post-3-empty-768.jpg) | [снимок](redesign-qa/post-3-empty-390.jpg) | [снимок](redesign-qa/post-3-empty-320.jpg) | PASS |
-| Публикация: выбранные фото `/listings/new` | Preview / проектное решение | [снимок](redesign-qa/preview-step-3-photos-1440.jpg) | [снимок](redesign-qa/preview-step-3-photos-1024.jpg) | [снимок](redesign-qa/preview-step-3-photos-768.jpg) | [снимок](redesign-qa/preview-step-3-photos-390.jpg) | [снимок](redesign-qa/preview-step-3-photos-320.jpg) | PASS |
-| Публикация: обзор `/listings/new` | Preview / проектное решение | [снимок](redesign-qa/preview-step-4-photos-1440.jpg) | [снимок](redesign-qa/preview-step-4-photos-1024.jpg) | [снимок](redesign-qa/preview-step-4-photos-768.jpg) | [снимок](redesign-qa/preview-step-4-photos-390.jpg) | [снимок](redesign-qa/preview-step-4-photos-320.jpg) | PASS |
 | 404 `неизвестный адрес` | API / проектное решение | [снимок](redesign-qa/404-1440.jpg) | [снимок](redesign-qa/404-1024.jpg) | [снимок](redesign-qa/404-768.jpg) | [снимок](redesign-qa/404-390.jpg) | [снимок](redesign-qa/404-320.jpg) | PASS |
 
 Общие листы для обзора: [1440](redesign-qa/contact-1440.jpg), [1024](redesign-qa/contact-1024.jpg), [768](redesign-qa/contact-768.jpg), [390](redesign-qa/contact-390.jpg).
@@ -73,42 +68,10 @@ Figma: [профиль](redesign-qa/reference-figma-profile.png), [чат](redes
 ## Состояния и overlays
 
 В каждой строке проверены текст, переносы, видимость действий и отсутствие
-переполнения страницы на desktop/mobile. Состояния preview не подставляются
-в рабочие маршруты при ошибке сервера.
+переполнения страницы на desktop/mobile.
 
 | Экран / состояние | Источник | Снимки | Результат |
 | --- | --- | --- | --- |
-| About / длинный текст | Preview | [1440](redesign-qa/preview-about-long-1440.jpg) · [390](redesign-qa/preview-about-long-390.jpg) | PASS |
-| Чат / пусто | Preview | [1440](redesign-qa/preview-chat-empty-1440.jpg) · [390](redesign-qa/preview-chat-empty-390.jpg) | PASS |
-| Чат / длинный текст | Preview | [1440](redesign-qa/preview-chat-long-1440.jpg) · [390](redesign-qa/preview-chat-long-390.jpg) | PASS |
-| Чат / диалог не выбран | Preview | [1440](redesign-qa/preview-chat-no-selection-1440.jpg) · [390](redesign-qa/preview-chat-no-selection-390.jpg) | PASS |
-| Чат / ошибка отправки с сохранением ввода | Preview | [1440](redesign-qa/preview-chat-send-error-1440.jpg) · [390](redesign-qa/preview-chat-send-error-390.jpg) | PASS |
-| Объявление / связь недоступна | Preview | [1440](redesign-qa/preview-detail-disabled-contact-1440.jpg) · [390](redesign-qa/preview-detail-disabled-contact-390.jpg) | PASS |
-| Объявление / длинный текст | Preview | [1440](redesign-qa/preview-detail-long-1440.jpg) · [390](redesign-qa/preview-detail-long-390.jpg) | PASS |
-| Объявление / много фото | Preview | [1440](redesign-qa/preview-detail-many-photos-1440.jpg) · [390](redesign-qa/preview-detail-many-photos-390.jpg) | PASS |
-| Объявление / нет фото | Preview | [1440](redesign-qa/preview-detail-no-photo-1440.jpg) · [390](redesign-qa/preview-detail-no-photo-390.jpg) | PASS |
-| Объявление / одно фото | Preview | [1440](redesign-qa/preview-detail-one-photo-1440.jpg) · [390](redesign-qa/preview-detail-one-photo-390.jpg) | PASS |
-| Объявление / два фото | Preview | [1440](redesign-qa/preview-detail-two-photos-1440.jpg) · [390](redesign-qa/preview-detail-two-photos-390.jpg) | PASS |
-| Главная / пусто | Preview | [1440](redesign-qa/preview-home-empty-1440.jpg) · [390](redesign-qa/preview-home-empty-390.jpg) | PASS |
-| Главная / длинный текст | Preview | [1440](redesign-qa/preview-home-long-1440.jpg) · [390](redesign-qa/preview-home-long-390.jpg) | PASS |
-| Главная / нет фото | Preview | [1440](redesign-qa/preview-home-no-photo-1440.jpg) · [390](redesign-qa/preview-home-no-photo-390.jpg) | PASS |
-| Публикация / длинный текст | Preview | [1440](redesign-qa/preview-post-long-1440.jpg) · [390](redesign-qa/preview-post-long-390.jpg) | PASS |
-| Публикация / ошибка публикации | Preview | [1440](redesign-qa/preview-post-publish-error-1440.jpg) · [390](redesign-qa/preview-post-publish-error-390.jpg) | PASS |
-| Публикация / публикация pending | Preview | [1440](redesign-qa/preview-post-publish-loading-1440.jpg) · [390](redesign-qa/preview-post-publish-loading-390.jpg) | PASS |
-| Профиль / инициалы вместо фото | Preview | [1440](redesign-qa/preview-profile-avatar-fallback-1440.jpg) · [390](redesign-qa/preview-profile-avatar-fallback-390.jpg) | PASS |
-| Профиль / редактирование | Preview | [1440](redesign-qa/preview-profile-editing-1440.jpg) · [390](redesign-qa/preview-profile-editing-390.jpg) | PASS |
-| Профиль / нет избранного | Preview | [1440](redesign-qa/preview-profile-empty-favorites-1440.jpg) · [390](redesign-qa/preview-profile-empty-favorites-390.jpg) | PASS |
-| Профиль / нет собственных объявлений | Preview | [1440](redesign-qa/preview-profile-empty-listings-1440.jpg) · [390](redesign-qa/preview-profile-empty-listings-390.jpg) | PASS |
-| Профиль / нет данных профиля | Preview | [1440](redesign-qa/preview-profile-empty-profile-1440.jpg) · [390](redesign-qa/preview-profile-empty-profile-390.jpg) | PASS |
-| Профиль / длинный текст | Preview | [1440](redesign-qa/preview-profile-long-1440.jpg) · [390](redesign-qa/preview-profile-long-390.jpg) | PASS |
-| Поиск / пусто | Preview | [1440](redesign-qa/preview-search-empty-1440.jpg) · [390](redesign-qa/preview-search-empty-390.jpg) | PASS |
-| Поиск / ошибка | Preview | [1440](redesign-qa/preview-search-error-1440.jpg) · [390](redesign-qa/preview-search-error-390.jpg) | PASS |
-| Поиск / загрузка | Preview | [1440](redesign-qa/preview-search-loading-1440.jpg) · [390](redesign-qa/preview-search-loading-390.jpg) | PASS |
-| Поиск / длинный текст | Preview | [1440](redesign-qa/preview-search-long-1440.jpg) · [390](redesign-qa/preview-search-long-390.jpg) | PASS |
-| Вход / ошибка | Preview | [1440](redesign-qa/preview-signin-error-1440.jpg) · [390](redesign-qa/preview-signin-error-390.jpg) | PASS |
-| Вход / загрузка | Preview | [1440](redesign-qa/preview-signin-loading-1440.jpg) · [390](redesign-qa/preview-signin-loading-390.jpg) | PASS |
-| Регистрация / ошибка | Preview | [1440](redesign-qa/preview-signup-error-1440.jpg) · [390](redesign-qa/preview-signup-error-390.jpg) | PASS |
-| Регистрация / загрузка | Preview | [1440](redesign-qa/preview-signup-loading-1440.jpg) · [390](redesign-qa/preview-signup-loading-390.jpg) | PASS |
 | Пустой поиск по несуществующему городу | API | [1440](redesign-qa/search-empty-api-1440.jpg) · [390](redesign-qa/search-empty-api-390.jpg) | PASS |
 | Ошибки первого шага | API | [1440](redesign-qa/post-1-error-1440.jpg) · [390](redesign-qa/post-1-error-390.jpg) | PASS |
 | Ошибки цены и описания | API | [1440](redesign-qa/post-2-error-1440.jpg) · [390](redesign-qa/post-2-error-390.jpg) | PASS |
@@ -121,9 +84,6 @@ Figma: [профиль](redesign-qa/reference-figma-profile.png), [чат](redes
 [выбранный File](redesign-qa/post-3-upload-iab-857.jpg),
 [обзор](redesign-qa/post-4-review-iab-857.jpg),
 [результат](redesign-qa/post-result-iab-857.jpg).
-На 1440/1024/768/390/320 выбранные миниатюры и обзор дополнительно проверены
-на preview: `photos=sample` создаёт presentation File-объекты и показывает
-локальные изображения; их байты не загружаются в API.
 
 ## Исправленные дефекты
 
@@ -169,10 +129,6 @@ Figma: [профиль](redesign-qa/reference-figma-profile.png), [чат](redes
   переключения раскладки и объявление с картой. Переполнение documentElement — 0.
 - Карточки главной/поиска: 3 колонки на 1440, 2 на 1024/768, 1 на 390/320.
   Профиль использует отдельную композицию Figma; изображения сохраняют пропорции.
-- [Короткий чат](redesign-qa/compact-chat.json): 390×600, 390×450, 320×450.
-  Низ composer находится внутри thread и выше нижней навигации; история имеет
-  самостоятельный scroll. [390×450](redesign-qa/preview-chat-context-450-390.jpg),
-  [320×450](redesign-qa/preview-chat-context-450-320.jpg).
 - Safe area учитывается CSS env; это браузерная проверка размеров, а не проверка
   физического устройства с вырезом или открытой системной клавиатурой.
   Такой проход и полная доступность остаются в Q02.
@@ -204,15 +160,22 @@ Figma: [профиль](redesign-qa/reference-figma-profile.png), [чат](redes
 Не сбрасывать существующую БД ради визуальной проверки. Для синтетических данных
 использовать live-скрипт выше и завершать его cleanup после браузерной проверки.
 
-Изолированные состояния: `cd client && npm run dev -- --config vite.preview.config.ts --port 5174`,
-затем `/preview.html?standalone=1&screen=chat&variant=long&header=user`.
-`standalone=1` убирает рамку/toolbar и использует рабочую нижнюю навигацию;
-размер определяется viewport браузера. Для миниатюр/обзора:
-`screen=post&variant=step-3&header=user&photos=sample` (или `step-4`).
-Обычный preview с переключателями продолжает работать без standalone.
-
 Снимки и JSON находятся локально в `docs/redesign-qa/`; по просьбе пользователя
 каталог игнорируется Git. При передаче отчёта проверяющему снимки нужно приложить
 отдельно. Коммит в этой задаче не создавался. Старые игнорируемые `docs/screenshots` не
 используются как доказательство Q01. Каталог содержит только данные этой проверки;
 токены, пароли, cookie и локальный smoke-manifest туда не копировались.
+
+## Регрессия после Q03 · 2 ноября 2026
+
+ChakraProvider и старый UI удалены после сверки переноса. Глобальные foundations
+переведены из CSS Module в обычный `shared/styles/foundations.scss`: при проверке
+выяснилось, что production исключал прежний side-effect module import. В итоговом
+CSS теперь присутствуют локальный Inter, CSS-переменные и общий reset; убран
+inline-фон `index.html`, перекрывавший токен страницы. Это исправление production-подключения, а не смена визуального эталона.
+
+Повторены production-проверки главной, About, поиска, деталей, входа/регистрации
+и NotFound на 320/1440 px; формы/мобильные фильтры/Modal/пагинация — также на 390 px.
+Без горизонтального переполнения; один main/h1. Снимки и подробные
+результаты — [раздел 27 журнала](redesign-integration-progress.md#27-q03--удаление-старого-ui-2-ноября-2026).
+Приёмка физического телефона и настоящего скринридера Q02 остаётся открытой.

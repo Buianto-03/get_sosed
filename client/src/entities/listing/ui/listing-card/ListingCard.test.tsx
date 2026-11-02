@@ -6,7 +6,7 @@ import { ListingCard, ListingCardVariant, type ListingCardData } from './Listing
 const listing: ListingCardData = {
   title: 'Светлая квартира рядом с парком',
   price: 25000,
-  imageUrl: '/images/2pic.jpg',
+  imageUrl: '/images/listing.jpg',
   imageAlt: 'Гостиная в квартире',
   city: 'Москва',
   district: 'Аэропорт',

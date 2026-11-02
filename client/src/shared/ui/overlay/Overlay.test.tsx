@@ -66,7 +66,7 @@ describe('overlay components', () => {
   it('closes a drawer when the backdrop is clicked', () => {
     const onClose = vi.fn();
     render(
-      <div id="preview-frame">
+      <div id="content-frame">
         <Drawer open onClose={onClose} title="Фильтры">
           <button type="button">Действие</button>
         </Drawer>
