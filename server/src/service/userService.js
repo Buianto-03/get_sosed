@@ -1,6 +1,18 @@
 const { User, UserProfile, Chat } = require('../../db/models');
 const Sequelize = require('sequelize');
 
+function selectLatestConversations(chats) {
+  const seen = new Set();
+  return chats.filter((chat) => {
+    const chatKey = `${chat.senderId}-${chat.receiverId}`;
+    const reverseChatKey = `${chat.receiverId}-${chat.senderId}`;
+    const isDuplicate = seen.has(chatKey) || seen.has(reverseChatKey);
+    seen.add(chatKey);
+    seen.add(reverseChatKey);
+    return !isDuplicate;
+  });
+}
+
 class UserService {
   constructor(user, userProfile, chat) {
     this.user = user;
@@ -8,20 +20,21 @@ class UserService {
     this.chat = chat;
   }
 
-  // async addPost(formData) {
-  //   const post = await this.model.create(formData);
-  //   const postWithUser = await this.model.findByPk(post.id, {
-  //     include: 'User',
-  //   });
-  //   return postWithUser;
-  // }
-
   getUsers() {
     return this.user.findAll({
       order: [['id', 'ASC']],
       attributes: { exclude: ['hashpass'] },
       include: 'UserProfile',
     });
+  }
+
+  getConversationIncludes() {
+    return ['receiver', 'sender'].map((participant) => ({
+      model: this.user,
+      as: participant,
+      attributes: ['id', 'name', 'email'],
+      include: [{ model: this.userProfile, attributes: ['photo'] }],
+    }));
   }
 
   async getReceiverUsers(id) {
@@ -33,65 +46,17 @@ class UserService {
         ['createdAt', 'DESC'],
         ['id', 'DESC'],
       ],
-      include: [
-        {
-          model: this.user,
-          as: 'receiver',
-          attributes: ['id', 'name', 'email'],
-          include: [{ model: this.userProfile, attributes: ['photo'] }],
-        },
-        {
-          model: this.user,
-          as: 'sender',
-          attributes: ['id', 'name', 'email'],
-          include: [{ model: this.userProfile, attributes: ['photo'] }],
-        },
-      ],
+      include: this.getConversationIncludes(),
     });
 
-    const seen = new Set();
-    const uniqueChats = allChats.filter((chat) => {
-      const chatKey = `${chat.senderId}-${chat.receiverId}`;
-      const reverseChatKey = `${chat.receiverId}-${chat.senderId}`;
-      const isDuplicate = seen.has(chatKey) || seen.has(reverseChatKey);
-      seen.add(chatKey);
-      seen.add(reverseChatKey);
-      return !isDuplicate;
-    });
-
-    return uniqueChats;
+    return selectLatestConversations(allChats);
   }
-
-  //   async deletePost(id) {
-  //     try {
-  //       await this.model.destroy({ where: { id } });
-  //       return true;
-  //     } catch (error) {
-  //       console.log(error);
-  //       return false;
-  //     }
-  //   }
 
   async getSummary(id) {
     return this.user.findByPk(id, {
       attributes: ['id', 'name'],
       include: [{ model: this.userProfile, attributes: ['photo'] }],
     });
-  }
-
-  async editUser(newData, id) {
-    // console.log('data --->', newData, 'id --->', id);
-
-    const user = await this.userProfile.findOne({
-      where: {
-        userId: id,
-      },
-    });
-    await user.update(newData);
-    const updatedUser = await this.user.findByPk(id, {
-      include: 'UserProfile',
-    });
-    return updatedUser;
   }
 }
 

@@ -129,8 +129,10 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Codex generated docs; keep the redesign plan and integration journal versioned
+# Codex generated docs; keep project plans and the integration journal versioned
 docs/*
 !docs/redesign-migration-plan.md
 !docs/redesign-integration-progress.md
 !docs/redesign-visual-qa.md
+!docs/client-optimization-plan.md
+!docs/server-service-refactoring-plan.md

@@ -207,3 +207,94 @@
 //     }, delay);
 //   };
 // };
+
+// function summarize(orders) {
+//   return orders
+//     .filter((order) => order.status === 'paid')
+//     .reduce((acc, order) => {
+//       acc[order.userId] = (acc[order.userId] ?? 0) + order.amount;
+
+//       return acc;
+//     }, {});
+// }
+
+// const orders = [
+//   { userId: 'u1', amount: 100, status: 'paid' },
+//   { userId: 'u2', amount: 200, status: 'paid' },
+//   { userId: 'u1', amount: 50, status: 'paid' },
+//   { userId: 'u2', amount: 300, status: 'cancelled' },
+// ];
+
+// console.log(summarize(orders));
+// console.log('A');
+
+// setTimeout(() => {
+//   console.log('B');
+// }, 0);
+
+// Promise.resolve().then(() => {
+//   console.log('C');
+// });
+
+// async function run() {
+//   console.log('D');
+//   await Promise.resolve();
+//   console.log('E');
+// }
+
+// run();
+
+// console.log('F');
+// function findCommon(first, second) {
+//   return first.filter(value => second.includes(value));
+// }
+
+// const first = [1, 2, 2, 3, 4, 5];
+// const second = [2, 4, 6];
+
+// console.log(findCommon(first, second));
+
+// const merge = (arr: number[][]): number[][] => {
+//   const copy = [...arr].sort((a, b) => a[0] - b[0]);
+//   const res: number[][] = [];
+
+//   for (const [start, end] of copy) {
+//     const last = res[res.length - 1];
+
+//     if (!last || start > last[1]) {
+//       res.push([start, end]);
+//     } else {
+//       last[1] = Math.max(end, last[1]);
+//     }
+//   }
+
+//   return res;
+// };
+// console.log(
+//   merge([
+//     [1, 3],
+//     [2, 6],
+//     [8, 10],
+//     [12, 16],
+//     [15, 18],
+//   ]),
+// );
+
+// const intersections = (arr1: number[], arr2: number[]): number[] => {
+//   const res: number[] = [];
+
+//   arr1.forEach((el) => {
+//     if (arr2.includes(el)) {
+//       res.push(el);
+//     }
+//   });
+
+//   return res;
+// };
+
+const intersections = (arr1: number[], arr2: number[]): number[] => {
+  const set = new Set(arr1);
+  return arr2.filter((el) => set.has(el));
+};
+
+console.log(intersections([1, 2, 3, 4, 5, 6], [4, 5, 6, 7, 8, 9, 0]));

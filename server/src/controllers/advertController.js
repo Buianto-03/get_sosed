@@ -1,6 +1,5 @@
 const advertService = require('../service/advertService');
 const publishAdvertService = require('../service/publishAdvertService');
-const fs = require('fs/promises');
 
 class AdvertController {
   constructor(advertService, publishAdvertService) {
@@ -83,11 +82,6 @@ class AdvertController {
     res.sendStatus(success ? 204 : 500);
   };
 
-  patchUser = async (req, res) => {
-    const { userId } = req.params;
-    const updatedUser = await this.advertService.editUser(req.body, userId);
-    res.json(updatedUser);
-  };
   getFilteredAdverts = async (req, res) => {
     try {
       const filters = req.body;

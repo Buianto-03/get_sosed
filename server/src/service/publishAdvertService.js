@@ -88,79 +88,122 @@ class PublishAdvertService {
     return result;
   }
 
-  async publishAdvert(body, files, userId) {
-    const values = this.parseAdvert(body);
-    if (!Array.isArray(files) || files.length < 1 || files.length > 10)
+  async preparePhotos(files) {
+    if (!Array.isArray(files) || files.length < 1 || files.length > 10) {
       throw invalid('Add 1–10 photos');
+    }
     const images = [];
     for (const file of files) {
       if (
         !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype) ||
         file.size > 10 * 1024 * 1024
-      )
+      ) {
         throw invalid('Invalid photo');
+      }
       try {
         images.push(await sharp(file.buffer).webp().toBuffer());
       } catch {
         throw invalid('Cannot decode photo');
       }
     }
+    return images;
+  }
+
+  async validateTagIds(tagIds, transaction) {
+    const tags = await this.tags.findAll({
+      where: { id: { [Op.in]: tagIds } },
+      transaction,
+    });
+    if (tags.length !== tagIds.length) {
+      throw invalid('Unknown tag ID');
+    }
+  }
+
+  async createAdvertWithRelations(values, userId, transaction) {
+    const {
+      city,
+      address,
+      district,
+      metro,
+      coordinates,
+      tagIds,
+      ...fields
+    } = values;
+    const advert = await this.advert.create(
+      { ...fields, userId },
+      { transaction },
+    );
+    await this.location.create(
+      { city, address, district, metro, coordinates, advertId: advert.id },
+      { transaction },
+    );
+    if (tagIds.length) {
+      await this.advertTags.bulkCreate(
+        tagIds.map((tagId) => ({ tagId, advertId: advert.id })),
+        { transaction },
+      );
+    }
+    return advert;
+  }
+
+  getPublishedAdvert(advertId, transaction) {
+    return this.advert.findByPk(advertId, {
+      include: this.advertService.getReadIncludes(),
+      transaction,
+    });
+  }
+
+  createPhotoPaths(advertId, index) {
+    const directory = `./public/images/adverts/advert-${advertId}`;
+    const fileName = `photo-${index}.webp`;
+    return {
+      directory,
+      filePath: `${directory}/${fileName}`,
+      url: `/images/adverts/advert-${advertId}/${fileName}`,
+    };
+  }
+
+  async saveAdvertPhotos(advertId, images, directory, transaction) {
+    await fs.mkdir(directory, { recursive: true });
+    for (let index = 0; index < images.length; index += 1) {
+      const photo = this.createPhotoPaths(advertId, index);
+      await fs.writeFile(photo.filePath, images[index]);
+      await this.advertPhoto.create(
+        { advertId, photo: photo.url },
+        { transaction },
+      );
+    }
+  }
+
+  async removeCreatedPhotos(directory) {
+    if (!directory) {
+      return;
+    }
+    try {
+      await fs.rm(directory, { recursive: true, force: true });
+    } catch (error) {
+      console.error('Cannot remove advert photos after rollback:', error);
+    }
+  }
+
+  async publishAdvert(body, files, userId) {
+    const values = this.parseAdvert(body);
+    const images = await this.preparePhotos(files);
     let directory;
     try {
       return await this.sequelize.transaction(async (transaction) => {
-        const tags = await this.tags.findAll({
-          where: { id: { [Op.in]: values.tagIds } },
+        await this.validateTagIds(values.tagIds, transaction);
+        const advert = await this.createAdvertWithRelations(
+          values,
+          userId,
           transaction,
-        });
-        if (tags.length !== values.tagIds.length)
-          throw invalid('Unknown tag ID');
-        const {
-          city,
-          address,
-          district,
-          metro,
-          coordinates,
-          tagIds,
-          ...fields
-        } = values;
-        const advert = await this.advert.create(
-          { ...fields, userId },
-          { transaction },
         );
-        await this.location.create(
-          { city, address, district, metro, coordinates, advertId: advert.id },
-          { transaction },
-        );
-        if (tagIds.length)
-          await this.advertTags.bulkCreate(
-            tagIds.map((tagId) => ({ tagId, advertId: advert.id })),
-            { transaction },
-          );
-        directory = `./public/images/adverts/advert-${advert.id}`;
-        await fs.mkdir(directory, { recursive: true });
-        for (let index = 0; index < images.length; index += 1) {
-          const name = `photo-${index}.webp`;
-          await fs.writeFile(`${directory}/${name}`, images[index]);
-          await this.advertPhoto.create(
-            {
-              advertId: advert.id,
-              photo: `/images/adverts/advert-${advert.id}/${name}`,
-            },
-            { transaction },
-          );
-        }
-        return this.advert.findByPk(advert.id, {
-          include: this.advertService.getReadIncludes(),
-          transaction,
-        });
+        directory = this.createPhotoPaths(advert.id, 0).directory;
+        await this.saveAdvertPhotos(advert.id, images, directory, transaction);
+        return this.getPublishedAdvert(advert.id, transaction);
       });
     } catch (error) {
-      if (directory)
-        await fs
-          .rm(directory, { recursive: true, force: true })
-          .catch((error) => {
-            console.error('Cannot remove advert photos after rollback:', error);
-          });
+      await this.removeCreatedPhotos(directory);
       throw error;
     }
   }

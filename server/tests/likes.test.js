@@ -18,6 +18,53 @@ function response() {
     json(body) { this.body = body; return this; } };
 }
 
+test('like reads use injected models and preserve the response without mutating or exposing password hashes', async () => {
+  const exported = load('../src/service/likeService.js', '../../db/models', {
+    Like: {}, User: {}, UserProfile: {},
+  });
+  const user = {};
+  const userProfile = {};
+  const row = {
+    id: 9,
+    userId: 2,
+    advertId: 7,
+    User: {
+      id: 2,
+      name: 'Анна',
+      email: 'anna@example.com',
+      roleId: 2,
+      hashpass: 'private-hash',
+      UserProfile: { photo: '/images/users/user-2/photo.webp' },
+    },
+  };
+  let rows = [row];
+  const like = {
+    findAll: async (query) => {
+      assert.equal(query.where.advertId, '7');
+      assert.equal(query.include.model, user);
+      assert.equal(query.include.include.model, userProfile);
+      return rows;
+    },
+  };
+  const service = new exported.constructor(like, user, userProfile);
+  const result = await service.getLikesByAdvertId('7');
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), [{
+    id: 9,
+    userId: 2,
+    advertId: 7,
+    User: {
+      id: 2,
+      name: 'Анна',
+      email: 'anna@example.com',
+      roleId: 2,
+      UserProfile: { photo: '/images/users/user-2/photo.webp' },
+    },
+  }]);
+  assert.equal(row.User.hashpass, 'private-hash');
+  rows = [];
+  assert.equal((await service.getLikesByAdvertId('7')).length, 0);
+});
+
 test('POST returns the same like with 201 then 200, without exposing credentials', async () => {
   const row = { id: 9, userId: 2, advertId: 7 };
   let exists = false;
