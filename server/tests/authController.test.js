@@ -21,7 +21,7 @@ function load(file, dependencies, logs = []) {
 function setup(signupService, generateTokens = () => ({}), loginService = {}) {
   const logs = [];
   const cookiesConfig = { httpOnly: true, maxAge: 1000 };
-  const exported = load('../src/controllers/authController.js', {
+  const exported = load('../build/src/controllers/authController.js', {
     '../service/signupService': {},
     '../service/loginService': {},
     '../utils/generateTokens': generateTokens,
@@ -132,7 +132,7 @@ test('signup route parses the photo upload before invoking the controller handle
   const login = () => {};
   const logout = () => {};
   const router = { post: (...args) => routes.push(args), get: (...args) => routes.push(args) };
-  const exported = load('../src/router/authRouter.js', {
+  const exported = load('../build/src/router/authRouter.js', {
     express: { Router: () => router },
     bcrypt: {},
     '../../db/models': {},

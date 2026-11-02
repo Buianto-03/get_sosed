@@ -19,7 +19,7 @@ function load(file, dependencies, logs = []) {
   return sandbox.module.exports;
 }
 
-const exported = load('../src/service/chatService.js', {
+const exported = load('../build/src/service/chatService.js', {
   sequelize: { Op },
   '../../db/models': {},
 });
@@ -132,7 +132,7 @@ class FakeSocket {
 test('WebSocket history passes authenticated user ID and returns SET_MESSAGES only to the requesting tab', async () => {
   const messages = [{ id: 5, senderId: 1, receiverId: 2, message: 'Hello' }];
   const calls = [];
-  const connect = load('../src/ws/connection.js', {
+  const connect = load('../build/src/ws/connection.js', {
     '../service/chatService': { getMessages: async (...args) => {
       calls.push(args);
       return messages;
@@ -152,7 +152,7 @@ test('WebSocket history passes authenticated user ID and returns SET_MESSAGES on
 
 test('WebSocket messages reach all participant tabs, support an offline receiver and preserve reconnect history', async () => {
   const messages = [];
-  const connect = load('../src/ws/connection.js', {
+  const connect = load('../build/src/ws/connection.js', {
     '../service/chatService': {
       sendMessage: async (senderId, receiverId, text) => {
         const message = { id: messages.length + 1, senderId, receiverId, message: text };
@@ -194,7 +194,7 @@ test('WebSocket service failures retain safe CHAT_ERROR responses and original s
   const failure = new Error('private database diagnostic');
   const logs = [];
   const reject = async () => { throw failure; };
-  const connect = load('../src/ws/connection.js', {
+  const connect = load('../build/src/ws/connection.js', {
     '../service/chatService': { getMessages: reject, sendMessage: reject },
   }, logs);
   const socket = new FakeSocket();

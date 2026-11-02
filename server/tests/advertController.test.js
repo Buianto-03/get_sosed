@@ -20,7 +20,7 @@ function load(file, dependencies, logs = []) {
 
 function setup(publishAdvertService, advertService = {}) {
   const logs = [];
-  const exported = load('../src/controllers/advertController.js', {
+  const exported = load('../build/src/controllers/advertController.js', {
     '../service/advertService': {},
     '../service/publishAdvertService': {},
     'fs/promises': {},
@@ -80,7 +80,7 @@ test('invalid pagination returns 400 without logging a server failure', async ()
 });
 
 test('publication validation errors return 400 with INVALID_ADVERT_DATA and a safe message', async () => {
-  const service = load('../src/service/publishAdvertService.js', {
+  const service = load('../build/src/service/publishAdvertService.js', {
     'fs/promises': {},
     sharp: {},
     sequelize: {},

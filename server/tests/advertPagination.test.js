@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const Sequelize = require('sequelize');
 
 function load(models) {
-  const filename = path.resolve(__dirname, '../src/service/advertService.js');
+  const filename = path.resolve(__dirname, '../build/src/service/advertService.js');
   const sandbox = {
     module: { exports: {} },
     require: (name) => name === '../../db/models' ? models : require(name),
@@ -20,7 +20,7 @@ test('own advert pagination scopes both SQL queries to the owner, counts distinc
   const sequelize = new Sequelize('test', 'test', 'test', { dialect: 'postgres', logging: false });
   try {
     const models = {};
-    const directory = path.resolve(__dirname, '../db/models');
+    const directory = path.resolve(__dirname, '../build/db/models');
     for (const file of fs.readdirSync(directory)) {
       if (!file.endsWith('.js') || file === 'index.js') continue;
       const model = require(path.join(directory, file))(sequelize, Sequelize.DataTypes);

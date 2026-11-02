@@ -31,7 +31,7 @@ function setup({ found = true, matches = true, failure } = {}) {
     assert.ok(name in dependencies, name);
     return dependencies[name];
   } };
-  const filename = path.resolve(__dirname, '../src/service/loginService.js');
+  const filename = path.resolve(__dirname, '../build/src/service/loginService.js');
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, { filename });
   return { service: new sandbox.module.exports.constructor(user, userProfile), calls, userProfile };
 }

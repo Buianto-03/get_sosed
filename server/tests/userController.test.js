@@ -20,7 +20,7 @@ function load(file, dependencies, logs = []) {
 
 function setup(profileService, userService = {}) {
   const logs = [];
-  const exported = load('../src/controllers/userController.js', {
+  const exported = load('../build/src/controllers/userController.js', {
     '../service/userService': {},
     '../service/profileService': {},
   }, logs);
@@ -28,7 +28,7 @@ function setup(profileService, userService = {}) {
 }
 
 function createProfileService(sequelize, user, userProfile) {
-  const exported = load('../src/service/profileService.js', {
+  const exported = load('../build/src/service/profileService.js', {
     crypto: {},
     'fs/promises': {},
     sharp: {},

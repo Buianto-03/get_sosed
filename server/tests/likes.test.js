@@ -19,7 +19,7 @@ function response() {
 }
 
 test('like reads use injected models and preserve the response without mutating or exposing password hashes', async () => {
-  const exported = load('../src/service/likeService.js', '../../db/models', {
+  const exported = load('../build/src/service/likeService.js', '../../db/models', {
     Like: {}, User: {}, UserProfile: {},
   });
   const user = {};
@@ -42,7 +42,7 @@ test('like reads use injected models and preserve the response without mutating 
     findAll: async (query) => {
       assert.equal(query.where.advertId, '7');
       assert.equal(query.include.model, user);
-      assert.equal(query.include.include.model, userProfile);
+      assert.equal(query.include.include[0].model, userProfile);
       return rows;
     },
   };
@@ -82,8 +82,8 @@ test('POST returns the same like with 201 then 200, without exposing credentials
       return row;
     },
   };
-  const service = load('../src/service/likeService.js', '../../db/models', { Like, User: {}, UserProfile: {} });
-  const controller = load('../src/controllers/likeController.js', '../service/likeService', service);
+  const service = load('../build/src/service/likeService.js', '../../db/models', { Like, User: {}, UserProfile: {} });
+  const controller = load('../build/src/controllers/likeController.js', '../service/likeService', service);
   for (const code of [201, 200]) {
     const res = response();
     await controller.setLike({ params: { advertId: '7' } }, res);
@@ -101,8 +101,8 @@ test('DELETE scopes to current user and consistently returns advertId/deleted', 
     exists = false;
     return count;
   } };
-  const service = load('../src/service/likeService.js', '../../db/models', { Like });
-  const controller = load('../src/controllers/likeController.js', '../service/likeService', service);
+  const service = load('../build/src/service/likeService.js', '../../db/models', { Like });
+  const controller = load('../build/src/controllers/likeController.js', '../service/likeService', service);
   for (const deleted of [true, false]) {
     const res = response();
     await controller.deleteLike({ params: { advertId: '7' } }, res);
@@ -112,7 +112,7 @@ test('DELETE scopes to current user and consistently returns advertId/deleted', 
 });
 
 test('failed mutations return 500, never a successful deletion', async () => {
-  const controller = load('../src/controllers/likeController.js', '../service/likeService', {
+  const controller = load('../build/src/controllers/likeController.js', '../service/likeService', {
     postLike: async () => { throw new Error('offline'); },
     deleteLike: async () => { throw new Error('offline'); },
   });

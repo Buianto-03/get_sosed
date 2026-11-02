@@ -27,9 +27,10 @@ test('unknown API requests return 404 JSON with API_ROUTE_NOT_FOUND', () => {
     './ws/wsServer': { on: noop },
     './ws/connection': noop,
   };
-  const filename = path.resolve(__dirname, '../src/app.js');
+  const filename = path.resolve(__dirname, '../build/src/app.js');
   const sandbox = {
     __dirname: path.dirname(filename),
+    process,
     module: { exports: {} },
     require(name) {
       assert.ok(name in dependencies, name);
