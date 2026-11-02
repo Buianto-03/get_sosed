@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string;

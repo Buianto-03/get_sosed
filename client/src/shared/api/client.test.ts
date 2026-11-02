@@ -1,8 +1,40 @@
 import { AxiosError } from 'axios';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import axiosInstance, { configureApiAuth } from './client';
 
 describe('HTTP client authentication', () => {
+  it('preserves the session when a replayed request has a validation error', async () => {
+    const unauthorized = vi.fn();
+    const originalAdapter = axiosInstance.defaults.adapter;
+    configureApiAuth({ getAccessToken: () => 'expired', refreshAccessToken: async () => 'fresh', onUnauthorized: unauthorized });
+    axiosInstance.defaults.adapter = async (config) => {
+      const status = config.headers.Authorization === 'Bearer fresh' ? 400 : 403;
+      const response = { data: { code: 'INVALID_ADVERT_DATA' }, status, statusText: 'Rejected', headers: {}, config };
+      throw new AxiosError('Rejected', 'ERR_BAD_REQUEST', config, undefined, response);
+    };
+    try {
+      await expect(axiosInstance.post('/adverts', new FormData())).rejects.toMatchObject({ response: { status: 400 } });
+      expect(unauthorized).not.toHaveBeenCalled();
+    } finally {
+      axiosInstance.defaults.adapter = originalAdapter;
+    }
+  });
+
+  it('clears the session when refreshing credentials itself fails', async () => {
+    const unauthorized = vi.fn();
+    const originalAdapter = axiosInstance.defaults.adapter;
+    configureApiAuth({ getAccessToken: () => 'expired', refreshAccessToken: async () => { throw new Error('Refresh rejected'); }, onUnauthorized: unauthorized });
+    axiosInstance.defaults.adapter = async (config) => {
+      throw new AxiosError('Forbidden', 'ERR_BAD_REQUEST', config, undefined, { data: {}, status: 403, statusText: 'Forbidden', headers: {}, config });
+    };
+    try {
+      await expect(axiosInstance.get('/protected')).rejects.toThrow('Refresh rejected');
+      expect(unauthorized).toHaveBeenCalledOnce();
+    } finally {
+      axiosInstance.defaults.adapter = originalAdapter;
+    }
+  });
+
   afterEach(() => {
     configureApiAuth({
       getAccessToken: () => '',

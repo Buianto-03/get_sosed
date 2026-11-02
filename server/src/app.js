@@ -3,7 +3,6 @@ const morgan = require('morgan');
 const path = require('path');
 const { createServer } = require('http');
 const cookieParser = require('cookie-parser');
-const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 
 const tokensRouter = require('./router/tokensRouter');
@@ -33,16 +32,12 @@ app.use('/api/users', userRouter);
 app.use('/api/tokens', tokensRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/likes', likeRouter);
-app.use(
-  '/api',
-  createProxyMiddleware({
-    target: 'https://api-maps.yandex.ru',
-    changeOrigin: true,
-    pathRewrite: {
-      '/api': '', // remove base path
-    },
-  }),
+// Unknown infrastructure URLs must never receive the SPA document.
+app.use('/api', (req, res) =>
+  res.status(404).json({ code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' }),
 );
+app.use('/images', (req, res) => res.sendStatus(404));
+app.use('/ws', (req, res) => res.sendStatus(426));
 
 app.use(express.static(path.join(__dirname, '..', 'dist')));
 app.get('/*', (req, res) => {

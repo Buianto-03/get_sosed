@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import authReducer, { clearAuth, setSession } from './authSlice';
-import { UserStatus } from './auth';
+import { UserStatus } from './authModel';
 
 describe('authSlice', () => {
   it('accepts login and clears the user on logout', () => {

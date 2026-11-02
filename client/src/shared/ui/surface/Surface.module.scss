@@ -1,0 +1,32 @@
+@use '../../styles/tokens' as tokens;
+
+.surface {
+  min-width: 0;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+}
+
+.default {
+  background: tokens.$color-surface;
+}
+
+.soft {
+  background: tokens.$color-soft;
+}
+
+.none {
+  padding: 0;
+}
+
+.sm {
+  padding: tokens.$space-3;
+}
+
+.md {
+  padding: tokens.$space-5;
+}
+
+.lg {
+  padding: tokens.$space-8;
+}

@@ -1,0 +1,100 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.aboutBanner {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.aboutBanner__content {
+  display: grid;
+  min-height: 315px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  overflow: hidden;
+  border-radius: tokens.$radius-xl;
+  background: tokens.$color-soft;
+}
+
+.aboutBanner__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 36px;
+}
+
+.aboutBanner__eyebrow {
+  margin: 0;
+  color: tokens.$color-accent;
+  font-size: tokens.$font-size-xs;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aboutBanner__title {
+  max-width: 650px;
+  margin: tokens.$space-3 0;
+  font-size: 43px;
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+}
+
+.aboutBanner__description {
+  max-width: 520px;
+  margin: 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.aboutBanner__button {
+  max-width: 100%;
+  margin-top: tokens.$space-6;
+  white-space: normal;
+}
+
+.aboutBanner__media {
+  position: relative;
+  min-height: 315px;
+}
+
+.aboutBanner__photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+@container (max-width: 760px) {
+  .aboutBanner__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aboutBanner__copy {
+    padding: tokens.$space-6 tokens.$space-5;
+  }
+
+  .aboutBanner__title {
+    font-size: 32px;
+  }
+
+  .aboutBanner__description {
+    font-size: tokens.$font-size-sm;
+  }
+
+  .aboutBanner__photo {
+    object-position: center 55%;
+  }
+}
+
+@container (max-width: 390px) {
+  .aboutBanner__button {
+    width: 100%;
+  }
+}

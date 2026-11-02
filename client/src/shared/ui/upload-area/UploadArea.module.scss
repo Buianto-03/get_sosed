@@ -1,0 +1,100 @@
+@use '../../styles/tokens' as tokens;
+
+.root {
+  display: grid;
+  gap: tokens.$space-4;
+}
+.dropzone {
+  display: grid;
+  justify-items: center;
+  gap: tokens.$space-2;
+  padding: tokens.$space-6;
+  border: 2px dashed tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  text-align: center;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.dragging {
+  border-color: tokens.$color-accent;
+  background: tokens.$color-highlight;
+}
+.dropIcon {
+  color: tokens.$color-accent;
+  font-size: 28px;
+}
+.hint,
+.limits,
+.empty {
+  margin: 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+}
+.error {
+  margin: 0;
+  color: tokens.$color-danger;
+  line-height: tokens.$line-height-normal;
+}
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: tokens.$space-3;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.photo {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-surface;
+}
+.thumbnail {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: tokens.$color-soft;
+}
+.mainBadge {
+  position: absolute;
+  top: tokens.$space-2;
+  left: tokens.$space-2;
+  display: inline-flex;
+  align-items: center;
+  gap: tokens.$space-1;
+  padding: tokens.$space-1 tokens.$space-2;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-xs;
+}
+.fileName {
+  display: block;
+  overflow: hidden;
+  padding: tokens.$space-2 tokens.$space-2 0;
+  font-size: tokens.$font-size-xs;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.photoActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: tokens.$space-1;
+  padding: tokens.$space-1 tokens.$space-2 tokens.$space-2;
+}
+.mainAction {
+  border-color: tokens.$color-accent;
+  color: tokens.$color-accent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropzone {
+    transition: none;
+  }
+}

@@ -1,0 +1,47 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.filters {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.filters__panel {
+  padding: tokens.$space-5;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+}
+
+.filters__heading {
+  display: flex;
+  align-items: center;
+  gap: tokens.$space-2;
+  margin-bottom: tokens.$space-4;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-md;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: tokens.$color-accent;
+  }
+}
+
+.filters__mobileTrigger {
+  display: none;
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@container (max-width: 680px) {
+  .filters__panel {
+    display: none;
+  }
+
+  .filters__mobileTrigger {
+    display: inline-flex;
+  }
+}

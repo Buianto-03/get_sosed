@@ -1,0 +1,9 @@
+@use '../../styles/tokens' as tokens;
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin: tokens.$space-4 0;
+  border: 0;
+  background: tokens.$color-border;
+}

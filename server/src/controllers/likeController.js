@@ -19,8 +19,8 @@ class LikeController {
     try {
       const { advertId } = req.params;
       const userId = res.locals.user.id;
-      const like = await this.service.postLike(advertId, userId);
-      return res.status(201).json(like);
+      const { like, created } = await this.service.postLike(advertId, userId);
+      return res.status(created ? 201 : 200).json(like);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

@@ -10,6 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.INTEGER,
       about: DataTypes.TEXT,
+      city: DataTypes.STRING,
+      intent: DataTypes.STRING,
+      habits: { type: DataTypes.JSONB, defaultValue: [] },
       age: DataTypes.INTEGER,
       gender: DataTypes.STRING,
       photo: DataTypes.STRING,

@@ -1,0 +1,46 @@
+@use '../../styles/tokens' as tokens;
+
+.badge {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.sm {
+  min-height: 22px;
+  padding: 2px tokens.$space-2;
+  font-size: tokens.$font-size-xs;
+}
+
+.md {
+  min-height: 26px;
+  padding: tokens.$space-1 tokens.$space-3;
+  font-size: tokens.$font-size-sm;
+}
+
+.neutral {
+  border-color: tokens.$color-border;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+}
+
+.accent {
+  background: tokens.$color-highlight;
+  color: tokens.$color-accent-hover;
+}
+
+.success {
+  background: tokens.$color-success-surface;
+  color: tokens.$color-success;
+}
+
+.warning {
+  background: tokens.$color-warning-surface;
+  color: tokens.$color-warning;
+}

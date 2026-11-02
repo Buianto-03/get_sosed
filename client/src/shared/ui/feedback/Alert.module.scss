@@ -1,0 +1,45 @@
+@use '../../styles/tokens' as tokens;
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: tokens.$space-3;
+  padding: tokens.$space-4;
+  border: 1px solid transparent;
+  border-radius: tokens.$radius-md;
+  line-height: tokens.$line-height-normal;
+}
+
+.icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  font-size: tokens.$font-size-lg;
+}
+.content {
+  min-width: 0;
+}
+.title {
+  display: block;
+  margin-bottom: tokens.$space-1;
+}
+.info {
+  border-color: tokens.$color-border;
+  background: tokens.$color-soft;
+  color: tokens.$color-ink;
+}
+.success {
+  border-color: tokens.$color-success;
+  background: tokens.$color-success-surface;
+  color: tokens.$color-success;
+}
+.warning {
+  border-color: tokens.$color-warning;
+  background: tokens.$color-warning-surface;
+  color: tokens.$color-warning;
+}
+.error {
+  border-color: tokens.$color-danger;
+  background: tokens.$color-danger-surface;
+  color: tokens.$color-danger;
+}

@@ -1,0 +1,82 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.collection {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.collectionHeading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: tokens.$space-4;
+  margin-bottom: tokens.$space-5;
+
+  h2 {
+    margin: 0;
+    color: tokens.$color-ink;
+    font-size: tokens.$font-size-2xl;
+    font-weight: 650;
+    letter-spacing: -0.035em;
+    line-height: tokens.$line-height-tight;
+    overflow-wrap: anywhere;
+  }
+}
+
+.kicker {
+  margin: 0 0 tokens.$space-1;
+  color: tokens.$color-accent;
+  font-size: tokens.$font-size-xs;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.viewAll {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: tokens.$space-2 0;
+  border: 0;
+  background: transparent;
+  color: tokens.$color-accent;
+  font: inherit;
+  font-size: tokens.$font-size-sm;
+  font-weight: 650;
+  cursor: pointer;
+
+  &:hover {
+    color: tokens.$color-accent-hover;
+  }
+
+  &:focus-visible {
+    border-radius: tokens.$radius-sm;
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 3px;
+  }
+}
+
+.listingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: tokens.$space-5;
+}
+
+@container (max-width: 1000px) {
+  .listingGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 620px) {
+  .collectionHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: tokens.$space-2;
+  }
+
+  .listingGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

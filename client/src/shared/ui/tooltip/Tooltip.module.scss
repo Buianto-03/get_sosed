@@ -1,0 +1,28 @@
+@use '../../styles/tokens' as tokens;
+
+.tooltip {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.tooltip__content {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(280px, calc(100vw - #{tokens.$space-4}));
+  max-height: calc(100vh - #{tokens.$space-4});
+  overflow: auto;
+  padding: tokens.$space-2 tokens.$space-3;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$color-ink;
+  color: tokens.$color-surface;
+  box-shadow: tokens.$shadow-card;
+  font-family: tokens.$font-family;
+  font-size: tokens.$font-size-sm;
+  font-weight: 400;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+  text-align: start;
+}

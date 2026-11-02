@@ -1,91 +1,112 @@
 import React from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Layout from '../layouts/BaseLayout';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
+import { NotFoundPage } from '@pages/not-found/ui/not-found-page/NotFoundPage';
+import { RoutePattern, routes } from '@shared/config/routes';
+import AppLayout from '@app/layouts/app-layout/AppLayout';
 import ProtectedRoute from './ProtectedRoute';
 
-const AccountPage = React.lazy(() => import('@pages/account/AccountPage'));
-const SignInPage = React.lazy(() => import('@pages/sign-in/SignInPage'));
-const SignUpPage = React.lazy(() => import('@pages/sign-up/SignUpPage'));
-const MainPage = React.lazy(() => import('@pages/search/MainPage'));
-const AdvertPage = React.lazy(() => import('@pages/advert-details/AdvertPage'));
-const ChatPage = React.lazy(() => import('@pages/chat/ChatPage'));
-const PostAdvertPage = React.lazy(() => import('@pages/advert-create/PostAdvertPage'));
-const WelcomePage = React.lazy(() => import('@pages/welcome/WelcomePage'));
+const AboutPage = React.lazy(() => import('@pages/about/ui/about-page/AboutPage'));
+const ProfileEditRoute = React.lazy(
+  () => import('@pages/profile/ui/profile-edit-route/ProfileEditRoute'),
+);
+const ProfileRoute = React.lazy(() => import('@pages/profile/ui/profile-route/ProfileRoute'));
+const SignInPage = React.lazy(() => import('@pages/sign-in/ui/sign-in-route/SignInRoute'));
+const SignUpPage = React.lazy(() => import('@pages/sign-up/ui/sign-up-route/SignUpRoute'));
+const SearchRoute = React.lazy(() => import('@pages/search/ui/search-route/SearchRoute'));
+const ListingRoute = React.lazy(
+  () => import('@pages/advert-details/ui/listing-route/ListingRoute'),
+);
+const MessagesRoute = React.lazy(() => import('@pages/chat/ui/messages-route/MessagesRoute'));
+const ListingCreateRoute = React.lazy(
+  () => import('@pages/listing-create/ui/listing-create-route/ListingCreateRoute'),
+);
+const WelcomePage = React.lazy(() => import('@pages/welcome/ui/home-route/HomeRoute'));
 
-const router = createBrowserRouter([
+export const appRouteObjects: RouteObject[] = [
   {
     path: '/',
-    element: <Layout />,
+    element: <AppLayout />,
     children: [
       {
-        path: '/',
+        index: true,
         element: <WelcomePage />,
       },
       {
-        path: '/account',
-        element: (
-          <ProtectedRoute access="logged" redirect="/signin">
-            <AccountPage />
-          </ProtectedRoute>
-        ),
-        // element: status === UserStatus.Logged ? <AccountPage /> : <div>Hello</div>,
+        path: RoutePattern.About,
+        element: <AboutPage />,
       },
       {
-        path: '/chat/:receiverId',
+        path: RoutePattern.Profile,
         element: (
-          <ProtectedRoute access="logged" redirect="/signin">
-            <ChatPage />
+          <ProtectedRoute access="logged" redirect={routes.signIn}>
+            <ProfileRoute />
           </ProtectedRoute>
         ),
-        // element: status === UserStatus.Logged ? <ChatPage /> : <div>Hello</div>,
       },
       {
-        path: '/signin',
+        path: RoutePattern.ProfileEdit,
         element: (
-          <ProtectedRoute access="guest" redirect="/">
+          <ProtectedRoute access="logged">
+            <ProfileEditRoute />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: RoutePattern.Messages,
+        element: (
+          <ProtectedRoute access="logged">
+            <MessagesRoute />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/messages/:receiverId',
+        element: (
+          <ProtectedRoute access="logged" redirect={routes.signIn}>
+            <MessagesRoute />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: RoutePattern.SignIn,
+        element: (
+          <ProtectedRoute access="guest">
             <SignInPage />
           </ProtectedRoute>
         ),
-
-        // element: <SignInPage />,
       },
       {
-        path: '/signup',
+        path: RoutePattern.SignUp,
         element: (
-          <ProtectedRoute access="guest" redirect="/">
+          <ProtectedRoute access="guest">
             <SignUpPage />
           </ProtectedRoute>
         ),
-        // element: <SignUpPage />,
       },
       {
-        path: '/home',
+        path: RoutePattern.Listings,
+        element: <SearchRoute />,
+      },
+      {
+        path: RoutePattern.ListingCreate,
         element: (
-        // <ProtectedRoute isAllowed={user.status === UserStatus.Logged} redirect="/signin">
-          <MainPage />
-        // </ProtectedRoute>
-        ),
-        //  element: <MainPage />
-      },
-      {
-        path: '/advert/:id',
-        element: <AdvertPage />,
-        // element: <AdvertPage />,
-      },
-      {
-        path: '/post',
-        element: (
-          <ProtectedRoute access="logged" redirect="/signin">
-            <PostAdvertPage />
+          <ProtectedRoute access="logged" redirect={routes.signIn}>
+            <ListingCreateRoute />
           </ProtectedRoute>
         ),
       },
       {
+        path: '/listings/:listingId',
+        element: <ListingRoute />,
+      },
+      {
         path: '*',
-        element: <Navigate to="/" />,
+        element: <NotFoundPage />,
       },
     ],
   },
-]);
+];
+
+const router = createBrowserRouter(appRouteObjects);
 
 export default router;

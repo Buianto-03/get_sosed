@@ -1,0 +1,31 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.search__page {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.search__intro h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: tokens.$line-height-tight;
+  letter-spacing: -0.025em;
+}
+
+.search__intro p {
+  margin: tokens.$space-2 0 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+}
+
+.search__page > section {
+  margin-top: tokens.$space-3;
+}
+
+@container (max-width: 680px) {
+  .search__intro h1 {
+    font-size: 27px;
+  }
+}

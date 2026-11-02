@@ -1,0 +1,5 @@
+@use '../step-layout' as step;
+
+.photos_step {
+  @include step.content;
+}

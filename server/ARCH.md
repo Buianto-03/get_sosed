@@ -1,0 +1,99 @@
+# Server Architecture
+
+The server uses Express for HTTP, Sequelize with PostgreSQL for persistence, and WebSocket for real-time chat. The usual HTTP request flow is `app -> router -> middleware -> controller -> service -> database models`; results return through the controller as an HTTP response.
+
+- `server/src/configs/`: runtime settings shared by application modules, such as JWT expiration options and cookie settings. Keep request handling and business operations out of configuration modules. `server/config/database.js` separately defines Sequelize connection settings for development, test, and production using environment variables.
+- `server/src/router/`: associate HTTP methods and paths with middleware and controller methods. Define middleware order here: authenticate, parse uploads when needed, then invoke the controller. Keep business operations and database queries in services rather than adding them to route handlers.
+- `server/src/middlewares/`: reusable request checks and preparation, such as access/refresh token verification and upload parsing/error handling. Call `next()` to continue or send an error response to stop processing. Authentication exposes the verified user through `res.locals.user`; uploaded files are available through `req.file` or `req.files`.
+- `server/src/controllers/`: adapt HTTP requests to service calls. Read request parameters and authenticated-user context, validate request identifiers and access to the requested resource, call services, and translate results/errors into HTTP statuses and response bodies. Pass services through constructors as described in the Dependencies and Structure section. Keep database queries, image processing, and multi-step business operations in services.
+- `server/src/service/`: implement application operations and business validation, query models, coordinate transactions, and manage related file operations. Examples include publication, registration, profile updates, filtering, and favorites. Accept ordinary arguments and return data or throw errors; do not depend on Express `req`/`res` or send HTTP responses. Enforce operation-specific invariants here so callers cannot bypass them.
+- `server/src/utils/`: focused helper functions, such as signing access and refresh tokens. Keep HTTP handling and complete business workflows out of utilities; workflows belong in services.
+- `server/db/models/`: Sequelize models defining persisted entities and their associations; services use them to read and write PostgreSQL data. `server/db/migrations/` contains versioned schema changes and required data migrations. `server/db/seeders/` supplies initial or demonstration data.
+- `server/src/ws/`: WebSocket server creation, authenticated HTTP upgrade for `/ws`, connection lifecycle, and chat events. Persist messages so history survives reconnects. Keep transport concerns here and place reusable business operations in services.
+- `server/src/app.js`: compose middleware, API routers, static files, SPA fallback, and HTTP/WebSocket integration. Unknown API and infrastructure paths must receive their appropriate status rather than the SPA document.
+- `server/src/server.js`: load startup configuration and begin listening on the configured port (default `3000`).
+
+For example, `PATCH /api/users/:userId` passes through access-token verification and photo-upload parsing, then `UserController.patchUser` verifies ownership and calls `profileService.editProfile`. The service validates fields, processes the photo, and updates the database; the controller returns the updated user or an HTTP error.
+
+Authentication routes delegate to `AuthController`. Login credential checks and database reads belong to `LoginService`; registration belongs to `SignupService`. The controller generates tokens, sets or clears the refresh cookie, and sends HTTP responses. Logout currently only clears the cookie and does not need a service.
+
+## Code Style
+
+### Naming
+
+- Use PascalCase for classes: `UserController`, `UserService`.
+- Use camelCase for functions, methods, and variables.
+- Name files in camelCase with their responsibility: `userController.js`, `userService.js`.
+- Prefix boolean names with `is`, `has`, `can`, or `should`: `isValid`, `hasPhoto`.
+- Use plural names for collections: `users`, `advertIds`.
+- Prefer descriptive names such as `error`, `transaction`, and `advert` over `e`, `t`, and generic `item` when the entity is known.
+- Name operations with a verb and the relevant entity: `getUserSummary`, `publishAdvert`, `updateProfile`.
+
+### Variables and Functions
+
+- Use `const` by default and `let` only for reassignment. Do not use `var`.
+- Name constructor parameters after the dependency: `userService` rather than generic `service`.
+- Declare controller handlers as arrow-function class fields to preserve `this` when passed to Express.
+- Use regular class methods for ordinary service methods.
+- Prefer early returns to unnecessary nesting.
+
+### Asynchronous Code
+
+- Prefer `async/await` over `.then()` chains.
+- Do not add `async` unless the function uses `await` or intentionally needs to turn thrown errors into promise rejections.
+- Await promises, return them to the caller, or explicitly handle their rejection. Do not leave unhandled promises.
+- Do not use `forEach(async ...)`; use `for...of` for sequential work or `Promise.all` for independent operations.
+- Run operations concurrently only when they are independent and failure handling accounts for operations that may still complete.
+- Name caught errors `error`; use `catch {}` when the error value is unnecessary.
+- Do not silently suppress failures. If failure is intentionally tolerated, document the reason and provide the appropriate fallback or logging.
+
+## Error Handling
+
+- Services throw errors; controllers translate them into HTTP responses.
+- Give expected application errors stable codes, such as `USER_NOT_FOUND` or `EMAIL_ALREADY_EXISTS`, and map them to appropriate HTTP statuses.
+- Do not return internal error messages, SQL, or stack traces in `500` responses. Return a generic message and log unexpected error details on the server without exposing credentials or tokens.
+- Preserve the original error or its cause when translating errors; do not replace useful diagnostic context with an unrelated generic exception.
+
+## Authorization and Access Control
+
+- Read the acting user's ID from verified authentication context, never trust a client-supplied user ID as proof of identity.
+- Check permission to read, modify, or delete each protected resource. Knowing its ID does not grant access.
+- Pass the acting user's ID to services when an operation requires authorization, and enforce operation-specific permissions there so another caller cannot bypass them.
+
+## Database Operations
+
+- Use a transaction for related writes that must succeed or fail together, and pass the same transaction to every database operation participating in it.
+- Enforce uniqueness and foreign-key constraints in the database rather than relying solely on application checks.
+- Query only the fields needed for the operation and exclude password hashes from public responses.
+- Use stable ordering and pagination for collection endpoints. Include a unique tie-breaker when sorting by a non-unique field.
+
+## Own Advert Pagination
+
+`GET /api/adverts/mine` authenticates the request and selects the owner from `res.locals.user.id`. The optional `page` and `limit` query parameters are positive integers, defaulting to `1` and `12`; `limit` must not exceed `50`. Reject invalid scalar values, arrays, and unsafe offsets with `400 { code: 'INVALID_PAGINATION', message: 'Invalid pagination parameters' }` before querying the database.
+
+Return `{ items, total, page, limit }`. Apply the owner filter to both the rows and the total count. Use `findAndCountAll` with `distinct: true` so tag joins do not inflate the count; bound the row query with `limit`/`offset` and sort by `createdAt DESC, id DESC`. A page past the end returns empty `items` and the actual total. The client and manual integration checks consume this paginated object rather than the former array response.
+
+## File Operations
+
+- Validate file count, size, MIME type, and successful image decoding before accepting uploaded images.
+- Generate stored file names on the server rather than using client-supplied names as storage paths.
+- On failure, remove new files created by that operation without deleting files belonging to other operations.
+- Delete replaced files only after the associated database changes commit successfully.
+- Account explicitly for the fact that a PostgreSQL transaction does not roll back file-system changes.
+
+## API Contracts
+
+- Use consistent HTTP statuses and a common error response shape with a stable error code and a safe message.
+- Explicitly select response fields instead of returning unrestricted database model instances.
+- Define consistently when absent values are represented by `null`, an omitted field, or an empty collection.
+- Coordinate response contract changes with the client consumers.
+
+## Dependencies and Structure
+
+Pass services to server controller classes through constructor parameters and store them on the instance. Controller methods must use these instance dependencies instead of calling imported services directly. Instantiate controllers with the concrete services at the module's composition point. Preserve constructor injection when modifying existing controllers so dependencies remain explicit and can be replaced in tests.
+
+- Implement server services as PascalCase classes with ordinary instance methods for application operations. Do not implement services as standalone workflow functions, plain objects of functions, or factory functions. Small pure helper functions may remain outside the class.
+- Pass database connections, models, and collaborating services through constructor parameters and store them on the instance. Methods must use these instance dependencies. Import concrete dependencies to instantiate the service at the module's composition point, and export that instance with `module.exports`.
+- Call service operations through their instance, such as `signupService.signup(body, file)`. Do not detach methods that use `this`; replace dependencies through the constructor in tests.
+- Avoid circular dependencies between modules.
+- Keep reusable business operations in services so HTTP controllers and WebSocket handlers use the same rules.

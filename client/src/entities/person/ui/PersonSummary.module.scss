@@ -1,0 +1,84 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: tokens.$space-3;
+}
+
+.details {
+  display: grid;
+  min-width: 0;
+  gap: tokens.$space-1;
+}
+
+.details h3,
+.details p {
+  margin: 0;
+}
+
+.details h3 {
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-md;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.meta,
+.description {
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+  margin-top: tokens.$space-2;
+}
+
+.profile {
+  min-height: 212px;
+  align-items: flex-start;
+  padding: tokens.$space-7;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+  overflow-wrap: anywhere;
+}
+
+.profile .details {
+  flex: 1 1 auto;
+}
+
+.profile .details h3 {
+  font-size: 29px;
+}
+
+.profile > :first-child {
+  width: 76px;
+  height: 76px;
+  background: tokens.$color-highlight;
+  color: tokens.$color-accent;
+  font-size: tokens.$font-size-xl;
+}
+
+.action {
+  margin-left: auto;
+}
+
+@container (max-width: 600px) {
+  .profile {
+    min-height: 0;
+    flex-wrap: wrap;
+    padding: tokens.$space-4;
+  }
+
+  .profile .action {
+    flex: 0 0 100%;
+    width: 100%;
+    margin-left: 0;
+  }
+}

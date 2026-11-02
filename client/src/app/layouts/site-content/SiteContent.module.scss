@@ -1,0 +1,43 @@
+@use '../../../shared/styles/tokens' as tokens;
+
+.site_content {
+  width: min(100%, 1440px);
+  flex: 1;
+  margin-inline: auto;
+  padding: tokens.$space-8 tokens.$space-7 tokens.$space-12;
+}
+
+.site_content_chat {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+
+  > main {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+  }
+}
+
+@container (max-width: 1100px) {
+  .site_content {
+    padding: tokens.$space-7 tokens.$space-6 tokens.$space-10;
+  }
+}
+
+@container (max-width: 680px) {
+  .site_content {
+    padding: tokens.$space-5 tokens.$space-4 tokens.$space-8;
+  }
+}
+
+@media (max-width: 680px) {
+  .site_content {
+    padding-bottom: 96px;
+
+    :focus-visible {
+      scroll-margin-block: 16px calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}

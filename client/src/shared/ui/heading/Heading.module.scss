@@ -1,0 +1,36 @@
+@use '../../styles/tokens' as tokens;
+
+.heading {
+  margin: 0;
+  color: tokens.$color-ink;
+  font-weight: 700;
+  line-height: tokens.$line-height-tight;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+}
+
+.display {
+  font-size: tokens.$font-size-display;
+}
+
+.xl {
+  font-size: tokens.$font-size-3xl;
+}
+
+.lg {
+  font-size: tokens.$font-size-2xl;
+}
+
+.md {
+  font-size: tokens.$font-size-xl;
+}
+
+.sm {
+  font-size: tokens.$font-size-lg;
+}
+
+@container (max-width: 680px) {
+  .xl {
+    font-size: 27px;
+  }
+}

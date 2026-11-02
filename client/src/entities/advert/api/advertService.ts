@@ -1,10 +1,21 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
-import { advertSchema, tagSchema } from '../model/advert';
-import type { AdvertType, FilterType, TagType } from '../model/advert';
+import { advertPageSchema, advertSchema, tagSchema } from '../model/advertsModel';
+import type { AdvertPageType, AdvertType, FilterType, TagType } from '../model/advertsModel';
+import { likedAdvertSchema, type LikedAdvert } from '../model/likedAdvertsModel';
 
 class AdvertService {
   constructor(private client: AxiosInstance) {}
+
+  async getMine(page: number = 1, limit: number = 12): Promise<AdvertPageType> {
+    const response = await this.client.get('/adverts/mine', { params: { page, limit } });
+    return advertPageSchema.parse(response.data);
+  }
+
+  async getLikedAdverts(): Promise<LikedAdvert[]> {
+    const response = await this.client.get('/adverts/liked');
+    return likedAdvertSchema.array().parse(response.data);
+  }
 
   async getAdverts(): Promise<AdvertType[]> {
     try {
@@ -32,7 +43,6 @@ class AdvertService {
 
   async getFilteredAdverts(filters: FilterType & { tags: TagType[] }): Promise<AdvertType[]> {
     try {
-      // const response = await this.client.post('/adverts/filters',filters )
       const response = await this.client.post('/adverts/filters', filters);
       return advertSchema.array().parse(response.data);
     } catch (error) {

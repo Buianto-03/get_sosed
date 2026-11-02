@@ -1,0 +1,84 @@
+@use '../../styles/tokens' as tokens;
+
+.chip {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: tokens.$space-2;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  line-height: 1.25;
+}
+
+.sm {
+  min-height: 28px;
+  padding: 2px tokens.$space-2 2px tokens.$space-3;
+  font-size: tokens.$font-size-xs;
+}
+
+.md {
+  min-height: 32px;
+  padding: tokens.$space-1 tokens.$space-2 tokens.$space-1 tokens.$space-3;
+  font-size: tokens.$font-size-sm;
+}
+
+.neutral {
+  border-color: tokens.$color-border;
+  background: tokens.$color-surface;
+  color: tokens.$color-ink;
+}
+
+.accent {
+  background: tokens.$color-highlight;
+  color: tokens.$color-accent-hover;
+}
+
+.soft {
+  background: tokens.$color-soft;
+  color: tokens.$color-ink;
+}
+
+.icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.remove {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  margin: 0 -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(31 41 51 / 9%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$color-focus;
+    outline-offset: 1px;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}

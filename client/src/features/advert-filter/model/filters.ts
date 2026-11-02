@@ -1,4 +1,4 @@
-import type { FilterType } from '@entities/advert/model/advert';
+import type { FilterType } from '@entities/advert/model/advertsModel';
 
 export type AppliedFilters = FilterType & { tagIds: number[] };
 

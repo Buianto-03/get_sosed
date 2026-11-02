@@ -1,0 +1,44 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.aboutSteps {
+  width: 100%;
+  min-width: 0;
+  margin-top: tokens.$space-10;
+  container-type: inline-size;
+}
+
+.aboutSteps__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$space-4;
+}
+
+.aboutSteps__card {
+  min-width: 0;
+  padding: tokens.$space-5;
+
+  h3 {
+    margin-top: tokens.$space-2;
+    font-size: tokens.$font-size-md;
+  }
+}
+
+.aboutSteps__number {
+  color: tokens.$color-accent;
+  font-size: tokens.$font-size-xs;
+  font-weight: 750;
+}
+
+.aboutSteps__description {
+  margin: tokens.$space-2 0 0;
+  color: tokens.$color-muted;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+@container (max-width: 620px) {
+  .aboutSteps__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

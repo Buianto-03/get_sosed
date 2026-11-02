@@ -1,0 +1,38 @@
+@use '../../styles/tokens' as tokens;
+
+.avatar {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid tokens.$color-border;
+  border-radius: 50%;
+  background: tokens.$color-soft;
+  color: tokens.$color-ink;
+  font-weight: 650;
+  object-fit: cover;
+}
+
+.sm {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+}
+
+.md {
+  width: 36px;
+  height: 36px;
+  font-size: tokens.$font-size-xs;
+}
+
+.lg {
+  width: 44px;
+  height: 44px;
+  font-size: tokens.$font-size-sm;
+}
+
+.xl {
+  width: 56px;
+  height: 56px;
+  font-size: tokens.$font-size-md;
+}

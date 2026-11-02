@@ -1,0 +1,61 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.navigation {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  display: none;
+  align-items: stretch;
+  gap: tokens.$space-1;
+  padding: tokens.$space-2 tokens.$space-2 max(tokens.$space-2, env(safe-area-inset-bottom));
+  border-top: 1px solid tokens.$color-border;
+  background: tokens.$color-surface;
+  box-shadow: 0 -4px 18px rgb(55 45 31 / 7%);
+}
+
+.item {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  min-height: 48px;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  border-radius: tokens.$radius-sm;
+  color: tokens.$color-muted;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &[aria-current='page'] {
+    background: tokens.$color-highlight;
+    color: tokens.$color-accent;
+    font-weight: 700;
+  }
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 1px;
+  }
+}
+
+.label {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+  .navigation {
+    display: flex;
+  }
+}

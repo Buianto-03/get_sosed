@@ -1,0 +1,89 @@
+@use '../../../styles/tokens' as tokens;
+
+.group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: tokens.$space-2;
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-sm;
+  font-weight: 600;
+  line-height: tokens.$line-height-normal;
+}
+
+.required {
+  margin-left: tokens.$space-1;
+  color: tokens.$color-danger;
+}
+
+.options {
+  display: flex;
+  gap: tokens.$space-3;
+}
+
+.vertical {
+  flex-direction: column;
+}
+
+.horizontal {
+  flex-flow: row wrap;
+}
+
+.option {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: tokens.$space-2;
+  color: tokens.$color-ink;
+  cursor: pointer;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+
+  input {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    margin: 0;
+    accent-color: tokens.$color-accent;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 3px solid tokens.$color-focus;
+      outline-offset: 2px;
+    }
+  }
+
+  &[data-disabled='true'] {
+    color: tokens.$color-muted;
+    cursor: not-allowed;
+
+    input {
+      cursor: not-allowed;
+    }
+  }
+}
+
+.hint,
+.error {
+  display: block;
+  margin-top: tokens.$space-2;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  color: tokens.$color-muted;
+}
+
+.error {
+  color: tokens.$color-danger;
+}
+
+.disabled .legend {
+  color: tokens.$color-muted;
+}

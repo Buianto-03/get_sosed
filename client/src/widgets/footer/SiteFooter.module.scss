@@ -1,0 +1,64 @@
+@use '../../shared/styles/tokens' as tokens;
+
+.footer {
+  border-top: 1px solid tokens.$color-border;
+  background: tokens.$color-soft;
+  color: tokens.$color-ink;
+}
+
+.inner {
+  display: flex;
+  width: min(100%, 1440px);
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$space-5;
+  margin-inline: auto;
+  padding: tokens.$space-4 tokens.$space-7;
+}
+
+.brand {
+  display: grid;
+  gap: tokens.$space-1;
+
+  strong {
+    font-size: tokens.$font-size-sm;
+  }
+
+  span {
+    color: tokens.$color-muted;
+    font-size: tokens.$font-size-xs;
+  }
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-5;
+
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+    font-size: tokens.$font-size-sm;
+    text-decoration: none;
+  }
+
+  a:hover,
+  a:focus-visible {
+    color: tokens.$color-accent;
+  }
+}
+
+@container (max-width: 680px) {
+  .footer {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .footer {
+    display: none;
+  }
+}

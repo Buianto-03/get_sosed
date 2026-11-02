@@ -1,0 +1,37 @@
+@use '../../styles/tokens' as tokens;
+
+.link {
+  border-radius: tokens.$radius-sm;
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 120ms ease, background-color 120ms ease;
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: 2px;
+  }
+}
+
+.default {
+  color: tokens.$color-accent;
+
+  &:hover {
+    color: tokens.$color-accent-hover;
+    text-decoration-thickness: 2px;
+  }
+}
+
+.subtle {
+  color: tokens.$color-muted;
+
+  &:hover {
+    color: tokens.$color-accent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition: none;
+  }
+}

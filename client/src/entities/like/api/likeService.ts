@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
-import { likeSchema, type LikeType } from '../model/like';
+import { deleteLikeSchema, likeSchema, type DeleteLikeResult, type LikeType } from '../model/like';
 
 class LikeService {
   constructor(private client: AxiosInstance) {}
@@ -24,12 +24,10 @@ class LikeService {
     }
   }
 
-  async deleteLike(advertId: LikeType['advertId']): Promise<LikeType> {
+  async deleteLike(advertId: LikeType['advertId']): Promise<DeleteLikeResult> {
     try {
       const response = await this.client.delete(`/likes/${advertId}`);
-      console.log(response);
-
-      return likeSchema.parse(response.data);
+      return deleteLikeSchema.parse(response.data);
     } catch (error) {
       return Promise.reject(error);
     }

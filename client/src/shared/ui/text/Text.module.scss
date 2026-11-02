@@ -1,0 +1,30 @@
+@use '../../styles/tokens' as tokens;
+
+.text {
+  margin: 0;
+  color: tokens.$color-ink;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+.body {
+  font-size: tokens.$font-size-md;
+}
+
+.lead {
+  font-size: tokens.$font-size-lg;
+  line-height: tokens.$line-height-relaxed;
+}
+
+.small {
+  font-size: tokens.$font-size-sm;
+}
+
+.caption {
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+}
+
+.muted {
+  color: tokens.$color-muted;
+}

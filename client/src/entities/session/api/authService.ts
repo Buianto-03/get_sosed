@@ -1,8 +1,8 @@
 import type { AxiosInstance } from 'axios';
 import { ZodError } from 'zod';
 import axiosInstance from '@shared/api/client';
-import type { AuthSchemaT, LoginForm } from '../model/auth';
-import { authSchema } from '../model/auth';
+import type { AuthSchemaT, LoginForm } from '../model/authModel';
+import { authSchema } from '../model/authModel';
 
 class AuthService {
   constructor(private client: AxiosInstance) {}
@@ -21,15 +21,8 @@ class AuthService {
   }
 
   async submitSignUpForm(formData: FormData): Promise<AuthSchemaT> {
-    try {
-      const response = await this.client.post('/auth/signup', formData);
-      return authSchema.parse(response.data);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        console.log('ZOD EROR WHILE SIGNUP', error.issues);
-      }
-      return Promise.reject(new Error('Signup error'));
-    }
+    const response = await this.client.post('/auth/signup', formData);
+    return authSchema.parse(response.data);
   }
 
   async checkAuth(): Promise<AuthSchemaT> {

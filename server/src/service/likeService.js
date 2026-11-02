@@ -32,41 +32,20 @@ class LikeService {
         userId,
       },
     });
-    const like = newLike.get();
-
-    if (created) {
-      const likeWithProfile = await this.like.findByPk(like.id, {
-        include: {
-          model: this.user,
-          include: {
-            model: this.userProfile,
-          },
-        },
-      });
-
-      return likeWithProfile;
-    } else {
-      return;
-    }
+    const like = await this.like.findByPk(newLike.get().id, {
+      attributes: ['id', 'userId', 'advertId'],
+      include: {
+        model: this.user,
+        attributes: ['id', 'name'],
+        include: { model: this.userProfile },
+      },
+    });
+    return { like, created };
   }
 
   async deleteLike(advertId, userId) {
-    console.log({ advertId, userId });
-    const like = await this.like.findOne({
-      where: {
-        advertId,
-        userId,
-      },
-    });
-    // if (like) {
-    //   await this.like.destroy();
-    //   return like;
-    // } else {
-    //   return ;
-    // }
-    console.log({ like });
-    await this.like.destroy({ where: { advertId, userId } });
-    return like || {};
+    const count = await this.like.destroy({ where: { advertId, userId } });
+    return { advertId: Number(advertId), deleted: count > 0 };
   }
 }
 

@@ -1,0 +1,27 @@
+@use '../../styles/tokens' as tokens;
+
+.container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: tokens.$space-4;
+}
+
+.content {
+  max-width: 1120px;
+}
+
+.wide {
+  max-width: 1440px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-inline: tokens.$space-6;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    padding-inline: tokens.$space-8;
+  }
+}

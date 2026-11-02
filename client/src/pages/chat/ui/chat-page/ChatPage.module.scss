@@ -1,0 +1,240 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.chat__announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.chat {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.chat__heading {
+  margin-bottom: tokens.$space-5;
+}
+
+.chat__heading h1 {
+  font-size: 42px;
+}
+
+.chat__workspace {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(260px, 0.65fr) minmax(0, 1.65fr);
+  gap: tokens.$space-4;
+}
+
+.chat__conversations,
+.chat__thread {
+  min-width: 0;
+  padding: tokens.$space-5;
+  border: 1px solid tokens.$color-border;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-surface;
+}
+
+.chat__conversations {
+  overflow: auto;
+}
+
+.rows {
+  margin-top: tokens.$space-3;
+}
+
+.chat__thread {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat__header {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: tokens.$space-3;
+  padding-bottom: tokens.$space-3;
+  border-bottom: 1px solid tokens.$color-border;
+  flex-shrink: 0;
+}
+
+.chat__header strong {
+  display: -webkit-box;
+  min-width: 0;
+  font-size: tokens.$font-size-lg;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.chat__back {
+  display: none;
+}
+
+.chat__header + button {
+  margin: tokens.$space-3 0;
+}
+
+.chat__messages {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: tokens.$space-3;
+  padding: tokens.$space-5 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: -3px;
+  }
+}
+
+.chat__messages > :first-child {
+  margin-top: auto;
+}
+
+.chat__message,
+.chat__message_mine {
+  flex-shrink: 0;
+  max-width: min(78%, 560px);
+  margin: 0;
+  padding: tokens.$space-3 tokens.$space-4;
+  border-radius: 12px 12px 12px 3px;
+  background: tokens.$color-soft;
+  font-size: tokens.$font-size-md;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.chat__message_mine {
+  align-self: flex-end;
+  border-radius: 12px 12px 3px 12px;
+  background: tokens.$color-highlight;
+}
+
+.chat__replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-2;
+  margin-bottom: tokens.$space-3;
+  flex-shrink: 0;
+}
+
+.chat__replies .chat__reply {
+  border-radius: 999px;
+}
+
+.chat__composer {
+  display: flex;
+  flex-shrink: 0;
+  gap: tokens.$space-2;
+  padding: tokens.$space-3 0;
+  padding-bottom: calc(tokens.$space-3 + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid tokens.$color-border;
+  background: tokens.$color-surface;
+}
+
+.chat__composer_field {
+  min-width: 0;
+  flex: 1;
+}
+
+.chat__composer_field > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.chat__empty,
+.chat__selection_empty {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.chat__error {
+  margin-bottom: tokens.$space-2;
+}
+
+@container (max-width: 680px) {
+  .chat__heading h1 {
+    font-size: 27px;
+  }
+
+  .chat__heading {
+    margin-bottom: tokens.$space-3;
+  }
+
+  .chat__workspace {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chat__conversations,
+  .chat__thread {
+    min-height: 0;
+    padding: tokens.$space-4;
+  }
+
+  .chat__workspace[data-mobile-view='conversation'] .chat__conversations {
+    display: none;
+  }
+
+  .chat__workspace[data-mobile-view='list'] .chat__thread {
+    display: none;
+  }
+
+  .chat__back {
+    display: inline-flex;
+    margin-right: auto;
+  }
+
+}
+
+@media (max-height: 600px) and (max-width: 680px) {
+  .chat__thread {
+    padding: tokens.$space-3;
+  }
+
+  .chat__replies {
+    display: none;
+  }
+
+  .chat__header + button {
+    flex-shrink: 0;
+    margin-block: tokens.$space-2;
+    padding: tokens.$space-1 tokens.$space-2;
+
+    > :first-child {
+      width: 36px;
+      height: 28px;
+    }
+  }
+
+  .chat__messages {
+    padding-block: tokens.$space-2;
+  }
+
+  .chat__composer {
+    padding-block: tokens.$space-2;
+  }
+
+  .chat__heading {
+    margin-bottom: tokens.$space-2;
+  }
+}

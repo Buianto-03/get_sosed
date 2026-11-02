@@ -1,0 +1,198 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.gallery {
+  position: relative;
+  height: 360px;
+  container-name: listing-gallery;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$color-soft;
+}
+
+.track {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.photo {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: tokens.$radius-md;
+  background: tokens.$color-soft;
+  cursor: zoom-in;
+}
+
+.photo:focus-visible {
+  z-index: 1;
+  outline: 3px solid tokens.$color-focus;
+  outline-offset: -3px;
+}
+
+.photo:focus-visible::after {
+  position: absolute;
+  inset: 0;
+  border: 6px solid tokens.$color-surface;
+  outline: 3px solid tokens.$color-focus;
+  outline-offset: -3px;
+  content: '';
+  pointer-events: none;
+}
+
+.photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.primary {
+  grid-row: span 2;
+}
+
+.double .track {
+  grid-template-columns: 1fr 1fr;
+}
+
+.double .photo:nth-child(2) {
+  grid-row: span 2;
+}
+
+.single .track {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.single .primary {
+  grid-row: auto;
+}
+
+.multiple .photo:nth-child(n + 4) {
+  display: none;
+}
+
+.morePhotos {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(31 41 51 / 56%);
+  color: white;
+  font-weight: 650;
+}
+
+.controls {
+  display: none;
+  position: absolute;
+  right: tokens.$space-3;
+  bottom: tokens.$space-3;
+  align-items: center;
+  gap: tokens.$space-2;
+  padding: tokens.$space-1;
+  border-radius: 999px;
+  background: rgb(255 253 249 / 94%);
+  color: tokens.$color-ink;
+  font-size: tokens.$font-size-xs;
+}
+
+.control {
+  width: 44px;
+  height: 44px;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$space-2;
+  color: tokens.$color-muted;
+}
+
+.empty svg {
+  width: 22px;
+  height: 22px;
+}
+
+.lightbox {
+  width: min(100%, 1120px);
+}
+
+.lightboxContent {
+  position: relative;
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  background: tokens.$color-ink;
+}
+
+.lightboxContent > img {
+  display: block;
+  max-width: 100%;
+  max-height: min(72vh, 760px);
+  object-fit: contain;
+}
+
+.lightboxControls {
+  position: absolute;
+  inset: 50% tokens.$space-3 auto;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+}
+
+@container listing-gallery (max-width: 640px) {
+  .gallery {
+    height: 280px;
+  }
+
+  .track,
+  .double .track,
+  .single .track {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .photo,
+  .primary,
+  .double .photo:nth-child(2),
+  .single .primary {
+    display: block;
+    width: 100%;
+    height: 100%;
+    flex: 0 0 100%;
+    grid-row: auto;
+    scroll-snap-align: start;
+  }
+
+  .multiple .photo:nth-child(n + 4) {
+    display: block;
+  }
+
+  .multiple .morePhotos {
+    display: none;
+  }
+
+  .controls {
+    display: flex;
+    bottom: tokens.$space-2;
+  }
+
+  .lightboxContent > img {
+    max-height: 68vh;
+  }
+}
