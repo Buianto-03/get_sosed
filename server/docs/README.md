@@ -45,6 +45,11 @@ npx --yes @apidevtools/swagger-cli validate docs/openapi.yaml
 4. `GET /api/auth/logout` очищает cookie. Уже выданный access token продолжает
    действовать до истечения срока.
 
+HTTP middleware и WebSocket upgrade проверяют подпись JWT и структуру его
+payload: `user` должен быть объектом с положительным безопасным целочисленным
+`id`. Необязательное `name` должно быть строкой или `null`. Остальные поля
+пользователя сохраняются для совместимости с выданными сессиями.
+
 Пример с cookie jar (не добавляйте файл cookie и токены в Git):
 
 ```sh

@@ -1,13 +1,9 @@
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
+import type { AuthResponse } from '../types/auth';
+import errorDetails = require('../utils/errorDetails');
 
 import userServiceInstance = require('../service/userService');
 import profileServiceInstance = require('../service/profileService');
-
-interface ErrorDetails {
-  status?: number;
-  code?: string;
-  message?: string;
-}
 
 const isValidId = (value: unknown) =>
   /^[1-9]\d*$/.test(String(value)) && Number.isSafeInteger(Number(value));
@@ -17,7 +13,7 @@ class UserController {
     private readonly profileService: typeof profileServiceInstance,
   ) {}
 
-  getUsers = async (req: Request, res: Response) => {
+  getUsers = async (req: Request, res: AuthResponse) => {
     try {
       res.json(await this.userService.getUsers());
     } catch (error) {
@@ -28,7 +24,7 @@ class UserController {
     }
   };
 
-  getReceiverUsers = async (req: Request, res: Response) => {
+  getReceiverUsers = async (req: Request, res: AuthResponse) => {
     if (
       !isValidId(req.params.userId) ||
       Number(req.params.userId) !== res.locals.user.id
@@ -49,7 +45,7 @@ class UserController {
     }
   };
 
-  getSummary = async (req: Request, res: Response) => {
+  getSummary = async (req: Request, res: AuthResponse) => {
     if (!isValidId(req.params.userId)) {
       return res
         .status(404)
@@ -72,7 +68,7 @@ class UserController {
     }
   };
 
-  patchUser = async (req: Request, res: Response) => {
+  patchUser = async (req: Request, res: AuthResponse) => {
     if (
       !isValidId(req.params.userId) ||
       Number(req.params.userId) !== res.locals.user.id
@@ -89,8 +85,7 @@ class UserController {
         ),
       );
     } catch (error) {
-      const details: ErrorDetails =
-        typeof error === 'object' && error !== null ? error : {};
+      const details = errorDetails(error);
       const isExpectedError =
         (details.status === 400 && details.code === 'INVALID_PROFILE_DATA') ||
         (details.status === 404 && details.code === 'USER_NOT_FOUND');
@@ -99,7 +94,7 @@ class UserController {
         (details.status !== undefined &&
           details.status >= 500 &&
           details.status < 600)
-          ? details.status!
+          ? (details.status ?? 500)
           : 500;
       if (!isExpectedError) {
         console.error('Cannot update profile:', error);

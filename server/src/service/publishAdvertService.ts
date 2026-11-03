@@ -5,6 +5,7 @@ import sharp = require('sharp');
 
 import db = require('../../db/models');
 import readAdvertService = require('./advertService');
+import AppError = require('../utils/appError');
 
 const { sequelize, Advert, Location, Tags, AdvertTags, AdvertPhoto } = db;
 const MAX_POSTGRES_INTEGER = 2 ** 31 - 1;
@@ -25,10 +26,7 @@ interface AdvertValues {
 }
 
 const invalid = (message: string) =>
-  Object.assign(new Error(message), {
-    status: 400,
-    code: 'INVALID_ADVERT_DATA',
-  });
+  new AppError(400, 'INVALID_ADVERT_DATA', message);
 
 function parseText(
   value: unknown,

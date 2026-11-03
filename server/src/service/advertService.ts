@@ -1,23 +1,21 @@
 import Sequelize = require('sequelize');
-import type { IncludeOptions, WhereAttributeHash, WhereOptions } from 'sequelize';
+import type {
+  IncludeOptions,
+  WhereAttributeHash,
+  WhereOptions,
+} from 'sequelize';
 import db = require('../../db/models');
+import AppError = require('../utils/appError');
 
 const { Op } = Sequelize;
-const {
-  Advert,
-  Location,
-  Tags,
-  User,
-  Like,
-  AdvertPhoto,
-  AdvertTags,
-} = db;
+const { Advert, Location, Tags, User, Like, AdvertPhoto, AdvertTags } = db;
 
 function invalidPagination() {
-  return Object.assign(new Error('Invalid pagination parameters'), {
-    status: 400,
-    code: 'INVALID_PAGINATION',
-  });
+  return new AppError(
+    400,
+    'INVALID_PAGINATION',
+    'Invalid pagination parameters',
+  );
 }
 
 interface Filters {

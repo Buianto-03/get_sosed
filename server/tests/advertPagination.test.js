@@ -9,7 +9,15 @@ function load(models) {
   const filename = path.resolve(__dirname, '../build/src/service/advertService.js');
   const sandbox = {
     module: { exports: {} },
-    require: (name) => name === '../../db/models' ? models : require(name),
+    require: (name) => {
+      if (name === '../../db/models') {
+        return models;
+      }
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
+      return require(name);
+    },
     console,
   };
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, { filename });

@@ -4,6 +4,7 @@ import fs = require('fs/promises');
 import sharp = require('sharp');
 
 import db = require('../../db/models');
+import AppError = require('../utils/appError');
 
 const { sequelize, User, UserProfile } = db;
 
@@ -15,7 +16,7 @@ interface SignupInput {
 }
 
 function signupError(status: number, code: string, message: string) {
-  return Object.assign(new Error(message), { status, code });
+  return new AppError(status, code, message);
 }
 
 class SignupService {

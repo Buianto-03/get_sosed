@@ -5,7 +5,9 @@ import {
   type InferCreationAttributes,
   type CreationOptional,
   type ModelStatic,
+  type NonAttribute,
 } from 'sequelize';
+import type createUserProfile = require('./userprofile');
 import commonAttributes = require('./commonAttributes');
 const createUser = (
   sequelize: Sequelize,
@@ -22,6 +24,9 @@ const createUser = (
     declare roleId: number | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
+    declare UserProfile?: NonAttribute<
+      InstanceType<ReturnType<typeof createUserProfile>> | null
+    >;
 
     static associate({
       Role,

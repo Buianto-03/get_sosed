@@ -5,7 +5,9 @@ import {
   type InferCreationAttributes,
   type CreationOptional,
   type ModelStatic,
+  type NonAttribute,
 } from 'sequelize';
+import type createUser = require('./user');
 import commonAttributes = require('./commonAttributes');
 const createLike = (
   sequelize: Sequelize,
@@ -20,12 +22,11 @@ const createLike = (
     declare userId: number | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
+    declare User?: NonAttribute<InstanceType<
+      ReturnType<typeof createUser>
+    > | null>;
 
-    static associate({
-      Advert,
-      User,
-      UserProfile,
-    }: Record<string, ModelStatic<Model>>) {
+    static associate({ Advert, User }: Record<string, ModelStatic<Model>>) {
       this.belongsTo(Advert, { foreignKey: 'advertId' });
       this.belongsTo(User, { foreignKey: 'userId' });
     }

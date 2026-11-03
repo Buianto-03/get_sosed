@@ -4,14 +4,12 @@ import fs = require('fs/promises');
 import sharp = require('sharp');
 
 import db = require('../../db/models');
+import AppError = require('../utils/appError');
 
 const { sequelize, User, UserProfile } = db;
 
 const invalid = () =>
-  Object.assign(new Error('Invalid profile data'), {
-    status: 400,
-    code: 'INVALID_PROFILE_DATA',
-  });
+  new AppError(400, 'INVALID_PROFILE_DATA', 'Invalid profile data');
 
 class ProfileService {
   constructor(
@@ -119,10 +117,7 @@ class ProfileService {
       lock: transaction.LOCK.UPDATE,
     });
     if (!user) {
-      throw Object.assign(new Error('User not found'), {
-        status: 404,
-        code: 'USER_NOT_FOUND',
-      });
+      throw new AppError(404, 'USER_NOT_FOUND', 'User not found');
     }
     return user;
   }

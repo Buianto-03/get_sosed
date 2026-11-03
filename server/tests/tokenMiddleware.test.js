@@ -93,3 +93,69 @@ test('refresh middleware exposes the user and clears an invalid cookie', (t) => 
   assert.equal(invalidRes.statusCode, 401);
   assert.equal(invalidRes.clearedCookie, 'refreshToken');
 });
+
+test('both token middlewares validate signed payloads and preserve compatible user data', (t) => {
+  t.mock.method(console, 'log', () => {});
+  const previousSecrets = {
+    ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
+  };
+  process.env.ACCESS_TOKEN_SECRET = 'payload-access-secret';
+  process.env.REFRESH_TOKEN_SECRET = 'payload-refresh-secret';
+  t.after(() => {
+    for (const [key, value] of Object.entries(previousSecrets)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  });
+
+  const invalidPayloads = [
+    {},
+    { user: null },
+    { user: [] },
+    { user: '7' },
+    { user: {} },
+    { user: { id: '7' } },
+    { user: { id: 0 } },
+    { user: { id: -1 } },
+    { user: { id: 1.5 } },
+    { user: { id: Number.MAX_SAFE_INTEGER + 1 } },
+    { user: { id: 7, name: 42 } },
+  ];
+  for (const [middleware, secret, status, request] of [
+    [verifyAccessToken, process.env.ACCESS_TOKEN_SECRET, 403,
+      (token) => ({ headers: { authorization: `Bearer ${token}` } })],
+    [verifyRefreshToken, process.env.REFRESH_TOKEN_SECRET, 401,
+      (token) => ({ cookies: { refreshToken: token } })],
+  ]) {
+    for (const payload of invalidPayloads) {
+      const res = response();
+      middleware(request(jwt.sign(payload, secret)), res, () => {
+        assert.fail('Malformed token user reached a handler');
+      });
+      assert.equal(res.statusCode, status);
+      assert.equal(res.locals.user, undefined);
+      if (status === 401) {
+        assert.equal(res.clearedCookie, 'refreshToken');
+      }
+    }
+
+    for (const user of [
+      { id: 7 },
+      { id: 7, name: null },
+      { id: 7, name: 'Anna', email: 'anna@example.com', roleId: 2,
+        UserProfile: { photo: '/images/photo.webp', habits: ['No smoking'] } },
+    ]) {
+      const res = response();
+      let nextCalls = 0;
+      middleware(request(jwt.sign({ user }, secret)), res, () => {
+        nextCalls += 1;
+      });
+      assert.equal(nextCalls, 1);
+      assert.deepEqual(res.locals.user, user);
+    }
+  }
+});

@@ -10,23 +10,17 @@ class LikeService {
   ) {}
 
   async getLikesByAdvertId(advertId: string | number) {
-    const likes = await this.like.findAll({
+    return this.like.findAll({
       where: { advertId },
       include: {
         model: this.user,
+        attributes: { exclude: ['hashpass'] },
         include: [
           {
             model: this.userProfile,
           },
         ],
       },
-    });
-    return likes.map((el) => {
-      const like: { User: { hashpass?: unknown } } = JSON.parse(
-        JSON.stringify(el),
-      );
-      delete like.User.hashpass;
-      return like;
     });
   }
 

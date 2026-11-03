@@ -7,6 +7,9 @@ const vm = require('node:vm');
 function load(file, dependency, replacement) {
   const filename = path.resolve(__dirname, file);
   const sandbox = { module: { exports: {} }, require: (name) => {
+    if (name === '../utils/errorDetails') {
+      return require('../build/src/utils/errorDetails');
+    }
     assert.equal(name, dependency);
     return replacement;
   } };
@@ -18,7 +21,7 @@ function response() {
     json(body) { this.body = body; return this; } };
 }
 
-test('like reads use injected models and preserve the response without mutating or exposing password hashes', async () => {
+test('like reads exclude password hashes in the query and preserve the returned rows', async () => {
   const exported = load('../build/src/service/likeService.js', '../../db/models', {
     Like: {}, User: {}, UserProfile: {},
   });
@@ -33,7 +36,6 @@ test('like reads use injected models and preserve the response without mutating 
       name: 'Анна',
       email: 'anna@example.com',
       roleId: 2,
-      hashpass: 'private-hash',
       UserProfile: { photo: '/images/users/user-2/photo.webp' },
     },
   };
@@ -42,6 +44,7 @@ test('like reads use injected models and preserve the response without mutating 
     findAll: async (query) => {
       assert.equal(query.where.advertId, '7');
       assert.equal(query.include.model, user);
+      assert.deepEqual(Array.from(query.include.attributes.exclude), ['hashpass']);
       assert.equal(query.include.include[0].model, userProfile);
       return rows;
     },
@@ -60,9 +63,24 @@ test('like reads use injected models and preserve the response without mutating 
       UserProfile: { photo: '/images/users/user-2/photo.webp' },
     },
   }]);
-  assert.equal(row.User.hashpass, 'private-hash');
+  assert.equal(result, rows);
   rows = [];
   assert.equal((await service.getLikesByAdvertId('7')).length, 0);
+});
+
+test('Sequelize like reads generate SQL without selecting password hashes', async (t) => {
+  const db = require('../build/db/models');
+  const service = require('../build/src/service/likeService');
+  const queries = [];
+  t.mock.method(db.sequelize, 'query', async (sql) => {
+    queries.push(sql);
+    return [];
+  });
+  assert.deepEqual(await service.getLikesByAdvertId(7), []);
+  assert.equal(queries.length, 1);
+  assert.doesNotMatch(queries[0], /hashpass/);
+  assert.match(queries[0], /"User"\."email"/);
+  assert.match(queries[0], /User->UserProfile/);
 });
 
 test('POST returns the same like with 201 then 200, without exposing credentials', async () => {

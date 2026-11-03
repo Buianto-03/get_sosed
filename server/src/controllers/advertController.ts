@@ -1,17 +1,9 @@
 import type { Request, Response } from 'express';
+import type { AuthResponse } from '../types/auth';
+import errorDetails = require('../utils/errorDetails');
 
 import advertServiceInstance = require('../service/advertService');
 import publishAdvertServiceInstance = require('../service/publishAdvertService');
-
-interface ErrorDetails {
-  status?: number;
-  code?: string;
-  message?: string;
-}
-
-function errorDetails(error: unknown): ErrorDetails {
-  return typeof error === 'object' && error !== null ? error : {};
-}
 
 class AdvertController {
   constructor(
@@ -45,7 +37,7 @@ class AdvertController {
     }
   };
 
-  getMine = async (req: Request, res: Response) => {
+  getMine = async (req: Request, res: AuthResponse) => {
     try {
       return res.json(
         await this.advertService.getMine(res.locals.user.id, req.query),
@@ -65,7 +57,7 @@ class AdvertController {
     }
   };
 
-  createAdvert = async (req: Request, res: Response) => {
+  createAdvert = async (req: Request, res: AuthResponse) => {
     try {
       return res
         .status(201)
@@ -85,7 +77,7 @@ class AdvertController {
         (details.status !== undefined &&
           details.status >= 500 &&
           details.status < 600)
-          ? details.status!
+          ? (details.status ?? 500)
           : 500;
       if (!isExpectedError) {
         console.error('Cannot publish advert:', error);
@@ -136,7 +128,7 @@ class AdvertController {
     }
   };
 
-  likedAdvertsHandler = async (req: Request, res: Response) => {
+  likedAdvertsHandler = async (req: Request, res: AuthResponse) => {
     const { id } = res.locals.user;
 
     try {

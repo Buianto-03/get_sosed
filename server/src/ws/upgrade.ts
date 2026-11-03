@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import cookieParser = require('cookie-parser');
 import jwt = require('jsonwebtoken');
 import wsServer = require('./wsServer');
+import getTokenUser = require('../utils/getTokenUser');
 
 require('dotenv').config();
 
@@ -22,13 +23,11 @@ const upgradeCb = (request: IncomingMessage, socket: Duplex, head: Buffer) => {
   cookieParser()(request as Request, {} as Response, () => {
     try {
       const { refreshToken } = (request as Request).cookies;
-      const { user } = jwt.verify(
+      const payload = jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET!,
-      ) as jwt.JwtPayload;
-      if (!user) {
-        throw new Error('Нет юзера в куки');
-      }
+      );
+      const user = getTokenUser(payload);
 
       console.log('JWT is parsed!');
 

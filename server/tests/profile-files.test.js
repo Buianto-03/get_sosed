@@ -30,6 +30,7 @@ function setup({ writeError, updateError, cleanupError, previousPhoto = '/images
       },
     },
     '../../db/models': {},
+    '../utils/appError': require('../build/src/utils/appError'),
   };
   const sandbox = {
     module: { exports: {} },

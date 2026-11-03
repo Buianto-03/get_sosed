@@ -287,6 +287,8 @@ paths:
         '401':
           description:
             Refresh token отсутствует или недействителен; cookie очищается.
+            Подписанный payload также должен содержать объект user с положительным
+            безопасным целочисленным id; name, если присутствует, — строка или null.
           content:
             text/plain:
               schema:
@@ -1098,7 +1100,9 @@ components:
     InvalidAccessToken:
       description:
         Access token отсутствует или недействителен. Текущая реализация
-        возвращает 403.
+        возвращает 403. Подписанный payload должен содержать объект user с
+        положительным безопасным целочисленным id; name, если присутствует,
+        — строка или null.
       content:
         text/html:
           schema:

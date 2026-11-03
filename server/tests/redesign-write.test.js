@@ -9,6 +9,9 @@ function load(file, dependencies, globals = {}) {
   const sandbox = {
     module: { exports: {} },
     require: (name) => {
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },

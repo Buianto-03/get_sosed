@@ -1,17 +1,19 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request } from 'express';
+import type { AuthResponse } from '../types/auth';
 import jwt = require('jsonwebtoken');
+import getTokenUser = require('../utils/getTokenUser');
 
 require('dotenv').config();
 
-function verifyRefreshToken(req: Request, res: Response, next: NextFunction) {
+function verifyRefreshToken(req: Request, res: AuthResponse, next: NextFunction) {
   try {
     const { refreshToken } = req.cookies;
-    const { user } = jwt.verify(
+    const payload = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET!,
-    ) as jwt.JwtPayload;
+    );
 
-    res.locals.user = user;
+    res.locals.user = getTokenUser(payload);
 
     next();
   } catch (error) {

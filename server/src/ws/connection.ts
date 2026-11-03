@@ -1,18 +1,14 @@
 import type { IncomingMessage } from 'node:http';
 import type WebSocket from 'ws';
+import type { AuthUser } from '../types/auth';
 import chatService = require('../service/chatService');
-
-interface ChatUser {
-  id: number;
-  name: string;
-}
 
 interface ChatAction {
   type?: string;
   payload?: { receiverId?: unknown; text?: unknown };
 }
 
-const connections = new Map<WebSocket, { ws: WebSocket; user: ChatUser }>();
+const connections = new Map<WebSocket, { ws: WebSocket; user: AuthUser }>();
 
 const send = (socket: WebSocket, action: object) => {
   if (socket.readyState === 1) {
@@ -31,7 +27,7 @@ const broadcastOnline = () => {
 const connect = (
   socket: WebSocket,
   request: IncomingMessage,
-  user: ChatUser,
+  user: AuthUser,
 ) => {
   // Multiple browser tabs for one user can stay connected independently.
   const key = socket;

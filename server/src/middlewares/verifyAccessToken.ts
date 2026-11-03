@@ -1,17 +1,23 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request } from 'express';
+import type { AuthResponse } from '../types/auth';
 import jwt = require('jsonwebtoken');
+import getTokenUser = require('../utils/getTokenUser');
 
 require('dotenv').config();
 
-function verifyAccessToken(req: Request, res: Response, next: NextFunction) {
+function verifyAccessToken(
+  req: Request,
+  res: AuthResponse,
+  next: NextFunction,
+) {
   try {
-    const accessToken = req.headers.authorization!.split(' ')[1]; // 'Bearer token'
-    const { user } = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_SECRET!,
-    ) as jwt.JwtPayload;
+    const accessToken = req.headers.authorization?.split(' ')[1]; // 'Bearer token'
+    if (!accessToken) {
+      throw new Error('Missing access token');
+    }
+    const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET!);
 
-    res.locals.user = user;
+    res.locals.user = getTokenUser(payload);
 
     next();
   } catch (error) {

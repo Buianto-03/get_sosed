@@ -1,8 +1,9 @@
+import type { AuthPayload } from '../types/auth';
 import jwt = require('jsonwebtoken');
 import jwtConfig = require('../configs/jwtConfig');
 require('dotenv').config();
 
-function generateTokens(payload: object) {
+function generateTokens(payload: AuthPayload) {
   return {
     accessToken: jwt.sign(
       payload,

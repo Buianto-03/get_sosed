@@ -1,4 +1,5 @@
 import express = require('express');
+import type { AuthResponse } from '../types/auth';
 import db = require('../../db/models');
 const { User } = db;
 import verifyRefreshToken = require('../middlewares/verifyRefreshToken');
@@ -7,7 +8,7 @@ import cookiesConfig = require('../configs/cookiesConfig');
 
 const tokensRouter = express.Router();
 
-tokensRouter.get('/refresh', verifyRefreshToken, async (req, res) => {
+tokensRouter.get('/refresh', verifyRefreshToken, async (req, res: AuthResponse) => {
   try {
     const { id } = res.locals.user;
     const newUser = await User.findOne({
@@ -17,13 +18,9 @@ tokensRouter.get('/refresh', verifyRefreshToken, async (req, res) => {
     if (!newUser) {
       throw new Error('User not found');
     }
-    const user: Partial<(typeof newUser)['_attributes']> = newUser.get();
-
-    delete user.hashpass;
-    // console.log(user);
+    const { hashpass, ...user } = newUser.get();
 
     const { accessToken, refreshToken } = generateTokens({ user });
-    // console.log(accessToken, refreshToken);
 
     res
       .cookie('refreshToken', refreshToken, cookiesConfig)

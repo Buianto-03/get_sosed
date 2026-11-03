@@ -1,6 +1,7 @@
 import bcrypt = require('bcrypt');
 
 import db = require('../../db/models');
+import AppError = require('../utils/appError');
 
 const { User, UserProfile } = db;
 
@@ -10,10 +11,7 @@ interface LoginInput {
 }
 
 function invalidCredentials() {
-  return Object.assign(new Error('Invalid email or password'), {
-    status: 401,
-    code: 'INVALID_CREDENTIALS',
-  });
+  return new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
 }
 
 class LoginService {

@@ -1,4 +1,5 @@
 import multer = require('multer');
+import AppError = require('../utils/appError');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -8,7 +9,7 @@ const upload = multer({
       return cb(null, true);
     }
     return cb(
-      Object.assign(new Error('Use JPG, PNG or WebP'), { status: 400 }),
+      new AppError(400, 'INVALID_UPLOAD', 'Use JPG, PNG or WebP'),
     );
   },
 });

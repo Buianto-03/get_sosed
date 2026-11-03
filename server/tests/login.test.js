@@ -28,6 +28,9 @@ function setup({ found = true, matches = true, failure } = {}) {
     bcrypt: { compare: async (...args) => { calls.push(['compare', ...args]); return matches; } },
   };
   const sandbox = { module: { exports: {} }, require: (name) => {
+    if (name === '../utils/appError') {
+      return require('../build/src/utils/appError');
+    }
     assert.ok(name in dependencies, name);
     return dependencies[name];
   } };

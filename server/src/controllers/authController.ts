@@ -1,21 +1,10 @@
 import type { Request, Response } from 'express';
+import errorDetails = require('../utils/errorDetails');
 
 import signupServiceInstance = require('../service/signupService');
 import loginServiceInstance = require('../service/loginService');
 import generateTokens = require('../utils/generateTokens');
 import cookiesConfig = require('../configs/cookiesConfig');
-
-interface ErrorDetails {
-  status?: number;
-  code?: string;
-  message?: string;
-}
-
-function errorDetails(error: unknown): ErrorDetails {
-  return typeof error === 'object' && error !== null
-    ? (error as ErrorDetails)
-    : {};
-}
 
 class AuthController {
   constructor(
@@ -77,7 +66,7 @@ class AuthController {
         (details.status !== undefined &&
           details.status >= 500 &&
           details.status < 600)
-          ? details.status!
+          ? (details.status ?? 500)
           : 500;
       if (!isExpectedError) {
         console.error('Cannot sign up user:', error);
