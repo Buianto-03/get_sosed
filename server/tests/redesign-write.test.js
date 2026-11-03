@@ -9,6 +9,9 @@ function load(file, dependencies, globals = {}) {
   const sandbox = {
     module: { exports: {} },
     require: (name) => {
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },
@@ -111,7 +114,7 @@ function publication(options = {}) {
       },
     },
   };
-  const exported = load('../src/service/publishAdvertService.js', {
+  const exported = load('../build/src/service/publishAdvertService.js', {
     sequelize: Sequelize,
     '../../db/models': {},
     './advertService': {},
@@ -336,7 +339,7 @@ test('publication logs cleanup failures without replacing the original photo-rec
   ]);
 });
 test('profile allowlist preserves omitted fields and rejects malformed habits and incompatible photo modes', async () => {
-  const service = load('../src/service/profileService.js', {
+  const service = load('../build/src/service/profileService.js', {
     crypto: { randomUUID: () => 'photo' },
     'fs/promises': {},
     sharp: {},
@@ -377,7 +380,7 @@ test('profile allowlist preserves omitted fields and rejects malformed habits an
   );
 });
 test('profile updates use injected models and keep all database operations in the same transaction', async () => {
-  const exported = load('../src/service/profileService.js', {
+  const exported = load('../build/src/service/profileService.js', {
     crypto: {},
     'fs/promises': {},
     sharp: {},
@@ -435,7 +438,7 @@ test('profile updates use injected models and keep all database operations in th
 });
 
 test('conversation list queries latest messages first and returns one latest row per other participant', async () => {
-  const exported = load('../src/service/userService.js', {
+  const exported = load('../build/src/service/userService.js', {
     sequelize: Sequelize,
     '../../db/models': {},
   });
@@ -482,7 +485,7 @@ test('conversation list queries latest messages first and returns one latest row
 
 test('profile photo preparation skips absent photos and rejects conflicting or oversized uploads before decoding', async () => {
   let decodes = 0;
-  const service = load('../src/service/profileService.js', {
+  const service = load('../build/src/service/profileService.js', {
     crypto: {},
     'fs/promises': {},
     sharp: () => { decodes += 1; throw new Error('unexpected decode'); },
@@ -504,7 +507,7 @@ test('profile photo preparation converts uploads at the size limit to WebP and r
   const source = Buffer.from('source');
   const image = Buffer.from('webp');
   let invalidImage = false;
-  const service = load('../src/service/profileService.js', {
+  const service = load('../build/src/service/profileService.js', {
     crypto: {},
     'fs/promises': {},
     sharp: (buffer) => {

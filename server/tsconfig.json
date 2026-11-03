@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "rootDir": ".",
+    "outDir": "build",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmitOnError": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "db/models/**/*", "config/**/*.js"],
+  "exclude": ["node_modules", "build", "dist"]
+}

@@ -23,14 +23,14 @@ function createService(logger = console) {
     dialect: 'postgres', logging: false,
   });
   const models = {};
-  const modelDirectory = path.resolve(__dirname, '../db/models');
+  const modelDirectory = path.resolve(__dirname, '../build/db/models');
   for (const file of fs.readdirSync(modelDirectory)) {
     if (!file.endsWith('.js') || file === 'index.js') continue;
     const model = require(path.join(modelDirectory, file))(sequelize, Sequelize.DataTypes);
     models[model.name] = model;
   }
   for (const model of Object.values(models)) model.associate?.(models);
-  const service = loadWithDependency('../src/service/advertService.js', '../../db/models', models, logger);
+  const service = loadWithDependency('../build/src/service/advertService.js', '../../db/models', models, logger);
   return { service, sequelize, models };
 }
 
@@ -130,7 +130,7 @@ test('photos use one batch query ordered by ID for multiple adverts', async () =
 test('details return 200, 404 for absent/invalid IDs, and 500 on rejected reads', async () => {
   const service = { getAdvertById: async (id) => id === 1 ? { id } : null };
   const controller = loadWithDependency(
-    '../src/controllers/advertController.js', '../service/advertService', service,
+    '../build/src/controllers/advertController.js', '../service/advertService', service,
   );
   const response = () => ({
     code: null, body: null,
@@ -171,7 +171,7 @@ test('tag catalog returns stable IDs and only id/name; searching preserves all c
 test('tag endpoint accepts absent query, rejects structured query and handles service failures', async () => {
   let receivedQuery;
   const controller = loadWithDependency(
-    '../src/controllers/advertController.js', '../service/advertService', {
+    '../build/src/controllers/advertController.js', '../service/advertService', {
       getTagsLikeStr: async (query) => {
         receivedQuery = query;
         if (query === 'fail') throw new Error('offline');

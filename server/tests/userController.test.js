@@ -3,12 +3,19 @@ const { test } = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const AppError = require('../build/src/utils/appError');
 
 function load(file, dependencies, logs = []) {
   const filename = path.resolve(__dirname, file);
   const sandbox = {
     module: { exports: {} },
     require(name) {
+      if (name === '../utils/errorDetails') {
+        return require('../build/src/utils/errorDetails');
+      }
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },
@@ -20,7 +27,7 @@ function load(file, dependencies, logs = []) {
 
 function setup(profileService, userService = {}) {
   const logs = [];
-  const exported = load('../src/controllers/userController.js', {
+  const exported = load('../build/src/controllers/userController.js', {
     '../service/userService': {},
     '../service/profileService': {},
   }, logs);
@@ -28,7 +35,7 @@ function setup(profileService, userService = {}) {
 }
 
 function createProfileService(sequelize, user, userProfile) {
-  const exported = load('../src/service/profileService.js', {
+  const exported = load('../build/src/service/profileService.js', {
     crypto: {},
     'fs/promises': {},
     sharp: {},
@@ -155,8 +162,9 @@ test('missing profile owner returns 404 with USER_NOT_FOUND', async () => {
 
 test('profile server errors retain their status, hide private details and log the original error', async () => {
   for (const status of [undefined, 500, 503]) {
-    const failure = Object.assign(new Error('private SQL or file diagnostic'), { code: 'EACCES' });
-    if (status !== undefined) failure.status = status;
+    const failure = status === undefined
+      ? new Error('private SQL or file diagnostic')
+      : new AppError(status, 'EACCES', 'private SQL or file diagnostic');
     const { controller, logs } = setup({ editProfile: async () => { throw failure; } });
     const res = response();
     await controller.patchUser({ params: { userId: '7' }, body: {} }, res);
@@ -169,7 +177,7 @@ test('profile server errors retain their status, hide private details and log th
 });
 
 test('unrecognized error codes cannot expose their messages as expected profile errors', async () => {
-  const failure = Object.assign(new Error('private internal diagnostic'), { status: 400, code: 'UNKNOWN' });
+  const failure = new AppError(400, 'UNKNOWN', 'private internal diagnostic');
   const { controller, logs } = setup({ editProfile: async () => { throw failure; } });
   const res = response();
   await controller.patchUser({ params: { userId: '7' }, body: {} }, res);

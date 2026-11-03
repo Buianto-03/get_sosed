@@ -30,13 +30,14 @@ function setup({ writeError, updateError, cleanupError, previousPhoto = '/images
       },
     },
     '../../db/models': {},
+    '../utils/appError': require('../build/src/utils/appError'),
   };
   const sandbox = {
     module: { exports: {} },
     require: (name) => { assert.ok(name in dependencies, name); return dependencies[name]; },
     console: { error: (...args) => logs.push(args) },
   };
-  const filename = path.resolve(__dirname, '../src/service/profileService.js');
+  const filename = path.resolve(__dirname, '../build/src/service/profileService.js');
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, { filename });
   const service = new sandbox.module.exports.constructor(
     { transaction: async (callback) => {

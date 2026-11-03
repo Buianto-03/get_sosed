@@ -3,12 +3,19 @@ const { test } = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const AppError = require('../build/src/utils/appError');
 
 function load(file, dependencies, logs = []) {
   const filename = path.resolve(__dirname, file);
   const sandbox = {
     module: { exports: {} },
     require(name) {
+      if (name === '../utils/errorDetails') {
+        return require('../build/src/utils/errorDetails');
+      }
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },
@@ -21,7 +28,7 @@ function load(file, dependencies, logs = []) {
 function setup(signupService, generateTokens = () => ({}), loginService = {}) {
   const logs = [];
   const cookiesConfig = { httpOnly: true, maxAge: 1000 };
-  const exported = load('../src/controllers/authController.js', {
+  const exported = load('../build/src/controllers/authController.js', {
     '../service/signupService': {},
     '../service/loginService': {},
     '../utils/generateTokens': generateTokens,
@@ -73,7 +80,7 @@ test('signup expected errors return status, stable code and message without logg
     [400, 'INVALID_PHOTO', 'Invalid photo'],
     [409, 'EMAIL_ALREADY_EXISTS', 'Email already exists'],
   ]) {
-    const failure = Object.assign(new Error(message), { status, code });
+    const failure = new AppError(status, code, message);
     const { controller, logs } = setup({ signup: async () => { throw failure; } });
     const res = response();
     await controller.signup({ body: {} }, res);
@@ -87,8 +94,9 @@ test('signup expected errors return status, stable code and message without logg
 
 test('signup unexpected and 5xx errors keep safe responses and log original errors', async () => {
   for (const status of [undefined, 500, 503]) {
-    const failure = Object.assign(new Error('private database diagnostic'), { code: 'EACCES' });
-    if (status !== undefined) failure.status = status;
+    const failure = status === undefined
+      ? new Error('private database diagnostic')
+      : new AppError(status, 'EACCES', 'private database diagnostic');
     const { controller, logs } = setup({ signup: async () => { throw failure; } });
     const res = response();
     await controller.signup({ body: {} }, res);
@@ -102,15 +110,27 @@ test('signup unexpected and 5xx errors keep safe responses and log original erro
 });
 
 test('unrecognized signup errors cannot expose internal codes or messages as expected errors', async () => {
-  const failure = Object.assign(new Error('private internal diagnostic'), { status: 400, code: 'UNKNOWN' });
-  const { controller, logs } = setup({ signup: async () => { throw failure; } });
-  const res = response();
-  await controller.signup({ body: {} }, res);
-  assert.equal(res.statusCode, 500);
-  assert.equal(res.body.code, 'SIGNUP_FAILED');
-  assert.equal(res.body.message, 'Cannot sign up user');
-  assert.deepEqual(res.cookies, []);
-  assert.equal(logs[0][1], failure);
+  for (const failure of [
+    new AppError(400, 'UNKNOWN', 'private internal diagnostic'),
+    Object.assign(new Error('private diagnostic'), { status: 400, code: 'INVALID_SIGNUP_DATA' }),
+    { status: 400, code: 'INVALID_SIGNUP_DATA', message: 'private diagnostic' },
+    Object.assign(new Error('private diagnostic'), { status: 503, code: 'PRIVATE' }),
+    null,
+    'private internal diagnostic',
+    { status: '400', code: 'INVALID_SIGNUP_DATA', message: 'private diagnostic' },
+    { status: '503', code: 'PRIVATE', message: 'private diagnostic' },
+    { status: 503.5, code: 'PRIVATE', message: 'private diagnostic' },
+    { status: 400, code: { value: 'INVALID_SIGNUP_DATA' }, message: 'private diagnostic' },
+  ]) {
+    const { controller, logs } = setup({ signup: async () => { throw failure; } });
+    const res = response();
+    await controller.signup({ body: {} }, res);
+    assert.equal(res.statusCode, 500);
+    assert.equal(res.body.code, 'SIGNUP_FAILED');
+    assert.equal(res.body.message, 'Cannot sign up user');
+    assert.deepEqual(res.cookies, []);
+    assert.equal(logs[0][1], failure);
+  }
 });
 
 test('token generation failures are handled before setting a refresh cookie', async () => {
@@ -132,7 +152,7 @@ test('signup route parses the photo upload before invoking the controller handle
   const login = () => {};
   const logout = () => {};
   const router = { post: (...args) => routes.push(args), get: (...args) => routes.push(args) };
-  const exported = load('../src/router/authRouter.js', {
+  const exported = load('../build/src/router/authRouter.js', {
     express: { Router: () => router },
     bcrypt: {},
     '../../db/models': {},
@@ -166,9 +186,9 @@ test('login uses injected service and returns tokens with the refresh cookie', a
 
 test('login distinguishes invalid credentials from internal failures without leaking diagnostics', async () => {
   for (const expected of [true, false]) {
-    const failure = Object.assign(new Error('private diagnostic'), {
-      status: 401, code: expected ? 'INVALID_CREDENTIALS' : 'INTERNAL_CODE',
-    });
+    const failure = new AppError(
+      401, expected ? 'INVALID_CREDENTIALS' : 'INTERNAL_CODE', 'private diagnostic',
+    );
     const { controller, logs } = setup({}, undefined, { login: async () => { throw failure; } });
     const res = response();
     await controller.login({ body: {} }, res);

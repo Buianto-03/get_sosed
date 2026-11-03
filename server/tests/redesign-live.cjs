@@ -6,8 +6,8 @@ const sharp = require('sharp');
 const WebSocket = require('ws');
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
-const app = require('../src/app');
-const db = require('../db/models');
+const app = require('../build/src/app');
+const db = require('../build/db/models');
 async function run() {
   await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${app.address().port}`;

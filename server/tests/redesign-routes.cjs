@@ -1,7 +1,7 @@
 // Verify the built SPA and infrastructure fallbacks without touching application records.
 const assert = require('node:assert/strict');
-const app = require('../src/app');
-const { sequelize } = require('../db/models');
+const app = require('../build/src/app');
+const { sequelize } = require('../build/db/models');
 async function run() {
   await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${app.address().port}`;

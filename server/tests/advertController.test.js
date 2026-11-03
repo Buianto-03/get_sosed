@@ -3,12 +3,19 @@ const { test } = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const AppError = require('../build/src/utils/appError');
 
 function load(file, dependencies, logs = []) {
   const filename = path.resolve(__dirname, file);
   const sandbox = {
     module: { exports: {} },
     require(name) {
+      if (name === '../utils/errorDetails') {
+        return require('../build/src/utils/errorDetails');
+      }
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },
@@ -20,7 +27,7 @@ function load(file, dependencies, logs = []) {
 
 function setup(publishAdvertService, advertService = {}) {
   const logs = [];
-  const exported = load('../src/controllers/advertController.js', {
+  const exported = load('../build/src/controllers/advertController.js', {
     '../service/advertService': {},
     '../service/publishAdvertService': {},
     'fs/promises': {},
@@ -67,9 +74,7 @@ test('own adverts success uses the authenticated user and forwards pagination pa
 });
 
 test('invalid pagination returns 400 without logging a server failure', async () => {
-  const failure = Object.assign(new Error('Invalid pagination parameters'), {
-    status: 400, code: 'INVALID_PAGINATION',
-  });
+  const failure = new AppError(400, 'INVALID_PAGINATION', 'Invalid pagination parameters');
   const { controller, logs } = setup({}, { getMine: async () => { throw failure; } });
   const res = response();
   await controller.getMine({ query: { page: '0' } }, res);
@@ -80,7 +85,7 @@ test('invalid pagination returns 400 without logging a server failure', async ()
 });
 
 test('publication validation errors return 400 with INVALID_ADVERT_DATA and a safe message', async () => {
-  const service = load('../src/service/publishAdvertService.js', {
+  const service = load('../build/src/service/publishAdvertService.js', {
     'fs/promises': {},
     sharp: {},
     sequelize: {},
@@ -99,8 +104,9 @@ test('publication validation errors return 400 with INVALID_ADVERT_DATA and a sa
 
 test('publication server errors retain their status, hide internal details and log the original error', async () => {
   for (const status of [undefined, 500, 503]) {
-    const failure = Object.assign(new Error('private SQL or file diagnostic'), { code: 'EACCES' });
-    if (status !== undefined) failure.status = status;
+    const failure = status === undefined
+      ? new Error('private SQL or file diagnostic')
+      : new AppError(status, 'EACCES', 'private SQL or file diagnostic');
     const { controller, logs } = setup({ publishAdvert: async () => { throw failure; } });
     const res = response();
     await controller.createAdvert({ body: {}, files: [] }, res);
@@ -113,7 +119,7 @@ test('publication server errors retain their status, hide internal details and l
 });
 
 test('unrecognized errors cannot expose their details as expected publication errors', async () => {
-  const failure = Object.assign(new Error('private internal diagnostic'), { status: 400, code: 'UNKNOWN' });
+  const failure = new AppError(400, 'UNKNOWN', 'private internal diagnostic');
   const { controller, logs } = setup({ publishAdvert: async () => { throw failure; } });
   const res = response();
   await controller.createAdvert({ body: {}, files: [] }, res);

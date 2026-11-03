@@ -138,12 +138,15 @@ function setup(options = {}) {
   const sandbox = {
     module: { exports: {} },
     require: (name) => {
+      if (name === '../utils/appError') {
+        return require('../build/src/utils/appError');
+      }
       assert.ok(name in dependencies, name);
       return dependencies[name];
     },
     console: { error: (...args) => logs.push(args) },
   };
-  const filename = path.resolve(__dirname, '../src/service/signupService.js');
+  const filename = path.resolve(__dirname, '../build/src/service/signupService.js');
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), sandbox, { filename });
   const service = new sandbox.module.exports.constructor(models.sequelize, models.User, models.UserProfile);
   return {

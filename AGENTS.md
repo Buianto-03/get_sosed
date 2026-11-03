@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository has independent client and server npm packages. The React, TypeScript, and Vite client is in `client/`; its `src/` follows Feature-Sliced Design layers: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. The Express and Sequelize server is in `server/`; routes/controllers/middleware are under `src/`, and database models, migrations, and seeders under `db/`.
+This repository has independent client and server npm packages. The React, TypeScript, and Vite client is in `client/`; its `src/` follows Feature-Sliced Design layers: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. The TypeScript Express and Sequelize server is in `server/`; routes/controllers/middleware are under `src/`, and database models, migrations, and seeders under `db/`.
 
 Consult `client/ARCH.md` when making client architecture decisions. Update it when a change alters the documented principles or boundaries.
 
@@ -14,7 +14,8 @@ Consult `server/ARCH.md` when making server changes. Follow its responsibility b
 - `cd client && npm run build` type-checks and builds the client into `server/dist`.
 - `cd client && npm run lint` runs ESLint and checks FSD import boundaries; `npm run lint:ts` runs TypeScript checks alone.
 - `cd client && npm test` runs the Vitest suite once.
-- `cd server && npm run dev` starts the API server with nodemon. Configure PostgreSQL and environment variables before using the database; `npm run db` drops and recreates the development database, then migrates and seeds it.
+- `cd server && npm run dev` starts the TypeScript API server in watch mode. `npm run typecheck` checks types, `npm run build` compiles the server, and `npm start` runs the compiled server. Configure PostgreSQL and environment variables before using the database; `npm run db` drops and recreates the development database, then migrates and seeds it.
+- `cd server && npm test` builds the server and runs its Node test suite.
 
 ## Coding Style & Naming Conventions
 
@@ -51,7 +52,7 @@ In `client/src`, use relative imports for files within the same FSD slice or com
 
 ## Testing Guidelines
 
-Add client tests beside the behavior, named `*.test.ts` or `*.test.tsx`; Vitest and Testing Library are configured. Run `npm test`, `npm run lint`, and `npm run build` in `client/` for client changes. The server has no test suite (`npm test` is a placeholder); verify changes with focused API/database checks.
+Add client tests beside the behavior, named `*.test.ts` or `*.test.tsx`; Vitest and Testing Library are configured. Run `npm test`, `npm run lint`, and `npm run build` in `client/` for client changes. Run `npm test` and `npm run typecheck` in `server/` for server changes; use focused API/database checks where applicable.
 
 ## Commit & Pull Request Guidelines
 

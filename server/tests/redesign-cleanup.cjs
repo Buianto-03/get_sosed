@@ -1,7 +1,7 @@
 // Remove only the synthetic accounts recorded by redesign-live.cjs and their own records.
 const fs = require('node:fs/promises');
 const { Op } = require('sequelize');
-const db = require('../db/models');
+const db = require('../build/db/models');
 async function cleanup() {
   const saved = JSON.parse(
     await fs.readFile('/tmp/get-sosed-redesign-smoke.json', 'utf8'),
