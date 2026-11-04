@@ -4,10 +4,10 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
   type NonAttribute,
 } from 'sequelize';
 import type createUserProfile = require('./userprofile');
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createUser = (
   sequelize: Sequelize,
@@ -35,7 +35,10 @@ const createUser = (
       Advert,
       Chat,
       UserPhoto,
-    }: Record<string, ModelStatic<Model>>) {
+    }: Pick<
+      typeof db,
+      'Role' | 'UserProfile' | 'Like' | 'Advert' | 'Chat' | 'UserPhoto'
+    >) {
       this.belongsTo(Role, { foreignKey: 'roleId' });
       this.hasOne(UserProfile, { foreignKey: 'userId' });
       this.hasMany(Like, { foreignKey: 'userId' });

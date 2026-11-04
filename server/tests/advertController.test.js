@@ -102,6 +102,29 @@ test('publication validation errors return 400 with INVALID_ADVERT_DATA and a sa
   assert.deepEqual(logs, []);
 });
 
+test('publication rejects absent files and Multer file dictionaries after validating the body', async () => {
+  const service = load('../build/src/service/publishAdvertService.js', {
+    'fs/promises': {},
+    sharp: {},
+    sequelize: {},
+    '../../db/models': {},
+    './advertService': {},
+  });
+  const body = {
+    title: 'Room', body: 'Description', city: 'City', address: 'Street',
+    square: '18', rooms: '2', floor: '3', price: '25000', tagIds: '[]',
+  };
+  for (const files of [undefined, { photos: [{ mimetype: 'image/png' }] }]) {
+    const { controller, logs } = setup(service);
+    const res = response();
+    await controller.createAdvert({ body, files }, res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.code, 'INVALID_ADVERT_DATA');
+    assert.equal(res.body.message, 'Add 1–10 photos');
+    assert.deepEqual(logs, []);
+  }
+});
+
 test('publication server errors retain their status, hide internal details and log the original error', async () => {
   for (const status of [undefined, 500, 503]) {
     const failure = status === undefined
@@ -139,6 +162,7 @@ test('publication success passes the authenticated author to the injected servic
   const { createAdvert } = controller;
   await createAdvert({ body, files }, res);
   assert.deepEqual(calls, [[body, files, 7]]);
+  assert.equal(calls[0][1], files);
   assert.equal(res.statusCode, 201);
   assert.equal(res.body, advert);
   assert.deepEqual(logs, []);

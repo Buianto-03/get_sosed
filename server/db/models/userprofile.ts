@@ -4,8 +4,8 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
 } from 'sequelize';
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createUserProfile = (
   sequelize: Sequelize,
@@ -28,7 +28,7 @@ const createUserProfile = (
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
-    static associate({ User }: Record<string, ModelStatic<Model>>) {
+    static associate({ User }: Pick<typeof db, 'User'>) {
       this.belongsTo(User, { foreignKey: 'userId' });
     }
   }

@@ -3,6 +3,8 @@ const { test } = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const sequelize = require('sequelize');
+const { UniqueConstraintError } = sequelize;
 
 function setup(options = {}) {
   const rows = [];
@@ -16,6 +18,7 @@ function setup(options = {}) {
   let sharpCalls = 0;
   let mkdirCalls = 0;
   const dependencies = {
+    sequelize,
     bcrypt: {
       hash: async (password, rounds) => {
         events.push('hash');
@@ -92,9 +95,7 @@ function setup(options = {}) {
           assert.equal(query.transaction, transaction);
           events.push('createUser');
           if (options.race) {
-            throw Object.assign(new Error('unique'), {
-              name: 'SequelizeUniqueConstraintError',
-            });
+            throw new UniqueConstraintError({ message: 'unique' });
           }
           rows.push({ ...values, id: 8, roleId: 2, internalFlag: true });
           return rows[0];
@@ -274,14 +275,15 @@ test('signup removes only its new photo after rollback and preserves other user 
 test('signup logs cleanup failures and preserves the original error or unique-conflict response', async () => {
   const failures = [
     new Error('profile failed'),
-    Object.assign(new Error('unique'), { name: 'SequelizeUniqueConstraintError' }),
+    new UniqueConstraintError({ message: 'unique' }),
+    Object.assign(new Error('fake unique'), { name: 'SequelizeUniqueConstraintError' }),
   ];
   for (const failure of failures) {
     const cleanupError = new Error('cannot remove photo');
     const env = setup({ profileError: failure, cleanupError });
     await assert.rejects(
       env.service.signup(body, { buffer: Buffer.from('photo') }),
-      (error) => failure.name === 'SequelizeUniqueConstraintError'
+      (error) => failure instanceof UniqueConstraintError
         ? error.status === 409 && error.code === 'EMAIL_ALREADY_EXISTS'
         : error === failure,
     );

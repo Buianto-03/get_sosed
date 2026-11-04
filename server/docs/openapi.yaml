@@ -679,22 +679,6 @@ paths:
                     type: string
               example:
                 message: server error
-    delete:
-      tags:
-        - Adverts
-      operationId: deleteAdvert
-      summary: Удалить объявление (маршрут неисправен)
-      deprecated: true
-      description:
-        Маршрут зарегистрирован без авторизации. Фактически срабатывает
-        /:postId; метод deletePost отсутствует в сервисе. Не используйте до
-        исправления реализации.
-      responses:
-        default:
-          description:
-            'Надёжный HTTP-ответ отсутствует: необработанный TypeError при
-            вызове отсутствующего advertService.deletePost. Контроллер содержит
-            недостижимые ответы 204/500; они не являются рабочим контрактом.'
   /api/users:
     get:
       tags:

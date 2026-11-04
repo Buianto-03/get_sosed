@@ -4,8 +4,8 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
 } from 'sequelize';
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createAdvertTags = (
   sequelize: Sequelize,
@@ -15,13 +15,15 @@ const createAdvertTags = (
     InferAttributes<AdvertTags>,
     InferCreationAttributes<AdvertTags>
   > {
-    declare id: CreationOptional<number>;
     declare tagId: number | null;
     declare advertId: number | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
-    static associate({ Advert, Tags }: Record<string, ModelStatic<Model>>) {
+    static associate({
+      Advert,
+      Tags,
+    }: Pick<typeof db, 'Advert' | 'Tags'>) {
       this.belongsTo(Advert, { foreignKey: 'advertId' });
       this.belongsTo(Tags, { foreignKey: 'tagId' });
     }

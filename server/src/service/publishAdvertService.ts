@@ -131,12 +131,12 @@ class PublishAdvertService {
     };
   }
 
-  async preparePhotos(files: unknown) {
+  async preparePhotos(files: Express.Multer.File[] | undefined) {
     if (!Array.isArray(files) || files.length < 1 || files.length > 10) {
       throw invalid('Add 1–10 photos');
     }
     const images = [];
-    for (const file of files as Express.Multer.File[]) {
+    for (const file of files) {
       if (
         !['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype) ||
         file.size > 10 * 1024 * 1024
@@ -233,7 +233,7 @@ class PublishAdvertService {
 
   async publishAdvert(
     body: Record<string, unknown>,
-    files: unknown,
+    files: Express.Multer.File[] | undefined,
     userId: number,
   ) {
     const values = this.parseAdvert(body);

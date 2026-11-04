@@ -295,6 +295,23 @@ test('a tag search without matches keeps an empty ID filter instead of returning
   assert.match(queries[1], /"Advert"\."id" IN \(NULL\)/);
 });
 
+test('tag search excludes null advert IDs and retains an empty ID filter when necessary', async () => {
+  for (const [ids, expected] of [
+    [[null, 42], /"Advert"\."id" IN \(42\)/],
+    [[null], /"Advert"\."id" IN \(NULL\)/],
+  ]) {
+    const { service, sequelize } = createService();
+    const queries = [];
+    sequelize.query = async (sql) => {
+      queries.push(sql);
+      return queries.length === 1 ? ids.map((advertId) => ({ advertId })) : [];
+    };
+    assert.deepEqual(await service.getFilteredAdverts({ tags: [{ id: 73 }] }), []);
+    assert.equal(queries.length, 2);
+    assert.match(queries[1], expected);
+  }
+});
+
 test('absent, empty and invalid-only tag selections skip the tag query and ID restriction', async () => {
   for (const tags of [undefined, [], [{ id: 0 }, { id: -1 }, { id: 'bad' }]]) {
     const { service, sequelize } = createService();

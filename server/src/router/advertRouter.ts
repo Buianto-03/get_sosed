@@ -24,10 +24,6 @@ advertRouter.route('/top').get(advertController.getTopAdvertsByLikes);
 
 advertRouter.route('/tags').get(advertController.getTagsBySearch);
 advertRouter.get('/mine', verifyAccessToken, advertController.getMine);
-advertRouter.route('/:postId').delete(advertController.deletePost);
-advertRouter
-  .route('/:advertId')
-  .get(advertController.getAdvertById)
-  .delete(advertController.deletePost);
+advertRouter.route('/:advertId').get(advertController.getAdvertById);
 
 export = advertRouter;

@@ -102,12 +102,8 @@ origin API, например `/images/users/user-1/avatar.webp`.
 - `GET /api/users/{userId}` возвращает последние сообщения диалогов текущего
   пользователя; краткий профиль доступен через
   `GET /api/users/{userId}/summary`.
-- `DELETE /api/adverts/{advertId}` зарегистрирован без авторизации и неисправен:
-  первый совпавший маршрут `/:postId` вызывает отсутствующий
-  `advertService.deletePost`. Его async-обработчик не перехватывает исключение;
-  нельзя рассчитывать на HTTP-ответ. В спецификации операция помечена
-  `deprecated` с описанием фактического ограничения. Исправление удаления
-  требует отдельного изменения реализации.
+- Удаление объявления не реализовано. `DELETE /api/adverts/{advertId}` возвращает
+  **404** `{ "code": "API_ROUTE_NOT_FOUND", "message": "API route not found" }`.
 - Неизвестные `/api/*` возвращают **404**
   `{ "code": "API_ROUTE_NOT_FOUND", "message": "API route not found" }`.
 

@@ -1,4 +1,5 @@
 import type { Transaction } from 'sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import bcrypt = require('bcrypt');
 import fs = require('fs/promises');
 import sharp = require('sharp');
@@ -169,12 +170,7 @@ class SignupService {
       });
     } catch (error) {
       await this.removeCreatedPhoto(photoPath);
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'name' in error &&
-        error.name === 'SequelizeUniqueConstraintError'
-      ) {
+      if (error instanceof UniqueConstraintError) {
         throw signupError(409, 'EMAIL_ALREADY_EXISTS', 'Email already exists');
       }
       throw error;

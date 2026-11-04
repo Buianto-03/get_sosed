@@ -4,10 +4,10 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
   type NonAttribute,
 } from 'sequelize';
 import type createUser = require('./user');
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createLike = (
   sequelize: Sequelize,
@@ -26,7 +26,10 @@ const createLike = (
       ReturnType<typeof createUser>
     > | null>;
 
-    static associate({ Advert, User }: Record<string, ModelStatic<Model>>) {
+    static associate({
+      Advert,
+      User,
+    }: Pick<typeof db, 'Advert' | 'User'>) {
       this.belongsTo(Advert, { foreignKey: 'advertId' });
       this.belongsTo(User, { foreignKey: 'userId' });
     }
