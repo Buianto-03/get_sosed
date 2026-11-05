@@ -78,3 +78,62 @@ jobs:
 
       - name: Проверить зависимости в образе сервера
         run: docker run --rm get-sosed-server:ci node -e "require('express'); require('sharp'); require('bcrypt'); console.log('Пакеты загружены')"
+
+      - name: Проверить Compose-конфигурацию
+        run: docker compose --profile tools config --quiet
+
+  compose-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v6
+
+      - name: Запустить PostgreSQL
+        run: docker compose up -d db
+
+      - name: Дождаться PostgreSQL
+        run: |
+          for attempt in {1..30}; do
+            if docker compose exec -T db pg_isready -U learner -d get-sosed; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL не начал принимать подключения"
+          exit 1
+
+      - name: Применить миграции
+        run: docker compose run --rm --build migrate
+
+      - name: Запустить сервер
+        run: docker compose up -d --build server
+
+      - name: Запустить клиент
+        run: docker compose up -d --build client
+
+      - name: Проверить API через Nginx
+        run: |
+          curl --fail --silent --show-error \
+            --retry 10 --retry-delay 2 --retry-connrefused \
+            http://127.0.0.1:8082/api/adverts \
+            | python3 -c 'import json, sys; data = json.load(sys.stdin); assert data == [], f"Ожидался пустой список, получено: {data}"; print("API вернул пустой JSON-массив")'
+
+      - name: Проверить страницу React
+        run: |
+          curl --fail --silent --show-error \
+            http://127.0.0.1:8082/listings \
+            | grep --quiet 'id="root"'
+          echo "Nginx вернул HTML-основу React"
+
+      - name: Проверить маршруты изображений и WebSocket
+        run: |
+          image_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://127.0.0.1:8082/images/ci-nonexistent.webp)
+          ws_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            http://127.0.0.1:8082/ws)
+
+          echo "Несуществующее изображение: HTTP $image_status"
+          echo "Обычный HTTP-запрос к WebSocket: HTTP $ws_status"
+
+          test "$image_status" = 404
+          test "$ws_status" = 426
