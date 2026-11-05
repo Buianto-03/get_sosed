@@ -75,3 +75,6 @@ jobs:
 
       - name: Собрать образ сервера
         run: docker build -t get-sosed-server:ci -f server/Dockerfile server
+
+      - name: Проверить зависимости в образе сервера
+        run: docker run --rm get-sosed-server:ci node -e "require('express'); require('sharp'); console.log('Пакеты загружены')"
