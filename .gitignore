@@ -136,3 +136,4 @@ docs/*
 !docs/redesign-visual-qa.md
 !docs/client-optimization-plan.md
 !docs/server-service-refactoring-plan.md
+!docs/devops/

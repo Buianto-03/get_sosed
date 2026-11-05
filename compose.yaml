@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: learner
+      POSTGRES_PASSWORD: training-only
+      POSTGRES_DB: get-sosed
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  migrate:
+    profiles:
+      - tools
+    build:
+      context: ./server
+      target: build
+    environment:
+      NODE_ENV: production
+      DB_USER_PROD: learner
+      DB_PASS_PROD: training-only
+      DB_NAME_PROD: get-sosed
+      DB_HOST_PROD: db
+    command: ["./node_modules/.bin/sequelize", "db:migrate"]
+
+  server:
+    build:
+      context: ./server
+    environment:
+      DB_USER_PROD: learner
+      DB_PASS_PROD: training-only
+      DB_NAME_PROD: get-sosed
+      DB_HOST_PROD: db
+      ACCESS_TOKEN_SECRET: local-training-access
+      REFRESH_TOKEN_SECRET: local-training-refresh
+    volumes:
+      - uploads_data:/app/public/images
+  client:
+    build:
+      context: ./client
+    ports:
+      - "127.0.0.1:8082:80"
+
+volumes:
+  postgres_data:
+  uploads_data:
