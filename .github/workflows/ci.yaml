@@ -57,3 +57,21 @@ jobs:
       - name: Собрать клиент
         working-directory: client
         run: npm run build
+
+  docker-client:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v6
+
+      - name: Собрать образ клиента
+        run: docker build -t get-sosed-client:ci -f client/Dockerfile client
+
+  docker-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v6
+
+      - name: Собрать образ сервера
+        run: docker build -t get-sosed-server:ci -f server/Dockerfile server
