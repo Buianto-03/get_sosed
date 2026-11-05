@@ -77,7 +77,9 @@ jobs:
         run: docker build -t get-sosed-server:ci -f server/Dockerfile server
 
       - name: Проверить зависимости в образе сервера
-        run: docker run --rm get-sosed-server:ci node -e "require('express'); require('sharp'); require('bcrypt'); console.log('Пакеты загружены')"
+        run:
+          docker run --rm get-sosed-server:ci node -e "require('express');
+          require('sharp'); require('bcrypt'); console.log('Пакеты загружены')"
 
       - name: Проверить Compose-конфигурацию
         run: docker compose --profile tools config --quiet
@@ -137,3 +139,9 @@ jobs:
 
           test "$image_status" = 404
           test "$ws_status" = 426
+
+      - name: Показать состояние и логи при ошибке
+        if: failure()
+        run: |
+          docker compose ps --all
+          docker compose logs --no-color --tail=50 db server client

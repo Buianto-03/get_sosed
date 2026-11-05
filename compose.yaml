@@ -32,6 +32,7 @@ services:
       DB_HOST_PROD: db
       ACCESS_TOKEN_SECRET: local-training-access
       REFRESH_TOKEN_SECRET: local-training-refresh
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
     volumes:
       - uploads_data:/app/public/images
   client:
