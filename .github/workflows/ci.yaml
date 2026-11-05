@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v6
+
+      - name: Настроить Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Установить зависимости сервера
+        working-directory: server
+        run: npm ci
+
+      - name: Проверить типы сервера
+        working-directory: server
+        run: npm run typecheck
+
+      - name: Запустить тесты сервера
+        working-directory: server
+        run: npm test
+
+  client:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v6
+
+      - name: Настроить Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Установить зависимости клиента
+        working-directory: client
+        run: npm ci
+
+      - name: Проверить код клиента
+        working-directory: client
+        run: npm run lint
+
+      - name: Запустить тесты клиента
+        working-directory: client
+        run: npm test
+
+      - name: Собрать клиент
+        working-directory: client
+        run: npm run build
