@@ -224,7 +224,22 @@ jobs:
             exit 1
           fi
 
-          docker compose run --rm --build migrate
+          docker compose run --rm --pull never migrate
+          docker compose run --rm --pull never migrate \
+            ./node_modules/.bin/sequelize db:seed \
+            --seed 20240822073001-Roles.js
+
+          roles=$(docker compose exec --no-TTY db \
+            psql --username learner --dbname get-sosed \
+            --tuples-only --no-align \
+            --command 'SELECT id, name FROM "Roles" ORDER BY id;')
+
+          if [ "$roles" != $'1|Admin\n2|User' ]; then
+            echo "Роли или их ID не соответствуют ожиданиям"
+            exit 1
+          fi
+
+          echo "Роли и их ID проверены"
           docker compose up --detach --no-build server
           docker compose up --detach --no-build client
 
