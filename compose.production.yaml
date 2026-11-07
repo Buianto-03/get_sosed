@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?Set DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:?Set DB_NAME}
+    volumes:
+      - production_db_data:/var/lib/postgresql/data
+
+  server:
+    image: ${SERVER_IMAGE:?Set SERVER_IMAGE}
+    restart: unless-stopped
+    environment:
+      DB_USER_PROD: ${DB_USER:?Set DB_USER}
+      DB_PASS_PROD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      DB_NAME_PROD: ${DB_NAME:?Set DB_NAME}
+      DB_HOST_PROD: db
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?Set ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:?Set REFRESH_TOKEN_SECRET}
+      COOKIE_SECURE: 'true'
+    volumes:
+      - production_uploads:/app/public/images
+
+  migrate:
+    profiles:
+      - tools
+    image: ${SERVER_IMAGE:?Set SERVER_IMAGE}
+    environment:
+      DB_USER_PROD: ${DB_USER:?Set DB_USER}
+      DB_PASS_PROD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      DB_NAME_PROD: ${DB_NAME:?Set DB_NAME}
+      DB_HOST_PROD: db
+    command: ['./node_modules/.bin/sequelize', 'db:migrate']
+
+  client:
+    image: ${CLIENT_IMAGE:?Set CLIENT_IMAGE}
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8082:80'
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  production_db_data:
+  production_uploads:
+  caddy_data:
+  caddy_config:
