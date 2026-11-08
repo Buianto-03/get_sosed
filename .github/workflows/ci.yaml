@@ -254,7 +254,27 @@ jobs:
 
       - name: Опубликовать проверенные образы
         run: |
+          set -euo pipefail
           owner="${GITHUB_REPOSITORY_OWNER,,}"
 
-          docker image push "ghcr.io/$owner/get-sosed-client:$GITHUB_SHA"
-          docker image push "ghcr.io/$owner/get-sosed-server:$GITHUB_SHA"
+          docker image push "ghcr.io/$owner/get-sosed-client:$GITHUB_SHA" | tee "$RUNNER_TEMP/client-push.log"
+          docker image push "ghcr.io/$owner/get-sosed-server:$GITHUB_SHA" | tee "$RUNNER_TEMP/server-push.log"
+
+          client_digest=$(sed -nE 's/.*digest: (sha256:[0-9a-f]{64}) size:.*/\1/p' "$RUNNER_TEMP/client-push.log")
+          server_digest=$(sed -nE 's/.*digest: (sha256:[0-9a-f]{64}) size:.*/\1/p' "$RUNNER_TEMP/server-push.log")
+          [[ "$client_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$server_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+
+          jq -n \
+            --arg commit "$GITHUB_SHA" \
+            --arg client "ghcr.io/$owner/get-sosed-client@$client_digest" \
+            --arg server "ghcr.io/$owner/get-sosed-server@$server_digest" \
+            '{commit: $commit, client: $client, server: $server}' \
+            > "$RUNNER_TEMP/deploy-images.json"
+
+      - name: Сохранить идентификаторы образов
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-images-${{ github.sha }}
+          path: ${{ runner.temp }}/deploy-images.json
+          if-no-files-found: error
