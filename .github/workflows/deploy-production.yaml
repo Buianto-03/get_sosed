@@ -48,7 +48,7 @@ jobs:
             core.setOutput('sha', run.head_sha);
 
       - name: Скачать данные образов
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: deploy-images-${{ steps.ci.outputs.sha }}
           run-id: ${{ steps.ci.outputs.run_id }}
