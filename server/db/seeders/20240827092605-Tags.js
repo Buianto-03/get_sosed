@@ -59,6 +59,16 @@ module.exports = {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      {
+        name: 'Тихие вечера',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: 'С рабочим местом',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
   },
 

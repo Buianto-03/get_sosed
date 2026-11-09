@@ -195,36 +195,38 @@ test('tag endpoint accepts absent query, rejects structured query and handles se
   }
 });
 
-test('condition migration is repeatable and rollback preserves existing user links and IDs', async () => {
-  const migration = require('../db/migrations/20261018000000-add-listing-condition-tags');
-  const tags = [
-    { id: 73, name: 'Для некурящих' },
-    { id: 109, name: 'Питомцы разрешены' },
-    { id: 28, name: 'Рядом с метро' },
-  ];
-  const links = [{ advertId: 1, tagId: 73 }];
+test('tag seeds include all conditions once and preserve demo advert tag IDs', async () => {
+  const tagSeed = require('../db/seeders/20240827092605-Tags');
+  const advertTagSeed = require('../db/seeders/20240827101623-AdvertTags');
+  const tables = { Tags: [], AdvertTags: [] };
   const queryInterface = {
-    sequelize: {
-      transaction: async (callback) => callback({}),
-      query: async (sql) => sql.startsWith('SELECT') ? tags : undefined,
-    },
     bulkInsert: async (table, rows) => {
-      assert.equal(table, 'Tags');
-      rows.forEach((row) => tags.push({ ...row, id: tags.length + 200 }));
+      for (const row of rows) {
+        tables[table].push({ ...row, id: tables[table].length + 1 });
+      }
     },
   };
-  await migration.up(queryInterface, Sequelize);
-  const afterFirstRun = structuredClone(tags);
-  assert.equal(tags.length, 5);
-  assert.equal(tags.find(({ name }) => name === 'Для некурящих').id, 73);
-  assert.equal(tags.find(({ name }) => name === 'Рядом с метро').id, 28);
-  await migration.up(queryInterface, Sequelize);
-  assert.deepEqual(tags, afterFirstRun);
-  await migration.down(queryInterface, Sequelize);
-  assert.deepEqual(tags, afterFirstRun);
-  assert.deepEqual(links, [{ advertId: 1, tagId: 73 }]);
-  await migration.up(queryInterface, Sequelize);
-  assert.deepEqual(tags, afterFirstRun);
+  await tagSeed.up(queryInterface, Sequelize);
+  await advertTagSeed.up(queryInterface, Sequelize);
+  const names = tables.Tags.map((tag) => tag.name);
+  assert.equal(new Set(names).size, names.length);
+  for (const name of [
+    'Для некурящих', 'Питомцы разрешены', 'Тихие вечера', 'С рабочим местом',
+  ]) {
+    assert.ok(names.includes(name));
+    const tag = tables.Tags.find((entry) => entry.name === name);
+    assert.ok(tables.AdvertTags.some((link) => link.tagId === tag.id));
+  }
+  assert.deepEqual(
+    tables.AdvertTags.filter((link) => link.advertId === 1)
+      .map((link) => tables.Tags.find((tag) => tag.id === link.tagId)?.name),
+    ['Двухкомнатная', 'С мебелью', 'Для некурящих', 'Тихие вечера'],
+  );
+  const links = tables.AdvertTags.map((link) => `${link.advertId}:${link.tagId}`);
+  assert.equal(new Set(links).size, links.length);
+  for (const link of tables.AdvertTags) {
+    assert.ok(tables.Tags.some((tag) => tag.id === link.tagId));
+  }
 });
 
 test('selected tags normalize IDs, use HAVING COUNT DISTINCT for an AND match and scope the final query', async () => {
