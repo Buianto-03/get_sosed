@@ -79,7 +79,6 @@ export default function AppLayout(): JSX.Element {
       }
       onSignOut={isLoggedIn ? signOut : undefined}
       availableRoutes={availableRoutes}
-      footerLinks={{ showAbout: true, showSearch: true, showListingCreate: true }}
       fullscreenChat={
         location.pathname === String(RoutePattern.Messages) ||
         location.pathname.startsWith(`${RoutePattern.Messages}/`)

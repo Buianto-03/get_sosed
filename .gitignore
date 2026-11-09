@@ -138,3 +138,4 @@ docs/*
 !docs/client-optimization-plan.md
 !docs/server-service-refactoring-plan.md
 !docs/devops/
+!docs/production-deploy.md

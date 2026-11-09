@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       ci_run_id:
-        description: ID успешного запуска CI для деплоя
-        required: true
+        description: ID успешного CI (необязательно; пустое поле — текущий коммит)
+        required: false
         type: string
 
 permissions:
@@ -32,16 +32,29 @@ jobs:
             if (context.ref !== 'refs/heads/release/initial') {
               throw new Error('Запустите workflow из ветки release/initial');
             }
-            const id = process.env.CI_RUN_ID;
-            if (!/^[1-9][0-9]*$/.test(id)) {
+            const requestedId = (process.env.CI_RUN_ID || '').trim();
+            if (requestedId && !/^[1-9][0-9]*$/.test(requestedId)) {
               throw new Error('ID запуска CI должен быть положительным числом');
             }
             const { owner, repo } = context.repo;
+            let id = requestedId;
+            if (!id) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id: 'ci.yaml', branch: 'release/initial',
+                event: 'push', status: 'success', head_sha: context.sha, per_page: 100,
+              });
+              const match = data.workflow_runs.find(run => run.head_sha === context.sha);
+              if (!match) {
+                throw new Error(`Для коммита ${context.sha} нет успешного CI. Дождитесь его завершения.`);
+              }
+              id = String(match.id);
+            }
             const { data: run } = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: id });
             const { data: workflow } = await github.rest.actions.getWorkflow({ owner, repo, workflow_id: run.workflow_id });
             if (workflow.path !== '.github/workflows/ci.yaml' || run.event !== 'push' ||
                 run.head_branch !== 'release/initial' || run.status !== 'completed' ||
-                run.conclusion !== 'success' || run.head_repository?.full_name !== `${owner}/${repo}`) {
+                run.conclusion !== 'success' || run.head_repository?.full_name !== `${owner}/${repo}` ||
+                (!requestedId && run.head_sha !== context.sha)) {
               throw new Error('Нужен успешный запуск CI по push в release/initial этого репозитория');
             }
             const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt, {
@@ -50,6 +63,7 @@ jobs:
             if (!jobs.some(job => job.name === 'publish-images' && job.conclusion === 'success')) {
               throw new Error('Публикация образов в выбранном запуске не завершилась успешно');
             }
+            core.info(`Выбран CI ${id}, коммит ${run.head_sha}: ${run.html_url}`);
             core.setOutput('run_id', id);
             core.setOutput('sha', run.head_sha);
 

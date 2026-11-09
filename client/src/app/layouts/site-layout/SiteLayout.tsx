@@ -1,8 +1,9 @@
 import React, { type ReactNode } from 'react';
 import { SiteHeader, type SiteHeaderProps } from '@widgets/header/SiteHeader';
-import { SiteFooter, type SiteFooterProps } from '@widgets/footer/SiteFooter';
+import { SiteFooter } from '@widgets/footer/SiteFooter';
 import { SiteContent } from '../site-content/SiteContent';
 import { SkipLink } from '../skip-link/SkipLink';
+import { version } from '../../../../package.json';
 import styles from './SiteLayout.module.scss';
 
 const contentId = 'route-content';
@@ -11,7 +12,6 @@ interface SiteLayoutProps extends SiteHeaderProps {
   children: ReactNode;
   bottomNavigation?: ReactNode;
   fullscreenChat?: boolean;
-  footerLinks?: SiteFooterProps;
 }
 
 export function SiteLayout({
@@ -21,20 +21,18 @@ export function SiteLayout({
   user,
   onSignOut,
   availableRoutes,
-  footerLinks,
 }: SiteLayoutProps): JSX.Element {
   return (
-    <div className={[styles.shell, fullscreenChat && styles.shell_chat].filter(Boolean).join(' ')}>
+    <div
+      className={[styles.shell, fullscreenChat && styles.shell_chat].filter(Boolean).join(' ')}
+      data-version={version}
+    >
       <SkipLink targetId={contentId} />
       <SiteHeader user={user} onSignOut={onSignOut} availableRoutes={availableRoutes} />
-      <SiteContent id={contentId} fullscreenChat={fullscreenChat}>{children}</SiteContent>
-      {!fullscreenChat && (
-        <SiteFooter
-          showAbout={footerLinks?.showAbout}
-          showSearch={footerLinks?.showSearch}
-          showListingCreate={footerLinks?.showListingCreate}
-        />
-      )}
+      <SiteContent id={contentId} fullscreenChat={fullscreenChat}>
+        {children}
+      </SiteContent>
+      {!fullscreenChat && <SiteFooter />}
       {bottomNavigation}
     </div>
   );
