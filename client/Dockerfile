@@ -6,6 +6,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+ARG VITE_YANDEX_API_KEY
 RUN npm run build
 
 FROM nginx:alpine

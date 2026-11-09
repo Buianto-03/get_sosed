@@ -175,12 +175,15 @@ jobs:
             --password-stdin
 
       - name: Собрать образы для публикации
+        env:
+          VITE_YANDEX_API_KEY: ${{ vars.VITE_YANDEX_API_KEY }}
         run: |
           owner="${GITHUB_REPOSITORY_OWNER,,}"
 
           docker build \
             --tag "ghcr.io/$owner/get-sosed-client:$GITHUB_SHA" \
             --file client/Dockerfile \
+            --build-arg VITE_YANDEX_API_KEY \
             client
 
           docker build \
