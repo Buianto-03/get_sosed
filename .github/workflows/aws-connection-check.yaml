@@ -11,11 +11,21 @@ jobs:
     if: github.ref == 'refs/heads/release/initial'
     runs-on: ubuntu-latest
     steps:
+      - name: Проверить идентификатор OIDC
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com');
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+            core.info(`OIDC subject: ${claims.sub}`);
+            core.info(`OIDC audience: ${claims.aud}`);
+
       - name: Получить временные права AWS
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 1
 
       - name: Проверить подключение
         run: aws sts get-caller-identity --query Account --output text

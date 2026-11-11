@@ -1,46 +1,56 @@
-# Get Sosed — фронтенд
+# Get Sosed client
 
-React, TypeScript, Vite, Redux Toolkit и собственный UI kit на SCSS Modules. Структура кода и правила
-импортов описаны в [ARCH.md](./ARCH.md).
+The client is a React and TypeScript application. React Router maps URLs to pages, and Redux Toolkit manages session, listing, favorites, and chat state. The client uses Axios for HTTP requests, Zod to validate API responses, and SCSS Modules to style components.
 
-## Запуск
+## Run locally
+
+Use Node.js 22 and npm. Set up PostgreSQL and start the API on port 3000 using the [server setup guide](../server/README.md). In a second terminal, run the following commands from `client/` for the first launch.
 
 ```sh
-npm install
+npm ci
 cp .env.example .env
 npm run dev
 ```
 
-Vite проксирует `/api`, `/images` и `/ws` на сервер по адресу
-`http://localhost:3000`; API запускается отдельно командой
-`npm --prefix server run dev` из корня репозитория. Для геокодирования при публикации объявления укажите
-`VITE_YANDEX_API_KEY` в `.env`. По умолчанию клиент использует текущий хост для
-WebSocket; `VITE_API_URL` и `VITE_WS_URL` позволяют переопределить адреса.
+Open the address printed by Vite, usually [http://localhost:5173](http://localhost:5173). Vite proxies `/api`, `/images`, and the `/ws` WebSocket connection to `http://localhost:3000`. This keeps browser requests on the same origin so the API and chat can use the `refreshToken` cookie. [Vite configuration](vite.config.ts)
 
-## Проверки
+### Environment variables
 
-```sh
-npm run build
-npm run lint
-npm run test
-```
+| Variable in `client/.env` | Purpose |
+| --- | --- |
+| `VITE_API_URL` | HTTP API base URL. Defaults to `/api`. Include the `/api` path when setting an absolute URL. |
+| `VITE_WS_URL` | Full WebSocket URL for chat. Defaults to `/ws` on the current host, using `ws://` for HTTP and `wss://` for HTTPS. |
+| `VITE_YANDEX_API_KEY` | Yandex Maps key for displaying maps and geocoding listing addresses. Listings can also be published with a text address and no coordinates. |
 
-Сборка записывается в `../server/dist`, откуда Express раздаёт SPA. `lint`
-включает проверку границ FSD. `test` запускает Vitest и ищет colocated тесты в
-`src` (`*.test.ts` и `*.test.tsx`). Компоненты проверяются в jsdom через React
-Testing Library. TypeScript проверяет тесты вместе с исходниками, а Vite не
-добавляет их в production-бандл.
+Vite reads these values when the development server starts or the production bundle is built. Restart Vite or rebuild after editing `.env`. The template also lists `VITE_APP_TITLE`. To change the browser tab title, edit [index.html](index.html).
 
-## Интерфейс и маршруты
+## Routes
 
-Общие стили находятся в `src/shared/styles`; каталог компонентов —
-[UI kit](src/shared/ui/README.md), визуальные правила — [DESIGN.md](DESIGN.md).
+| Access | Routes | Pages |
+| --- | --- | --- |
+| Public | `/`, `/about` | Home page and service overview |
+| Public | `/listings`, `/listings/:listingId` | Listing search and listing details |
+| Guests | `/sign-in`, `/sign-up` | Sign-in and registration |
+| Signed-in users | `/profile`, `/profile/edit` | Profile, published listings, favorites, and profile editing |
+| Signed-in users | `/listings/new` | Publish a listing with photos |
+| Signed-in users | `/messages`, `/messages/:receiverId` | Conversation list and chat with a specific user |
 
-Рабочие адреса: `/`, `/about`, `/listings`, `/listings/:listingId`,
-`/sign-in`, `/sign-up`, `/profile`, `/profile/edit`, `/listings/new`,
-`/messages`, `/messages/:receiverId`. Профиль, публикация и сообщения защищены
-с сохранением назначения после входа. Прежние `/home`, `/advert/:id`, `/post`,
-`/account`, `/chat/:receiverId`, `/signin`, `/signup` не имеют aliases или redirects.
-ChakraProvider и старые UI-компоненты удалены в Q03; необходимые API/Redux/thunks сохранены.
-Результаты очистки и открытые ручные проверки Q02 — в
-[журнале интеграции](../docs/redesign-integration-progress.md#27-q03--удаление-старого-ui-2-ноября-2026).
+When a guest opens a protected page, the client saves the requested URL so they can return after signing in. Routes and access rules are defined in [router.tsx](src/app/router/router.tsx).
+
+## Source layout
+
+The `src/` directory follows Feature-Sliced Design. The `app` layer configures routing and the Redux store. Pages live in `pages`, larger interface sections in `widgets`, and user actions in `features`. Domain models and their API calls belong in `entities`. Shared components and configuration live in `shared`. See the import rules and Redux conventions in [ARCH.md](ARCH.md).
+
+Shared styles live in `src/shared/styles/`. For visual conventions and reusable components, see the [design specification](DESIGN.md) and the [UI kit](src/shared/ui/README.md). The [integration log](../docs/redesign-integration-progress.md) records the screen migration and manual checks.
+
+## Checks and builds
+
+| Command from `client/` | What it does |
+| --- | --- |
+| `npm test` | Runs Vitest once. Tests live alongside the source. Component tests use jsdom and React Testing Library. |
+| `npm run lint` | Runs ESLint and checks Feature-Sliced Design import boundaries. |
+| `npm run check:architecture` | Checks import boundaries on their own. |
+| `npm run lint:ts` | Checks TypeScript types. |
+| `npm run build` | Type-checks the client and writes the Vite build to `../server/dist`. |
+
+When running the server from the repository, Express can serve the built client from `server/dist/`. In Docker, Nginx serves the client files.

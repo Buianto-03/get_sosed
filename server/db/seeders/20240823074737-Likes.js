@@ -7,9 +7,9 @@ const generateRandomInt = (min, max) => {
 const likes = [];
 const usedCombinations = new Set();
 
-while (likes.length < 15) {
-  const userId = generateRandomInt(1, 5);
-  const advertId = generateRandomInt(1, 15);
+while (likes.length < 50) {
+  const userId = generateRandomInt(1, 25);
+  const advertId = generateRandomInt(1, 40);
   const combination = `${userId}-${advertId}`;
 
   if (!usedCombinations.has(combination)) {

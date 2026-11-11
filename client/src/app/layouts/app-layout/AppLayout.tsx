@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import { LuHome, LuPlus, LuSearch, LuUser, LuMessagesSquare } from 'react-icons/lu';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
@@ -18,6 +18,13 @@ export default function AppLayout(): JSX.Element {
   const user = useAppSelector((state) => state.auth.user);
   const [logoutError, setLogoutError] = useState(false);
   const isLoggedIn = user.status === UserStatus.Logged;
+  const fullscreenChat = useMemo(
+    () =>
+      location.pathname === String(RoutePattern.Messages) ||
+      location.pathname.startsWith(`${RoutePattern.Messages}/`),
+    [location.pathname],
+  );
+
   const availableRoutes: HeaderPage[] = isLoggedIn
     ? ['home', 'search', 'about', 'post', 'profile', 'chat', 'signin']
     : ['home', 'search', 'about', 'post', 'profile', 'chat', 'signin', 'signup'];
@@ -79,11 +86,7 @@ export default function AppLayout(): JSX.Element {
       }
       onSignOut={isLoggedIn ? signOut : undefined}
       availableRoutes={availableRoutes}
-      footerLinks={{ showAbout: true, showSearch: true, showListingCreate: true }}
-      fullscreenChat={
-        location.pathname === String(RoutePattern.Messages) ||
-        location.pathname.startsWith(`${RoutePattern.Messages}/`)
-      }
+      fullscreenChat={fullscreenChat}
       bottomNavigation={<MobileNavigation items={mobileItems} />}
     >
       {logoutError && (

@@ -1,0 +1,13 @@
+services:
+  migrate:
+    build: !reset null
+    image: ${CI_SERVER_IMAGE:?CI_SERVER_IMAGE is required}
+    pull_policy: never
+
+  server:
+    image: ${CI_SERVER_IMAGE:?CI_SERVER_IMAGE is required}
+    pull_policy: never
+
+  client:
+    image: ${CI_CLIENT_IMAGE:?CI_CLIENT_IMAGE is required}
+    pull_policy: never

@@ -3,217 +3,973 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('AdvertTags', [
-      // Объявление 1
-      {
-        advertId: 1,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 1,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 2
-      {
-        advertId: 2,
-        tagId: 3, // Трехкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 2,
-        tagId: 6, // Новостройка
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 3
-      {
-        advertId: 3,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 3,
-        tagId: 7, // Рядом с метро
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 4
-      {
-        advertId: 4,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 4,
-        tagId: 6, // Новостройка
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 5
-      {
-        advertId: 5,
-        tagId: 3, // Трехкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 5,
-        tagId: 7, // Рядом с метро
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 6
-      {
-        advertId: 6,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 6,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 7
-      {
-        advertId: 7,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 7,
-        tagId: 7, // Рядом с метро
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 8
-      {
-        advertId: 8,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 8,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 9
-      {
-        advertId: 9,
-        tagId: 3, // Трехкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 9,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 10
-      {
-        advertId: 10,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 10,
-        tagId: 7, // Рядом с метро
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 11
-      {
-        advertId: 11,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 11,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 12
-      {
-        advertId: 12,
-        tagId: 3, // Трехкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 12,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 13
-      {
-        advertId: 13,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 13,
-        tagId: 6, // Новостройка
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 14
-      {
-        advertId: 14,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 14,
-        tagId: 7, // Рядом с метро
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    
-      // Объявление 15
-      {
-        advertId: 15,
-        tagId: 2, // Двухкомнатная
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        advertId: 15,
-        tagId: 4, // С мебелью
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ], {});  },
+    await queryInterface.bulkInsert(
+      'AdvertTags',
+      [
+        {
+          advertId: 1,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 1,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 2,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 2,
+          tagId: 6,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 3,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 3,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 4,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 4,
+          tagId: 6,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 5,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 5,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 6,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 6,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 7,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 7,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 8,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 8,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 9,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 9,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 10,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 10,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 11,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 11,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 12,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 12,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 13,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 13,
+          tagId: 6,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 14,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 14,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 15,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 15,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 1,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 1,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 2,
+          tagId: 11,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 2,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 3,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 3,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 5,
+          tagId: 11,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 5,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 8,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 8,
+          tagId: 11,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 11,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 11,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 4,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 4,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 6,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 6,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 7,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 7,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 9,
+          tagId: 11,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 9,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 10,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 10,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 12,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 12,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 13,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 13,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 14,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 14,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 15,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 15,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 16,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 16,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 16,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 16,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 17,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 17,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 17,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 17,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 18,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 18,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 18,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 18,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 19,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 19,
+          tagId: 6,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 19,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 19,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 20,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 20,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 20,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 20,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 21,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 21,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 21,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 21,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 22,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 22,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 22,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 22,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 23,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 23,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 23,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 23,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 24,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 24,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 24,
+          tagId: 9,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 24,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 25,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 25,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 25,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 25,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 26,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 26,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 26,
+          tagId: 9,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 26,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 27,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 27,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 27,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 27,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 28,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 28,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 28,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 28,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 29,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 29,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 29,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 29,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 30,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 30,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 30,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 30,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 31,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 31,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 31,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 31,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 32,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 32,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 32,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 32,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 33,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 33,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 33,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 33,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 34,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 34,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 34,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 34,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 35,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 35,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 35,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 35,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 36,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 36,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 36,
+          tagId: 7,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 36,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 37,
+          tagId: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 37,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 37,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 37,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 38,
+          tagId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 38,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 38,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 38,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 39,
+          tagId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 39,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 39,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 39,
+          tagId: 13,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 40,
+          tagId: 4,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 40,
+          tagId: 8,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 40,
+          tagId: 10,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          advertId: 40,
+          tagId: 12,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      {},
+    );
+  },
 
   async down(queryInterface, Sequelize) {},
 };

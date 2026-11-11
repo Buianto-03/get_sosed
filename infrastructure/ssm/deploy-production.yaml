@@ -1,0 +1,29 @@
+schemaVersion: '2.2'
+description: Deploy approved Get Sosed container images on the production instance.
+parameters:
+  ClientImage:
+    type: String
+    description: Client image pinned by digest.
+    interpolationType: ENV_VAR
+    allowedPattern: '^ghcr\.io/buianto-03/get-sosed-client@sha256:[0-9a-f]{64}$'
+  ServerImage:
+    type: String
+    description: Server image pinned by digest.
+    interpolationType: ENV_VAR
+    allowedPattern: '^ghcr\.io/buianto-03/get-sosed-server@sha256:[0-9a-f]{64}$'
+mainSteps:
+  - action: aws:runShellScript
+    name: deployProduction
+    precondition:
+      StringEquals:
+        - platformType
+        - Linux
+    inputs:
+      timeoutSeconds: '1800'
+      runCommand:
+        - |
+          set -eu
+          : "${SSM_ClientImage:?ClientImage is required}"
+          : "${SSM_ServerImage:?ServerImage is required}"
+          exec /usr/bin/env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin HOME=/root \
+            /bin/bash /usr/local/lib/get-sosed/deploy-production.sh "$SSM_ClientImage" "$SSM_ServerImage"

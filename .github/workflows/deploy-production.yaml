@@ -4,17 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       ci_run_id:
-        description: ID успешного запуска CI для деплоя
-        required: true
+        description: ID успешного CI (необязательно; пустое поле — текущий коммит)
+        required: false
         type: string
 
 permissions:
   actions: read
+  id-token: write
+
+concurrency:
+  group: get-sosed-production
+  cancel-in-progress: false
 
 jobs:
   verify-images:
-    name: Проверить образы для деплоя
+    name: Проверить образы и выполнить деплой
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - name: Проверить запуск CI
         id: ci
@@ -26,16 +32,29 @@ jobs:
             if (context.ref !== 'refs/heads/release/initial') {
               throw new Error('Запустите workflow из ветки release/initial');
             }
-            const id = process.env.CI_RUN_ID;
-            if (!/^[1-9][0-9]*$/.test(id)) {
+            const requestedId = (process.env.CI_RUN_ID || '').trim();
+            if (requestedId && !/^[1-9][0-9]*$/.test(requestedId)) {
               throw new Error('ID запуска CI должен быть положительным числом');
             }
             const { owner, repo } = context.repo;
+            let id = requestedId;
+            if (!id) {
+              const { data } = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id: 'ci.yaml', branch: 'release/initial',
+                event: 'push', status: 'success', head_sha: context.sha, per_page: 100,
+              });
+              const match = data.workflow_runs.find(run => run.head_sha === context.sha);
+              if (!match) {
+                throw new Error(`Для коммита ${context.sha} нет успешного CI. Дождитесь его завершения.`);
+              }
+              id = String(match.id);
+            }
             const { data: run } = await github.rest.actions.getWorkflowRun({ owner, repo, run_id: id });
             const { data: workflow } = await github.rest.actions.getWorkflow({ owner, repo, workflow_id: run.workflow_id });
             if (workflow.path !== '.github/workflows/ci.yaml' || run.event !== 'push' ||
                 run.head_branch !== 'release/initial' || run.status !== 'completed' ||
-                run.conclusion !== 'success' || run.head_repository?.full_name !== `${owner}/${repo}`) {
+                run.conclusion !== 'success' || run.head_repository?.full_name !== `${owner}/${repo}` ||
+                (!requestedId && run.head_sha !== context.sha)) {
               throw new Error('Нужен успешный запуск CI по push в release/initial этого репозитория');
             }
             const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt, {
@@ -44,11 +63,12 @@ jobs:
             if (!jobs.some(job => job.name === 'publish-images' && job.conclusion === 'success')) {
               throw new Error('Публикация образов в выбранном запуске не завершилась успешно');
             }
+            core.info(`Выбран CI ${id}, коммит ${run.head_sha}: ${run.html_url}`);
             core.setOutput('run_id', id);
             core.setOutput('sha', run.head_sha);
 
       - name: Скачать данные образов
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: deploy-images-${{ steps.ci.outputs.sha }}
           run-id: ${{ steps.ci.outputs.run_id }}
@@ -56,6 +76,7 @@ jobs:
           path: ${{ runner.temp }}/deploy-images
 
       - name: Проверить данные образов
+        id: images
         env:
           EXPECTED_SHA: ${{ steps.ci.outputs.sha }}
           IMAGES_FILE: ${{ runner.temp }}/deploy-images/deploy-images.json
@@ -74,5 +95,64 @@ jobs:
               expected = rf'ghcr\.io/{re.escape(owner)}/get-sosed-{service}@sha256:[0-9a-f]{{64}}'
               if not isinstance(data.get(service), str) or not re.fullmatch(expected, data[service]):
                   raise SystemExit(f'Некорректный адрес образа: {service}')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              for service in ('client', 'server'):
+                  output.write(f'{service}={data[service]}\n')
           print(f"Проверены образы для коммита {data['commit']}")
           PY
+
+      - name: Получить временные права AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Запустить деплой и дождаться результата
+        env:
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          CLIENT_IMAGE: ${{ steps.images.outputs.client }}
+          SERVER_IMAGE: ${{ steps.images.outputs.server }}
+        run: |
+          set -euo pipefail
+          [[ "$INSTANCE_ID" =~ ^i-[0-9a-f]{17}$ ]]
+          parameters=$(jq -nc --arg client "$CLIENT_IMAGE" --arg server "$SERVER_IMAGE" \
+            '{ClientImage: [$client], ServerImage: [$server]}')
+          command_id=$(aws ssm send-command \
+            --document-name GetSosed-DeployProduction \
+            --document-version 1 \
+            --instance-ids "$INSTANCE_ID" \
+            --parameters "$parameters" \
+            --query 'Command.CommandId' --output text)
+          echo "Команда SSM: $command_id"
+
+          errors=0
+          for attempt in {1..210}; do
+            if result=$(aws ssm get-command-invocation \
+              --command-id "$command_id" --instance-id "$INSTANCE_ID" --output json 2> "$RUNNER_TEMP/ssm-error"); then
+              errors=0
+              status=$(jq -r '.Status' <<< "$result")
+              case "$status" in
+                Success)
+                  jq -r '.StandardOutputContent // ""' <<< "$result"
+                  echo 'Деплой завершился успешно.'
+                  exit 0
+                  ;;
+                Pending|InProgress|Delayed|Cancelling) ;;
+                *)
+                  jq -r '.StandardOutputContent // "", .StandardErrorContent // ""' <<< "$result"
+                  echo "Команда завершилась со статусом: $status" >&2
+                  exit 1
+                  ;;
+              esac
+            else
+              errors=$((errors + 1))
+              if (( errors >= 12 )); then
+                cat "$RUNNER_TEMP/ssm-error" >&2
+                echo 'Не удалось получить статус команды SSM.' >&2
+                exit 1
+              fi
+            fi
+            sleep 10
+          done
+          echo 'Время ожидания результата истекло; проверьте команду в AWS Systems Manager.' >&2
+          exit 1
