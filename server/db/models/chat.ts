@@ -4,8 +4,8 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
 } from 'sequelize';
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 
 const createChat = (
@@ -27,7 +27,7 @@ const createChat = (
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ User }: Record<string, ModelStatic<Model>>) {
+    static associate({ User }: Pick<typeof db, 'User'>) {
       this.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
       this.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
     }

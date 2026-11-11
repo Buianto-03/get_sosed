@@ -1,9 +1,6 @@
-interface TokenConfig {
-  access: { expiresIn: `${number}` };
-  refresh: { expiresIn: `${number}` };
-}
+import type { SignOptions } from 'jsonwebtoken';
 
-const jwtConfig: TokenConfig = {
+const jwtConfig: Record<'access' | 'refresh', SignOptions> = {
   access: {
     expiresIn: `${5 * 1000}`,
   },

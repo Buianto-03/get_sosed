@@ -1,7 +1,6 @@
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
-import type { EventEmitter } from 'node:events';
-import type { Request, Response } from 'express';
+import cookie = require('cookie');
 import cookieParser = require('cookie-parser');
 import jwt = require('jsonwebtoken');
 import wsServer = require('./wsServer');
@@ -20,30 +19,33 @@ const upgradeCb = (request: IncomingMessage, socket: Duplex, head: Buffer) => {
   });
 
   console.log('Parsing token from request...');
-  cookieParser()(request as Request, {} as Response, () => {
-    try {
-      const { refreshToken } = (request as Request).cookies;
-      const payload = jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN_SECRET!,
-      );
-      const user = getTokenUser(payload);
-
-      console.log('JWT is parsed!');
-
-      socket.removeListener('error', (err) => {
-        console.log('Socket error:', err);
-      });
-
-      wsServer.handleUpgrade(request, socket, head, (ws) => {
-        (wsServer as EventEmitter).emit('connection', ws, request, user);
-      });
-    } catch (error) {
-      console.log('ERR', error);
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
+  try {
+    const rawToken = cookie.parse(request.headers.cookie ?? '').refreshToken;
+    const jsonToken: unknown = cookieParser.JSONCookie(rawToken);
+    const refreshToken: unknown = jsonToken || rawToken;
+    if (typeof refreshToken !== 'string') {
+      throw new Error('Invalid refresh token');
     }
-  });
+    const payload = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET!,
+    );
+    const user = getTokenUser(payload);
+
+    console.log('JWT is parsed!');
+
+    socket.removeListener('error', (err) => {
+      console.log('Socket error:', err);
+    });
+
+    wsServer.handleUpgrade(request, socket, head, (ws) => {
+      wsServer.emit('connection', ws, request, user);
+    });
+  } catch (error) {
+    console.log('ERR', error);
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+  }
 };
 
 export = upgradeCb;

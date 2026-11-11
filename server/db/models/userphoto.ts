@@ -4,8 +4,8 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
 } from 'sequelize';
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createUserPhoto = (
   sequelize: Sequelize,
@@ -26,7 +26,7 @@ const createUserPhoto = (
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ User }: Record<string, ModelStatic<Model>>) {
+    static associate({ User }: Pick<typeof db, 'User'>) {
       this.belongsTo(User, { foreignKey: 'userId' });
       // define association here
     }

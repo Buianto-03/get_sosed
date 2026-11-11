@@ -4,8 +4,8 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
 } from 'sequelize';
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createLocation = (
   sequelize: Sequelize,
@@ -30,7 +30,7 @@ const createLocation = (
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Advert }: Record<string, ModelStatic<Model>>) {
+    static associate({ Advert }: Pick<typeof db, 'Advert'>) {
       this.belongsTo(Advert, { foreignKey: 'advertId' });
     }
   }

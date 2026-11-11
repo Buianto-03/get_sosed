@@ -1,7 +1,9 @@
 import Sequelize = require('sequelize');
 import type {
+  Attributes,
   IncludeOptions,
   WhereAttributeHash,
+  WhereOperators,
   WhereOptions,
 } from 'sequelize';
 import db = require('../../db/models');
@@ -9,6 +11,9 @@ import AppError = require('../utils/appError');
 
 const { Op } = Sequelize;
 const { Advert, Location, Tags, User, Like, AdvertPhoto, AdvertTags } = db;
+
+type AdvertAttributes = Attributes<InstanceType<typeof db.Advert>>;
+type LocationAttributes = Attributes<InstanceType<typeof db.Location>>;
 
 function invalidPagination() {
   return new AppError(
@@ -51,7 +56,7 @@ class AdvertService {
     private readonly advertTag: typeof db.AdvertTags,
   ) {}
 
-  getReadIncludes(locationWhere?: WhereOptions): IncludeOptions[] {
+  getReadIncludes(locationWhere?: WhereOptions<LocationAttributes>): IncludeOptions[] {
     return [
       { model: this.user, as: 'user', attributes: ['id', 'name', 'email'] },
       {
@@ -130,7 +135,7 @@ class AdvertService {
   }
 
   getLocationWhere(filters: Filters) {
-    const locationClause: WhereAttributeHash = {};
+    const locationClause: WhereAttributeHash<LocationAttributes> = {};
     if (filters.city) {
       locationClause.city = filters.city;
     }
@@ -144,25 +149,27 @@ class AdvertService {
   }
 
   getAdvertWhere(filters: Filters) {
-    const whereClause: WhereAttributeHash = {};
+    const whereClause: WhereAttributeHash<AdvertAttributes> = {};
     if (filters.priceFrom || filters.priceTo) {
-      whereClause.price = {};
+      const priceRange: WhereOperators<number> = {};
       if (filters.priceFrom !== undefined) {
-        whereClause.price[Op.gte] = Number(filters.priceFrom);
+        priceRange[Op.gte] = Number(filters.priceFrom);
       }
       if (filters.priceTo && filters.priceTo !== 0) {
-        whereClause.price[Op.lte] = Number(filters.priceTo);
+        priceRange[Op.lte] = Number(filters.priceTo);
       }
+      whereClause.price = priceRange;
     }
 
     if (filters.roomsFrom || filters.roomsTo) {
-      whereClause.rooms = {};
+      const roomsRange: WhereOperators<number> = {};
       if (filters.roomsFrom !== undefined) {
-        whereClause.rooms[Op.gte] = Number(filters.roomsFrom);
+        roomsRange[Op.gte] = Number(filters.roomsFrom);
       }
       if (filters.roomsTo && filters.roomsTo !== 0) {
-        whereClause.rooms[Op.lte] = Number(filters.roomsTo);
+        roomsRange[Op.lte] = Number(filters.roomsTo);
       }
+      whereClause.rooms = roomsRange;
     }
     return whereClause;
   }
@@ -177,7 +184,9 @@ class AdvertService {
         tagIds.length,
       ),
     });
-    return matches.map(({ advertId }) => advertId);
+    return matches
+      .map(({ advertId }) => advertId)
+      .filter((id): id is number => id !== null);
   }
 
   async getFilteredAdverts(filters: Filters) {

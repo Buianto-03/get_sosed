@@ -4,8 +4,8 @@ import {
   type InferAttributes,
   type InferCreationAttributes,
   type CreationOptional,
-  type ModelStatic,
 } from 'sequelize';
+import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
 const createAdvert = (
   sequelize: Sequelize,
@@ -33,7 +33,10 @@ const createAdvert = (
       AdvertTags,
       Like,
       Tags,
-    }: Record<string, ModelStatic<Model>>) {
+    }: Pick<
+      typeof db,
+      'AdvertPhoto' | 'User' | 'Location' | 'AdvertTags' | 'Like' | 'Tags'
+    >) {
       // define association here
       this.hasMany(AdvertPhoto, { foreignKey: 'advertId' });
       this.belongsTo(User, { foreignKey: 'userId', as: 'user' });

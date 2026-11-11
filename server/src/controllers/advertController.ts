@@ -59,12 +59,13 @@ class AdvertController {
 
   createAdvert = async (req: Request, res: AuthResponse) => {
     try {
+      const files = Array.isArray(req.files) ? req.files : undefined;
       return res
         .status(201)
         .json(
           await this.publishAdvertService.publishAdvert(
             req.body,
-            req.files,
+            files,
             res.locals.user.id,
           ),
         );
@@ -87,18 +88,6 @@ class AdvertController {
         message: isExpectedError ? details.message : 'Cannot publish advert',
       });
     }
-  };
-
-  deletePost = async (req: Request, res: Response) => {
-    const { postId } = req.params;
-    if (
-      !('deletePost' in this.advertService) ||
-      typeof this.advertService.deletePost !== 'function'
-    ) {
-      throw new TypeError('advertService.deletePost is not a function');
-    }
-    const success = await this.advertService.deletePost(postId);
-    res.sendStatus(success ? 204 : 500);
   };
 
   getFilteredAdverts = async (req: Request, res: Response) => {
