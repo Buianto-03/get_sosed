@@ -4,7 +4,7 @@ const path = require('path');
 
 const photos = [];
 
-for (let i = 1; i < 6; i++) {
+for (let i = 1; i < 26; i++) {
   const dirPath = path.resolve(__dirname, `../../public/images/users/user-${i}`);
   
   if (fs.existsSync(dirPath)) {
