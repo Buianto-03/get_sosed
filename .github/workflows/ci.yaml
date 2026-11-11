@@ -156,7 +156,7 @@ jobs:
           docker compose logs --no-color --tail=50 db server client
 
   publish-images:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/release/initial'
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
     needs: [server, client, docker-client, docker-server, compose-integration]
     runs-on: ubuntu-latest
     permissions:
