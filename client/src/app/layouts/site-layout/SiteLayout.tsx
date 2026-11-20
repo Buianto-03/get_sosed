@@ -18,7 +18,6 @@ export function SiteLayout({
   children,
   bottomNavigation,
   fullscreenChat = false,
-  user,
   onSignOut,
   availableRoutes,
 }: SiteLayoutProps): JSX.Element {
@@ -28,7 +27,7 @@ export function SiteLayout({
       data-version={version}
     >
       <SkipLink targetId={contentId} />
-      <SiteHeader user={user} onSignOut={onSignOut} availableRoutes={availableRoutes} />
+      <SiteHeader onSignOut={onSignOut} availableRoutes={availableRoutes} />
       <SiteContent id={contentId} fullscreenChat={fullscreenChat}>
         {children}
       </SiteContent>

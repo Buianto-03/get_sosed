@@ -4,8 +4,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Button, ButtonSize, ButtonVariant } from '@shared/ui/button/Button';
 import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
 import { routes } from '@shared/config/routes';
+import { useAppSelector } from '@app/store/hooks';
+import { selectAuthUser } from '@entities/session/model/authSelector';
+import { UserStatus } from '@entities/session/model/authModel';
+import { getMediaUrl } from '@shared/config/media';
 import { HeaderNavLink } from './HeaderNavLink';
-import { HeaderProfileMenu, type HeaderUser } from './HeaderProfileMenu';
+import { HeaderProfileMenu } from './HeaderProfileMenu';
 import {
   guestMobileItems,
   headerRoutes,
@@ -16,23 +20,24 @@ import {
 import styles from './SiteHeader.module.scss';
 
 export type SiteHeaderProps = {
-  user?: HeaderUser;
   onSignOut?: () => void;
   availableRoutes?: readonly HeaderPage[];
 };
 
-export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps): JSX.Element {
+export function SiteHeader({ onSignOut, availableRoutes }: SiteHeaderProps): JSX.Element {
+  const user = useAppSelector(selectAuthUser);
+  const isLoggedIn = user.status === UserStatus.Logged;
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const menuId = useId();
   const rootRef = useRef<HTMLElement>(null);
   const menuTriggerRef = useRef<HTMLSpanElement>(null);
-  const userName = user?.name;
+  const userName = user.status === UserStatus.Logged ? user?.name : undefined;
   const returnTo = searchParams.get('returnTo');
   const closeMobileMenu = (): void => setMobileMenuOpen(false);
-  const isRouteAvailable = (page: HeaderPage): boolean => (
-    availableRoutes === undefined || availableRoutes.includes(page)
-  );
+  const isRouteAvailable = (page: HeaderPage): boolean =>
+    availableRoutes === undefined || availableRoutes.includes(page);
 
   useEffect(() => setMobileMenuOpen(false), [userName]);
 
@@ -72,10 +77,12 @@ export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps
       </Link>
 
       <nav className={styles.desktopNav} aria-label="Основная навигация">
-        {primaryItems.filter(({ page }) => isRouteAvailable(page)).map(({ page, label }) => (
-          <HeaderNavLink key={page} page={page} label={label} onSelect={closeMobileMenu} />
-        ))}
-        {user ? (
+        {primaryItems
+          .filter(({ page }) => isRouteAvailable(page))
+          .map(({ page, label }) => (
+            <HeaderNavLink key={page} page={page} label={label} onSelect={closeMobileMenu} />
+          ))}
+        {isLoggedIn ? (
           <>
             {isRouteAvailable('post') && (
               <Link to={headerRoutes.post} className={styles.headerCta}>
@@ -83,7 +90,8 @@ export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps
               </Link>
             )}
             <HeaderProfileMenu
-              user={user}
+              name={user.name}
+              avatarUrl={getMediaUrl(user.UserProfile?.photo)}
               onSignOut={onSignOut}
               availableRoutes={availableRoutes}
             />
@@ -119,9 +127,10 @@ export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps
             Меню
           </Button>
         </span>
-        {user ? (
+        {isLoggedIn ? (
           <HeaderProfileMenu
-            user={user}
+            name={user.name}
+            avatarUrl={getMediaUrl(user.UserProfile?.photo)}
             onSignOut={onSignOut}
             availableRoutes={availableRoutes}
           />
@@ -134,15 +143,29 @@ export function SiteHeader({ user, onSignOut, availableRoutes }: SiteHeaderProps
 
       {mobileMenuOpen && (
         <nav id={menuId} className={styles.mobileMenu} aria-label="Мобильное меню">
-          {primaryItems.filter(({ page }) => isRouteAvailable(page)).map(({ page, label }) => (
-            <HeaderNavLink key={page} page={page} label={label} mobile onSelect={closeMobileMenu} />
-          ))}
-          {(user ? memberMobileItems : guestMobileItems)
+          {primaryItems
             .filter(({ page }) => isRouteAvailable(page))
             .map(({ page, label }) => (
-              <HeaderNavLink key={page} page={page} label={label} mobile onSelect={closeMobileMenu} />
+              <HeaderNavLink
+                key={page}
+                page={page}
+                label={label}
+                mobile
+                onSelect={closeMobileMenu}
+              />
             ))}
-          {user && onSignOut && (
+          {(isLoggedIn ? memberMobileItems : guestMobileItems)
+            .filter(({ page }) => isRouteAvailable(page))
+            .map(({ page, label }) => (
+              <HeaderNavLink
+                key={page}
+                page={page}
+                label={label}
+                mobile
+                onSelect={closeMobileMenu}
+              />
+            ))}
+          {isLoggedIn && onSignOut && (
             <Button
               variant={ButtonVariant.Text}
               className={styles.mobileSignOut}

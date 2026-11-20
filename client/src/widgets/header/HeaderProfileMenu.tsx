@@ -6,18 +6,19 @@ import { RoutePattern } from '@shared/config/routes';
 import { headerRoutes, type HeaderPage } from './navigation';
 import styles from './SiteHeader.module.scss';
 
-export type HeaderUser = {
+type HeaderProfileMenuProps = {
   name: string;
   avatarUrl?: string;
-};
-
-type HeaderProfileMenuProps = {
-  user: HeaderUser;
   onSignOut?: () => void;
   availableRoutes?: readonly HeaderPage[];
 };
 
-export function HeaderProfileMenu({ user, onSignOut, availableRoutes }: HeaderProfileMenuProps): JSX.Element {
+export function HeaderProfileMenu({
+  name,
+  avatarUrl,
+  onSignOut,
+  availableRoutes,
+}: HeaderProfileMenuProps): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const profileSectionActive =
@@ -29,14 +30,14 @@ export function HeaderProfileMenu({ user, onSignOut, availableRoutes }: HeaderPr
 
   return (
     <Menu
-      label={`Меню профиля: ${user.name}`}
+      label={`Меню профиля: ${name}`}
       className={[styles.profileMenu, profileSectionActive && styles.activeProfile]
         .filter(Boolean)
         .join(' ')}
       trigger={
         <span className={styles.profileTrigger}>
-          <Avatar name={user.name} src={user.avatarUrl} size={AvatarSize.Sm} />
-          <span className={styles.profileName}>{user.name}</span>
+          <Avatar name={name} src={avatarUrl} size={AvatarSize.Sm} />
+          <span className={styles.profileName}>{name}</span>
         </span>
       }
       items={[

@@ -1,7 +1,11 @@
 import React from 'react';
+import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { Provider } from 'react-redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import type { BackendUserT } from '@entities/session/model/authModel';
+import authReducer, { clearAuth, setSession } from '@entities/session/model/authSlice';
 import { SiteHeader, type SiteHeaderProps } from './SiteHeader';
 
 function CurrentPath(): JSX.Element {
@@ -9,18 +13,38 @@ function CurrentPath(): JSX.Element {
   return <output data-testid="current-path">{location.pathname + location.search + location.hash}</output>;
 }
 
-function renderHeader(props: SiteHeaderProps = {}, initialPath = '/'): void {
+const memberUser: BackendUserT = {
+  id: 3,
+  name: 'Александр Петров',
+  email: 'user@example.com',
+  roleId: 2,
+};
+
+function renderHeader(
+  props: SiteHeaderProps = {},
+  initialPath = '/',
+  user?: BackendUserT,
+): void {
+  const store = configureStore({ reducer: { auth: authReducer } });
+  if (user) {
+    store.dispatch(setSession({ accessToken: 'test-token', user }));
+  } else {
+    store.dispatch(clearAuth());
+  }
+
   render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <SiteHeader user={props.user} onSignOut={props.onSignOut} />
-      <CurrentPath />
-    </MemoryRouter>,
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <SiteHeader onSignOut={props.onSignOut} availableRoutes={props.availableRoutes} />
+        <CurrentPath />
+      </MemoryRouter>
+    </Provider>,
   );
 }
 
 describe('SiteHeader', () => {
   it('does not mark search as active on the publication route', () => {
-    renderHeader({ user: { name: 'Тестовый пользователь' } }, '/listings/new');
+    renderHeader({}, '/listings/new', memberUser);
 
     const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
     expect(within(navigation).getByRole('link', { name: 'Поиск' })).not.toHaveAttribute('aria-current');
@@ -79,7 +103,7 @@ describe('SiteHeader', () => {
 
   it('shows the member actions and profile menu', () => {
     const onSignOut = vi.fn();
-    renderHeader({ user: { name: 'Александр Петров' }, onSignOut }, '/profile');
+    renderHeader({ onSignOut }, '/profile', memberUser);
 
     const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
     expect(within(navigation).queryByRole('link', { name: 'Войти' })).not.toBeInTheDocument();
@@ -92,16 +116,11 @@ describe('SiteHeader', () => {
   });
 
   it('hides navigation items while their destinations have not been registered', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <SiteHeader availableRoutes={['home', 'search', 'signin', 'signup']} />
-      </MemoryRouter>,
-    );
+    renderHeader({ availableRoutes: ['home', 'search', 'signin', 'signup'] });
 
     const navigation = screen.getByRole('navigation', { name: 'Основная навигация' });
     expect(within(navigation).getByRole('link', { name: 'Поиск' })).toBeInTheDocument();
     expect(within(navigation).queryByRole('link', { name: 'О нас' })).not.toBeInTheDocument();
     expect(within(navigation).queryByRole('link', { name: 'Регистрация' })).toBeInTheDocument();
   });
-
 });
