@@ -31,6 +31,30 @@ describe('ChatPage accessibility', () => {
     expect(send).toHaveBeenNthCalledWith(2, '2', 'Здравствуйте');
   });
 
+  it('resets the draft and send error when switching conversations', () => {
+    const send = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const second = { ...conversation, id: '3', receiverId: 3, name: 'Другой собеседник' };
+    const props = { ...actions, conversations: [conversation, second], onSendMessage: send };
+    const { rerender } = render(<ChatPage {...props} selectedConversationId="2" />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Сообщение' }), {
+      target: { value: 'Сообщение первому собеседнику' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось отправить');
+
+    rerender(<ChatPage {...props} selectedConversationId="3" />);
+    const input = screen.getByRole('textbox', { name: 'Сообщение' });
+    expect(input).toHaveValue('');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    fireEvent.change(input, { target: { value: 'Сообщение второму собеседнику' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить' }));
+    expect(send).toHaveBeenNthCalledWith(2, '3', 'Сообщение второму собеседнику');
+
+    rerender(<ChatPage {...props} selectedConversationId="2" />);
+    expect(screen.getByRole('textbox', { name: 'Сообщение' })).toHaveValue('');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('announces only new incoming messages without moving focus or rereading on typing', () => {
     const props = { ...actions, selectedConversationId: '2', onSendMessage: () => true };
     const { rerender } = render(<ChatPage {...props} conversations={[conversation]} historyLoading />);

@@ -1,13 +1,13 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LuArrowLeft, LuMessagesSquare } from 'react-icons/lu';
+import { MessageComposer } from '@features/send-message/ui/message-composer/MessageComposer';
 import { ConversationRow } from '@entities/chat/ui/ConversationRow';
 import { ListingContextCard } from '@entities/listing/ui/listing-context-card/ListingContextCard';
-import { Button, ButtonSize, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
+import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import { Spinner } from '@shared/ui/feedback/Spinner';
-import { Input } from '@shared/ui/input/Input';
 import { Avatar } from '@shared/ui/avatar/Avatar';
 import styles from './ChatPage.module.scss';
 
@@ -61,9 +61,6 @@ export function ChatPage({
 }: ChatPageProps): JSX.Element {
   const activeConversation = conversations.find(({ id }) => id === selectedConversationId);
   const hasActiveConversation = Boolean(activeConversation);
-  const [draft, setDraft] = useState('');
-  const [sendError, setSendError] = useState(false);
-  const inputId = useId();
   const [announcement, setAnnouncement] = useState('');
   const seenMessages = useRef<{ conversation: string | null; ids: Set<string> }>({
     conversation: selectedConversationId,
@@ -111,22 +108,14 @@ export function ChatPage({
 
   useEffect(() => {
     followLatest.current = true;
-    setDraft('');
-    setSendError(false);
   }, [selectedConversationId]);
 
-  const sendMessage = (event: React.FormEvent<HTMLFormElement>): void => {
-    event.preventDefault();
-    const message = draft.trim();
-    if (!activeConversation || !message) {
-      return;
-    }
-    const sent = onSendMessage(activeConversation.id, message);
-    setSendError(!sent);
+  const sendToConversation = (conversationId: string, message: string): boolean => {
+    const sent = onSendMessage(conversationId, message);
     if (sent) {
       followLatest.current = true;
-      setDraft('');
     }
+    return sent;
   };
 
   return (
@@ -234,49 +223,12 @@ export function ChatPage({
                   </p>
                 ))}
               </div>
-              <div className={styles.chat__replies}>
-                <Button
-                  className={styles.chat__reply}
-                  size={ButtonSize.Sm}
-                  variant={ButtonVariant.Secondary}
-                  onClick={() => setDraft('Здравствуйте!')}
-                >
-                  Здравствуйте!
-                </Button>
-                <Button
-                  className={styles.chat__reply}
-                  size={ButtonSize.Sm}
-                  variant={ButtonVariant.Secondary}
-                  onClick={() => setDraft('Когда можно посмотреть?')}
-                >
-                  Когда можно посмотреть?
-                </Button>
-              </div>
-              {sendError && (
-                <Alert className={styles.chat__error} variant={AlertVariant.Error}>
-                  Не удалось отправить сообщение. Попробуйте ещё раз.
-                </Alert>
-              )}
-              <form className={styles.chat__composer} onSubmit={sendMessage}>
-                <Input
-                  id={`${inputId}-message`}
-                  label="Сообщение"
-                  fieldClassName={styles.chat__composer_field}
-                  autoComplete="off"
-                  maxLength={10000}
-                  value={draft}
-                  onChange={(event) => {
-                    setDraft(event.target.value);
-                    if (sendError) {
-                      setSendError(false);
-                    }
-                  }}
-                  placeholder="Напишите сообщение"
-                />
-                <Button type={ButtonType.Submit} disabled={historyLoading}>
-                  Отправить
-                </Button>
-              </form>
+              <MessageComposer
+                key={activeConversation.id}
+                conversationId={activeConversation.id}
+                loading={historyLoading}
+                onSendMessage={sendToConversation}
+              />
             </>
           )}
           {!activeConversation && selectedConversationId && (

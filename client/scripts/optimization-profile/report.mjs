@@ -114,7 +114,12 @@ function renderedCards(group) {
 
 const source = process.argv[2];
 assert.ok(source, 'Из client/: node scripts/optimization-profile/report.mjs /tmp/o01.json');
-const { trials, samples } = JSON.parse(readFileSync(source, 'utf8'));
+const { trials, samples, selection } = JSON.parse(readFileSync(source, 'utf8'));
+const selected = selection ?? {
+  modes: ['production', 'profile'],
+  sizes: Object.keys(sizes),
+  routes,
+};
 
 function routeSamples(mode, size, route, cache) {
   const group = samples.filter(
@@ -129,105 +134,114 @@ function routeSamples(mode, size, route, cache) {
   return group;
 }
 
-const routeRows = Object.keys(sizes).flatMap((size) =>
-  routes.flatMap((route) =>
-    Object.keys(caches).map((cache) => ({
-      label: [sizes[size], `\`${route}\``, caches[cache]],
-      production: routeSamples('production', size, route, cache),
-      profiling: routeSamples('profile', size, route, cache),
-    })),
-  ),
-);
+function routeRows(mode) {
+  return selected.sizes.flatMap((size) =>
+    selected.routes.flatMap((route) =>
+      Object.keys(caches).map((cache) => ({
+        label: [sizes[size], `\`${route}\``, caches[cache]],
+        group: routeSamples(mode, size, route, cache),
+      })),
+    ),
+  );
+}
+
 const routeHeader = ['Набор', 'Маршрут', 'Кеш'];
 
 console.log(
   `Число прогонов — ${trials}. Значения показаны как медиана [минимум–максимум]. Стабильные объёмы и счётчики показаны одним числом.\n`,
 );
 
-console.log('### Загрузка маршрутов · production\n');
-table(
-  [...routeHeader, 'LCP, мс', 'CLS', 'Элементы DOM', 'JS heap, МиБ'],
-  routeRows.map(({ label, production }) => [
-    ...label,
-    summary(
-      production.map(({ lcp }) => lcp),
-      duration,
-      true,
-    ),
-    summary(
-      production.map((sample) => sample.cls),
-      cls,
-      true,
-    ),
-    summary(production.map(({ domElements }) => domElements)),
-    summary(
-      production.map(({ heapUsed }) => heapUsed / 1024 ** 2),
-      duration,
-      true,
-    ),
-  ]),
-);
+if (selected.modes.includes('production')) {
+  const rows = routeRows('production');
+  console.log('### Загрузка маршрутов · production\n');
+  table(
+    [...routeHeader, 'LCP, мс', 'CLS', 'Элементы DOM', 'JS heap, МиБ'],
+    rows.map(({ label, group }) => [
+      ...label,
+      summary(
+        group.map(({ lcp }) => lcp),
+        duration,
+        true,
+      ),
+      summary(
+        group.map((sample) => sample.cls),
+        cls,
+        true,
+      ),
+      summary(group.map(({ domElements }) => domElements)),
+      summary(
+        group.map(({ heapUsed }) => heapUsed / 1024 ** 2),
+        duration,
+        true,
+      ),
+    ]),
+  );
 
-console.log('### Сеть маршрутов · production\n');
-console.log(
-  'HTTP, JS и CSS — байты CDP. Переданные ресурсы имеют положительный transfer. JSON — размеры тел HTTP-ответов по Resource Timing до и после распаковки. WS — байты входящих сообщений.\n',
-);
-table(
-  [
-    ...routeHeader,
-    'HTTP ресурсов',
-    'Из них передано',
-    'HTTP всего, Б',
-    'JS, Б',
-    'CSS, Б',
-    'JSON сжатый, Б',
-    'JSON распакованный, Б',
-    'WS, Б',
-  ],
-  routeRows.map(({ label, production }) => {
-    const metrics = production.map(network);
-    return [...label, ...metrics[0].map((_, index) => summary(metrics.map((row) => row[index])))];
-  }),
-);
+  console.log('### Сеть маршрутов · production\n');
+  console.log(
+    'HTTP, JS и CSS — байты CDP. Переданные ресурсы имеют положительный transfer. JSON — размеры тел HTTP-ответов по Resource Timing до и после распаковки. WS — байты входящих сообщений.\n',
+  );
+  table(
+    [
+      ...routeHeader,
+      'HTTP ресурсов',
+      'Из них передано',
+      'HTTP всего, Б',
+      'JS, Б',
+      'CSS, Б',
+      'JSON сжатый, Б',
+      'JSON распакованный, Б',
+      'WS, Б',
+    ],
+    rows.map(({ label, group }) => {
+      const metrics = group.map(network);
+      return [...label, ...metrics[0].map((_, index) => summary(metrics.map((row) => row[index])))];
+    }),
+  );
+}
 
-console.log('### Загрузка маршрутов · profiling\n');
-console.log(
-  'На каждый прогон суммируются корневые React Profiler actualDuration (работа рендера) и, отдельно, измерения длительности фазы commit.\n',
-);
-const reactHeader = ['Σ actualDuration, мс', 'Σ фазы commit, мс', 'Коммиты'];
-table(
-  [...routeHeader, ...reactHeader],
-  routeRows.map(({ label, profiling }) => [...label, ...reactMetrics(profiling)]),
-);
+if (selected.modes.includes('profile')) {
+  console.log('### Загрузка маршрутов · profiling\n');
+  console.log(
+    'На каждый прогон суммируются корневые React Profiler actualDuration (работа рендера) и, отдельно, измерения длительности фазы commit.\n',
+  );
+  const reactHeader = ['Σ actualDuration, мс', 'Σ фазы commit, мс', 'Коммиты'];
+  table(
+    [...routeHeader, ...reactHeader],
+    routeRows('profile').map(({ label, group }) => [...label, ...reactMetrics(group)]),
+  );
 
-console.log('### Взаимодействия · profiling, тёплый кеш\n');
-console.log(
-  'Для ввода нескольких символов задержка до второго кадра сначала сводится к медиане внутри прогона. Счётчики показывают вызовы и, где измерено, суммарное число элементов при обходах. Карточки перечислены по номерам синтетических объявлений и числу рендеров каждой.\n',
-);
-const interactionRows = [];
-for (const [size, sizeLabel] of Object.entries(sizes)) {
-  for (const route of routes) {
-    const group = routeSamples('profile', size, route, 'warm');
-    const keys = [...new Set(group.flatMap(({ interactions }) => Object.keys(interactions ?? {})))];
-    for (const key of keys) {
-      const runs = group.map(({ interactions }) => interactions?.[key]);
-      assert.ok(runs.every(Boolean), `Неполная серия сценария ${key}: ${size} ${route}`);
-      interactionRows.push([
-        sizeLabel,
-        scenarios[key] ?? key,
-        ...reactMetrics(runs),
-        summary(
-          runs.map(({ eventToSecondFrameMs }) => median(sorted(eventToSecondFrameMs))),
-          duration,
-          true,
-        ),
-        counters(runs),
-        renderedCards(runs),
-      ]);
+  console.log('### Взаимодействия · profiling, тёплый кеш\n');
+  console.log(
+    'Для ввода нескольких символов задержка до второго кадра сначала сводится к медиане внутри прогона. Счётчики показывают вызовы и, где измерено, суммарное число элементов при обходах. Карточки перечислены по номерам синтетических объявлений и числу рендеров каждой.\n',
+  );
+  const interactionRows = [];
+  for (const size of selected.sizes) {
+    for (const route of selected.routes) {
+      const group = routeSamples('profile', size, route, 'warm');
+      const keys = [
+        ...new Set(group.flatMap(({ interactions }) => Object.keys(interactions ?? {}))),
+      ];
+      for (const key of keys) {
+        const runs = group.map(({ interactions }) => interactions?.[key]);
+        assert.ok(runs.every(Boolean), `Неполная серия сценария ${key}: ${size} ${route}`);
+        interactionRows.push([
+          sizes[size],
+          scenarios[key] ?? key,
+          ...reactMetrics(runs),
+          summary(
+            runs.map(({ eventToSecondFrameMs }) => median(sorted(eventToSecondFrameMs))),
+            duration,
+            true,
+          ),
+          counters(runs),
+          renderedCards(runs),
+        ]);
+      }
     }
   }
+  table(
+    ['Набор', 'Сценарий', ...reactHeader, 'До второго кадра, мс', 'Счётчики', 'Карточки'],
+    interactionRows,
+  );
 }
-table(
-  ['Набор', 'Сценарий', ...reactHeader, 'До второго кадра, мс', 'Счётчики', 'Карточки'],
-  interactionRows,
-);

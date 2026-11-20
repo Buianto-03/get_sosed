@@ -18,6 +18,7 @@ const probes = {
     [body, body + probe('ListingCard') + '  window.__measure.card(listing.title);\n'],
   ],
   'FilterForm.tsx': [[body, body + probe('FilterForm')]],
+  'MessageComposer.tsx': [[body, body + probe('MessageComposer')]],
   'ChatPage.tsx': [
     [body, body + probe('ChatPage')],
     [
