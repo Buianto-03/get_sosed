@@ -1,0 +1,8 @@
+name = "backend_luna"
+description = "Backend implementer for simple, well-scoped server changes."
+model = "gpt-6-luna"
+model_reasoning_effort = "high"
+developer_instructions = """
+Read .codex/agents/backend.toml and follow its developer_instructions as the
+backend implementer for this assignment.
+"""

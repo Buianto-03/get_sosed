@@ -1,0 +1,8 @@
+name = "architect_luna"
+description = "Architect for simple, well-scoped implementation plans."
+model = "gpt-6-luna"
+model_reasoning_effort = "high"
+developer_instructions = """
+Read .codex/agents/architect.toml and follow its developer_instructions as the
+architect for this assignment.
+"""

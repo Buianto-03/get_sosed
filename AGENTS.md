@@ -1,5 +1,45 @@
 # Repository Guidelines
 
+## Codex Multi-Agent Workflow
+
+Use this workflow for implementation requests. The coordinating agent inspects
+the relevant code and presents a plan before any implementation edits. Include
+the intended behavior, affected packages, dependencies, and verification steps.
+When the user starts in Plan mode, wait until they start implementation and use
+the resulting plan. In Default mode, present the plan and proceed when the user
+has requested implementation.
+
+After planning, spawn the `architect` subagent with the plan and its success
+criteria. The architect owns the client/server contract, breaks the plan into
+concrete tasks, and delegates to `frontend` for `client/` and `backend` for
+`server/`. Start only the agents needed for the task. Run independent assignments
+in parallel and sequence assignments with dependencies or overlapping edits.
+If the architect cannot spawn agents directly, launch the workers from the main
+session with the architect's task briefs and return their results to the
+architect for review. If named roles are unavailable, use the corresponding
+instructions from `.codex/agents/` in each launch message.
+
+Choose the model and reasoning effort by assignment. The coordinating agent
+classifies the architect's assignment, and the architect classifies each worker's
+assignment separately. Include the selected pair and role in the task brief.
+
+| Complexity | Model | Reasoning effort | Examples |
+| --- | --- | --- | --- |
+| Simple | `gpt-6-luna` | `high` | Local change with known behavior and a straightforward check |
+| Moderate | `gpt-6.2-sol` | `medium` | Feature or bug fix with several affected modules or edge cases |
+| Complex | `gpt-6.2-astra` | `high` | Cross-package contract change, migration, or hard-to-trace behavior |
+
+For simple assignments, launch `architect_luna`, `frontend_luna`, or
+`backend_luna` as appropriate. These profiles set the model and effort, so omit
+both launch overrides. If a Luna profile is unavailable, try explicit Luna
+`high` when the launch tool supports it. Otherwise use the base role with Sol
+`low`. For moderate and complex assignments, use the base role and pass the
+table's model and effort as launch parameters. Report any substitution.
+
+The coordinating agent waits for the architect's integration review before
+reporting changes and verification results. Include the model and effort used
+for each agent so the choice can be checked.
+
 ## Project Structure & Module Organization
 
 This repository has independent client and server npm packages. The React, TypeScript, and Vite client is in `client/`; its `src/` follows Feature-Sliced Design layers: `app`, `pages`, `widgets`, `features`, `entities`, and `shared`. Keep imports flowing down those layers; `npm run check:architecture` enforces boundaries. The TypeScript Express and Sequelize server is in `server/`; routes/controllers/middleware are under `src/`, and database models, migrations, and seeders under `db/`.
