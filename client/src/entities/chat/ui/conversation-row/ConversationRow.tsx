@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Avatar } from '@shared/ui/avatar/Avatar';
 import styles from './ConversationRow.module.scss';
 
 export interface ConversationRowProps {
+  id: string;
   name: string;
   listingTitle?: string;
   avatarUrl?: string;
   lastMessage: string;
   time?: string;
   active?: boolean;
-  onSelect?: () => void;
+  onSelect: (id: string) => void;
 }
 
-export function ConversationRow({
+function ConversationRowView({
+  id,
   name,
   avatarUrl,
   listingTitle,
@@ -26,7 +28,7 @@ export function ConversationRow({
       className={[styles.row, active && styles.active].filter(Boolean).join(' ')}
       type="button"
       aria-current={active ? 'true' : undefined}
-      onClick={onSelect}
+      onClick={() => onSelect(id)}
     >
       <Avatar name={name} src={avatarUrl} />
       <span className={styles.details}>
@@ -38,3 +40,5 @@ export function ConversationRow({
     </button>
   );
 }
+
+export const ConversationRow = memo(ConversationRowView);

@@ -158,7 +158,15 @@ if (selected.modes.includes('production')) {
   const rows = routeRows('production');
   console.log('### Загрузка маршрутов · production\n');
   table(
-    [...routeHeader, 'LCP, мс', 'CLS', 'Элементы DOM', 'JS heap, МиБ'],
+    [
+      ...routeHeader,
+      'LCP, мс',
+      'CLS',
+      'Элементы DOM',
+      'JS heap, МиБ',
+      'Длинные задачи',
+      'Макс. задача, мс',
+    ],
     rows.map(({ label, group }) => [
       ...label,
       summary(
@@ -177,6 +185,16 @@ if (selected.modes.includes('production')) {
         duration,
         true,
       ),
+      group.every(({ longTasks }) => Array.isArray(longTasks))
+        ? summary(group.map(({ longTasks }) => longTasks.length))
+        : '—',
+      group.every(({ longTasks }) => Array.isArray(longTasks))
+        ? summary(
+            group.map(({ longTasks }) => Math.max(0, ...longTasks.map((task) => task.duration))),
+            duration,
+            true,
+          )
+        : '—',
     ]),
   );
 

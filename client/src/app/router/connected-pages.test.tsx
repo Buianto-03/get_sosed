@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Link, MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
 import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
@@ -13,7 +13,7 @@ import likeService from '@entities/like/api/likeService';
 import chatService from '@entities/chat/api/chatListService';
 import profileService from '@features/edit-profile/userProfileService';
 import { chatSocket } from '@entities/chat/model/socket';
-import { setMessages, addMessage } from '@entities/chat/model/chatListSlice';
+import { setMessages, addMessage, historyFailed } from '@entities/chat/model/chatListSlice';
 import { advertSchema, type AdvertPageType } from '@entities/advert/model/advertsModel';
 import { clearAuth, setSession } from '@entities/session/model/authSlice';
 import axiosInstance from '@shared/api/client';
@@ -63,7 +63,7 @@ function Location(): JSX.Element {
   const location = useLocation();
   return <output data-testid="location">{location.pathname + location.search}</output>;
 }
-function open(path: string, state?: object): ReturnType<typeof render> {
+function open(path: string, state?: object, navigation?: React.ReactNode): ReturnType<typeof render> {
   return render(
     <Provider store={store}>
       <MemoryRouter
@@ -76,6 +76,7 @@ function open(path: string, state?: object): ReturnType<typeof render> {
         ]}
       >
         <Location />
+        {navigation}
         <Routes>
           <Route path="/listings" element={<SearchRoute />} />
           <Route path="/listings/:listingId" element={<ListingRoute />} />
@@ -304,4 +305,83 @@ it('opens a first conversation without a fake listing and sends through the sock
   expect(screen.getAllByText('Здравствуйте')).toHaveLength(1);
   view.unmount();
   expect(leave).toHaveBeenCalledWith(2);
+});
+
+it('changes listing context without reopening the dialog or refetching the summary on history retry', async () => {
+  login();
+  vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
+  const summary = vi.spyOn(chatService, 'getSummary').mockResolvedValue({ id: 2, name: 'Михаил' });
+  const enter = vi.spyOn(chatSocket, 'openDialog').mockImplementation(() => undefined);
+  const leave = vi.spyOn(chatSocket, 'closeDialog').mockImplementation(() => undefined);
+  let resolveAdvert!: (value: typeof advert) => void;
+  const pending = new Promise<typeof advert>((resolve) => {
+    resolveAdvert = resolve;
+  });
+  const readAdvert = vi
+    .spyOn(advertService, 'getAdvertById')
+    .mockReturnValueOnce(pending)
+    .mockResolvedValueOnce({ ...advert, id: 43, title: 'Действующее объявление' });
+
+  open(
+    '/messages/2?listingId=42',
+    undefined,
+    <Link to="/messages/2?listingId=43">Сменить объявление</Link>,
+  );
+  await waitFor(() => expect(enter).toHaveBeenCalledWith(2));
+  act(() => {
+    store.dispatch(setMessages({ receiverId: 2, messages: [] }));
+  });
+  const input = screen.getByRole('textbox', { name: 'Сообщение' });
+  fireEvent.change(input, { target: { value: 'Черновик' } });
+  fireEvent.click(screen.getByRole('link', { name: 'Сменить объявление' }));
+  const thread = within(screen.getByRole('region', { name: 'Переписка' }));
+  expect(
+    await thread.findByRole('button', { name: /Действующее объявление/ }),
+  ).toBeInTheDocument();
+  await act(async () => {
+    resolveAdvert({ ...advert, title: 'Устаревшее объявление' });
+    await pending;
+  });
+  expect(thread.queryByText('Устаревшее объявление')).not.toBeInTheDocument();
+  expect(input).toHaveValue('Черновик');
+  expect(enter).toHaveBeenCalledTimes(1);
+  expect(leave).not.toHaveBeenCalled();
+  expect(summary).toHaveBeenCalledTimes(1);
+
+  act(() => {
+    store.dispatch(historyFailed(2));
+  });
+  fireEvent.click(thread.getByRole('button', { name: 'Повторить загрузку переписки' }));
+  expect(enter).toHaveBeenCalledTimes(2);
+  expect(summary).toHaveBeenCalledTimes(1);
+  expect(readAdvert.mock.calls).toEqual([[42], [43]]);
+  expect(input).toHaveValue('Черновик');
+});
+
+it('discards a previous owner’s late summary when the receiver stays the same', async () => {
+  login();
+  vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
+  let resolveSummary!: (value: { id: number; name: string }) => void;
+  const pending = new Promise<{ id: number; name: string }>((resolve) => {
+    resolveSummary = resolve;
+  });
+  const summary = vi
+    .spyOn(chatService, 'getSummary')
+    .mockReturnValueOnce(pending)
+    .mockResolvedValueOnce({ id: 2, name: 'Текущий собеседник' });
+  const enter = vi.spyOn(chatSocket, 'openDialog').mockImplementation(() => undefined);
+
+  open('/messages/2');
+  act(() => {
+    store.dispatch(setSession({ user: { ...user, id: 3 }, accessToken: 'new-token' }));
+  });
+  const thread = within(screen.getByRole('region', { name: 'Переписка' }));
+  expect(await thread.findByText('Текущий собеседник')).toBeInTheDocument();
+  await act(async () => {
+    resolveSummary({ id: 2, name: 'Устаревший собеседник' });
+    await pending;
+  });
+  expect(thread.queryByText('Устаревший собеседник')).not.toBeInTheDocument();
+  expect(summary.mock.calls).toEqual([[2], [2]]);
+  expect(enter.mock.calls).toEqual([[2]]);
 });

@@ -18,21 +18,30 @@ class FakeSocket {
 
   close = vi.fn();
 
-  constructor() { FakeSocket.instances.push(this); }
+  constructor() {
+    FakeSocket.instances.push(this);
+  }
 }
 
 afterEach(() => {
   chatSocket.disconnect();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   FakeSocket.instances = [];
 });
 it('never forwards an old socket event to the listener of a new session', () => {
   vi.stubGlobal('WebSocket', FakeSocket);
-  const first = vi.fn(); const second = vi.fn();
+  const first = vi.fn();
+  const second = vi.fn();
   chatSocket.connect(first);
   const old = FakeSocket.instances[0];
   chatSocket.connect(second);
-  const event = { data: JSON.stringify({ type: 'ADD_MESSAGE', payload: { id: 1, senderId: 2, receiverId: 3, message: 'Текст' } }) };
+  const event = {
+    data: JSON.stringify({
+      type: 'ADD_MESSAGE',
+      payload: { id: 1, senderId: 2, receiverId: 3, message: 'Текст' },
+    }),
+  };
   old.onmessage?.(event);
   expect(second).not.toHaveBeenCalled();
   FakeSocket.instances[1].onmessage?.(event);
@@ -41,7 +50,38 @@ it('never forwards an old socket event to the listener of a new session', () => 
 it('returns false when a transport write throws, so the composer can retain its text', () => {
   vi.stubGlobal('WebSocket', FakeSocket);
   chatSocket.connect(vi.fn());
-  FakeSocket.instances[0].send.mockImplementationOnce(() => { throw new Error('socket closed'); });
+  FakeSocket.instances[0].send.mockImplementationOnce(() => {
+    throw new Error('socket closed');
+  });
   expect(chatSocket.sendMessage(2, 'Текст')).toBe(false);
   expect(chatSocket.sendMessage(2, 'Текст')).toBe(true);
+});
+
+it.each([2, 3])('restores history only for receiver %i after reconnect', (receiverId) => {
+  vi.useFakeTimers();
+  vi.stubGlobal('WebSocket', FakeSocket);
+  const listener = vi.fn();
+  const connection = vi.fn();
+  chatSocket.connect(listener, connection);
+  const first = FakeSocket.instances[0];
+  first.onopen?.();
+  chatSocket.openDialog(2);
+  first.onclose?.();
+  if (receiverId !== 2) {
+    chatSocket.closeDialog(2);
+    chatSocket.openDialog(receiverId);
+  }
+  vi.advanceTimersByTime(1000);
+  const reconnected = FakeSocket.instances[1];
+  reconnected.onopen?.();
+  expect(reconnected.send).toHaveBeenCalledTimes(1);
+  expect(reconnected.send).toHaveBeenCalledWith(
+    JSON.stringify({ type: 'INITIALIZE', payload: { receiverId } }),
+  );
+  expect(connection.mock.calls).toEqual([[true], [false], [true]]);
+  const response = JSON.stringify({ type: 'SET_MESSAGES', receiverId, payload: [] });
+  first.onmessage?.({ data: response });
+  expect(listener).not.toHaveBeenCalled();
+  reconnected.onmessage?.({ data: response });
+  expect(listener).toHaveBeenCalledWith(JSON.parse(response));
 });

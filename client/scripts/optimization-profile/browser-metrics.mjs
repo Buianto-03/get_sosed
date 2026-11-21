@@ -3,6 +3,7 @@ export function observePage(profile) {
   performance.setResourceTimingBufferSize(4000);
   let lcp = null;
   const shifts = [];
+  const longTasks = [];
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       lcp = entry.startTime;
@@ -15,6 +16,11 @@ export function observePage(profile) {
       }
     }
   }).observe({ type: 'layout-shift', buffered: true });
+  new PerformanceObserver((list) => {
+    for (const { startTime, duration } of list.getEntries()) {
+      longTasks.push({ startTime, duration });
+    }
+  }).observe({ type: 'longtask', buffered: true });
   let commits = [];
   let commitPhaseMs = [];
   let hits = {};
@@ -127,6 +133,7 @@ export function observePage(profile) {
         cls,
         domElements: document.getElementsByTagName('*').length,
         historyParagraphs: document.querySelectorAll('[aria-label="Сообщения"] p').length,
+        longTasks,
         commits,
         commitPhaseMs,
         hits,

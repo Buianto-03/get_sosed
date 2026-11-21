@@ -1,37 +1,27 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { LuArrowLeft, LuMessagesSquare } from 'react-icons/lu';
-import { MessageComposer } from '@features/send-message/ui/message-composer/MessageComposer';
-import { ConversationRow } from '@entities/chat/ui/ConversationRow';
-import { ListingContextCard } from '@entities/listing/ui/listing-context-card/ListingContextCard';
+import React from 'react';
+import { LuMessagesSquare } from 'react-icons/lu';
+import { ConversationRow } from '@entities/chat/ui/conversation-row/ConversationRow';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import { Spinner } from '@shared/ui/feedback/Spinner';
-import { Avatar } from '@shared/ui/avatar/Avatar';
+import { ChatThread, type ChatListingContext, type ChatMessage } from '../chat-thread/ChatThread';
 import styles from './ChatPage.module.scss';
 
-export type ChatMessage = {
+export interface ChatConversationRow {
   id: string;
-  from: 'me' | 'them';
-  text: string;
-};
-
-export interface ChatConversation {
-  id: string;
-  receiverId: number;
   name: string;
   avatarUrl?: string;
-  listing?: { id: string; title: string; price: number | null; imageUrl?: string };
   lastMessage: string;
   time?: string;
-  messages: ChatMessage[];
 }
 
 export interface ChatPageProps {
-  conversations: ChatConversation[];
+  conversations: ChatConversationRow[];
   selectedConversationId: string | null;
-  empty?: boolean;
+  messages: ChatMessage[];
+  listing?: ChatListingContext;
   listLoading?: boolean;
   listError?: string | null;
   historyLoading?: boolean;
@@ -47,7 +37,8 @@ export interface ChatPageProps {
 export function ChatPage({
   conversations,
   selectedConversationId,
-  empty = false,
+  messages,
+  listing,
   listLoading,
   listError,
   historyLoading,
@@ -60,67 +51,9 @@ export function ChatPage({
   onSendMessage,
 }: ChatPageProps): JSX.Element {
   const activeConversation = conversations.find(({ id }) => id === selectedConversationId);
-  const hasActiveConversation = Boolean(activeConversation);
-  const [announcement, setAnnouncement] = useState('');
-  const seenMessages = useRef<{ conversation: string | null; ids: Set<string> }>({
-    conversation: selectedConversationId,
-    ids: new Set(activeConversation?.messages.map((message) => message.id)),
-  });
-  const wasHistoryLoading = useRef(historyLoading);
-  const messageListRef = useRef<HTMLDivElement>(null);
-  const followLatest = useRef(true);
-  const lastMessageId = activeConversation?.messages[activeConversation.messages.length - 1]?.id;
-  const messageCount = activeConversation?.messages.length ?? 0;
-
-  useEffect(() => {
-    const messages = activeConversation?.messages ?? [];
-    const previous = seenMessages.current;
-    if (previous.conversation === selectedConversationId && !historyLoading && !wasHistoryLoading.current) {
-      const incoming = messages.filter((message) => message.from === 'them' && !previous.ids.has(message.id));
-      setAnnouncement(incoming.map((message) => `${activeConversation?.name}: ${message.text}`).join(' '));
-    } else {
-      setAnnouncement('');
-    }
-    seenMessages.current = { conversation: selectedConversationId, ids: new Set(messages.map((message) => message.id)) };
-    wasHistoryLoading.current = historyLoading;
-  }, [activeConversation?.messages, activeConversation?.name, historyLoading, selectedConversationId]);
-
-  useEffect(() => {
-    const list = messageListRef.current;
-    if (list && followLatest.current) {
-      list.scrollTop = list.scrollHeight;
-    }
-  }, [selectedConversationId, lastMessageId, messageCount]);
-
-  useEffect(() => {
-    const list = messageListRef.current;
-    if (!list || typeof ResizeObserver === 'undefined') {
-      return undefined;
-    }
-    const observer = new ResizeObserver(() => {
-      if (followLatest.current) {
-        list.scrollTop = list.scrollHeight;
-      }
-    });
-    observer.observe(list);
-    return () => observer.disconnect();
-  }, [selectedConversationId, hasActiveConversation]);
-
-  useEffect(() => {
-    followLatest.current = true;
-  }, [selectedConversationId]);
-
-  const sendToConversation = (conversationId: string, message: string): boolean => {
-    const sent = onSendMessage(conversationId, message);
-    if (sent) {
-      followLatest.current = true;
-    }
-    return sent;
-  };
 
   return (
     <main className={styles.chat}>
-      <span className={styles.chat__announcement} role="status" aria-atomic="true">{announcement}</span>
       <div className={styles.chat__heading}>
         <Heading level={HeadingLevel.H1} size={HeadingSize.Xl}>
           Сообщения
@@ -143,7 +76,7 @@ export function ChatPage({
           )}
           {!listLoading &&
             !listError &&
-            (empty || conversations.length === 0 ? (
+            (conversations.length === 0 ? (
               <EmptyState
                 className={styles.chat__empty}
                 title="Пока нет сообщений"
@@ -155,13 +88,16 @@ export function ChatPage({
                 {conversations.map((conversation) => (
                   <ConversationRow
                     key={conversation.id}
+                    id={conversation.id}
                     name={conversation.name}
-                    listingTitle={conversation.listing?.title}
+                    listingTitle={
+                      conversation.id === selectedConversationId ? listing?.title : undefined
+                    }
                     avatarUrl={conversation.avatarUrl}
                     lastMessage={conversation.lastMessage}
                     time={conversation.time}
                     active={conversation.id === selectedConversationId}
-                    onSelect={() => onSelectConversation(conversation.id)}
+                    onSelect={onSelectConversation}
                   />
                 ))}
               </div>
@@ -170,66 +106,20 @@ export function ChatPage({
 
         <section className={styles.chat__thread} aria-label="Переписка">
           {activeConversation && (
-            <>
-              <header className={styles.chat__header}>
-                <Button
-                  className={styles.chat__back}
-                  variant={ButtonVariant.Text}
-                  onClick={onBackToList}
-                >
-                  <LuArrowLeft aria-hidden="true" />К диалогам
-                </Button>
-                <Avatar name={activeConversation.name} src={activeConversation.avatarUrl} />
-                <strong title={activeConversation.name}>{activeConversation.name}</strong>
-              </header>
-              {activeConversation.listing && (
-                <ListingContextCard
-                  title={activeConversation.listing.title}
-                  price={activeConversation.listing.price}
-                  imageUrl={activeConversation.listing.imageUrl}
-                  onOpen={() => {
-                    if (activeConversation.listing) {
-                      onOpenListing?.(activeConversation.listing.id);
-                    }
-                  }}
-                />
-              )}
-              {historyLoading && <Spinner label="Загрузка переписки" />}
-              {historyError && (
-                <>
-                  <Alert variant={AlertVariant.Error}>{historyError}</Alert>
-                  <Button onClick={onRetryHistory}>Повторить загрузку переписки</Button>
-                </>
-              )}
-              <div
-                ref={messageListRef}
-                className={styles.chat__messages}
-                aria-label="Сообщения"
-                role="region"
-                // Keyboard users must be able to scroll history independently of the composer.
-                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-                tabIndex={0}
-                onScroll={(event) => {
-                  const list = event.currentTarget;
-                  followLatest.current = list.scrollHeight - list.clientHeight - list.scrollTop < 8;
-                }}
-              >
-                {activeConversation.messages.map((message) => (
-                  <p
-                    className={message.from === 'me' ? styles.chat__message_mine : styles.chat__message}
-                    key={message.id}
-                  >
-                    {message.text}
-                  </p>
-                ))}
-              </div>
-              <MessageComposer
-                key={activeConversation.id}
-                conversationId={activeConversation.id}
-                loading={historyLoading}
-                onSendMessage={sendToConversation}
-              />
-            </>
+            <ChatThread
+              key={activeConversation.id}
+              conversationId={activeConversation.id}
+              name={activeConversation.name}
+              avatarUrl={activeConversation.avatarUrl}
+              listing={listing}
+              messages={messages}
+              loading={historyLoading}
+              error={historyError}
+              onRetry={onRetryHistory}
+              onBackToList={onBackToList}
+              onOpenListing={onOpenListing}
+              onSendMessage={onSendMessage}
+            />
           )}
           {!activeConversation && selectedConversationId && (
             <>
@@ -250,7 +140,7 @@ export function ChatPage({
           {!activeConversation && !selectedConversationId && (
             <EmptyState
               className={styles.chat__selection_empty}
-              title={empty ? 'Нет выбранного диалога' : 'Выберите диалог'}
+              title="Выберите диалог"
               description="Здесь появится переписка с автором объявления."
               icon={<LuMessagesSquare />}
             />

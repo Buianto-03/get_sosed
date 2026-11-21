@@ -1,0 +1,42 @@
+import { useEffect, useState } from 'react';
+import advertService from '@entities/advert/api/advertService';
+import type { ChatListingContext } from '../chat-thread/ChatThread';
+import { toListingContext } from './helper';
+
+interface ListingContextResult {
+  ownerId: number;
+  receiverId: number;
+  listingId: number;
+  listing: ChatListingContext;
+}
+
+export function useListingContext(
+  ownerId: number | null,
+  receiverId: number | null,
+  listingId: number | null,
+): ChatListingContext | undefined {
+  const [result, setResult] = useState<ListingContextResult | null>(null);
+  useEffect(() => {
+    setResult(null);
+    if (ownerId === null || receiverId === null || listingId === null) {
+      return undefined;
+    }
+    let active = true;
+    void advertService
+      .getAdvertById(listingId)
+      .then((advert) => {
+        if (active && advert.id === listingId && advert.userId === receiverId) {
+          setResult({ ownerId, receiverId, listingId, listing: toListingContext(advert) });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [ownerId, receiverId, listingId]);
+  return result?.ownerId === ownerId &&
+    result.receiverId === receiverId &&
+    result.listingId === listingId
+    ? result.listing
+    : undefined;
+}

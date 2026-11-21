@@ -20,16 +20,10 @@ const probes = {
   'FilterForm.tsx': [[body, body + probe('FilterForm')]],
   'FilterConditions.tsx': [[body, body + probe('FilterConditions')]],
   'MessageComposer.tsx': [[body, body + probe('MessageComposer')]],
-  'ChatPage.tsx': [
-    [body, body + probe('ChatPage')],
-    [
-      'activeConversation?.messages.map((message) => message.id)',
-      "activeConversation && (window.__measure.hit('historySeenInit', activeConversation.messages.length), activeConversation.messages.map((message) => message.id))",
-    ],
-    [
-      '{activeConversation.messages.map(',
-      "{(window.__measure.hit('historyMarkup', activeConversation.messages.length), activeConversation.messages).map(",
-    ],
+  'ChatPage.tsx': [[body, body + probe('ChatPage')]],
+  'ChatThread.tsx': [
+    [body, body + probe('ChatThread')],
+    ['{messages.map(', "{(window.__measure.hit('historyMarkup', messages.length), messages).map("],
     [
       'messages.filter((message)',
       "(window.__measure.hit('historyIncoming', messages.length), messages).filter((message)",
@@ -40,6 +34,10 @@ const probes = {
     ],
   ],
   'pages/chat/ui/messages-route/helper.ts': [
+    [
+      '(row, userId): ChatConversationRow => {',
+      `(row, userId): ChatConversationRow => {${probe('rowProjection')}`,
+    ],
     [
       'return messages.map(',
       "window.__measure.hit('historyProjection', messages.length); return messages.map(",

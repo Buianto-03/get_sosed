@@ -1,0 +1,101 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.thread__announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.thread__header {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: tokens.$space-3;
+  padding-bottom: tokens.$space-3;
+  border-bottom: 1px solid tokens.$color-border;
+  flex-shrink: 0;
+}
+
+.thread__header strong {
+  display: -webkit-box;
+  min-width: 0;
+  font-size: tokens.$font-size-lg;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.thread__back {
+  display: none;
+}
+
+.thread__header + button {
+  margin: tokens.$space-3 0;
+}
+
+.thread__messages {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: tokens.$space-3;
+  padding: tokens.$space-5 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: -3px;
+  }
+}
+
+.thread__messages > :first-child {
+  margin-top: auto;
+}
+
+.thread__message,
+.thread__message_mine {
+  flex-shrink: 0;
+  max-width: min(78%, 560px);
+  margin: 0;
+  padding: tokens.$space-3 tokens.$space-4;
+  border-radius: 12px 12px 12px 3px;
+  background: tokens.$color-soft;
+  font-size: tokens.$font-size-md;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.thread__message_mine {
+  align-self: flex-end;
+  border-radius: 12px 12px 3px 12px;
+  background: tokens.$color-highlight;
+}
+
+@container (max-width: 680px) {
+  .thread__back {
+    display: inline-flex;
+    margin-right: auto;
+  }
+}
+@media (max-height: 600px) and (max-width: 680px) {
+  .thread__header + button {
+    flex-shrink: 0;
+    margin-block: tokens.$space-2;
+    padding: tokens.$space-1 tokens.$space-2;
+
+    > :first-child {
+      width: 36px;
+      height: 28px;
+    }
+  }
+
+  .thread__messages {
+    padding-block: tokens.$space-2;
+  }
+}
