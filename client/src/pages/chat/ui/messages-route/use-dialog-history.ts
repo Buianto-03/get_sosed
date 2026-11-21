@@ -1,19 +1,49 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useAppDispatch } from '@app/store/hooks';
-import { historyStarted } from '@entities/chat/model/chatListSlice';
-import { chatSocket } from '@entities/chat/model/socket';
+import { useCallback, useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '@app/store/hooks';
+import type { DialogHistory } from '@entities/chat/model/chatListModel';
+import { selectChatHistory, selectChatConnection } from '@entities/chat/model/chatListSelectors';
+import {
+  closeHistory,
+  loadOlderHistory,
+  openHistory,
+  retryHistory,
+} from '@entities/chat/model/chatListSlice';
 
-export function useDialogHistory(ownerId: number | null, receiverId: number | null): () => void {
+interface DialogHistoryResult {
+  history: DialogHistory | null;
+  connected: boolean;
+  retry: () => void;
+  loadOlder: () => void;
+}
+
+export function useDialogHistory(
+  ownerId: number | null,
+  receiverId: number | null,
+): DialogHistoryResult {
   const dispatch = useAppDispatch();
-  const [attempt, setAttempt] = useState(0);
+  const history = useAppSelector((state) => selectChatHistory(state, ownerId, receiverId));
+  const connected = useAppSelector(selectChatConnection);
   useEffect(() => {
     if (ownerId === null || receiverId === null) {
       return undefined;
     }
-    dispatch(historyStarted(receiverId));
-    chatSocket.openDialog(receiverId);
-    return () => chatSocket.closeDialog(receiverId);
-  }, [dispatch, ownerId, receiverId, attempt]);
+    const dialog = { ownerId, receiverId };
+    dispatch(openHistory(dialog));
+    return () => {
+      dispatch(closeHistory(dialog));
+    };
+  }, [dispatch, ownerId, receiverId]);
 
-  return useCallback(() => setAttempt((value) => value + 1), []);
+  const retry = useCallback(() => {
+    if (ownerId !== null && receiverId !== null) {
+      dispatch(retryHistory({ ownerId, receiverId }));
+    }
+  }, [dispatch, ownerId, receiverId]);
+  const loadOlder = useCallback(() => {
+    if (ownerId !== null && receiverId !== null) {
+      dispatch(loadOlderHistory({ ownerId, receiverId }));
+    }
+  }, [dispatch, ownerId, receiverId]);
+
+  return { history, connected, retry, loadOlder };
 }

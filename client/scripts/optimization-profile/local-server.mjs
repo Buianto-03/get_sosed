@@ -117,6 +117,9 @@ export async function serve(root) {
     presence() {
       fixture.presence();
     },
+    disconnectWithQueuedMessages(count) {
+      fixture.disconnectWithQueuedMessages(count);
+    },
     holdLike() {
       gate = new Promise((resolve) => {
         release = resolve;

@@ -4,8 +4,6 @@ import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { UserStatus } from '@entities/session/model/authModel';
 import { ChatStatus } from '@entities/chat/model/chatListModel';
 import {
-  selectChatHistory,
-  selectChatHistoryStatus,
   selectChatListError,
   selectChatListStatus,
   selectChatRows,
@@ -35,8 +33,6 @@ export default function MessagesRoute(): JSX.Element | null {
   const rows = useAppSelector(selectChatRows);
   const listStatus = useAppSelector(selectChatListStatus);
   const listError = useAppSelector(selectChatListError);
-  const history = useAppSelector((state) => selectChatHistory(state, activeId));
-  const historyStatus = useAppSelector((state) => selectChatHistoryStatus(state, activeId));
   const {
     summary,
     error: summaryError,
@@ -45,7 +41,7 @@ export default function MessagesRoute(): JSX.Element | null {
   } = useDialogSummary(userId, activeId);
   const listing = useListingContext(userId, activeId, listingId);
   const summaryId = summary?.id ?? null;
-  const retryHistory = useDialogHistory(userId, summaryId);
+  const { history, connected, loadOlder, retry } = useDialogHistory(userId, summaryId);
   const requestList = useCallback(() => {
     if (userId !== null) {
       void dispatch(getReceiverListThunk(userId));
@@ -68,9 +64,10 @@ export default function MessagesRoute(): JSX.Element | null {
     [summaryId],
   );
 
+  const historyMessages = history?.messages;
   const messages = useMemo(
-    () => (userId === null ? [] : toMessages(history, userId)),
-    [history, userId],
+    () => (userId !== null && historyMessages ? toMessages(historyMessages, userId) : []),
+    [historyMessages, userId],
   );
   const conversations = useMemo(() => {
     if (userId === null) {
@@ -92,14 +89,10 @@ export default function MessagesRoute(): JSX.Element | null {
     return null;
   }
   const historyLoading =
-    summaryLoading ||
-    (summary !== null &&
-      (historyStatus === ChatStatus.Loading || historyStatus === ChatStatus.Idle));
+    summaryLoading || (summary !== null && !history?.initialized && !history?.failed);
   const historyError =
     (receiverId && activeId === null ? 'Недопустимый собеседник.' : summaryError) ||
-    (historyStatus === ChatStatus.Error
-      ? 'Не удалось загрузить историю. Проверьте соединение.'
-      : '');
+    (history?.failed ? 'Не удалось загрузить историю. Проверьте соединение.' : '');
 
   return (
     <div className={styles.messages__route}>
@@ -114,7 +107,14 @@ export default function MessagesRoute(): JSX.Element | null {
         onRetryList={requestList}
         historyLoading={historyLoading}
         historyError={historyError}
-        onRetryHistory={summary ? retryHistory : retrySummary}
+        onRetryHistory={summary ? retry : retrySummary}
+        awaitingConnection={Boolean(history && !connected)}
+        sendFailed={history?.sendFailed}
+        hasOlder={history?.beforeCursor != null}
+        olderDisabled={!connected || Boolean(history?.pending || history?.failed)}
+        onLoadOlder={loadOlder}
+        lastPageId={history?.lastPageId}
+        lastOlderPageId={history?.lastOlderPageId}
         onSelectConversation={selectConversation}
         onBackToList={backToList}
         onOpenListing={openListing}

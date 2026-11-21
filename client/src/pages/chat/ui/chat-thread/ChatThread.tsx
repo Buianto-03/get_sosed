@@ -6,6 +6,7 @@ import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Avatar } from '@shared/ui/avatar/Avatar';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Spinner } from '@shared/ui/feedback/Spinner';
+import { MessageViewport } from '../message-viewport/MessageViewport';
 import styles from './ChatThread.module.scss';
 
 export type ChatMessage = {
@@ -29,6 +30,13 @@ interface ChatThreadProps {
   messages: ChatMessage[];
   loading?: boolean;
   error?: string | null;
+  awaitingConnection?: boolean;
+  sendFailed?: boolean;
+  hasOlder?: boolean;
+  olderDisabled?: boolean;
+  lastPageId?: string | null;
+  lastOlderPageId?: string | null;
+  onLoadOlder?: () => void;
   onRetry?: () => void;
   onBackToList: () => void;
   onOpenListing?: (id: string) => void;
@@ -43,6 +51,13 @@ function ChatThreadView({
   messages,
   loading,
   error,
+  awaitingConnection,
+  sendFailed,
+  hasOlder,
+  olderDisabled,
+  lastPageId,
+  lastOlderPageId,
+  onLoadOlder,
   onRetry,
   onBackToList,
   onOpenListing,
@@ -51,13 +66,12 @@ function ChatThreadView({
   const [announcement, setAnnouncement] = useState('');
   const seenIds = useRef<Set<string> | null>(null);
   const wasLoading = useRef(loading);
-  const messageListRef = useRef<HTMLDivElement>(null);
-  const followLatest = useRef(true);
-  const lastMessageId = messages[messages.length - 1]?.id;
+  const previousPage = useRef(lastPageId);
+  const viewport = useRef<MessageViewport>(null);
 
   useEffect(() => {
     const previous = seenIds.current;
-    if (previous && !loading && !wasLoading.current) {
+    if (previous && !loading && !wasLoading.current && previousPage.current === lastPageId) {
       const incoming = messages.filter(
         (message) => message.from === 'them' && !previous.has(message.id),
       );
@@ -67,33 +81,13 @@ function ChatThreadView({
     }
     seenIds.current = new Set(messages.map((message) => message.id));
     wasLoading.current = loading;
-  }, [messages, name, loading]);
-
-  useEffect(() => {
-    const list = messageListRef.current;
-    if (list && followLatest.current) {
-      list.scrollTop = list.scrollHeight;
-    }
-  }, [lastMessageId, messages.length]);
-
-  useEffect(() => {
-    const list = messageListRef.current;
-    if (!list || typeof ResizeObserver === 'undefined') {
-      return undefined;
-    }
-    const observer = new ResizeObserver(() => {
-      if (followLatest.current) {
-        list.scrollTop = list.scrollHeight;
-      }
-    });
-    observer.observe(list);
-    return () => observer.disconnect();
-  }, []);
+    previousPage.current = lastPageId;
+  }, [messages, name, loading, lastPageId]);
 
   const sendToConversation = (id: string, message: string): boolean => {
     const sent = onSendMessage(id, message);
     if (sent) {
-      followLatest.current = true;
+      viewport.current?.followEnd();
     }
     return sent;
   };
@@ -118,35 +112,35 @@ function ChatThreadView({
           onOpen={() => onOpenListing?.(listing.id)}
         />
       )}
-      {loading && <Spinner label="Загрузка переписки" />}
+      {awaitingConnection && <Alert>Ожидаем подключения к чату…</Alert>}
+      {!awaitingConnection && loading && <Spinner label="Загрузка переписки" />}
+      {sendFailed && <Alert variant={AlertVariant.Error}>Не удалось отправить сообщение.</Alert>}
       {error && (
         <>
           <Alert variant={AlertVariant.Error}>{error}</Alert>
           <Button onClick={onRetry}>Повторить загрузку переписки</Button>
         </>
       )}
-      <div
-        ref={messageListRef}
-        className={styles.thread__messages}
-        aria-label="Сообщения"
-        role="region"
-        // Keyboard users must be able to scroll history independently of the composer.
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-        tabIndex={0}
-        onScroll={(event) => {
-          const list = event.currentTarget;
-          followLatest.current = list.scrollHeight - list.clientHeight - list.scrollTop < 8;
-        }}
-      >
+      <MessageViewport ref={viewport} lastOlderPageId={lastOlderPageId}>
+        {hasOlder && (
+          <Button
+            variant={ButtonVariant.Text}
+            aria-disabled={olderDisabled}
+            onClick={olderDisabled ? undefined : onLoadOlder}
+          >
+            Загрузить предыдущие сообщения
+          </Button>
+        )}
         {messages.map((message) => (
           <p
             className={message.from === 'me' ? styles.thread__message_mine : styles.thread__message}
             key={message.id}
+            data-message-id={message.id}
           >
             {message.text}
           </p>
         ))}
-      </div>
+      </MessageViewport>
       <MessageComposer
         conversationId={conversationId}
         loading={loading}

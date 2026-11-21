@@ -14,7 +14,7 @@ class FakeSocket {
 
   onmessage?: (event: { data: string }) => void;
 
-  send = vi.fn();
+  send = vi.fn<[string], void>();
 
   close = vi.fn();
 
@@ -57,7 +57,7 @@ it('returns false when a transport write throws, so the composer can retain its 
   expect(chatSocket.sendMessage(2, 'Текст')).toBe(true);
 });
 
-it.each([2, 3])('restores history only for receiver %i after reconnect', (receiverId) => {
+it('reconnects without replaying a history request and ignores the previous transport', () => {
   vi.useFakeTimers();
   vi.stubGlobal('WebSocket', FakeSocket);
   const listener = vi.fn();
@@ -65,23 +65,29 @@ it.each([2, 3])('restores history only for receiver %i after reconnect', (receiv
   chatSocket.connect(listener, connection);
   const first = FakeSocket.instances[0];
   first.onopen?.();
-  chatSocket.openDialog(2);
+  const payload = { receiverId: 2, requestId: 'r1', limit: 50 };
+  expect(chatSocket.requestHistoryPage(payload)).toBe(true);
+  expect(JSON.parse(first.send.mock.calls[0][0])).toEqual({ type: 'GET_HISTORY_PAGE', payload });
   first.onclose?.();
-  if (receiverId !== 2) {
-    chatSocket.closeDialog(2);
-    chatSocket.openDialog(receiverId);
-  }
   vi.advanceTimersByTime(1000);
   const reconnected = FakeSocket.instances[1];
   reconnected.onopen?.();
-  expect(reconnected.send).toHaveBeenCalledTimes(1);
-  expect(reconnected.send).toHaveBeenCalledWith(
-    JSON.stringify({ type: 'INITIALIZE', payload: { receiverId } }),
-  );
+  expect(reconnected.send).not.toHaveBeenCalled();
   expect(connection.mock.calls).toEqual([[true], [false], [true]]);
-  const response = JSON.stringify({ type: 'SET_MESSAGES', receiverId, payload: [] });
-  first.onmessage?.({ data: response });
+  const page = {
+    type: 'HISTORY_PAGE',
+    receiverId: 2,
+    requestId: 'r1',
+    payload: [],
+    hasMore: false,
+    nextCursor: null,
+  };
+  first.onmessage?.({ data: JSON.stringify(page) });
   expect(listener).not.toHaveBeenCalled();
-  reconnected.onmessage?.({ data: response });
-  expect(listener).toHaveBeenCalledWith(JSON.parse(response));
+  reconnected.onmessage?.({ data: JSON.stringify(page) });
+  expect(listener).toHaveBeenCalledWith(page);
+  reconnected.onmessage?.({ data: JSON.stringify({ ...page, hasMore: 'yes' }) });
+  expect(listener).toHaveBeenLastCalledWith(
+    expect.objectContaining({ type: 'CHAT_ERROR', requestId: 'r1', receiverId: 2 }),
+  );
 });

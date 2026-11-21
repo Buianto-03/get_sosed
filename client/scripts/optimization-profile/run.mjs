@@ -8,7 +8,7 @@ import { buildClient } from './profile-build.mjs';
 import { openChrome } from './chrome.mjs';
 import { serve } from './local-server.mjs';
 import { observePage } from './browser-metrics.mjs';
-import { routes, measureRoute, interact } from './scenarios.mjs';
+import { routes, measureRoute, interact, checkHistoryPagination } from './scenarios.mjs';
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -94,6 +94,9 @@ try {
                 };
                 if (profile && cache === 'warm') {
                   sample.interactions = await interact(page, server, route);
+                  if (route === '/messages/2') {
+                    sample.historyPagination = await checkHistoryPagination(page, server, size);
+                  }
                 }
                 result.samples.push(sample);
               }

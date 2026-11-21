@@ -2,7 +2,7 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { Link, MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
 import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
 import ProfileRoute from '@pages/profile/ui/profile-route/ProfileRoute';
@@ -12,8 +12,14 @@ import advertService from '@entities/advert/api/advertService';
 import likeService from '@entities/like/api/likeService';
 import chatService from '@entities/chat/api/chatListService';
 import profileService from '@features/edit-profile/userProfileService';
+import type { HistoryPageRequest } from '@entities/chat/model/protocol';
 import { chatSocket } from '@entities/chat/model/socket';
-import { setMessages, addMessage, historyFailed } from '@entities/chat/model/chatListSlice';
+import {
+  historyReceived,
+  addMessage,
+  historyFailed,
+  setChatConnection,
+} from '@entities/chat/model/chatListSlice';
 import { advertSchema, type AdvertPageType } from '@entities/advert/model/advertsModel';
 import { clearAuth, setSession } from '@entities/session/model/authSlice';
 import axiosInstance from '@shared/api/client';
@@ -63,7 +69,11 @@ function Location(): JSX.Element {
   const location = useLocation();
   return <output data-testid="location">{location.pathname + location.search}</output>;
 }
-function open(path: string, state?: object, navigation?: React.ReactNode): ReturnType<typeof render> {
+function open(
+  path: string,
+  state?: object,
+  navigation?: React.ReactNode,
+): ReturnType<typeof render> {
   return render(
     <Provider store={store}>
       <MemoryRouter
@@ -271,17 +281,40 @@ it('keeps profile input on failure, updates the session from the API response an
   expect(store.getState().auth.accessToken).toBe('keep-token');
 });
 
+function connectChat(): MockInstance<[HistoryPageRequest], boolean> {
+  const request = vi.spyOn(chatSocket, 'requestHistoryPage').mockReturnValue(true);
+  store.dispatch(setChatConnection(true));
+  return request;
+}
+
+function receiveFirstPage(hasMore = false): void {
+  const request = store.getState().chatList.history?.pending;
+  if (!request) {
+    throw new Error('Expected a pending first page');
+  }
+  store.dispatch(
+    historyReceived({
+      ...request,
+      type: 'HISTORY_PAGE',
+      payload: hasMore ? [{ id: 15, senderId: 1, receiverId: 2, message: 'Сообщение' }] : [],
+      hasMore,
+      nextCursor: hasMore ? 15 : null,
+    }),
+  );
+}
+
 it('opens a first conversation without a fake listing and sends through the socket with a retained failed draft', async () => {
   login();
   vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
   vi.spyOn(chatService, 'getSummary').mockResolvedValue({ id: 2, name: 'Михаил' });
-  const enter = vi.spyOn(chatSocket, 'openDialog').mockImplementation(() => undefined);
-  const leave = vi.spyOn(chatSocket, 'closeDialog').mockImplementation(() => undefined);
+  const enter = connectChat();
   const send = vi.spyOn(chatSocket, 'sendMessage').mockReturnValueOnce(false).mockReturnValue(true);
   const view = open('/messages/2');
-  await waitFor(() => expect(enter).toHaveBeenCalledWith(2));
+  await waitFor(() =>
+    expect(enter).toHaveBeenCalledWith(expect.objectContaining({ receiverId: 2, limit: 50 })),
+  );
   act(() => {
-    store.dispatch(setMessages({ receiverId: 2, messages: [] }));
+    receiveFirstPage();
   });
   expect(screen.queryByText('Объявление')).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole('textbox', { name: 'Сообщение' }), {
@@ -293,26 +326,25 @@ it('opens a first conversation without a fake listing and sends through the sock
   fireEvent.click(screen.getByRole('button', { name: 'Отправить' }));
   expect(send).toHaveBeenLastCalledWith(2, 'Здравствуйте');
   expect(screen.getByRole('textbox', { name: 'Сообщение' })).toHaveValue('');
-  expect(store.getState().chatList.messagesByUser[2]).toEqual([]);
+  expect(store.getState().chatList.history?.messages).toEqual([]);
   act(() => {
     store.dispatch(
       addMessage({
-        userId: 2,
+        ownerId: 1,
         message: { id: 8, senderId: 1, receiverId: 2, message: 'Здравствуйте' },
       }),
     );
   });
   expect(screen.getAllByText('Здравствуйте')).toHaveLength(1);
   view.unmount();
-  expect(leave).toHaveBeenCalledWith(2);
+  expect(store.getState().chatList.history).toBeNull();
 });
 
 it('changes listing context without reopening the dialog or refetching the summary on history retry', async () => {
   login();
   vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
   const summary = vi.spyOn(chatService, 'getSummary').mockResolvedValue({ id: 2, name: 'Михаил' });
-  const enter = vi.spyOn(chatSocket, 'openDialog').mockImplementation(() => undefined);
-  const leave = vi.spyOn(chatSocket, 'closeDialog').mockImplementation(() => undefined);
+  const enter = connectChat();
   let resolveAdvert!: (value: typeof advert) => void;
   const pending = new Promise<typeof advert>((resolve) => {
     resolveAdvert = resolve;
@@ -327,17 +359,17 @@ it('changes listing context without reopening the dialog or refetching the summa
     undefined,
     <Link to="/messages/2?listingId=43">Сменить объявление</Link>,
   );
-  await waitFor(() => expect(enter).toHaveBeenCalledWith(2));
+  await waitFor(() =>
+    expect(enter).toHaveBeenCalledWith(expect.objectContaining({ receiverId: 2, limit: 50 })),
+  );
   act(() => {
-    store.dispatch(setMessages({ receiverId: 2, messages: [] }));
+    receiveFirstPage(true);
   });
   const input = screen.getByRole('textbox', { name: 'Сообщение' });
   fireEvent.change(input, { target: { value: 'Черновик' } });
   fireEvent.click(screen.getByRole('link', { name: 'Сменить объявление' }));
   const thread = within(screen.getByRole('region', { name: 'Переписка' }));
-  expect(
-    await thread.findByRole('button', { name: /Действующее объявление/ }),
-  ).toBeInTheDocument();
+  expect(await thread.findByRole('button', { name: /Действующее объявление/ })).toBeInTheDocument();
   await act(async () => {
     resolveAdvert({ ...advert, title: 'Устаревшее объявление' });
     await pending;
@@ -345,14 +377,16 @@ it('changes listing context without reopening the dialog or refetching the summa
   expect(thread.queryByText('Устаревшее объявление')).not.toBeInTheDocument();
   expect(input).toHaveValue('Черновик');
   expect(enter).toHaveBeenCalledTimes(1);
-  expect(leave).not.toHaveBeenCalled();
+
   expect(summary).toHaveBeenCalledTimes(1);
 
+  fireEvent.click(thread.getByRole('button', { name: 'Загрузить предыдущие сообщения' }));
   act(() => {
-    store.dispatch(historyFailed(2));
+    store.dispatch(historyFailed(enter.mock.calls[1][0]));
   });
   fireEvent.click(thread.getByRole('button', { name: 'Повторить загрузку переписки' }));
-  expect(enter).toHaveBeenCalledTimes(2);
+  expect(enter).toHaveBeenCalledTimes(3);
+  expect(enter.mock.calls[2][0].beforeId).toBe(15);
   expect(summary).toHaveBeenCalledTimes(1);
   expect(readAdvert.mock.calls).toEqual([[42], [43]]);
   expect(input).toHaveValue('Черновик');
@@ -369,11 +403,12 @@ it('discards a previous owner’s late summary when the receiver stays the same'
     .spyOn(chatService, 'getSummary')
     .mockReturnValueOnce(pending)
     .mockResolvedValueOnce({ id: 2, name: 'Текущий собеседник' });
-  const enter = vi.spyOn(chatSocket, 'openDialog').mockImplementation(() => undefined);
+  const enter = connectChat();
 
   open('/messages/2');
   act(() => {
     store.dispatch(setSession({ user: { ...user, id: 3 }, accessToken: 'new-token' }));
+    store.dispatch(setChatConnection(true));
   });
   const thread = within(screen.getByRole('region', { name: 'Переписка' }));
   expect(await thread.findByText('Текущий собеседник')).toBeInTheDocument();
@@ -383,5 +418,5 @@ it('discards a previous owner’s late summary when the receiver stays the same'
   });
   expect(thread.queryByText('Устаревший собеседник')).not.toBeInTheDocument();
   expect(summary.mock.calls).toEqual([[2], [2]]);
-  expect(enter.mock.calls).toEqual([[2]]);
+  expect(enter.mock.calls).toEqual([[expect.objectContaining({ receiverId: 2 })]]);
 });

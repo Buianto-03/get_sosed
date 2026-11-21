@@ -5,7 +5,14 @@ import chatService = require('../service/chatService');
 
 interface ChatAction {
   type?: string;
-  payload?: { receiverId?: unknown; text?: unknown };
+  payload?: {
+    receiverId?: unknown;
+    text?: unknown;
+    requestId?: unknown;
+    limit?: unknown;
+    beforeId?: unknown;
+    afterId?: unknown;
+  };
 }
 
 const connections = new Map<WebSocket, { ws: WebSocket; user: AuthUser }>();
@@ -35,8 +42,44 @@ const connect = (
   broadcastOnline();
   socket.on('message', async (raw) => {
     let receiverId = 0;
+    let requestId: string | undefined;
     try {
       const { type, payload } = JSON.parse(raw.toString()) as ChatAction;
+      if (type === 'GET_HISTORY_PAGE') {
+        const requestedReceiverId = payload?.receiverId;
+        const requestedId = payload?.requestId;
+        if (
+          typeof requestedReceiverId !== 'number' ||
+          !Number.isSafeInteger(requestedReceiverId) ||
+          requestedReceiverId <= 0
+        ) {
+          throw new Error('Invalid receiver');
+        }
+        receiverId = requestedReceiverId;
+        if (typeof requestedId !== 'string' || !requestedId.trim()) {
+          throw new Error('Invalid history page request ID');
+        }
+        requestId = requestedId;
+        const { messages, hasMore, nextCursor } = await chatService.getHistoryPage(
+          user.id,
+          receiverId,
+          {
+            limit: payload?.limit,
+            beforeId: payload?.beforeId,
+            afterId: payload?.afterId,
+          },
+        );
+        send(socket, {
+          type: 'HISTORY_PAGE',
+          requestId,
+          receiverId,
+          payload: messages,
+          hasMore,
+          nextCursor,
+        });
+        return;
+      }
+
       receiverId = Number(payload?.receiverId);
 
       if (type === 'INITIALIZE') {
@@ -58,6 +101,7 @@ const connect = (
       console.error('Cannot process chat request:', error);
       send(socket, {
         type: 'CHAT_ERROR',
+        ...(requestId === undefined ? {} : { requestId }),
         receiverId,
         payload: 'Не удалось выполнить запрос чата.',
       });

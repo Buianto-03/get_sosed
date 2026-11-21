@@ -1,3 +1,4 @@
+import { chatSocket } from '@entities/chat/model/socket';
 import { clearChat } from '@entities/chat/model/chatListSlice';
 import { createListenerMiddleware } from '@reduxjs/toolkit';
 import { UserStatus, type UserT } from '@entities/session/model/authModel';
@@ -15,9 +16,12 @@ sessionListener.startListening.withTypes<RootState, AppDispatch>()({
   effect: (_, api) => {
     const id = userId(api.getState().auth.user);
     // No await: clear request IDs before the auth dispatch returns.
+    chatSocket.disconnect();
     api.dispatch(clearChat());
     api.dispatch(resetSavedAdverts());
     api.dispatch(resetLikes(id));
-    if (id !== null) void api.dispatch(getLikedAdvertsThunk());
+    if (id !== null) {
+      void api.dispatch(getLikedAdvertsThunk());
+    }
   },
 });

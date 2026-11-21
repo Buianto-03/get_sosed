@@ -94,3 +94,74 @@ describe('ChatPage accessibility', () => {
     expect(screen.getByRole('region', { name: 'Сообщения' })).toHaveAttribute('tabindex', '0');
   });
 });
+
+it('anchors the row visible at commit across an older page and keeps keyboard focus in the history on exhaustion', () => {
+  const rows = (ids: number[]): ChatMessage[] =>
+    ids.map((id) => ({ id: String(id), text: String(id), from: 'them' }));
+  const props = {
+    ...actions,
+    conversations: [conversation],
+    selectedConversationId: '2',
+    onSendMessage: vi.fn(),
+    onLoadOlder: vi.fn(),
+  };
+  const initial = rows([8, 9, 10, 11]);
+  const { rerender } = render(<ChatPage {...props} messages={initial} hasOlder />);
+  const list = screen.getByRole('region', { name: 'Сообщения' });
+  const older = screen.getByRole('button', { name: 'Загрузить предыдущие сообщения' });
+  const rect = (top: number, height: number): DOMRect => ({ top, bottom: top + height }) as DOMRect;
+  Object.defineProperty(list, 'clientHeight', { value: 60 });
+  Object.defineProperty(list, 'scrollHeight', { get: () => list.children.length * 40 });
+  list.getBoundingClientRect = () => rect(100, 60);
+  // Layout is a function of the current DOM order, like browser layout before/after commit.
+  const measure = vi
+    .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    .mockImplementation(function measureRow(this: HTMLElement) {
+      const index = Array.from(list.children).indexOf(this);
+      return rect(100 + index * 40 - list.scrollTop, 40);
+    });
+  try {
+    older.focus();
+    fireEvent.click(older);
+    expect(props.onLoadOlder).toHaveBeenCalledTimes(1);
+    rerender(<ChatPage {...props} messages={initial} hasOlder olderDisabled />);
+    list.scrollTop = 95;
+    fireEvent.scroll(list);
+    const anchor = screen.getByText('9');
+    expect(anchor.getBoundingClientRect().top).toBe(85);
+    rerender(
+      <ChatPage
+        {...props}
+        messages={rows([5, 6, 7, 8, 9, 10, 11, 12])}
+        lastPageId="older"
+        lastOlderPageId="older"
+      />,
+    );
+    expect(anchor.getBoundingClientRect().top).toBe(85);
+    expect(list).toHaveFocus();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    const anchoredTop = list.scrollTop;
+    rerender(
+      <ChatPage
+        {...props}
+        messages={rows([5, 6, 7, 8, 9, 10, 11, 12, 13])}
+        lastPageId="older"
+        lastOlderPageId="older"
+      />,
+    );
+    expect(list.scrollTop).toBe(anchoredTop);
+    list.scrollTop = list.scrollHeight - list.clientHeight;
+    fireEvent.scroll(list);
+    rerender(
+      <ChatPage
+        {...props}
+        messages={rows([5, 6, 7, 8, 9, 10, 11, 12, 13, 14])}
+        lastPageId="older"
+        lastOlderPageId="older"
+      />,
+    );
+    expect(list.scrollTop).toBe(list.scrollHeight);
+  } finally {
+    measure.mockRestore();
+  }
+});

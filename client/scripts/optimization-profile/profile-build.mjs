@@ -25,8 +25,8 @@ const probes = {
     [body, body + probe('ChatThread')],
     ['{messages.map(', "{(window.__measure.hit('historyMarkup', messages.length), messages).map("],
     [
-      'messages.filter((message)',
-      "(window.__measure.hit('historyIncoming', messages.length), messages).filter((message)",
+      'const incoming = messages.filter(',
+      "const incoming = (window.__measure.hit('historyIncoming', messages.length), messages).filter(",
     ],
     [
       'new Set(messages.map(',

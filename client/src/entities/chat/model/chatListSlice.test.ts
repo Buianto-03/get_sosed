@@ -4,7 +4,6 @@ import { ChatStatus, type ChatListType } from './chatListModel';
 import {
   selectChatConnection,
   selectChatHistory,
-  selectChatHistoryStatus,
   selectChatListError,
   selectChatListStatus,
   selectChatRows,
@@ -12,9 +11,10 @@ import {
 import chatReducer, {
   addMessage,
   clearChat,
+  openHistory,
   historyStarted,
+  historyReceived,
   setChatConnection,
-  setMessages,
   setOnline,
 } from './chatListSlice';
 import { getReceiverListThunk } from './chatListThunk';
@@ -33,97 +33,67 @@ function row(id: number, senderId = 2, receiverId = 1): ChatListType {
 }
 
 describe('chat history', () => {
-  it('inserts late IDs in order, appends new IDs and preserves unrelated histories and rows', () => {
+  it('merges pages and live events in order, preserves references for duplicates and ignores inactive history', () => {
     const latest = row(20);
     const neighbor = row(15, 3);
-    const activeMessages = [message(10), latest];
-    const neighborMessages = [neighbor];
-    let state = chatReducer(undefined, addMessage({ userId: 2, message: latest }));
-    state = chatReducer(state, addMessage({ userId: 3, message: neighbor }));
-    state = chatReducer(state, setMessages({ receiverId: 2, messages: activeMessages }));
+    const opened = chatReducer(undefined, openHistory({ ownerId: 1, receiverId: 2 }));
+    let state = chatReducer(opened, addMessage({ ownerId: 1, message: latest }));
+    state = chatReducer(state, historyStarted({ receiverId: 2, requestId: 'a', limit: 50 }));
+    state = chatReducer(
+      state,
+      historyReceived({
+        type: 'HISTORY_PAGE',
+        receiverId: 2,
+        requestId: 'a',
+        payload: [message(10), { ...latest }],
+        hasMore: true,
+        nextCursor: 10,
+      }),
+    );
+    expect(state.history?.messages).toEqual([message(10), latest]);
+    expect(state.history?.messages[1]).toBe(latest);
     const before = state;
-
-    const late = message(14);
-    state = chatReducer(state, addMessage({ userId: 2, message: late }));
-    expect(state.chatList).toBe(before.chatList);
-    expect(state.messagesByUser[3]).toEqual(neighborMessages);
-    expect(state.messagesByUser[3]).toBe(before.messagesByUser[3]);
-    expect(state.messagesByUser[2][0]).toBe(before.messagesByUser[2][0]);
-    expect(state.messagesByUser[2][1]).toBe(late);
-    expect(state.messagesByUser[2][2]).toBe(latest);
-
+    state = chatReducer(state, addMessage({ ownerId: 1, message: neighbor }));
+    expect(state.history).toBe(before.history);
+    const rows = state.chatList;
+    state = chatReducer(state, addMessage({ ownerId: 1, message: message(14) }));
+    expect(state.chatList).toBe(rows);
     const reply = message(21, 1, 2);
-    state = chatReducer(state, addMessage({ userId: 2, message: reply }));
-    expect(state.messagesByUser[2].map(({ id }) => id)).toEqual([10, 14, 20, 21]);
+    state = chatReducer(state, addMessage({ ownerId: 1, message: reply }));
+    expect(state.history?.messages.map(({ id }) => id)).toEqual([10, 14, 20, 21]);
     expect(state.chatList[0]).toEqual({
       ...reply,
       sender: latest.receiver,
       receiver: latest.sender,
     });
-    expect(state.chatList[1]).toBe(before.chatList[1]);
-    expect(state.messagesByUser[3]).toBe(before.messagesByUser[3]);
-  });
-
-  it('merges an out-of-order SET_MESSAGES snapshot with newer live data for the addressed dialog', () => {
-    const live = row(15);
-    const otherState = chatReducer(undefined, addMessage({ userId: 2, message: live }));
-    const older = message(8, 3);
-    const event = incomingMessageSchema.parse({
-      type: 'SET_MESSAGES',
-      receiverId: 3,
-      payload: [message(12, 3), { ...older, message: 'Старая версия' }, older],
-    });
-    if (event.type !== 'SET_MESSAGES') {
-      throw new Error('Expected SET_MESSAGES');
-    }
-    const withNeighbor = chatReducer(
-      otherState,
-      setMessages({ receiverId: event.receiverId, messages: event.payload }),
-    );
-    expect(withNeighbor.messagesByUser[2]).toBe(otherState.messagesByUser[2]);
-    expect(withNeighbor.messagesByUser[3]).toEqual([older, message(12, 3)]);
-    const activeSnapshot = [message(12), row(9), row(12)];
-    const merged = chatReducer(
-      withNeighbor,
-      setMessages({ receiverId: 2, messages: activeSnapshot }),
-    );
-    expect(merged.messagesByUser[2]).toEqual([activeSnapshot[1], activeSnapshot[2], live]);
-    expect(merged.messagesByUser[2][2]).toBe(live);
-    expect(merged.messagesByUser[3]).toBe(withNeighbor.messagesByUser[3]);
-    expect(merged.chatList).toBe(withNeighbor.chatList);
-    expect(selectChatHistoryStatus({ chatList: merged }, 2)).toBe(ChatStatus.Ready);
-
-    const replay = chatReducer(
-      merged,
-      setMessages({ receiverId: 2, messages: structuredClone(activeSnapshot) }),
-    );
-    expect(replay).toBe(merged);
+    expect(state.chatList[1]).toBe(rows[1]);
   });
 
   it('preserves identities on ADD/NEW replay and uses participants arriving later to create the row', () => {
     const sparse = message(11);
-    const initial = chatReducer(undefined, addMessage({ userId: 2, message: sparse }));
+    const opened = chatReducer(undefined, openHistory({ ownerId: 1, receiverId: 2 }));
+    const initial = chatReducer(opened, addMessage({ ownerId: 1, message: sparse }));
     expect(initial.chatList).toEqual([]);
     const enriched = row(sparse.id);
-    const ready = chatReducer(initial, addMessage({ userId: 2, message: enriched }));
+    const ready = chatReducer(initial, addMessage({ ownerId: 1, message: enriched }));
     expect(ready.chatList).toEqual([enriched]);
-    expect(ready.messagesByUser[2]).toBe(initial.messagesByUser[2]);
+    expect(ready.history?.messages).toBe(initial.history?.messages);
 
     ['ADD_MESSAGE', 'NEW_MESSAGE'].forEach((type) => {
       const event = incomingMessageSchema.parse({ type, payload: enriched });
       if (event.type !== 'ADD_MESSAGE' && event.type !== 'NEW_MESSAGE') {
         throw new Error('Expected a live message');
       }
-      expect(chatReducer(ready, addMessage({ userId: 2, message: event.payload }))).toBe(ready);
+      expect(chatReducer(ready, addMessage({ ownerId: 1, message: event.payload }))).toBe(ready);
     });
-    expect(chatReducer(ready, addMessage({ userId: 2, message: sparse }))).toBe(ready);
+    expect(chatReducer(ready, addMessage({ ownerId: 1, message: sparse }))).toBe(ready);
     const withPhoto = {
       ...enriched,
       sender: { ...enriched.sender, UserProfile: { photo: 'avatar.jpg' } },
     };
-    const updated = chatReducer(ready, addMessage({ userId: 2, message: withPhoto }));
+    const updated = chatReducer(ready, addMessage({ ownerId: 1, message: withPhoto }));
     expect(updated.chatList).toEqual([withPhoto]);
-    expect(updated.messagesByUser[2]).toBe(ready.messagesByUser[2]);
+    expect(updated.history?.messages).toBe(ready.history?.messages);
   });
 });
 
@@ -131,7 +101,7 @@ describe('chat list and selectors', () => {
   it('merges a late list with newer live rows and keeps the list stable on an equivalent refresh', () => {
     const pending = chatReducer(undefined, getReceiverListThunk.pending('request', 1));
     const live = row(14);
-    const withLive = chatReducer(pending, addMessage({ userId: 2, message: live }));
+    const withLive = chatReducer(pending, addMessage({ ownerId: 1, message: live }));
     const fromServer = row(11, 3);
     const loaded = chatReducer(
       withLive,
@@ -151,35 +121,26 @@ describe('chat list and selectors', () => {
     expect(refreshed.chatList).toBe(loaded.chatList);
   });
 
-  it('keeps selected histories stable on presence and unrelated history changes', () => {
-    const withHistory = chatReducer(
-      undefined,
-      setMessages({ receiverId: 2, messages: [message(7)] }),
-    );
-    const online = chatReducer(withHistory, setOnline([{ id: 2, name: 'Собеседник' }]));
+  it('keeps selected history stable on presence, rejects other addresses', () => {
+    const opened = chatReducer(undefined, openHistory({ ownerId: 1, receiverId: 2 }));
+    const online = chatReducer(opened, setOnline([{ id: 2, name: 'Собеседник' }]));
     const connected = chatReducer(online, setChatConnection(true));
-    const loading = chatReducer(connected, historyStarted(3));
-    const disconnected = chatReducer(loading, setChatConnection(false));
-
-    const before = { chatList: withHistory };
-    const after = { chatList: disconnected };
-    expect(selectChatConnection({ chatList: loading })).toBe(true);
-    expect(selectChatConnection(after)).toBe(false);
+    const before = { chatList: opened };
+    const after = { chatList: connected };
+    expect(selectChatConnection(after)).toBe(true);
     expect(selectChatRows(after)).toBe(selectChatRows(before));
-    expect(selectChatHistory(after, 2)).toBe(selectChatHistory(before, 2));
-    expect(selectChatHistory(after, 3)).toBe(selectChatHistory(before, 4));
-    expect(selectChatHistoryStatus(after, 2)).toBe(ChatStatus.Ready);
-    expect(selectChatHistoryStatus(after, 3)).toBe(ChatStatus.Error);
-    expect(selectChatHistoryStatus(after, 4)).toBe(ChatStatus.Idle);
+    expect(selectChatHistory(after, 1, 2)).toBe(selectChatHistory(before, 1, 2));
+    expect(selectChatHistory(after, 1, 3)).toBeNull();
+    expect(selectChatHistory(after, 3, 2)).toBeNull();
     expect(selectChatListStatus(after)).toBe(ChatStatus.Idle);
     expect(selectChatListError(after)).toBeNull();
   });
 
   it('clears histories, rows and connection and ignores a previous session’s late list', () => {
     const pending = chatReducer(undefined, getReceiverListThunk.pending('old', 1));
-    const withLive = chatReducer(pending, addMessage({ userId: 2, message: row(8) }));
+    const withLive = chatReducer(pending, addMessage({ ownerId: 1, message: row(8) }));
     const cleared = chatReducer(withLive, clearChat());
-    expect(cleared.messagesByUser).toEqual({});
+    expect(cleared.history).toBeNull();
     expect(cleared.chatList).toEqual([]);
     expect(cleared.connected).toBe(false);
     const nextSession = chatReducer(cleared, getReceiverListThunk.pending('new', 3));

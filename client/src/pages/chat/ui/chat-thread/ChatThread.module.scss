@@ -36,28 +36,6 @@
   margin: tokens.$space-3 0;
 }
 
-.thread__messages {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: tokens.$space-3;
-  padding: tokens.$space-5 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-
-  &:focus-visible {
-    outline: 3px solid tokens.$color-focus;
-    outline-offset: -3px;
-  }
-}
-
-.thread__messages > :first-child {
-  margin-top: auto;
-}
-
 .thread__message,
 .thread__message_mine {
   flex-shrink: 0;
@@ -93,9 +71,5 @@
       width: 36px;
       height: 28px;
     }
-  }
-
-  .thread__messages {
-    padding-block: tokens.$space-2;
   }
 }

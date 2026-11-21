@@ -64,6 +64,84 @@ test('chat history is scoped to both directions of one conversation and selects 
   assert.equal(await service.getMessages(1, 2), messages);
 });
 
+test('history pages apply strict conversation and cursor predicates and return ascending IDs', async () => {
+  const rows = Array.from({ length: 106 }, (_, index) => ({ id: 2 * index + 2 }));
+  const cases = [
+    { input: {}, ids: rows.slice(-50), nextCursor: 114, queryLimit: 51 },
+    { input: { limit: 100 }, ids: rows.slice(-100), nextCursor: 14, queryLimit: 101 },
+    { input: { beforeId: 10, limit: 2 }, ids: [{ id: 6 }, { id: 8 }], nextCursor: 6, queryLimit: 3 },
+    { input: { beforeId: 6, limit: 2 }, ids: [{ id: 2 }, { id: 4 }], nextCursor: null, queryLimit: 3 },
+    { input: { beforeId: 2 }, ids: [], nextCursor: null, queryLimit: 51 },
+    { input: { afterId: 204, limit: 2 }, ids: [{ id: 206 }, { id: 208 }], nextCursor: 208, queryLimit: 3 },
+    { input: { afterId: 210, limit: 2 }, ids: [{ id: 212 }], nextCursor: null, queryLimit: 3 },
+    { input: { afterId: 212 }, ids: [], nextCursor: null, queryLimit: 51 },
+    { input: { afterId: 0, limit: 1 }, ids: [{ id: 2 }], nextCursor: 2, queryLimit: 2 },
+  ];
+
+  for (const { input, ids, nextCursor, queryLimit } of cases) {
+    const { beforeId, afterId } = input;
+    const service = createService({
+      findAll: async (options) => {
+        assert.deepEqual(Reflect.ownKeys(options.where), [
+          ...(beforeId === undefined && afterId === undefined ? [] : ['id']),
+          Op.or,
+        ]);
+        assert.equal(JSON.stringify(options.where[Op.or]), JSON.stringify([
+          { senderId: 1, receiverId: 2 },
+          { senderId: 2, receiverId: 1 },
+        ]));
+        assert.equal(options.limit, queryLimit);
+        assert.equal(options.order[0][0], 'id');
+        assert.equal(options.order[0][1], afterId === undefined ? 'DESC' : 'ASC');
+        assert.deepEqual(Array.from(options.attributes), [
+          'id', 'senderId', 'receiverId', 'message', 'createdAt', 'updatedAt',
+        ]);
+        checkParticipants(options, service);
+
+        if (beforeId !== undefined) {
+          assert.deepEqual(Reflect.ownKeys(options.where.id), [Op.lt]);
+          assert.equal(options.where.id[Op.lt], beforeId);
+          return rows.filter(({ id }) => id < beforeId).reverse().slice(0, options.limit);
+        }
+        if (afterId !== undefined) {
+          assert.deepEqual(Reflect.ownKeys(options.where.id), [Op.gt]);
+          assert.equal(options.where.id[Op.gt], afterId);
+          return rows.filter(({ id }) => id > afterId).slice(0, options.limit);
+        }
+        return [...rows].reverse().slice(0, options.limit);
+      },
+    });
+    const result = await service.getHistoryPage(1, 2, input);
+    assert.deepEqual(Array.from(result.messages), ids);
+    assert.equal(result.hasMore, nextCursor !== null);
+    assert.equal(result.nextCursor, nextCursor);
+  }
+});
+
+test('history pages reject invalid options before lookup and invalid receivers before reading history', async () => {
+  const lookups = [];
+  const service = createService({}, {
+    findByPk: async (id) => {
+      lookups.push(id);
+      return null;
+    },
+  });
+  for (const field of ['beforeId', 'afterId', 'limit']) {
+    for (const value of [null, -1, 1.5, NaN, Number.MAX_SAFE_INTEGER + 1, '2', [], true]) {
+      await assert.rejects(service.getHistoryPage(1, 2, { [field]: value }), /Invalid history page/);
+    }
+  }
+  for (const input of [{ beforeId: 0 }, { limit: 0 }, { limit: 101 }, { beforeId: 5, afterId: 0 }]) {
+    await assert.rejects(service.getHistoryPage(1, 2, input), /Invalid history page/);
+  }
+  for (const receiverId of [null, 0, -1, 1, 1.5, NaN, Number.MAX_SAFE_INTEGER + 1, '2']) {
+    await assert.rejects(service.getHistoryPage(1, receiverId, {}), /Invalid receiver/);
+  }
+  assert.deepEqual(lookups, []);
+  await assert.rejects(service.getHistoryPage(1, 2, {}), /User not found/);
+  assert.deepEqual(lookups, [2]);
+});
+
 test('chat service validates text before creating a message', async () => {
   const service = createService();
   for (const text of [undefined, null, 42, '', '   ', 'a'.repeat(10001)]) {
@@ -148,6 +226,74 @@ test('WebSocket history passes authenticated user ID and returns SET_MESSAGES on
   assert.deepEqual(calls, [[1, 2]]);
   assert.deepEqual(sender.events, [{ type: 'SET_MESSAGES', receiverId: 2, payload: messages }]);
   assert.deepEqual(receiver.events, []);
+});
+
+test('WebSocket pages use the authenticated user and correlate each response to the requesting tab', async () => {
+  const messages = [{ id: 5, senderId: 1, receiverId: 2, message: 'Hello' }];
+  const calls = [];
+  const connect = load('../build/src/ws/connection.js', {
+    '../service/chatService': {
+      getHistoryPage: async (userId, receiverId, options) => {
+        calls.push([userId, receiverId, { ...options }]);
+        return { messages, hasMore: true, nextCursor: 5 };
+      },
+    },
+  });
+  const sockets = [1, 1, 2, 3].map((id) => {
+    const socket = new FakeSocket();
+    connect(socket, {}, { id, name: `User ${id}` });
+    return socket;
+  });
+  sockets.forEach((socket) => { socket.events.length = 0; });
+
+  await sockets[0].receive({
+    type: 'GET_HISTORY_PAGE',
+    payload: { requestId: 'history-1', receiverId: 2, senderId: 999, afterId: 0, limit: 1 },
+  });
+  assert.deepEqual(calls, [[1, 2, { afterId: 0, beforeId: undefined, limit: 1 }]]);
+  assert.deepEqual(sockets[0].events, [{
+    type: 'HISTORY_PAGE', requestId: 'history-1', receiverId: 2, payload: messages, hasMore: true, nextCursor: 5,
+  }]);
+  for (const socket of sockets.slice(1)) {
+    assert.deepEqual(socket.events, []);
+  }
+});
+
+test('WebSocket pages correlate service errors and reject invalid identifiers without querying history', async () => {
+  const failure = new Error('private database diagnostic');
+  const logs = [];
+  const calls = [];
+  const connect = load('../build/src/ws/connection.js', {
+    '../service/chatService': {
+      getHistoryPage: async (...args) => {
+        calls.push(args);
+        throw failure;
+      },
+    },
+  }, logs);
+  const socket = new FakeSocket();
+  connect(socket, {}, { id: 1, name: 'Anna' });
+  socket.events.length = 0;
+  for (const requestId of [undefined, '', '  ', 12]) {
+    await socket.receive({ type: 'GET_HISTORY_PAGE', payload: { requestId, receiverId: 2 } });
+    assert.deepEqual(socket.events.at(-1), {
+      type: 'CHAT_ERROR', receiverId: 2, payload: 'Не удалось выполнить запрос чата.',
+    });
+  }
+  for (const receiverId of ['2', 0, -2, 2.5, Number.MAX_SAFE_INTEGER + 1]) {
+    await socket.receive({ type: 'GET_HISTORY_PAGE', payload: { requestId: 'history-1', receiverId } });
+    assert.deepEqual(socket.events.at(-1), {
+      type: 'CHAT_ERROR', receiverId: 0, payload: 'Не удалось выполнить запрос чата.',
+    });
+  }
+  assert.equal(calls.length, 0);
+
+  await socket.receive({ type: 'GET_HISTORY_PAGE', payload: { requestId: 'history-2', receiverId: 2 } });
+  assert.deepEqual(socket.events.at(-1), {
+    type: 'CHAT_ERROR', requestId: 'history-2', receiverId: 2, payload: 'Не удалось выполнить запрос чата.',
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(logs.at(-1)[1], failure);
 });
 
 test('WebSocket messages reach all participant tabs, support an offline receiver and preserve reconnect history', async () => {

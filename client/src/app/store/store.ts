@@ -4,6 +4,7 @@ import advertReducer from '@entities/advert/model/advertsSlice';
 import likeReducer from '@entities/like/model/likesSlice';
 import chatListReducer from '@entities/chat/model/chatListSlice';
 import likedAdvertsReducer from '@entities/advert/model/likedAdvertsSlice';
+import { chatHistoryListener } from './chat-history-listener';
 import { sessionListener } from './session-listener';
 
 export const store = configureStore({
@@ -14,7 +15,8 @@ export const store = configureStore({
     chatList: chatListReducer,
     likedAdverts: likedAdvertsReducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().prepend(sessionListener.middleware),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().prepend(sessionListener.middleware, chatHistoryListener.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

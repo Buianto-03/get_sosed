@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { HistoryPageRequest } from './protocol';
 import { chatSchema, participantSchema, type ChatType } from './chat';
 
 export const chatListSchema = chatSchema.extend({
@@ -14,11 +15,28 @@ export enum ChatStatus {
   Ready = 'ready',
   Error = 'error',
 }
+export interface DialogAddress {
+  ownerId: number;
+  receiverId: number;
+}
+
+export interface DialogHistory extends DialogAddress {
+  messages: ChatType[];
+  sendFailed: boolean;
+  initialized: boolean;
+  beforeCursor: number | null;
+  // Keep the confirmed recovery boundary independent of concurrent live messages.
+  afterCursor: number | null;
+  pending: HistoryPageRequest | null;
+  failed: HistoryPageRequest | null;
+  lastPageId: string | null;
+  lastOlderPageId: string | null;
+}
+
 export interface ChatListSlice {
   chatList: ChatListType[];
   online: { id: number; name: string }[];
-  messagesByUser: Record<number, ChatType[]>;
-  historyStatus: Record<number, ChatStatus>;
+  history: DialogHistory | null;
   status: ChatStatus;
   error: string | null;
   requestId: string | null;

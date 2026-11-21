@@ -193,12 +193,33 @@ export function createFixture(size) {
           throw new Error('Unknown fixture receiver');
         }
 
-        if (type === 'INITIALIZE') {
+        if (type === 'INITIALIZE' || type === 'GET_HISTORY_PAGE') {
           const history = numbered(counts.history - 1, (index) =>
             initialMessage(receiverId, index),
           );
           history.push(conversation.preview, ...conversation.received);
-          send(socket, { type: 'SET_MESSAGES', receiverId, payload: history });
+          if (type === 'INITIALIZE') {
+            send(socket, { type: 'SET_MESSAGES', receiverId, payload: history });
+          } else {
+            const { requestId, limit = 50, beforeId, afterId } = payload;
+            const ascending = afterId !== undefined;
+            const candidates = history.filter(({ id }) => {
+              if (ascending) {
+                return id > afterId;
+              }
+              return beforeId === undefined || id < beforeId;
+            });
+            const messages = ascending ? candidates.slice(0, limit) : candidates.slice(-limit);
+            const hasMore = candidates.length > limit;
+            send(socket, {
+              type: 'HISTORY_PAGE',
+              requestId,
+              receiverId,
+              payload: messages,
+              hasMore,
+              nextCursor: hasMore ? (ascending ? messages.at(-1).id : messages[0].id) : null,
+            });
+          }
         } else if (type === 'ADD_MESSAGE') {
           const text = payload.text?.trim();
           if (!text || payload.text.length > 10_000) {
@@ -226,6 +247,20 @@ export function createFixture(size) {
       'Новое сообщение соседнего диалога',
     );
     broadcast({ type: 'NEW_MESSAGE', payload: entry });
+  }
+
+  function disconnectWithQueuedMessages(count) {
+    for (const socket of sockets) {
+      socket.close();
+    }
+    for (let index = 1; index <= count; index += 1) {
+      appendMessage(
+        activeReceiverId,
+        activeReceiverId,
+        signedInUserId,
+        `Сообщение вне сети ${index}`,
+      );
+    }
   }
 
   function presence() {
@@ -310,5 +345,5 @@ export function createFixture(size) {
     return result({ error: `Unhandled fixture request ${method} ${pathname}` }, 404);
   }
 
-  return { request, connect, neighbor, presence };
+  return { request, connect, neighbor, presence, disconnectWithQueuedMessages };
 }

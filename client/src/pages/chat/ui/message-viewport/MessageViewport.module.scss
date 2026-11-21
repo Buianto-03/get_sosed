@@ -1,0 +1,30 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.viewport {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: tokens.$space-3;
+  padding: tokens.$space-5 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+
+  &:focus-visible {
+    outline: 3px solid tokens.$color-focus;
+    outline-offset: -3px;
+  }
+}
+
+.viewport > :first-child {
+  margin-top: auto;
+}
+
+@media (max-height: 600px) and (max-width: 680px) {
+  .viewport {
+    padding-block: tokens.$space-2;
+  }
+}

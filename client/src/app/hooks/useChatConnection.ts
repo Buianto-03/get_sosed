@@ -3,10 +3,11 @@ import { chatSocket } from '@entities/chat/model/socket';
 import {
   addMessage,
   clearChat,
-  setMessages,
+  historyReceived,
   setOnline,
   setChatConnection,
   historyFailed,
+  chatSendFailed,
 } from '@entities/chat/model/chatListSlice';
 import { UserStatus } from '@entities/session/model/authModel';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -26,22 +27,25 @@ export function useChatConnection(): void {
       (action) => {
         switch (action.type) {
           case 'CHAT_ERROR':
-            dispatch(historyFailed(action.receiverId));
+            if (action.requestId !== undefined) {
+              dispatch(
+                historyFailed({ receiverId: action.receiverId, requestId: action.requestId }),
+              );
+            } else {
+              dispatch(chatSendFailed({ ownerId: userId, receiverId: action.receiverId }));
+            }
             break;
           case 'SET_USERS':
             dispatch(setOnline(action.payload));
             break;
-          case 'SET_MESSAGES':
-            dispatch(setMessages({ receiverId: action.receiverId, messages: action.payload }));
+          case 'HISTORY_PAGE':
+            dispatch(historyReceived(action));
             break;
           case 'ADD_MESSAGE':
           case 'NEW_MESSAGE':
             dispatch(
               addMessage({
-                userId:
-                  action.payload.senderId === userId
-                    ? action.payload.receiverId
-                    : action.payload.senderId,
+                ownerId: userId,
                 message: action.payload,
               }),
             );

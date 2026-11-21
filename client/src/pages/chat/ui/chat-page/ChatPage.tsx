@@ -26,6 +26,13 @@ export interface ChatPageProps {
   listError?: string | null;
   historyLoading?: boolean;
   historyError?: string | null;
+  awaitingConnection?: boolean;
+  sendFailed?: boolean;
+  hasOlder?: boolean;
+  olderDisabled?: boolean;
+  lastPageId?: string | null;
+  lastOlderPageId?: string | null;
+  onLoadOlder?: () => void;
   onRetryList?: () => void;
   onRetryHistory?: () => void;
   onSelectConversation: (id: string) => void;
@@ -43,6 +50,13 @@ export function ChatPage({
   listError,
   historyLoading,
   historyError,
+  awaitingConnection,
+  sendFailed,
+  hasOlder,
+  olderDisabled,
+  lastPageId,
+  lastOlderPageId,
+  onLoadOlder,
   onRetryList,
   onRetryHistory,
   onSelectConversation,
@@ -116,6 +130,13 @@ export function ChatPage({
               loading={historyLoading}
               error={historyError}
               onRetry={onRetryHistory}
+              awaitingConnection={awaitingConnection}
+              sendFailed={sendFailed}
+              hasOlder={hasOlder}
+              olderDisabled={olderDisabled}
+              lastPageId={lastPageId}
+              lastOlderPageId={lastOlderPageId}
+              onLoadOlder={onLoadOlder}
               onBackToList={onBackToList}
               onOpenListing={onOpenListing}
               onSendMessage={onSendMessage}

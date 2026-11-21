@@ -7,6 +7,10 @@ const number = (selector) => `document.querySelectorAll(${JSON.stringify(selecto
 const city = text('input[placeholder="Любой город"]');
 const priceFrom = text('input[id$="-desktop-price-from"]');
 const composer = text('input[placeholder="Напишите сообщение"]');
+const messageRegion = text('[role=region][aria-label="Сообщения"]');
+const messageRows = '[role=region][aria-label="Сообщения"] [data-message-id]';
+const olderButton = `Array.from(document.querySelectorAll('button')).find(
+  (button) => button.textContent.includes('Загрузить предыдущие сообщения'))`;
 const save = text('article button[aria-pressed]');
 const favorites = 'section[aria-labelledby=favorites] article';
 const firstFavorite = text(`${favorites} button[aria-pressed]`);
@@ -17,7 +21,7 @@ export async function measureRoute(page, server, route, size, profile) {
     '/': `${number('article button[aria-pressed]:enabled')} === 3`,
     '/listings': `${number('article button[aria-pressed]:enabled')} === 8 && ${number('input[type=checkbox]:enabled')} === ${large ? 200 : 20}`,
     '/profile': `${number(favorites)} === ${large ? 500 : 50} && ${number('section[aria-labelledby=my-listings] article')} > 0`,
-    '/messages/2': `${number('section[aria-label="Диалоги"] button')} === 50 && ${number('[role=region][aria-label="Сообщения"] p')} === ${large ? 5000 : 100}`,
+    '/messages/2': `${number('section[aria-label="Диалоги"] button')} === 50 && ${number('[role=region][aria-label="Сообщения"] p')} === 50`,
   };
   await page.send('Page.navigate', { url: 'about:blank' });
   await page.wait("location.href === 'about:blank' && document.readyState === 'complete'");
@@ -74,6 +78,45 @@ async function type(page, input, chars) {
     );
   }
   return finish(page, chars.length);
+}
+
+export async function checkHistoryPagination(page, server, size) {
+  await page.evaluate(`${messageRegion}.scrollTop = 0`);
+  const anchor = await page.evaluate(`new Promise((resolve) => requestAnimationFrame(() => {
+    const region = ${messageRegion};
+    const top = region.getBoundingClientRect().top;
+    const row = Array.from(region.querySelectorAll('[data-message-id]')).find(
+      (entry) => entry.getBoundingClientRect().bottom > top);
+    resolve({ id: row.dataset.messageId, offset: row.getBoundingClientRect().top - top });
+  }))`);
+  await page.evaluate(`(() => {
+    const button = ${olderButton};
+    button.focus({ preventScroll: true });
+    button.click();
+  })()`);
+  await page.wait(`${number(messageRows)} === 100`);
+  const restoredOffset = await page.evaluate(`new Promise((resolve) => requestAnimationFrame(() => {
+    const region = ${messageRegion};
+    const row = region.querySelector('[data-message-id="${anchor.id}"]');
+    resolve(row.getBoundingClientRect().top - region.getBoundingClientRect().top);
+  }))`);
+  assert.ok(Math.abs(anchor.offset - restoredOffset) < 2, 'loading older history moved the anchor');
+  const focused = size === 'small' ? messageRegion : `(${olderButton})`;
+  assert.equal(await page.evaluate(`document.activeElement === ${focused}`), true);
+
+  // More than one page fits in the reconnect gap.
+  server.disconnectWithQueuedMessages(55);
+  await page.wait(
+    `${number(messageRows)} === 155 && ${messageRegion}.textContent.includes('Сообщение вне сети 55')`,
+  );
+  const ids =
+    await page.evaluate(`Array.from(document.querySelectorAll(${JSON.stringify(messageRows)}),
+    (row) => Number(row.dataset.messageId))`);
+  assert.ok(
+    ids.every((id, index) => index === 0 || id > ids[index - 1]),
+    'history IDs must ascend without duplicates',
+  );
+  return { olderPageRows: 50, recoveredRows: 55, anchorShiftPx: restoredOffset - anchor.offset };
 }
 
 export async function interact(page, server, route) {

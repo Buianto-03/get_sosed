@@ -1,18 +1,19 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createAction, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   ChatStatus,
   type ChatListSlice,
   type ChatListType,
+  type DialogAddress,
   type UserSummary,
 } from './chatListModel';
 import type { ChatType } from './chat';
+import type { HistoryPage, HistoryPageRequest } from './protocol';
 import { getReceiverListThunk } from './chatListThunk';
 
 const initialState: ChatListSlice = {
   chatList: [],
   online: [],
-  messagesByUser: {},
-  historyStatus: {},
+  history: null,
   status: ChatStatus.Idle,
   error: null,
   requestId: null,
@@ -83,6 +84,9 @@ function insertMessage(history: ChatType[], message: ChatType): void {
   }
 }
 
+export const loadOlderHistory = createAction<DialogAddress>('chatList/loadOlderHistory');
+export const retryHistory = createAction<DialogAddress>('chatList/retryHistory');
+
 export const chatListSlice = createSlice({
   name: 'chatList',
   initialState,
@@ -92,35 +96,121 @@ export const chatListSlice = createSlice({
     },
     setChatConnection: (state, action: PayloadAction<boolean>) => {
       state.connected = action.payload;
-      if (!action.payload) {
-        Object.keys(state.historyStatus).forEach((id) => {
-          if (state.historyStatus[Number(id)] === ChatStatus.Loading) {
-            state.historyStatus[Number(id)] = ChatStatus.Error;
-          }
-        });
+      const { history } = state;
+      if (!action.payload && history) {
+        if (history.initialized && history.afterCursor === null) {
+          history.afterCursor = history.messages[history.messages.length - 1]?.id ?? 0;
+        }
+        history.pending = null;
+        history.failed = null;
       }
     },
-    historyStarted: (state, action: PayloadAction<number>) => {
-      state.historyStatus[action.payload] = ChatStatus.Loading;
+    openHistory: (state, action: PayloadAction<DialogAddress>) => {
+      state.history = {
+        ...action.payload,
+        messages: [],
+        sendFailed: false,
+        initialized: false,
+        beforeCursor: null,
+        afterCursor: null,
+        pending: null,
+        failed: null,
+        lastPageId: null,
+        lastOlderPageId: null,
+      };
     },
-    historyFailed: (state, action: PayloadAction<number>) => {
-      state.historyStatus[action.payload] = ChatStatus.Error;
+    closeHistory: (state, action: PayloadAction<DialogAddress>) => {
+      const { history } = state;
+      const { ownerId, receiverId } = action.payload;
+      if (history?.ownerId === ownerId && history.receiverId === receiverId) {
+        state.history = null;
+      }
     },
-    setMessages: (state, action: PayloadAction<{ receiverId: number; messages: ChatType[] }>) => {
-      const { receiverId, messages } = action.payload;
-      state.messagesByUser[receiverId] = mergeHistory(
-        state.messagesByUser[receiverId] ?? [],
-        messages,
-      );
-      state.historyStatus[receiverId] = ChatStatus.Ready;
+    chatSendFailed: (state, action: PayloadAction<DialogAddress>) => {
+      const { history } = state;
+      if (
+        history?.ownerId === action.payload.ownerId &&
+        history.receiverId === action.payload.receiverId
+      ) {
+        history.sendFailed = true;
+      }
     },
-    addMessage: (state, action: PayloadAction<{ userId: number; message: ChatType }>) => {
-      const { userId, message } = action.payload;
-      const history = state.messagesByUser[userId];
-      if (history) {
-        insertMessage(history, message);
+    historyStarted: (state, action: PayloadAction<HistoryPageRequest>) => {
+      const { history } = state;
+      if (history?.receiverId === action.payload.receiverId) {
+        history.pending = action.payload;
+        history.failed = null;
+      }
+    },
+    historyFailed: (
+      state,
+      action: PayloadAction<Pick<HistoryPageRequest, 'requestId' | 'receiverId'>>,
+    ) => {
+      const { history } = state;
+      const { requestId, receiverId } = action.payload;
+      if (history?.receiverId === receiverId && history.pending?.requestId === requestId) {
+        history.failed = history.pending;
+        history.pending = null;
+      }
+    },
+    historyReceived: (state, action: PayloadAction<HistoryPage>) => {
+      const { history } = state;
+      const page = action.payload;
+      if (
+        history?.receiverId !== page.receiverId ||
+        history.pending?.requestId !== page.requestId
+      ) {
+        return;
+      }
+      const request = history.pending;
+      const { beforeId, afterId } = request;
+      const boundary =
+        afterId === undefined ? page.payload[0]?.id : page.payload[page.payload.length - 1]?.id;
+      const valid =
+        page.payload.length <= request.limit &&
+        (page.hasMore ? page.nextCursor === boundary : page.nextCursor === null) &&
+        page.payload.every((message, index) => {
+          const belongs =
+            (message.senderId === history.ownerId && message.receiverId === history.receiverId) ||
+            (message.senderId === history.receiverId && message.receiverId === history.ownerId);
+          return (
+            belongs &&
+            Number.isSafeInteger(message.id) &&
+            message.id > 0 &&
+            (index === 0 || page.payload[index - 1].id < message.id) &&
+            (beforeId === undefined || message.id < beforeId) &&
+            (afterId === undefined || message.id > afterId)
+          );
+        });
+      history.pending = null;
+      if (!valid) {
+        history.failed = request;
+        return;
+      }
+      history.messages = mergeHistory(history.messages, page.payload);
+      history.initialized = true;
+      history.lastPageId = page.requestId;
+      if (afterId !== undefined) {
+        history.afterCursor = page.nextCursor;
       } else {
-        state.messagesByUser[userId] = [message];
+        history.beforeCursor = page.nextCursor;
+        if (beforeId !== undefined) {
+          history.lastOlderPageId = page.requestId;
+        }
+      }
+    },
+    addMessage: (state, action: PayloadAction<{ ownerId: number; message: ChatType }>) => {
+      const { ownerId, message } = action.payload;
+      if (message.senderId !== ownerId && message.receiverId !== ownerId) {
+        return;
+      }
+      const userId = message.senderId === ownerId ? message.receiverId : message.senderId;
+      const { history } = state;
+      if (history?.ownerId === ownerId && history.receiverId === userId) {
+        insertMessage(history.messages, message);
+        if (message.senderId === ownerId) {
+          history.sendFailed = false;
+        }
       }
       const oldIndex = state.chatList.findIndex(
         (row) => row.senderId === userId || row.receiverId === userId,
@@ -188,7 +278,10 @@ export const chatListSlice = createSlice({
 });
 export const {
   setOnline,
-  setMessages,
+  openHistory,
+  closeHistory,
+  historyReceived,
+  chatSendFailed,
   addMessage,
   clearChat,
   historyStarted,
