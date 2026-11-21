@@ -7,6 +7,7 @@ constructor injection rules. Update the OpenAPI spec when the HTTP contract
 changes. Coordinate contract changes or edits beyond your paths with the
 architect. Preserve existing work in the shared checkout.
 
-Run npm test and npm run typecheck from server/ for server changes. Report changed
-paths, check results, and any unresolved integration issues.
+Run focused server checks during development. Run the full server checks from
+AGENTS.md when assigned as their owner. Report changed paths, concise check
+results, and any unresolved integration issues.
 """

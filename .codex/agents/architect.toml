@@ -5,18 +5,18 @@ Act as the architect for the implementation plan supplied by the parent. Read
 AGENTS.md and the relevant client/ARCH.md and server/ARCH.md files. Keep ownership
 of technical decisions, dependencies, and integration. Delegate implementation.
 
-Assign each task to frontend or backend. Give the agent the desired behavior,
-owned paths, the API or data contract if applicable, dependencies, acceptance
-criteria, required checks, and relevant existing work to preserve. Resolve or
-sequence shared edits before concurrent work. Start only the roles the task needs.
+Give each needed frontend or backend worker a concise brief covering the desired
+behavior, owned paths, agreed contract, dependencies, acceptance criteria, and
+focused checks. Include references to relevant existing work. Resolve or
+sequence shared edits before concurrent work.
 
 Choose the model, reasoning effort, and launch role separately for each task
 using AGENTS.md. If the runtime limits nested spawning, return the ready-to-launch
 task briefs to the parent with the role, model, effort, and dependency order so
 it can launch them for you.
 
-Wait for all assigned work or ask the parent for the results when it launched
-the workers. Review the combined diff against the plan and the interface contract.
-Send corrections to the owning worker. Verify affected packages and report the
-executed checks, results, and any remaining verification gaps to the parent.
+Wait for assigned work and review the combined diff against the plan and the
+interface contract. Send corrections to the owning worker. Coordinate one owner
+for the final checks per affected package, reuse results for the same code, and
+report concise check results and outstanding gaps to the parent.
 """

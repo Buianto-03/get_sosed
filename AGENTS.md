@@ -1,44 +1,70 @@
 # Repository Guidelines
 
-## Codex Multi-Agent Workflow
+## Codex Implementation Workflow
 
-Use this workflow for implementation requests. The coordinating agent inspects
-the relevant code and presents a plan before any implementation edits. Include
-the intended behavior, affected packages, dependencies, and verification steps.
-When the user starts in Plan mode, wait until they start implementation and use
-the resulting plan. In Default mode, present the plan and proceed when the user
-has requested implementation.
+Inspect the relevant code and present a short plan before implementation edits.
+State the intended behavior, affected packages, dependencies, and verification
+steps. In Plan mode, wait until the user starts implementation. In Default mode,
+proceed when the user has requested implementation.
 
-After planning, spawn the `architect` subagent with the plan and its success
-criteria. The architect owns the client/server contract, breaks the plan into
-concrete tasks, and delegates to `frontend` for `client/` and `backend` for
-`server/`. Start only the agents needed for the task. Run independent assignments
-in parallel and sequence assignments with dependencies or overlapping edits.
-If the architect cannot spawn agents directly, launch the workers from the main
-session with the architect's task briefs and return their results to the
-architect for review. If named roles are unavailable, use the corresponding
-instructions from `.codex/agents/` in each launch message.
+Use one agent by default. For a client/server contract change, the coordinator
+assigns one `architect` to own the contract and integration review. The architect
+delegates client and server implementation to `frontend` and `backend` for the
+packages that need edits. Use additional agents when the user asks for them or
+the work has independent assignments with separate ownership. Run independent
+assignments in parallel and sequence edits that depend on each other or overlap.
 
-Choose the model and reasoning effort by assignment. The coordinating agent
-classifies the architect's assignment, and the architect classifies each worker's
-assignment separately. Include the selected pair and role in the task brief.
+Give each agent a short brief with its role, owned paths, agreed behavior and
+interfaces, relevant constraints, success criteria, and checks. Share a concise
+handoff and references to relevant files. Assign one owner to each decision and
+each verification run. If the architect cannot spawn workers directly, the
+coordinator launches them from those briefs and returns their findings to the
+architect. If named roles are unavailable, use the corresponding instructions
+from `.codex/agents/` in the launch brief.
 
-| Complexity | Model | Reasoning effort | Examples |
+The coordinator selects the architect's model. The architect defines the
+interfaces, state ownership, edge cases, and integration criteria, then divides
+implementation into bounded assignments for frontend and backend workers.
+Each assignment should deliver a complete behavior that can be implemented and
+checked independently. Keep tightly coupled invariants, such as a reconnect
+cursor and its retry transitions, with one owner.
+
+Use the following model choices for delegated work.
+
+| Assignment | Model | Reasoning effort | Examples |
 | --- | --- | --- | --- |
-| Simple | `gpt-6-luna` | `high` | Local change with known behavior and a straightforward check |
-| Moderate | `gpt-6.2-sol` | `medium` | Feature or bug fix with several affected modules or edge cases |
-| Complex | `gpt-6.2-astra` | `high` | Cross-package contract change, migration, or hard-to-trace behavior |
+| Bounded frontend or backend implementation | `gpt-6-luna` | `high` | Agreed validation, query, event handler, component, or regression fix |
+| Visual and browser verification | `gpt-6.1-terra` | `medium` | Responsive layout, keyboard focus, scrolling, and screenshots |
+| Implementation needing additional engineering decisions | `gpt-6.2-sol` | `medium` | An unresolved race, integration failure, or behavior spanning coupled modules |
+| Architecture and integration review | `gpt-6.2-sol` | `medium` | Decomposition, ownership, interfaces, and review against the agreed contract |
+| Complex architecture and contract review | `gpt-6.2-astra` | `high` | Cross-package protocol, migration strategy, or hard-to-trace concurrency |
 
-For simple assignments, launch `architect_luna`, `frontend_luna`, or
-`backend_luna` as appropriate. These profiles set the model and effort, so omit
-both launch overrides. If a Luna profile is unavailable, try explicit Luna
-`high` when the launch tool supports it. Otherwise use the base role with Sol
-`low`. For moderate and complex assignments, use the base role and pass the
-table's model and effort as launch parameters. Report any substitution.
+Luna is the default code implementer. Give it the accepted design, relevant
+existing patterns, and behavioral checks. Use `frontend_luna` or `backend_luna`;
+these profiles set the model and effort, so omit launch overrides. For Terra
+and Sol, use a matching available role with explicit model and effort. If a
+profile is unavailable, use its instructions from `.codex/agents/` with an
+available role and the intended model. Report any model substitution.
 
-The coordinating agent waits for the architect's integration review before
-reporting changes and verification results. Include the model and effort used
-for each agent so the choice can be checked.
+After an unsuccessful implementation attempt, the architect or coordinator
+diagnoses the failure and clarifies the assignment. Escalate a coupled or
+ambiguous implementation to Sol when it requires an additional engineering
+decision. Keep Astra focused on architecture and contract review. Include the
+role, model, effort, and reason for any escalation in the brief and final report.
+For a short local change, the single agent implements and verifies it directly.
+
+Each implementer runs focused checks during development. The coordinator or
+architect assigns the required full checks to one owner per affected package.
+Run final measurements after the implementation stabilizes when required. Reuse
+successful results for the same code and rerun when a change affects the check
+or a failure needs diagnosis. Return concise results and relevant errors. Keep
+full logs or measurement data available by path when needed.
+
+For interrupted work, resume from a short handoff with the branch and commit,
+changes in progress, completed checks, and remaining criteria. Keep the handoff
+in the existing task journal when one is already in use. The coordinator waits
+for the architect's integration review when an architect is assigned and
+reports the model and effort used by each participating agent.
 
 ## Project Structure & Module Organization
 

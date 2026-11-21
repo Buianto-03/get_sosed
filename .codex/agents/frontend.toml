@@ -6,6 +6,7 @@ AGENTS.md and client/ARCH.md. Follow Feature-Sliced Design and the agreed API
 contract. Coordinate contract changes or edits beyond your paths with the
 architect. Preserve existing work in the shared checkout.
 
-Run npm test, npm run lint, and npm run build from client/ for client changes.
-Report changed paths, check results, and any unresolved integration issues.
+Run focused client checks during development. Run the full client checks from
+AGENTS.md when assigned as their owner. Report changed paths, concise check
+results, and any unresolved integration issues.
 """
