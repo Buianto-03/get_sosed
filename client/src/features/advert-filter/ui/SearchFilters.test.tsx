@@ -3,7 +3,21 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { ListingCondition, TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import type { CheckboxProps } from '@shared/ui/selection/checkbox/Checkbox';
 import { SearchFilters, emptySearchFilters } from './SearchFilters';
+
+const checkboxRender = vi.hoisted(() => vi.fn());
+
+vi.mock('@shared/ui/selection/checkbox/Checkbox', async (importOriginal) => {
+  const original = await importOriginal<{ Checkbox: (props: CheckboxProps) => JSX.Element }>();
+  return {
+    Checkbox: (props: CheckboxProps): JSX.Element => {
+      const { id } = props;
+      checkboxRender(id);
+      return React.createElement(original.Checkbox, props);
+    },
+  };
+});
 
 const tagCatalog: TagCatalog = {
   tags: [
@@ -38,23 +52,60 @@ describe('SearchFilters', () => {
       <SearchFilters tagCatalog={tagCatalog} applied={emptySearchFilters} onApply={onApply} />,
     );
 
+    expect(checkboxRender).toHaveBeenCalled();
+    checkboxRender.mockClear();
     fireEvent.change(screen.getByRole('textbox', { name: 'Город' }), {
       target: { value: 'Москва' },
     });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Цена от, ₽' }), {
+      target: { value: '35000' },
+    });
+    expect(checkboxRender).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Питомцы разрешены' }));
+    expect(checkboxRender).toHaveBeenCalled();
     expect(onApply).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Показать объявления' }));
     expect(onApply).toHaveBeenLastCalledWith({
       ...emptySearchFilters,
       city: 'Москва',
+      priceFrom: '35000',
       tagIds: [29],
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Сбросить фильтры' }));
     expect(onApply).toHaveBeenLastCalledWith(emptySearchFilters);
     expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('');
+    expect(screen.getByRole('spinbutton', { name: 'Цена от, ₽' })).toHaveValue(null);
     expect(screen.getByRole('checkbox', { name: 'Питомцы разрешены' })).not.toBeChecked();
+  });
+
+  it('keeps unknown selections, disambiguates duplicate names and replaces draft after navigation', () => {
+    const catalog = {
+      ...tagCatalog,
+      tags: [{ id: 888, name: ListingCondition.Workspace }, ...tagCatalog.tags],
+    };
+    const applied = { ...emptySearchFilters, tagIds: [999] };
+    const onApply = vi.fn();
+    const { rerender } = render(
+      <SearchFilters tagCatalog={catalog} applied={applied} onApply={onApply} />,
+    );
+    expect(screen.getByRole('button', { name: '#999 ×' })).toBeInTheDocument();
+    const primary = screen.getByRole('checkbox', { name: /^С рабочим местом$/ });
+    expect(primary.id).toContain('condition-112');
+    fireEvent.click(screen.getByText('Все условия проживания'));
+    fireEvent.click(screen.getByLabelText('С рабочим местом (#888)'));
+    expect(screen.getByRole('button', { name: 'С рабочим местом (#888) ×' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Показать объявления' }));
+    expect(onApply).toHaveBeenLastCalledWith({ ...applied, tagIds: [999, 888] });
+
+    const next = { ...emptySearchFilters, city: 'Белград', priceFrom: '300', tagIds: [112] };
+    rerender(<SearchFilters tagCatalog={catalog} applied={next} onApply={onApply} />);
+    expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('Белград');
+    expect(screen.getByRole('spinbutton', { name: 'Цена от, ₽' })).toHaveValue(300);
+    expect(primary).toBeChecked();
+    expect(screen.getByLabelText('С рабочим местом (#888)')).not.toBeChecked();
+    expect(screen.queryByRole('button', { name: '#999 ×' })).not.toBeInTheDocument();
   });
 
   it('closes the drawer on Escape and restores scrolling and focus', () => {

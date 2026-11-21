@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { TagCatalogState } from '@entities/advert/model/tag-catalog';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { getTagCatalogView, TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreateForm } from '@features/listing-create/ui/listing-create-form/ListingCreateForm';
@@ -78,10 +78,11 @@ export function ListingCreatePage({
       return Object.keys(validateRoom(draft)).length === 0;
     }
     if (step === 2) {
+      const { byId } = getTagCatalogView(tagCatalog.tags);
       return (
         tagCatalog.state === TagCatalogState.Ready &&
         Object.keys(validatePrice(draft)).length === 0 &&
-        draft.tagIds.every((id) => tagCatalog.tags.some((tag) => tag.id === id))
+        draft.tagIds.every((id) => byId.has(id))
       );
     }
     if (step === 3) {
@@ -103,14 +104,14 @@ export function ListingCreatePage({
     setDraft((current) => ({ ...current, [field]: value }));
   };
 
-  const updateRule = (rule: number, checked: boolean): void => {
+  const updateRule = useCallback((rule: number, checked: boolean): void => {
     setDraft((current) => ({
       ...current,
       tagIds: checked
         ? [...new Set([...current.tagIds, rule])]
         : current.tagIds.filter((selectedRule) => selectedRule !== rule),
     }));
-  };
+  }, []);
 
   const publishListing = async (): Promise<void> => {
     if (publishing.current || !onPublish) {

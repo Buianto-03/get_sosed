@@ -1,0 +1,8 @@
+@use '../../../../shared/styles/tokens' as tokens;
+
+.conditions__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$space-3 tokens.$space-5;
+  margin: tokens.$space-5 0;
+}

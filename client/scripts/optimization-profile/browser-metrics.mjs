@@ -129,6 +129,7 @@ export function observePage(profile) {
         historyParagraphs: document.querySelectorAll('[aria-label="Сообщения"] p').length,
         commits,
         commitPhaseMs,
+        hits,
       };
     },
   };

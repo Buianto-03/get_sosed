@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import advertService from '../api/advertService';
 import type { TagType } from './advertsModel';
-import { getPrimaryTags, getTagLabel, ListingCondition, TagCatalogState } from './tag-catalog';
+import { getTagCatalogView, getTagLabel, ListingCondition, TagCatalogState } from './tag-catalog';
 import { useTagCatalog } from './use-tag-catalog';
 
 const tags: TagType[] = [
@@ -21,7 +21,9 @@ describe('useTagCatalog', () => {
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
     expect(getTags).toHaveBeenCalledWith('');
     expect(result.current.tags).toEqual(tags);
-    expect(getPrimaryTags(result.current.tags).map(({ id }) => id)).toEqual([73, 109, 56, 418]);
+    expect(getTagCatalogView(result.current.tags).primary.map(({ id }) => id)).toEqual([
+      73, 109, 56, 418,
+    ]);
     act(() => result.current.reload());
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
     expect(result.current.tags).toEqual(tags);
@@ -49,9 +51,10 @@ describe('useTagCatalog', () => {
     expect(result.current.error).toContain('отсутствуют условия: С рабочим местом');
     act(() => result.current.reload());
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
-    expect(getPrimaryTags(result.current.tags).find((tag) => tag.name === String(ListingCondition.Workspace))?.id).toBe(418);
-    expect(getTagLabel(result.current.tags, 888)).toBe('С рабочим местом (#888)');
-    expect(result.current.tags.some((tag) => tag.id === 888)).toBe(true);
+    const view = getTagCatalogView(result.current.tags);
+    expect(view.primary.map(({ id }) => id)).toContain(418);
+    expect(view.byId.has(888)).toBe(true);
+    expect(getTagLabel(view, 888)).toBe('С рабочим местом (#888)');
   });
 
   it('ignores a stale response after retry', async () => {

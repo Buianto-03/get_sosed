@@ -1,4 +1,5 @@
 import React from 'react';
+import { getTagCatalogView, getTagLabel } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
 import { ListingCard, ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
@@ -24,6 +25,7 @@ export function ReviewStep({
   onSavedChange,
 }: ReviewStepProps): JSX.Element {
   const mainPhoto = photos.find(({ isMain }) => isMain);
+  const catalogView = getTagCatalogView(tagCatalog.tags);
 
   return (
     <div className={styles.review_step}>
@@ -36,9 +38,7 @@ export function ReviewStep({
           imageAlt: mainPhoto?.file.name ?? 'Главное фото объявления',
           city: draft.city,
           metro: draft.metro ? `м. ${draft.metro}` : '',
-          tags: draft.tagIds.map(
-            (id) => tagCatalog.tags.find((tag) => tag.id === id)?.name ?? `#${id}`,
-          ),
+          tags: draft.tagIds.map((id) => getTagLabel(catalogView, id)),
         }}
         variant={ListingCardVariant.Profile}
         saved={saved}

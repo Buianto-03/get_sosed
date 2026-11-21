@@ -26,6 +26,20 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
   const [draft, setDraft] = useState<SearchFilterValues>(applied);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const changeField = useCallback(
+    (field: keyof Omit<SearchFilterValues, 'tagIds'>, value: string) => {
+      setDraft((current) => ({ ...current, [field]: value }));
+    },
+    [],
+  );
+  const changeCondition = useCallback((tagId: number, checked: boolean) => {
+    setDraft((current) => ({
+      ...current,
+      tagIds: checked
+        ? [...new Set([...current.tagIds, tagId])]
+        : current.tagIds.filter((item) => item !== tagId),
+    }));
+  }, []);
 
   useEffect(() => {
     setDraft(applied);
@@ -61,7 +75,8 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
           idPrefix={`${id}-desktop`}
           error={drawerOpen ? undefined : error}
           draft={draft}
-          onChange={setDraft}
+          onFieldChange={changeField}
+          onConditionChange={changeCondition}
           onApply={apply}
           onReset={reset}
         />
@@ -81,7 +96,8 @@ export function SearchFilters({ applied, onApply, tagCatalog }: SearchFiltersPro
           error={error}
           inDrawer
           draft={draft}
-          onChange={setDraft}
+          onFieldChange={changeField}
+          onConditionChange={changeCondition}
           onApply={apply}
           onReset={reset}
         />

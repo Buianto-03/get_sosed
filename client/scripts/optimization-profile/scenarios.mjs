@@ -5,6 +5,7 @@ export const routes = ['/', '/listings', '/profile', '/messages/2'];
 const text = (selector) => `document.querySelector(${JSON.stringify(selector)})`;
 const number = (selector) => `document.querySelectorAll(${JSON.stringify(selector)}).length`;
 const city = text('input[placeholder="Любой город"]');
+const priceFrom = text('input[id$="-desktop-price-from"]');
 const composer = text('input[placeholder="Напишите сообщение"]');
 const save = text('article button[aria-pressed]');
 const favorites = 'section[aria-labelledby=favorites] article';
@@ -78,6 +79,7 @@ async function type(page, input, chars) {
 export async function interact(page, server, route) {
   if (route === '/listings') {
     const filterCity = await type(page, city, 'М');
+    const filterPrice = await type(page, priceFrom, '3');
     assert.equal(await page.evaluate(`${save}.getAttribute('aria-pressed')`), 'false');
     // Keep the incoming HTTP confirmation out of the pending observation window.
     server.holdLike();
@@ -94,7 +96,7 @@ export async function interact(page, server, route) {
     } finally {
       server.releaseLike();
     }
-    return { filterCity, likePending, likeConfirmed };
+    return { filterCity, filterPrice, likePending, likeConfirmed };
   }
   if (route === '/profile') {
     const favoriteCount = await page.evaluate(number(favorites));

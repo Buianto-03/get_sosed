@@ -1,11 +1,9 @@
 import React from 'react';
 import { Input, InputType } from '@shared/ui/input/Input';
-import { Checkbox } from '@shared/ui/selection/checkbox/Checkbox';
 import { Textarea } from '@shared/ui/textarea/Textarea';
-import { getPrimaryTags, TagCatalogState } from '@entities/advert/model/tag-catalog';
 import type { TagCatalog } from '@entities/advert/model/tag-catalog';
-import { TagCatalogFeedback } from '@entities/advert/ui/tag-catalog-feedback/TagCatalogFeedback';
 import { validatePrice, type ListingDraft } from '../../model';
+import { ListingRules } from '../listing-rules/ListingRules';
 import styles from './PriceRulesStep.module.scss';
 
 export interface PriceRulesStepProps {
@@ -50,20 +48,7 @@ export function PriceRulesStep({
           required
           error={errors.description}
         />
-        <fieldset className={styles.price_rules_step__rules}>
-          <legend>Условия проживания</legend>
-          <TagCatalogFeedback catalog={tagCatalog} />
-          {getPrimaryTags(tagCatalog.tags).map((rule) => (
-            <Checkbox
-              key={rule.id}
-              id={`listing-rule-${rule.id}`}
-              label={rule.name}
-              disabled={tagCatalog.state !== TagCatalogState.Ready}
-              checked={draft.tagIds.includes(rule.id)}
-              onChange={(event) => onRuleChange(rule.id, event.target.checked)}
-            />
-          ))}
-        </fieldset>
+        <ListingRules catalog={tagCatalog} tagIds={draft.tagIds} onChange={onRuleChange} />
       </div>
     </div>
   );

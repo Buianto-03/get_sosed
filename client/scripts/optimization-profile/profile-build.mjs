@@ -18,6 +18,7 @@ const probes = {
     [body, body + probe('ListingCard') + '  window.__measure.card(listing.title);\n'],
   ],
   'FilterForm.tsx': [[body, body + probe('FilterForm')]],
+  'FilterConditions.tsx': [[body, body + probe('FilterConditions')]],
   'MessageComposer.tsx': [[body, body + probe('MessageComposer')]],
   'ChatPage.tsx': [
     [body, body + probe('ChatPage')],
@@ -46,12 +47,8 @@ const probes = {
   ],
   'tag-catalog.ts': [
     [
-      'return conditionNames.flatMap(',
-      "window.__measure.hit('getPrimaryTags'); return conditionNames.flatMap(",
-    ],
-    [
-      'const tag = tags.filter(',
-      "window.__measure.hit('primaryTagFilter', tags.length); const tag = tags.filter(",
+      'function buildTagCatalogView(tags: readonly TagType[]): TagCatalogView {',
+      "function buildTagCatalogView(tags: readonly TagType[]): TagCatalogView { window.__measure.hit('buildTagCatalogView', tags.length);",
     ],
   ],
 };

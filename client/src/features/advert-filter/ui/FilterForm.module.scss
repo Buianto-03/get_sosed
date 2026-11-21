@@ -14,13 +14,6 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.filters__conditions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: tokens.$space-3 tokens.$space-5;
-  margin: tokens.$space-5 0;
-}
-
 .filters__actions {
   display: grid;
   gap: tokens.$space-2;

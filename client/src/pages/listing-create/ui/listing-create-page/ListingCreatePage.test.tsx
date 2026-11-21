@@ -232,3 +232,55 @@ it('revalidates every step before publishing even when the review was opened dir
   expect(onPublish).not.toHaveBeenCalled();
   expect(screen.getByText('Проверьте все шаги: обязательные поля, числа, условия и фотографии.')).toBeInTheDocument();
 });
+
+it('shows indexed condition labels and validates draft IDs against the current catalog', async () => {
+  const onPublish = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+  const catalog = {
+    ...tagCatalog,
+    tags: [{ id: 888, name: ListingCondition.Workspace }, ...tagCatalog.tags],
+  };
+  const initialDraft = {
+    title: 'Комната',
+    city: 'Казань',
+    address: 'Улица, 1',
+    rooms: '2',
+    floor: '3',
+    area: '18',
+    price: '32000',
+    description: 'Рядом с метро',
+    tagIds: [888, 999],
+  };
+  const initialPhotos = [{
+    id: 'room',
+    file: new File(['photo'], 'room.webp', { type: 'image/webp' }),
+    previewUrl: 'blob:room',
+    isMain: true,
+  }];
+  const { rerender } = render(
+    <ListingCreatePage
+      tagCatalog={catalog}
+      initialStep={4}
+      initialDraft={initialDraft}
+      initialPhotos={initialPhotos}
+      onPublish={onPublish}
+    />,
+  );
+  expect(screen.getByText('С рабочим местом (#888)')).toBeInTheDocument();
+  expect(screen.getByText('#999')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+  expect(onPublish).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Проверьте все шаги');
+
+  rerender(
+    <ListingCreatePage
+      tagCatalog={{ ...catalog, tags: [...catalog.tags, { id: 999, name: 'Рядом с парком' }] }}
+      initialStep={4}
+      onPublish={onPublish}
+    />,
+  );
+  expect(screen.getByText('Рядом с парком')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Опубликовать' }));
+  await screen.findByText('Объявление опубликовано');
+  expect(onPublish).toHaveBeenCalledWith(expect.objectContaining({ tagIds: [888, 999] }), initialPhotos);
+});

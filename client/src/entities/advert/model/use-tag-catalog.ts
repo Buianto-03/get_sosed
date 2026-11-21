@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import advertService from '../api/advertService';
-import { getTagCatalogError, TagCatalogState } from './tag-catalog';
+import { getTagCatalogView, TagCatalogState } from './tag-catalog';
 import type { TagCatalog } from './tag-catalog';
 
 export function useTagCatalog(): TagCatalog {
@@ -17,19 +17,28 @@ export function useTagCatalog(): TagCatalog {
 
   useEffect(() => {
     let active = true;
-    void advertService.getTagsBySearch('').then((tags) => {
-      if (!active) return;
-      const error = getTagCatalogError(tags);
-      setCatalog({ tags, state: error ? TagCatalogState.Error : TagCatalogState.Ready, error });
-    }).catch(() => {
-      if (active) {
-        setCatalog((current) => ({
-          ...current, state: TagCatalogState.Error, error: 'Не удалось загрузить условия проживания.',
-        }));
-      }
-    });
-    return () => { active = false; };
+    void advertService
+      .getTagsBySearch('')
+      .then((tags) => {
+        if (!active) {
+          return;
+        }
+        const { error } = getTagCatalogView(tags);
+        setCatalog({ tags, state: error ? TagCatalogState.Error : TagCatalogState.Ready, error });
+      })
+      .catch(() => {
+        if (active) {
+          setCatalog((current) => ({
+            ...current,
+            state: TagCatalogState.Error,
+            error: 'Не удалось загрузить условия проживания.',
+          }));
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, [attempt]);
 
-  return { ...catalog, reload };
+  return useMemo(() => ({ ...catalog, reload }), [catalog, reload]);
 }

@@ -6,6 +6,7 @@ const sizes = { small: 'Малый', large: 'Большой' };
 const caches = { cold: 'Холодный', warm: 'Тёплый' };
 const scenarios = {
   filterCity: 'Город, 1 символ',
+  filterPrice: 'Цена от, 1 цифра',
   likePending: 'Сохранение, ожидание',
   likeConfirmed: 'Сохранение, подтверждение',
   removePending: 'Удаление из избранного, ожидание',
