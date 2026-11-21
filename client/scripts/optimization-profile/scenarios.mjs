@@ -7,13 +7,15 @@ const number = (selector) => `document.querySelectorAll(${JSON.stringify(selecto
 const city = text('input[placeholder="Любой город"]');
 const composer = text('input[placeholder="Напишите сообщение"]');
 const save = text('article button[aria-pressed]');
+const favorites = 'section[aria-labelledby=favorites] article';
+const firstFavorite = text(`${favorites} button[aria-pressed]`);
 
 export async function measureRoute(page, server, route, size, profile) {
   const large = size === 'large';
   const ready = {
     '/': `${number('article button[aria-pressed]:enabled')} === 3`,
     '/listings': `${number('article button[aria-pressed]:enabled')} === 8 && ${number('input[type=checkbox]:enabled')} === ${large ? 200 : 20}`,
-    '/profile': `${number('section[aria-labelledby=favorites] article')} === ${large ? 500 : 50} && ${number('section[aria-labelledby=my-listings] article')} > 0`,
+    '/profile': `${number(favorites)} === ${large ? 500 : 50} && ${number('section[aria-labelledby=my-listings] article')} > 0`,
     '/messages/2': `${number('section[aria-label="Диалоги"] button')} === 50 && ${number('[role=region][aria-label="Сообщения"] p')} === ${large ? 5000 : 100}`,
   };
   await page.send('Page.navigate', { url: 'about:blank' });
@@ -93,6 +95,30 @@ export async function interact(page, server, route) {
       server.releaseLike();
     }
     return { filterCity, likePending, likeConfirmed };
+  }
+  if (route === '/profile') {
+    const favoriteCount = await page.evaluate(number(favorites));
+    assert.equal(
+      await page.evaluate(`${firstFavorite}.closest('article').querySelector('h3').textContent`),
+      'Тестовое объявление 2',
+    );
+    assert.equal(await page.evaluate(`${firstFavorite}.getAttribute('aria-pressed')`), 'true');
+    server.holdLike();
+    try {
+      await begin(page, 'click');
+      await page.evaluate(`${firstFavorite}.click()`);
+      await page.wait(
+        `${firstFavorite}.disabled && ${firstFavorite}.getAttribute('aria-pressed') === 'true' && ${number(favorites)} === ${favoriteCount}`,
+      );
+      const removePending = await finish(page);
+      await begin(page, 'response');
+      server.releaseLike();
+      await page.wait(`${number(favorites)} === ${favoriteCount - 1}`);
+      const removeConfirmed = await finish(page);
+      return { removePending, removeConfirmed };
+    } finally {
+      server.releaseLike();
+    }
   }
   if (route === '/messages/2') {
     const chatInput = await type(page, composer, 'абвгд');

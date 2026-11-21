@@ -2,14 +2,32 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { SearchResults, SearchResultsState, type SearchResultListing } from './SearchResults';
+import { ListingCard, ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
+import { SearchResults, SearchResultsState } from './SearchResults';
 
-const listings: SearchResultListing[] = [
+const listings = [
   { id: 'one', listing: { title: 'Первая квартира', price: 25000 }, saved: false },
   { id: 'two', listing: { title: 'Вторая квартира', price: 30000 }, saved: true },
 ];
 
-function renderResults(state = SearchResultsState.Ready, items = listings): {
+function listingCards(onOpenListing = vi.fn(), onSaveListing = vi.fn()): React.ReactElement[] {
+  return listings.map(({ id, listing, saved }) => (
+    <ListingCard
+      key={id}
+      listing={listing}
+      variant={ListingCardVariant.Search}
+      saved={saved}
+      onOpen={() => {
+        onOpenListing(id);
+      }}
+      onSavedChange={(nextSaved) => {
+        onSaveListing(id, nextSaved);
+      }}
+    />
+  ));
+}
+
+function renderResults(state = SearchResultsState.Ready, cards?: React.ReactElement[]): {
   onOpenListing: ReturnType<typeof vi.fn>;
   onSaveListing: ReturnType<typeof vi.fn>;
   onResetFilters: ReturnType<typeof vi.fn>;
@@ -21,10 +39,8 @@ function renderResults(state = SearchResultsState.Ready, items = listings): {
   const onRetry = vi.fn();
   render(
     <SearchResults
-      listings={items}
+      cards={cards ?? listingCards(onOpenListing, onSaveListing)}
       state={state}
-      onOpenListing={onOpenListing}
-      onSaveListing={onSaveListing}
       onResetFilters={onResetFilters}
       onRetry={onRetry}
     />,
@@ -34,7 +50,7 @@ function renderResults(state = SearchResultsState.Ready, items = listings): {
 
 describe('SearchResults', () => {
   it('keeps previously loaded cards visible while refreshing or retrying', () => {
-    const props = { listings, onOpenListing: vi.fn(), onSaveListing: vi.fn(), onResetFilters: vi.fn(), onRetry: vi.fn() };
+    const props = { cards: listingCards(), onResetFilters: vi.fn(), onRetry: vi.fn() };
     const { rerender } = render(<SearchResults {...props} />);
     const action = screen.getAllByRole('button', { name: 'Подробнее' })[0];
     action.focus();
@@ -48,21 +64,22 @@ describe('SearchResults', () => {
   });
 
   it('focuses the first added card after loading more, including the last batch', () => {
-    const props = { totalCount: 2, onLoadMore: vi.fn(), onOpenListing: vi.fn(), onSaveListing: vi.fn(), onResetFilters: vi.fn(), onRetry: vi.fn() };
-    const { rerender } = render(<SearchResults {...props} listings={listings.slice(0, 1)} />);
+    const props = { totalCount: 2, onLoadMore: vi.fn(), onResetFilters: vi.fn(), onRetry: vi.fn() };
+    const cards = listingCards();
+    const { rerender } = render(<SearchResults {...props} cards={cards.slice(0, 1)} />);
     fireEvent.click(screen.getByRole('button', { name: 'Показать ещё' }));
-    rerender(<SearchResults {...props} listings={listings.slice(0, 1)} state={SearchResultsState.Loading} />);
-    rerender(<SearchResults {...props} listings={listings} />);
+    rerender(<SearchResults {...props} cards={cards.slice(0, 1)} state={SearchResultsState.Loading} />);
+    rerender(<SearchResults {...props} cards={cards} />);
     expect(screen.getByRole('button', { name: 'Открыть объявление: Вторая квартира' })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
 
     const firstCard = screen.getByRole('button', { name: 'Открыть объявление: Первая квартира' });
     firstCard.focus();
-    rerender(<SearchResults {...props} listings={listings} />);
+    rerender(<SearchResults {...props} cards={cards} />);
     expect(firstCard).toHaveFocus();
   });
 
-  it('shows results, map and controlled listing actions', () => {
+  it('shows the result count and renders interactive cards in the grid', () => {
     const actions = renderResults();
     expect(screen.getByRole('status')).toHaveTextContent('2 варианта');
     expect(screen.getAllByRole('article')).toHaveLength(2);

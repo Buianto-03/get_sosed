@@ -8,6 +8,8 @@ const scenarios = {
   filterCity: 'Город, 1 символ',
   likePending: 'Сохранение, ожидание',
   likeConfirmed: 'Сохранение, подтверждение',
+  removePending: 'Удаление из избранного, ожидание',
+  removeConfirmed: 'Удаление из избранного, подтверждение',
   chatInput: 'Сообщение, 5 символов',
   neighborMessage: 'Сообщение соседнего диалога',
   neighborPresence: 'Присутствие собеседника',

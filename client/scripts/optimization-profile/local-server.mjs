@@ -60,7 +60,10 @@ export async function serve(root) {
         if (answer.delayMs) {
           await delay(answer.delayMs);
         }
-        if (req.method === 'POST' && url.pathname.startsWith('/api/likes/')) {
+        if (
+          (req.method === 'POST' || req.method === 'DELETE') &&
+          url.pathname.startsWith('/api/likes/')
+        ) {
           await gate;
         }
         status = answer.status;

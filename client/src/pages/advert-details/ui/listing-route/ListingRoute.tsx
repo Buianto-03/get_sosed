@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { shallowEqual } from 'react-redux';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { ListingHeader } from '@widgets/listing-header/ListingHeader';
@@ -7,9 +8,11 @@ import { PersonSummary } from '@entities/person/ui/PersonSummary';
 import { getAdvertByIdThunk } from '@entities/advert/model/advertsThunk';
 import { AdvertDetailStatus } from '@entities/advert/model/advertsModel';
 import { selectAdverts } from '@entities/advert/model/advertsSelectors';
+import type { LikeType } from '@entities/like/model/like';
 import { getLikesThunk } from '@entities/like/model/likesThunk';
 import { UserStatus } from '@entities/session/model/authModel';
-import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
+import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
+import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
 import { Button } from '@shared/ui/button/Button';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Spinner } from '@shared/ui/feedback/Spinner';
@@ -20,6 +23,8 @@ import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
 import { searchDestination } from './helper';
 import styles from './ListingRoute.module.scss';
 
+const noInterestedPeople: readonly LikeType[] = [];
+
 export default function ListingRoute(): JSX.Element {
   const { listingId } = useParams();
   const id = Number(listingId);
@@ -29,8 +34,12 @@ export default function ListingRoute(): JSX.Element {
   const location = useLocation();
   const data = useAppSelector(selectAdverts);
   const user = useAppSelector((state) => state.auth.user);
-  const likes = useAppSelector((state) => state.likes);
-  const saved = useSavedAdverts();
+  const interestedPeople = useAppSelector(
+    (state) => (state.likes.advertId === id ? state.likes.likes : noInterestedPeople),
+    shallowEqual,
+  );
+  const saved = useSavedAdvert(id);
+  const savedCollection = useSavedCollectionStatus();
   const [attempt, setAttempt] = useState(0);
   const [likesLoading, setLikesLoading] = useState(true);
   const [likesError, setLikesError] = useState(false);
@@ -91,16 +100,16 @@ export default function ListingRoute(): JSX.Element {
         }
         onBack={() => navigate(searchDestination(location.state))}
       />
-      {saved.error && (
+      {savedCollection.error && (
         <Alert variant={AlertVariant.Error}>
-          {saved.error}
-          <Button onClick={saved.reload}>Повторить загрузку избранного</Button>
+          {savedCollection.error}
+          <Button onClick={savedCollection.reload}>Повторить загрузку избранного</Button>
         </Alert>
       )}
-      {saved.errors[id] && <Alert variant={AlertVariant.Error}>{saved.errors[id]}</Alert>}
+      {saved.error && <Alert variant={AlertVariant.Error}>{saved.error}</Alert>}
       <ListingDetails
-        saved={saved.savedIds.includes(id)}
-        saveDisabled={saved.disabled || !!saved.pending[id]}
+        saved={saved.saved}
+        saveDisabled={saved.disabled}
         contactDisabled={!authorId || (user.status === UserStatus.Logged && user.id === authorId)}
         onContact={() => {
           if (authorId) message(authorId, true);
@@ -142,23 +151,20 @@ export default function ListingRoute(): JSX.Element {
             )}
             {!likesLoading && !likesError && (
               <div className={styles.listing__people}>
-                {likes.advertId === id &&
-                  likes.likes.map((like) => (
-                    <PersonSummary
-                      key={like.id}
-                      name={like.User?.name || 'Пользователь'}
-                      avatarUrl={getMediaUrl(like.User?.UserProfile?.photo)}
-                      description={like.User?.UserProfile?.about ?? undefined}
-                      action={
-                        user.status === UserStatus.Logged && user.id === like.userId ? undefined : (
-                          <Button onClick={() => message(like.userId)}>Написать</Button>
-                        )
-                      }
-                    />
-                  ))}
-                {(likes.advertId !== id || likes.likes.length === 0) && (
-                  <p>Пока никто не сохранил объявление</p>
-                )}
+                {interestedPeople.map((like) => (
+                  <PersonSummary
+                    key={like.id}
+                    name={like.User?.name || 'Пользователь'}
+                    avatarUrl={getMediaUrl(like.User?.UserProfile?.photo)}
+                    description={like.User?.UserProfile?.about ?? undefined}
+                    action={
+                      user.status === UserStatus.Logged && user.id === like.userId ? undefined : (
+                        <Button onClick={() => message(like.userId)}>Написать</Button>
+                      )
+                    }
+                  />
+                ))}
+                {interestedPeople.length === 0 && <p>Пока никто не сохранил объявление</p>}
               </div>
             )}
           </>

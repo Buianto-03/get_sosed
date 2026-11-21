@@ -5,7 +5,7 @@ import { Button, ButtonSize, ButtonVariant } from '@shared/ui/button/Button';
 import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
 import { routes } from '@shared/config/routes';
 import { useAppSelector } from '@app/store/hooks';
-import { selectAuthUser } from '@entities/session/model/authSelector';
+import { selectAuthUser } from '@entities/session/model/authSelectors';
 import { UserStatus } from '@entities/session/model/authModel';
 import { getMediaUrl } from '@shared/config/media';
 import { HeaderNavLink } from './HeaderNavLink';

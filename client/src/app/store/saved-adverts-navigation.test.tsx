@@ -6,7 +6,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { clearAuth } from '@entities/session/model/authSlice';
 import type { AdvertType } from '@entities/advert/model/advertsModel';
 import likeService from '@entities/like/api/likeService';
-import { useSavedAdverts } from '@features/liked-adverts/model/use-saved-adverts';
+import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
 import { store } from './store';
 
 const advert: AdvertType = {
@@ -24,7 +24,7 @@ const advert: AdvertType = {
   location: null,
 };
 function GuestSave(): JSX.Element {
-  const saved = useSavedAdverts();
+  const saved = useSavedAdvert(advert.id);
   const location = useLocation();
   return (
     <>

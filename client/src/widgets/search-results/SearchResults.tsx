@@ -1,15 +1,10 @@
 import React, { useRef } from 'react';
 import { LuSearch } from 'react-icons/lu';
 import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
-import {
-  ListingCard,
-  ListingCardVariant,
-  type ListingCardData,
-} from '../../entities/listing/ui/listing-card/ListingCard';
-import { Button, ButtonVariant } from '../../shared/ui/button/Button';
-import { Alert, AlertVariant } from '../../shared/ui/feedback/Alert';
-import { EmptyState } from '../../shared/ui/feedback/EmptyState';
-import { Skeleton } from '../../shared/ui/feedback/Skeleton';
+import { Button, ButtonVariant } from '@shared/ui/button/Button';
+import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
+import { EmptyState } from '@shared/ui/feedback/EmptyState';
+import { Skeleton } from '@shared/ui/feedback/Skeleton';
 import { formatResultCount } from './formatResultCount';
 import styles from './SearchResults.module.scss';
 
@@ -20,19 +15,9 @@ export enum SearchResultsState {
   Error = 'error',
 }
 
-export type SearchResultListing = {
-  id: string;
-  listing: ListingCardData;
-  saved: boolean;
-  saveDisabled?: boolean;
-  saveError?: string;
-};
-
 export interface SearchResultsProps {
-  listings: readonly SearchResultListing[];
+  cards: readonly React.ReactElement[];
   state?: SearchResultsState;
-  onOpenListing: (id: string) => void;
-  onSaveListing: (id: string, saved: boolean) => void;
   onResetFilters: () => void;
   onRetry: () => void;
   totalCount?: number;
@@ -40,18 +25,16 @@ export interface SearchResultsProps {
 }
 
 export function SearchResults({
-  listings,
+  cards,
   state = SearchResultsState.Ready,
-  onOpenListing,
-  onSaveListing,
   onResetFilters,
   onRetry,
-  totalCount = listings.length,
+  totalCount = cards.length,
   onLoadMore,
 }: SearchResultsProps): JSX.Element {
   const gridRef = useRef<HTMLDivElement>(null);
   const requestFocus = useFocusAfterUpdate();
-  const currentState = state === SearchResultsState.Ready && listings.length === 0
+  const currentState = state === SearchResultsState.Ready && cards.length === 0
     ? SearchResultsState.Empty
     : state;
   let countLabel = formatResultCount(totalCount);
@@ -72,29 +55,18 @@ export function SearchResults({
         <span className={styles.results__count} role="status">{countLabel}</span>
       </div>
 
-      {listings.length > 0 && currentState !== SearchResultsState.Ready && (
+      {cards.length > 0 && currentState !== SearchResultsState.Ready && (
         <p>Показаны предыдущие результаты поиска.</p>
       )}
 
-      {listings.length > 0 && (
+      {cards.length > 0 && (
         <>
           <div ref={gridRef} className={styles.results__grid} aria-busy={currentState === SearchResultsState.Loading}>
-            {listings.map(({ id, listing, saved, saveDisabled, saveError }) => (
-              <ListingCard
-                key={id}
-                listing={listing}
-                variant={ListingCardVariant.Search}
-                saved={saved}
-                saveDisabled={saveDisabled}
-                saveError={saveError}
-                onSavedChange={(nextSaved) => onSaveListing(id, nextSaved)}
-                onOpen={() => onOpenListing(id)}
-              />
-            ))}
+            {cards}
           </div>
-          {listings.length < totalCount && onLoadMore && (
+          {cards.length < totalCount && onLoadMore && (
             <Button disabled={currentState !== SearchResultsState.Ready} onClick={() => {
-              const addedFrom = listings.length;
+              const addedFrom = cards.length;
               requestFocus(() => gridRef.current?.children[addedFrom]?.querySelector('button'));
               onLoadMore();
             }}>Показать ещё</Button>
@@ -102,7 +74,7 @@ export function SearchResults({
         </>
       )}
 
-      {currentState === SearchResultsState.Loading && listings.length === 0 && (
+      {currentState === SearchResultsState.Loading && cards.length === 0 && (
         <div className={styles.results__grid} aria-hidden="true">
           {[0, 1, 2].map((item) => (
             <div className={styles.results__skeletonCard} key={item}>

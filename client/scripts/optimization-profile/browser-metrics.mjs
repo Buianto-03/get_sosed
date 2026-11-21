@@ -63,7 +63,8 @@ export function observePage(profile) {
     };
     const open = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function instrumentOpen(...args) {
-      if (args[0].toUpperCase() === 'POST' && String(args[1]).includes('/likes/')) {
+      const method = args[0].toUpperCase();
+      if ((method === 'POST' || method === 'DELETE') && String(args[1]).includes('/likes/')) {
         this.addEventListener('readystatechange', () => {
           if (this.readyState === 4) {
             startTiming('response');

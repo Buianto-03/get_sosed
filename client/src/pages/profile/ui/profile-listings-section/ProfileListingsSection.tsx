@@ -2,27 +2,18 @@ import React, { useRef } from 'react';
 import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Spinner } from '@shared/ui/feedback/Spinner';
-import {
-  ListingCard,
-  ListingCardVariant,
-  type ListingCardData,
-} from '@entities/listing/ui/listing-card/ListingCard';
+import type { AdvertType } from '@entities/advert/model/advertsModel';
+import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
+import { SavedListingCard } from '@features/liked-adverts/ui/saved-listing-card/SavedListingCard';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
+import { toProfileListing } from '../../helper';
 import { getCollectionFocusTarget } from './helper';
 import styles from './ProfileListingsSection.module.scss';
 
-export type ProfileListing = {
-  id: string;
-  listing: ListingCardData;
-  saved: boolean;
-  saveDisabled?: boolean;
-  saveError?: string;
-};
-
 export interface ProfileCollection {
-  items: readonly ProfileListing[];
+  items: readonly AdvertType[];
   total: number;
   loading: boolean;
   error: string | null;
@@ -35,11 +26,6 @@ export interface ProfileCollection {
   };
 }
 
-export interface ProfileListingActions {
-  onOpen: (id: string) => void;
-  onToggleSaved: (id: string) => void;
-}
-
 interface ProfileListingsSectionProps {
   headingId: string;
   title: string;
@@ -50,7 +36,7 @@ interface ProfileListingsSectionProps {
     action: React.ReactNode;
     icon: React.ReactNode;
   };
-  actions: ProfileListingActions;
+  onOpenListing: (id: string) => void;
 }
 
 export function ProfileListingsSection({
@@ -58,7 +44,7 @@ export function ProfileListingsSection({
   title,
   collection,
   emptyState,
-  actions,
+  onOpenListing,
 }: ProfileListingsSectionProps): JSX.Element {
   const sectionRef = useRef<HTMLElement>(null);
   const requestFocus = useFocusAfterUpdate();
@@ -91,16 +77,13 @@ export function ProfileListingsSection({
         !collection.error &&
         (collection.items.length > 0 ? (
           <div className={styles.collection__grid}>
-            {collection.items.map(({ id, listing, saved, saveDisabled, saveError }) => (
-              <ListingCard
-                key={id}
-                listing={listing}
+            {collection.items.map((advert) => (
+              <SavedListingCard
+                key={advert.id}
+                advert={advert}
+                toListing={toProfileListing}
                 variant={ListingCardVariant.Profile}
-                saved={saved}
-                saveDisabled={saveDisabled}
-                saveError={saveError}
-                onSavedChange={() => actions.onToggleSaved(id)}
-                onOpen={() => actions.onOpen(id)}
+                onOpen={onOpenListing}
               />
             ))}
           </div>

@@ -29,7 +29,7 @@ it.each([
               favorites={emptyCollection}
               myListings={emptyCollection}
               navigation={{ onEditProfile: vi.fn(), onFindListings }}
-              listingActions={{ onOpen: vi.fn(), onToggleSaved: vi.fn() }}
+              onOpenListing={vi.fn()}
             />
           }
         />

@@ -6,7 +6,7 @@ import { UserStatus } from '@entities/session/model/authModel';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { RoutePattern } from '@shared/config/routes';
 import { MobileNavigation } from '@widgets/mobile-navigation/MobileNavigation';
-import { selectAuthUser } from '@entities/session/model/authSelector';
+import { selectAuthUser } from '@entities/session/model/authSelectors';
 import { SiteLayout } from '../site-layout/SiteLayout';
 import { getAvailableRoutes, mobileItems } from './helper';
 

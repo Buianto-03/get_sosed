@@ -5,7 +5,11 @@ import { clearAuth, setAccessToken, setSession } from '@entities/session/model/a
 import { checkAuthThunk } from '@entities/session/model/authThunk';
 import type { AdvertType } from '@entities/advert/model/advertsModel';
 import { removeSavedAdvertThunk, saveAdvertThunk } from '@features/liked-adverts/model';
-import { selectIsSaved } from '@entities/advert/model/likedAdvertsSelectors';
+import {
+  selectIsSaved,
+  selectSaveError,
+  selectSavePending,
+} from '@entities/advert/model/likedAdvertsSelectors';
 import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
 import { getLikedAdvertsThunk } from '@entities/advert/model/likedAdvertsThunk';
 import { store } from './store';
@@ -64,6 +68,38 @@ describe('shared saved adverts', () => {
     await store.dispatch(removeSavedAdvertThunk(7));
     expect(selectIsSaved(store.getState(), 7)).toBe(true);
     expect(store.getState().likedAdverts.items).toHaveLength(1);
+  });
+
+  it('keeps independent pending, error and confirmed values for concurrent IDs', async () => {
+    await ready();
+    const response = deferred<typeof like>();
+    const otherAdvert = { ...advert, id: 8 };
+    const otherLike = { ...like, id: 16, advertId: otherAdvert.id };
+    const setLike = vi
+      .spyOn(likeService, 'setLike')
+      .mockReturnValueOnce(response.promise)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(otherLike);
+    const first = store.dispatch(saveAdvertThunk(advert));
+    const second = store.dispatch(saveAdvertThunk(otherAdvert));
+
+    expect(selectSavePending(store.getState(), advert.id)).toBe(true);
+    expect(selectSavePending(store.getState(), otherAdvert.id)).toBe(true);
+    expect((await second).meta.requestStatus).toBe('rejected');
+    expect(selectSavePending(store.getState(), advert.id)).toBe(true);
+    expect(selectSaveError(store.getState(), advert.id)).toBeUndefined();
+    expect(selectSavePending(store.getState(), otherAdvert.id)).toBe(false);
+    expect(selectSaveError(store.getState(), otherAdvert.id)).toBeTruthy();
+
+    await store.dispatch(saveAdvertThunk(otherAdvert)).unwrap();
+    expect(selectIsSaved(store.getState(), otherAdvert.id)).toBe(true);
+    expect(selectIsSaved(store.getState(), advert.id)).toBe(false);
+    expect(selectSaveError(store.getState(), otherAdvert.id)).toBeUndefined();
+    response.resolve(like);
+    await first.unwrap();
+    expect(selectIsSaved(store.getState(), advert.id)).toBe(true);
+    expect(selectIsSaved(store.getState(), otherAdvert.id)).toBe(true);
+    expect(setLike.mock.calls).toEqual([[advert.id], [otherAdvert.id], [otherAdvert.id]]);
   });
   it('clears on account change and ignores the old list, including same-user re-login', async () => {
     const old = deferred<{ data: unknown }>();

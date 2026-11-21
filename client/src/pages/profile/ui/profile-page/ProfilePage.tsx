@@ -8,14 +8,8 @@ import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import {
   ProfileListingsSection,
   type ProfileCollection,
-  type ProfileListingActions,
 } from '../profile-listings-section/ProfileListingsSection';
 import styles from './ProfilePage.module.scss';
-
-export type {
-  ProfileListing,
-  ProfileCollection,
-} from '../profile-listings-section/ProfileListingsSection';
 
 export type ProfileDetails = {
   name: string;
@@ -37,7 +31,7 @@ export interface ProfilePageProps {
   favorites: ProfileCollection;
   myListings: ProfileCollection;
   navigation: ProfileNavigation;
-  listingActions: ProfileListingActions;
+  onOpenListing: (id: string) => void;
 }
 
 export function ProfilePage({
@@ -45,7 +39,7 @@ export function ProfilePage({
   favorites,
   myListings,
   navigation,
-  listingActions,
+  onOpenListing,
 }: ProfilePageProps): JSX.Element {
   const collections = [
     {
@@ -131,7 +125,7 @@ export function ProfilePage({
               action: collection.emptyAction,
               icon: collection.icon,
             }}
-            actions={listingActions}
+            onOpenListing={onOpenListing}
           />
         ))}
       </div>
