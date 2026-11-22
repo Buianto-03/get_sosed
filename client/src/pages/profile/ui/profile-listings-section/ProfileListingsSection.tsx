@@ -4,7 +4,7 @@ import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Spinner } from '@shared/ui/feedback/Spinner';
 import type { AdvertType } from '@entities/advert/model/advertsModel';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
-import { SavedListingCard } from '@features/liked-adverts/ui/saved-listing-card/SavedListingCard';
+import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
@@ -78,7 +78,7 @@ export function ProfileListingsSection({
         (collection.items.length > 0 ? (
           <div className={styles.collection__grid}>
             {collection.items.map((advert) => (
-              <SavedListingCard
+              <ListingCardWithSave
                 key={advert.id}
                 advert={advert}
                 toListing={toProfileListing}

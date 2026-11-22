@@ -7,19 +7,19 @@ import {
 } from '@entities/listing/ui/listing-card/ListingCard';
 import { useSavedAdvert } from '../../model/use-saved-advert';
 
-interface SavedListingCardProps {
+interface ListingCardWithSaveProps {
   advert: AdvertType;
   toListing: (advert: AdvertType) => ListingCardData;
   variant: ListingCardVariant;
   onOpen: (id: string) => void;
 }
 
-function SavedListingCardView({
+function ListingCardWithSaveView({
   advert,
   toListing,
   variant,
   onOpen,
-}: SavedListingCardProps): JSX.Element {
+}: ListingCardWithSaveProps): JSX.Element {
   const { saved, disabled, error, toggle } = useSavedAdvert(advert.id);
   return (
     <ListingCard
@@ -34,4 +34,4 @@ function SavedListingCardView({
   );
 }
 
-export const SavedListingCard = memo(SavedListingCardView);
+export const ListingCardWithSave = memo(ListingCardWithSaveView);

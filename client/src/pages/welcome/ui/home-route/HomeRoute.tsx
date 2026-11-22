@@ -4,7 +4,7 @@ import { MainBanner } from '@widgets/main-banner/MainBanner';
 import { FreshListings, FreshListingsState } from '@widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '@widgets/how-it-works/HowItWorks';
 import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
-import { SavedListingCard } from '@features/liked-adverts/ui/saved-listing-card/SavedListingCard';
+import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
 import advertService from '@entities/advert/api/advertService';
 import type { AdvertType } from '@entities/advert/model/advertsModel';
 import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
@@ -62,7 +62,7 @@ export default function HomeRoute(): JSX.Element {
       <FreshListings
         state={state}
         cards={adverts.map((advert) => (
-          <SavedListingCard
+          <ListingCardWithSave
             key={advert.id}
             advert={advert}
             toListing={toHomeCard}

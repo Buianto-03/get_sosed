@@ -5,7 +5,7 @@ import { SearchFilters } from '@features/advert-filter/ui/SearchFilters';
 import { readFilters, writeFilters } from '@features/advert-filter/model/filters';
 import { toSearchValues, toAppliedFilters } from '@features/advert-filter/model/searchFilterValues';
 import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
-import { SavedListingCard } from '@features/liked-adverts/ui/saved-listing-card/SavedListingCard';
+import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
 import { useTagCatalog } from '@entities/advert/model/use-tag-catalog';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { getFilteredAdvertsThunk } from '@entities/advert/model/advertsThunk';
@@ -73,7 +73,7 @@ export default function SearchRoute(): JSX.Element {
         state={state}
         totalCount={result.adverts.length}
         cards={result.adverts.slice(0, result.visitableCards).map((advert) => (
-          <SavedListingCard
+          <ListingCardWithSave
             key={advert.id}
             advert={advert}
             toListing={toSearchCard}
