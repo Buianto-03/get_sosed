@@ -8,7 +8,6 @@ import { PersonSummary } from '@entities/person/ui/PersonSummary';
 import { getAdvertByIdThunk } from '@entities/advert/model/advertsThunk';
 import { AdvertDetailStatus } from '@entities/advert/model/advertsModel';
 import { selectAdverts } from '@entities/advert/model/advertsSelectors';
-import type { LikeType } from '@entities/like/model/like';
 import { getLikesThunk } from '@entities/like/model/likesThunk';
 import { UserStatus } from '@entities/session/model/authModel';
 import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
@@ -23,8 +22,6 @@ import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
 import { searchDestination } from './helper';
 import styles from './ListingRoute.module.scss';
 
-const noInterestedPeople: readonly LikeType[] = [];
-
 export default function ListingRoute(): JSX.Element {
   const { listingId } = useParams();
   const id = Number(listingId);
@@ -35,7 +32,7 @@ export default function ListingRoute(): JSX.Element {
   const data = useAppSelector(selectAdverts);
   const user = useAppSelector((state) => state.auth.user);
   const interestedPeople = useAppSelector(
-    (state) => (state.likes.advertId === id ? state.likes.likes : noInterestedPeople),
+    (state) => (state.likes.advertId === id ? state.likes.likes : []),
     shallowEqual,
   );
   const saved = useSavedAdvert(id);

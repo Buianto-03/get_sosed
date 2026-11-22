@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ListingGallery } from './ListingGallery';
 
@@ -8,6 +8,55 @@ afterEach(() => {
 });
 
 describe('ListingGallery motion preference', () => {
+  it('requests only visible tiles and still opens an unloaded photo in the lightbox', () => {
+    let notify: IntersectionObserverCallback;
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'IntersectionObserver',
+      vi.fn((callback: IntersectionObserverCallback) => {
+        notify = callback;
+        return { observe, disconnect };
+      }),
+    );
+    const photos = Array.from({ length: 6 }, (_, index) => ({
+      id: String(index),
+      src: `/photo-${index}.webp`,
+      alt: `Фото ${index}`,
+    }));
+    const { container, unmount } = render(<ListingGallery photos={photos} />);
+    expect(container.querySelectorAll('img')).toHaveLength(1);
+    expect(observe).toHaveBeenCalledTimes(6);
+
+    const second = screen.getByRole('button', { name: 'Открыть фото 2 из 6' });
+    act(() =>
+      notify(
+        [
+          {
+            target: second,
+            isIntersecting: true,
+            intersectionRect: new DOMRect(0, 0, 200, 200),
+            boundingClientRect: second.getBoundingClientRect(),
+            intersectionRatio: 1,
+            rootBounds: null,
+            time: 0,
+          },
+        ],
+        {} as IntersectionObserver,
+      ),
+    );
+    expect(container.querySelectorAll('img')).toHaveLength(2);
+    expect(container.querySelector('img[src="/photo-5.webp"]')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть фото 6 из 6' }));
+    expect(within(screen.getByRole('dialog')).getByRole('img')).toHaveAttribute(
+      'src',
+      '/photo-5.webp',
+    );
+    unmount();
+    expect(disconnect).toHaveBeenCalledOnce();
+  });
+
   it('handles no photos and a single photo without redundant navigation', () => {
     const { rerender } = render(<ListingGallery photos={[]} />);
     expect(screen.getByText('Фотографии не добавлены')).toBeInTheDocument();
@@ -24,7 +73,10 @@ describe('ListingGallery motion preference', () => {
 
   it('keeps photo navigation and respects a preference changed after mounting', () => {
     let reducedMotion = false;
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: reducedMotion })));
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: reducedMotion })),
+    );
     render(
       <ListingGallery
         photos={[

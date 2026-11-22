@@ -41,7 +41,7 @@ function readPageNumber(searchParams, key, fallback, max = Number.MAX_SAFE_INTEG
   return Number.isSafeInteger(value) && value > 0 ? Math.min(value, max) : fallback;
 }
 
-export function createFixture(size) {
+export function createFixture(size, { photos = false } = {}) {
   if (size !== 'small' && size !== 'large') {
     throw new Error(`Unknown optimization fixture size: ${size}`);
   }
@@ -103,7 +103,13 @@ export function createFixture(size) {
         advertId: id,
       },
       tags: [tags[id % primaryTags.length], tags[(id + primaryTags.length) % tags.length]],
-      AdvertPhotos: [],
+      AdvertPhotos: photos
+        ? numbered(6, (index) => ({
+            id: id * 10 + index,
+            advertId: id,
+            photo: `/fixture-photos/${id}/${index}.webp`,
+          }))
+        : [],
     };
   });
   const myAdverts = adverts.filter(({ userId }) => userId === signedInUserId).reverse();

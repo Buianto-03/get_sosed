@@ -2,11 +2,19 @@
 export function observePage(profile) {
   performance.setResourceTimingBufferSize(4000);
   let lcp = null;
+  let lcpElement = null;
   const shifts = [];
   const longTasks = [];
   new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       lcp = entry.startTime;
+      lcpElement = entry.element
+        ? {
+            tag: entry.element.tagName,
+            text: entry.element.textContent?.slice(0, 120),
+            src: entry.element.currentSrc ? new URL(entry.element.currentSrc).pathname : null,
+          }
+        : null;
     }
   }).observe({ type: 'largest-contentful-paint', buffered: true });
   new PerformanceObserver((list) => {
@@ -130,6 +138,7 @@ export function observePage(profile) {
       return {
         resources,
         lcp,
+        lcpElement,
         cls,
         domElements: document.getElementsByTagName('*').length,
         historyParagraphs: document.querySelectorAll('[aria-label="Сообщения"] p').length,

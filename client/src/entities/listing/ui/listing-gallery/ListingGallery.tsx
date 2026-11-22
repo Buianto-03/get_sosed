@@ -3,6 +3,7 @@ import { LuChevronLeft, LuChevronRight, LuImageOff } from 'react-icons/lu';
 import { IconButton } from '@shared/ui/button/IconButton';
 import { Modal, ModalSize } from '@shared/ui/overlay/Modal';
 import { getGalleryScrollBehavior } from './helper';
+import { useGalleryPhotos } from './use-gallery-photos';
 import styles from './ListingGallery.module.scss';
 
 export type ListingPhoto = {
@@ -19,6 +20,7 @@ export function ListingGallery({ photos }: ListingGalleryProps): JSX.Element {
   const galleryRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const loadedSources = useGalleryPhotos(galleryRef, photos);
 
   const changeIndex = (nextIndex: number): void => {
     const normalizedIndex = (nextIndex + photos.length) % photos.length;
@@ -64,13 +66,23 @@ export function ListingGallery({ photos }: ListingGalleryProps): JSX.Element {
               className={[styles.photo, index === 0 && styles.primary].filter(Boolean).join(' ')}
               key={photo.id}
               type="button"
+              data-photo-src={photo.src}
               aria-label={`Открыть фото ${index + 1} из ${photos.length}`}
               onClick={() => {
                 setActiveIndex(index);
                 setLightboxOpen(true);
               }}
             >
-              <img src={photo.src} alt={photo.alt} />
+              {(index === 0 ||
+                loadedSources.has(photo.src) ||
+                typeof IntersectionObserver === 'undefined') && (
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              )}
               {photos.length > 3 && index === 2 && (
                 <span className={styles.morePhotos}>Ещё {photos.length - 3} фото</span>
               )}

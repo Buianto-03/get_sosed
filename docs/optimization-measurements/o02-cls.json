@@ -1,0 +1,305 @@
+{
+  "before": [
+    {
+      "trial": 1,
+      "shifts": []
+    },
+    {
+      "trial": 2,
+      "shifts": [
+        {
+          "value": 0.025746503665123457,
+          "time": 67.79999995231628,
+          "sources": [
+            {
+              "node": "<footer class=\"_footer_104p1_1\"><div class=\"_inner_104p1_7\"><div class=\"_brand_104p1_18\"><strong>GETSOSED</strong><span>Жильё и люди рядом</span></div><nav class=\"_links_104p1_30\" aria-label=\"Навигация в подвале\"><a class=\"\" href=\"/about\">О нас</a><a",
+              "prev": {
+                "x": 0,
+                "y": 823,
+                "width": 1440,
+                "height": 77,
+                "top": 823,
+                "right": 1440,
+                "bottom": 900,
+                "left": 0
+              },
+              "now": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "trial": 3,
+      "shifts": []
+    },
+    {
+      "trial": 4,
+      "shifts": []
+    },
+    {
+      "trial": 5,
+      "shifts": []
+    },
+    {
+      "trial": 6,
+      "shifts": []
+    },
+    {
+      "trial": 7,
+      "shifts": []
+    },
+    {
+      "trial": 8,
+      "shifts": [
+        {
+          "value": 0.025746503665123457,
+          "time": 67.20000004768372,
+          "sources": [
+            {
+              "node": "<footer class=\"_footer_104p1_1\"><div class=\"_inner_104p1_7\"><div class=\"_brand_104p1_18\"><strong>GETSOSED</strong><span>Жильё и люди рядом</span></div><nav class=\"_links_104p1_30\" aria-label=\"Навигация в подвале\"><a class=\"\" href=\"/about\">О нас</a><a",
+              "prev": {
+                "x": 0,
+                "y": 823,
+                "width": 1440,
+                "height": 77,
+                "top": 823,
+                "right": 1440,
+                "bottom": 900,
+                "left": 0
+              },
+              "now": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "trial": 9,
+      "shifts": []
+    },
+    {
+      "trial": 10,
+      "shifts": []
+    },
+    {
+      "trial": 11,
+      "shifts": []
+    },
+    {
+      "trial": 12,
+      "shifts": []
+    }
+  ],
+  "after": [
+    {
+      "trial": 1,
+      "shifts": []
+    },
+    {
+      "trial": 2,
+      "shifts": []
+    },
+    {
+      "trial": 3,
+      "shifts": []
+    },
+    {
+      "trial": 4,
+      "shifts": [
+        {
+          "value": 0.03140584129050926,
+          "time": 97.30000019073486,
+          "sources": [
+            {
+              "node": "<footer class=\"_footer_104p1_1\"><div class=\"_inner_104p1_7\"><div class=\"_brand_104p1_18\"><strong>GETSOSED</strong><span>Жильё и люди рядом</span></div><nav class=\"_links_104p1_30\" aria-label=\"Навигация в подвале\"><a class=\"\" href=\"/about\">О нас</a><a",
+              "prev": {
+                "x": 0,
+                "y": 823,
+                "width": 1440,
+                "height": 77,
+                "top": 823,
+                "right": 1440,
+                "bottom": 900,
+                "left": 0
+              },
+              "now": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            },
+            {
+              "node": "<nav class=\"_desktopNav_1sk5x_45\" aria-label=\"Основная навигация\"><a class=\"_navLink_1sk5x_55\" href=\"/\">Главная</a><a aria-current=\"page\" class=\"_navLink_1sk5x_55 active\" href=\"/listings\">Поиск</a><a class=\"_navLink_1sk5x_55\" href=\"/about\">О нас</a><",
+              "prev": {
+                "x": 1029.125,
+                "y": 11.5,
+                "width": 382.875,
+                "height": 44,
+                "top": 11.5,
+                "right": 1412,
+                "bottom": 55.5,
+                "left": 1029.125
+              },
+              "now": {
+                "x": 783.609375,
+                "y": 10.5,
+                "width": 628.390625,
+                "height": 46,
+                "top": 10.5,
+                "right": 1412,
+                "bottom": 56.5,
+                "left": 783.609375
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "trial": 5,
+      "shifts": []
+    },
+    {
+      "trial": 6,
+      "shifts": [
+        {
+          "value": 0.025746503665123457,
+          "time": 74,
+          "sources": [
+            {
+              "node": "<footer class=\"_footer_104p1_1\"><div class=\"_inner_104p1_7\"><div class=\"_brand_104p1_18\"><strong>GETSOSED</strong><span>Жильё и люди рядом</span></div><nav class=\"_links_104p1_30\" aria-label=\"Навигация в подвале\"><a class=\"\" href=\"/about\">О нас</a><a",
+              "prev": {
+                "x": 0,
+                "y": 823,
+                "width": 1440,
+                "height": 77,
+                "top": 823,
+                "right": 1440,
+                "bottom": 900,
+                "left": 0
+              },
+              "now": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "trial": 7,
+      "shifts": []
+    },
+    {
+      "trial": 8,
+      "shifts": [
+        {
+          "value": 0.025746503665123457,
+          "time": 86.59999990463257,
+          "sources": [
+            {
+              "node": "<footer class=\"_footer_104p1_1\"><div class=\"_inner_104p1_7\"><div class=\"_brand_104p1_18\"><strong>GETSOSED</strong><span>Жильё и люди рядом</span></div><nav class=\"_links_104p1_30\" aria-label=\"Навигация в подвале\"><a class=\"\" href=\"/about\">О нас</a><a",
+              "prev": {
+                "x": 0,
+                "y": 823,
+                "width": 1440,
+                "height": 77,
+                "top": 823,
+                "right": 1440,
+                "bottom": 900,
+                "left": 0
+              },
+              "now": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "trial": 9,
+      "shifts": []
+    },
+    {
+      "trial": 10,
+      "shifts": []
+    },
+    {
+      "trial": 11,
+      "shifts": [
+        {
+          "value": 0.025746503665123457,
+          "time": 74.09999990463257,
+          "sources": [
+            {
+              "node": "<footer class=\"_footer_104p1_1\"><div class=\"_inner_104p1_7\"><div class=\"_brand_104p1_18\"><strong>GETSOSED</strong><span>Жильё и люди рядом</span></div><nav class=\"_links_104p1_30\" aria-label=\"Навигация в подвале\"><a class=\"\" href=\"/about\">О нас</a><a",
+              "prev": {
+                "x": 0,
+                "y": 823,
+                "width": 1440,
+                "height": 77,
+                "top": 823,
+                "right": 1440,
+                "bottom": 900,
+                "left": 0
+              },
+              "now": {
+                "x": 0,
+                "y": 0,
+                "width": 0,
+                "height": 0,
+                "top": 0,
+                "right": 0,
+                "bottom": 0,
+                "left": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "trial": 12,
+      "shifts": []
+    }
+  ]
+}

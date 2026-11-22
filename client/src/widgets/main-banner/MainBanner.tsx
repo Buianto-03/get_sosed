@@ -1,4 +1,5 @@
 import React from 'react';
+import { HeroImage } from '@shared/ui/hero-image/HeroImage';
 import { CreateListingButton } from '@features/listing-create/ui/create-listing-button/CreateListingButton';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import styles from './MainBanner.module.scss';
@@ -29,7 +30,7 @@ export function MainBanner({
           </div>
         </div>
         <div className={styles.main_banner__media}>
-          <img className={styles.main_banner__photo} src="/redesign-hero.jpg" alt="Интерьер квартиры" />
+          <HeroImage className={styles.main_banner__photo} />
         </div>
       </section>
     </div>

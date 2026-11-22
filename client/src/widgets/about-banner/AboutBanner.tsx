@@ -1,4 +1,5 @@
 import React from 'react';
+import { HeroImage } from '@shared/ui/hero-image/HeroImage';
 import { Button } from '@shared/ui/button/Button';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import styles from './AboutBanner.module.scss';
@@ -27,7 +28,7 @@ export function AboutBanner({ description, onBrowseListings }: AboutBannerProps)
           </Button>
         </div>
         <div className={styles.aboutBanner__media}>
-          <img className={styles.aboutBanner__photo} src="/redesign-hero.jpg" alt="Интерьер квартиры" />
+          <HeroImage className={styles.aboutBanner__photo} />
         </div>
       </section>
     </div>

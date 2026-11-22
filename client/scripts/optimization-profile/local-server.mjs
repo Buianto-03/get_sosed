@@ -6,6 +6,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { WebSocketServer } from 'ws';
 import { createFixture } from './fixtures.mjs';
 
+const photoSources = ['photo-0', 'photo-1', 'photo-2', 'photo-3', 'advert3-0', 'advert3-1'];
+
 const mime = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -16,6 +18,8 @@ const mime = {
   '.svg': 'image/svg+xml',
   '.jpg': 'image/jpeg',
   '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
 };
 
 async function readAssets(root) {
@@ -34,8 +38,17 @@ async function readAssets(root) {
   return assets;
 }
 
-export async function serve(root) {
+export async function serve(root, { photos = false } = {}) {
   const assets = await readAssets(root);
+  const photoBodies = photos
+    ? await Promise.all(
+        photoSources.map((name) =>
+          readFile(
+            new URL(`../../../server/public/images/adverts/advert-3/${name}.webp`, import.meta.url),
+          ),
+        ),
+      )
+    : [];
   let fixture;
   let release;
   let gate;
@@ -70,6 +83,10 @@ export async function serve(root) {
         body = gzipSync(JSON.stringify(answer.data));
         type = 'application/json';
         compressed = true;
+      } else if (photos && /^\/fixture-photos\/[1-9]\d*\/[1-6]\.webp$/.test(url.pathname)) {
+        body = photoBodies[Number(url.pathname.match(/(\d)\.webp$/)[1]) - 1];
+        type = 'image/webp';
+        cache = 'public, max-age=31536000, immutable';
       } else {
         const asset =
           assets.get(url.pathname) ?? (!extname(url.pathname) && assets.get('/index.html'));
@@ -109,7 +126,7 @@ export async function serve(root) {
     origin: 'http://127.0.0.1:' + server.address().port,
     failures,
     reset(size) {
-      fixture = createFixture(size);
+      fixture = createFixture(size, { photos });
     },
     neighbor() {
       fixture.neighbor();
