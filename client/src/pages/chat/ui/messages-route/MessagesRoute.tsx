@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { UserStatus } from '@entities/session/model/authModel';
@@ -42,12 +42,17 @@ export default function MessagesRoute(): JSX.Element | null {
   const listing = useListingContext(userId, activeId, listingId);
   const summaryId = summary?.id ?? null;
   const { history, connected, loadOlder, retry } = useDialogHistory(userId, summaryId);
+  const listRequest = useRef<ReturnType<ReturnType<typeof getReceiverListThunk>>>();
   const requestList = useCallback(() => {
+    listRequest.current?.abort();
     if (userId !== null) {
-      void dispatch(getReceiverListThunk(userId));
+      listRequest.current = dispatch(getReceiverListThunk(userId));
     }
   }, [dispatch, userId]);
-  useEffect(requestList, [requestList]);
+  useEffect(() => {
+    requestList();
+    return () => listRequest.current?.abort();
+  }, [requestList]);
 
   const selectConversation = useCallback(
     (other: string) => navigate(routes.messageThread(other)),

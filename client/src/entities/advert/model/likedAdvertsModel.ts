@@ -19,6 +19,7 @@ export interface SavedState {
   items: LikedAdvert[];
   savedIds: number[];
   status: SavedStatus;
+  initialized: boolean;
   error: string | null;
   pending: Record<number, string>;
   errors: Record<number, string>;

@@ -52,6 +52,8 @@ export async function serve(root, { photos = false } = {}) {
   let fixture;
   let release;
   let gate;
+  const heldReads = new Map();
+  const reads = [];
   const failures = [];
   const server = createServer(async (req, res) => {
     try {
@@ -59,10 +61,31 @@ export async function serve(root, { photos = false } = {}) {
       let type, compressed, body;
       let status = 200;
       let cache = 'no-store';
+      let read;
       if (url.pathname.startsWith('/api/')) {
         let input = '';
         for await (const chunk of req) {
           input += chunk;
+        }
+        const hold = heldReads.get(url.pathname);
+        if (hold) {
+          read = {
+            path: url.pathname,
+            method: req.method,
+            canceled: false,
+            completed: false,
+            bytes: 0,
+          };
+          reads.push(read);
+          res.once('close', () => {
+            if (!res.writableEnded) {
+              read.canceled = true;
+            }
+          });
+          await hold.promise;
+          if (res.destroyed) {
+            return;
+          }
         }
         const answer = fixture.request(
           req.method,
@@ -111,6 +134,10 @@ export async function serve(root, { photos = false } = {}) {
         ...(compressed ? { 'Content-Encoding': 'gzip' } : {}),
       });
       res.end(body);
+      if (read) {
+        read.completed = true;
+        read.bytes = body.length;
+      }
     } catch (error) {
       failures.push(error.stack);
       res.writeHead(500).end();
@@ -125,7 +152,24 @@ export async function serve(root, { photos = false } = {}) {
   return {
     origin: 'http://127.0.0.1:' + server.address().port,
     failures,
+    reads,
+    holdReads(paths) {
+      for (const path of paths) {
+        let releaseRead;
+        const promise = new Promise((resolve) => {
+          releaseRead = resolve;
+        });
+        heldReads.set(path, { promise, release: releaseRead });
+      }
+    },
+    releaseReads() {
+      for (const hold of heldReads.values()) {
+        hold.release();
+      }
+      heldReads.clear();
+    },
     reset(size) {
+      reads.length = 0;
       fixture = createFixture(size, { photos });
     },
     neighbor() {
@@ -147,6 +191,9 @@ export async function serve(root, { photos = false } = {}) {
       gate = undefined;
     },
     async close() {
+      for (const hold of heldReads.values()) {
+        hold.release();
+      }
       release?.();
       for (const socket of sockets.clients) {
         socket.terminate();

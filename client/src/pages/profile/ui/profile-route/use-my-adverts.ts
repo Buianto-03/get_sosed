@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import advertService from '@entities/advert/api/advertService';
+import { isRequestCanceled } from '@shared/api/cancellation';
 import { initialMyAdverts, mergeAdverts } from './helper';
 import type { MyAdvertsState } from './helper';
 
@@ -13,16 +14,21 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
   const [attempt, setAttempt] = useState(0);
   const generation = useRef(0);
   const inFlight = useRef(false);
+  const controllerRef = useRef<AbortController>();
 
   useEffect(() => {
     generation.current += 1;
     const requestGeneration = generation.current;
+    const controller = new AbortController();
+    controllerRef.current = controller;
     setState(initialMyAdverts(userId));
     inFlight.current = userId !== null;
     async function loadFirstPage(): Promise<void> {
       try {
-        const result = await advertService.getMine(1);
-        if (generation.current !== requestGeneration) return;
+        const result = await advertService.getMine(1, 12, { signal: controller.signal });
+        if (generation.current !== requestGeneration) {
+          return;
+        }
         setState((previous) => ({
           ...previous,
           items: result.items,
@@ -31,20 +37,27 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
           hasMore: result.page * result.limit < result.total,
           loading: false,
         }));
-      } catch {
-        if (generation.current !== requestGeneration) return;
+      } catch (error) {
+        if (generation.current !== requestGeneration) {
+          return;
+        }
         setState((previous) => ({
           ...previous,
           loading: false,
-          error: 'Не удалось загрузить ваши объявления.',
+          error: isRequestCanceled(error) ? '' : 'Не удалось загрузить ваши объявления.',
         }));
       } finally {
-        if (generation.current === requestGeneration) inFlight.current = false;
+        if (generation.current === requestGeneration) {
+          inFlight.current = false;
+        }
       }
     }
-    if (userId !== null) void loadFirstPage();
+    if (userId !== null) {
+      void loadFirstPage();
+    }
     return () => {
       generation.current += 1;
+      controller.abort();
     };
   }, [userId, attempt]);
 
@@ -55,14 +68,21 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
       state.loading ||
       !state.hasMore ||
       inFlight.current
-    )
+    ) {
       return;
+    }
     const requestGeneration = generation.current;
+    const signal = controllerRef.current?.signal;
+    if (!signal || signal.aborted) {
+      return;
+    }
     inFlight.current = true;
     setState((previous) => ({ ...previous, loadingMore: true, loadMoreError: '' }));
     try {
-      const result = await advertService.getMine(state.page + 1);
-      if (generation.current !== requestGeneration) return;
+      const result = await advertService.getMine(state.page + 1, 12, { signal });
+      if (generation.current !== requestGeneration) {
+        return;
+      }
       setState((previous) => ({
         ...previous,
         items: mergeAdverts(previous.items, result.items),
@@ -71,15 +91,19 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
         hasMore: result.page * result.limit < result.total,
         loadingMore: false,
       }));
-    } catch {
-      if (generation.current !== requestGeneration) return;
+    } catch (error) {
+      if (generation.current !== requestGeneration) {
+        return;
+      }
       setState((previous) => ({
         ...previous,
         loadingMore: false,
-        loadMoreError: 'Не удалось загрузить следующие объявления.',
+        loadMoreError: isRequestCanceled(error) ? '' : 'Не удалось загрузить следующие объявления.',
       }));
     } finally {
-      if (generation.current === requestGeneration) inFlight.current = false;
+      if (generation.current === requestGeneration) {
+        inFlight.current = false;
+      }
     }
   }
 

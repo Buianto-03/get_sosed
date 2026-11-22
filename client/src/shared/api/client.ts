@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { CanceledError } from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from '../config/env';
+import { isRequestCanceled, waitForRefresh } from './cancellation';
 
 type RetriedRequest = InternalAxiosRequestConfig & { sent?: boolean };
 type AuthBridge = {
@@ -30,6 +31,9 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const previousRequest = error.config as RetriedRequest | undefined;
+    if (isRequestCanceled(error) || previousRequest?.signal?.aborted) {
+      return Promise.reject(new CanceledError('Request canceled'));
+    }
     if (error.response?.status !== 403 || !previousRequest || previousRequest.sent || !authBridge) {
       return Promise.reject(error);
     }
@@ -37,13 +41,22 @@ axiosInstance.interceptors.response.use(
     previousRequest.sent = true;
     let accessToken: string;
     try {
-      refreshPromise ??= authBridge.refreshAccessToken().finally(() => {
-        refreshPromise = undefined;
-      });
-      accessToken = await refreshPromise;
+      const bridge = authBridge;
+      refreshPromise ??= bridge
+        .refreshAccessToken()
+        .catch((refreshError: unknown) => {
+          bridge.onUnauthorized();
+          throw refreshError;
+        })
+        .finally(() => {
+          refreshPromise = undefined;
+        });
+      accessToken = await waitForRefresh(refreshPromise, previousRequest.signal);
     } catch (refreshError) {
-      authBridge.onUnauthorized();
       return Promise.reject(refreshError);
+    }
+    if (previousRequest.signal?.aborted) {
+      return Promise.reject(new CanceledError('Request canceled'));
     }
     previousRequest.headers.Authorization = `Bearer ${accessToken}`;
     return axiosInstance(previousRequest);

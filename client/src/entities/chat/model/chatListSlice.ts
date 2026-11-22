@@ -1,3 +1,4 @@
+import { isRequestCanceled } from '@shared/api/cancellation';
 import { createAction, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   ChatStatus,
@@ -270,8 +271,14 @@ export const chatListSlice = createSlice({
       if (state.requestId !== action.meta.requestId) {
         return;
       }
-      state.status = ChatStatus.Error;
-      state.error = 'Не удалось загрузить диалоги.';
+      const canceled = action.meta.aborted || isRequestCanceled(action.error);
+      if (canceled) {
+        state.status = state.chatList.length ? ChatStatus.Ready : ChatStatus.Idle;
+        state.error = null;
+      } else {
+        state.status = ChatStatus.Error;
+        state.error = 'Не удалось загрузить диалоги.';
+      }
       state.requestId = null;
     });
   },

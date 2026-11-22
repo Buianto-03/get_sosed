@@ -153,3 +153,17 @@ it('about opens listings through the real navigation callback', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Смотреть объявления' }));
   expect(screen.getByTestId('location')).toHaveTextContent('/listings');
 });
+
+it('aborts its own loading request when the home page unmounts', () => {
+  const get = vi.spyOn(advertService, 'getAdverts').mockImplementation(
+    () =>
+      new Promise(() => {
+        /* Pending until its owner cancels. */
+      }),
+  );
+  const view = open();
+  const signal = get.mock.calls[0][0]?.signal;
+  expect(signal?.aborted).toBe(false);
+  view.unmount();
+  expect(signal?.aborted).toBe(true);
+});

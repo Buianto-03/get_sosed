@@ -1,18 +1,14 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
+import type { ReadOptions } from '@shared/api/cancellation';
 import { deleteLikeSchema, likeSchema, type DeleteLikeResult, type LikeType } from '../model/like';
 
 class LikeService {
   constructor(private client: AxiosInstance) {}
 
-  async getLikesByAdvertId(id: LikeType['advertId']): Promise<LikeType[]> {
-    try {
-      const response = await this.client.get(`/likes/${id}`);
-      return likeSchema.array().parse(response.data);
-    } catch (error) {
-      console.log(error);
-      return Promise.reject(error);
-    }
+  async getLikesByAdvertId(id: LikeType['advertId'], options?: ReadOptions): Promise<LikeType[]> {
+    const response = await this.client.get(`/likes/${id}`, options);
+    return likeSchema.array().parse(response.data);
   }
 
   async setLike(advertId: LikeType['advertId']): Promise<LikeType> {

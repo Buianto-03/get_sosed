@@ -18,6 +18,7 @@ import { Spinner } from '@shared/ui/feedback/Spinner';
 import { YMap } from '@shared/ui/y-map/YMap';
 import { getMediaUrl } from '@shared/config/media';
 import { routes } from '@shared/config/routes';
+import { isRequestCanceled } from '@shared/api/cancellation';
 import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
 import { searchDestination } from './helper';
 import styles from './ListingRoute.module.scss';
@@ -41,47 +42,63 @@ export default function ListingRoute(): JSX.Element {
   const [likesLoading, setLikesLoading] = useState(true);
   const [likesError, setLikesError] = useState(false);
   const [likesAttempt, setLikesAttempt] = useState(0);
+  const ownerId = user.status === UserStatus.Logged ? user.id : null;
   useEffect(() => {
-    if (valid) void dispatch(getAdvertByIdThunk(id));
+    if (!valid) {
+      return undefined;
+    }
+    const request = dispatch(getAdvertByIdThunk(id));
+    return () => request.abort();
   }, [dispatch, id, valid, attempt]);
   useEffect(() => {
-    if (!valid) return undefined;
+    if (!valid) {
+      return undefined;
+    }
     let active = true;
     setLikesLoading(true);
     setLikesError(false);
-    void dispatch(getLikesThunk(id))
+    const request = dispatch(getLikesThunk(id));
+    void request
       .unwrap()
-      .catch(() => {
-        if (active) setLikesError(true);
+      .catch((error: unknown) => {
+        if (active && !isRequestCanceled(error)) {
+          setLikesError(true);
+        }
       })
       .finally(() => {
-        if (active) setLikesLoading(false);
+        if (active) {
+          setLikesLoading(false);
+        }
       });
     return () => {
       active = false;
+      request.abort();
     };
-  }, [dispatch, id, valid, likesAttempt]);
+  }, [dispatch, id, valid, likesAttempt, ownerId]);
   const message = (receiverId: number, withListing = false): void => {
     const to = routes.messageThread(receiverId) + (withListing ? `?listingId=${id}` : '');
     navigate(user.status === UserStatus.Logged ? to : getAuthenticationPath(routes.signIn, to));
   };
-  if (!valid || data.detailStatus === AdvertDetailStatus.NotFound)
+  if (!valid || data.detailStatus === AdvertDetailStatus.NotFound) {
     return (
       <main className={styles.listing__page}>
         <h1>Объявление не найдено</h1>
         <Button onClick={() => navigate(routes.listings)}>К объявлениям</Button>
       </main>
     );
-  if (data.detailStatus === AdvertDetailStatus.Error)
+  }
+  if (data.detailStatus === AdvertDetailStatus.Error) {
     return (
       <main className={styles.listing__page}>
         <Alert variant={AlertVariant.Error}>Не удалось загрузить объявление.</Alert>
         <Button onClick={() => setAttempt((value) => value + 1)}>Повторить</Button>
       </main>
     );
+  }
   const advert = data.chosenAdvert;
-  if (!advert || advert.id !== id || data.detailStatus !== AdvertDetailStatus.Ready)
+  if (!advert || advert.id !== id || data.detailStatus !== AdvertDetailStatus.Ready) {
     return <Spinner label="Загрузка объявления" />;
+  }
   const authorId = advert.userId;
 
   return (
@@ -109,7 +126,9 @@ export default function ListingRoute(): JSX.Element {
         saveDisabled={saved.disabled}
         contactDisabled={!authorId || (user.status === UserStatus.Logged && user.id === authorId)}
         onContact={() => {
-          if (authorId) message(authorId, true);
+          if (authorId) {
+            message(authorId, true);
+          }
         }}
         onSavedChange={() => saved.toggle(advert)}
         information={{

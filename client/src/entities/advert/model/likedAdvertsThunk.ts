@@ -4,7 +4,7 @@ import { SavedStatus, type LikedAdvert, type SavedRoot } from './likedAdvertsMod
 
 export const getLikedAdvertsThunk = createAsyncThunk<LikedAdvert[], void, { state: SavedRoot }>(
   'likedAdverts/get',
-  () => advertService.getLikedAdverts(),
+  (_, { signal }) => advertService.getLikedAdverts({ signal }),
   {
     condition: (_, { getState }) => {
       const state = getState().likedAdverts;

@@ -126,14 +126,13 @@ it('loads search from the URL only, keeps unknown tags and returns from details 
   vi.spyOn(advertService, 'getAdvertById').mockResolvedValue(advert);
   open('/listings?city=Казань&priceFrom=10&roomsTo=4&tags=99');
   expect(await screen.findByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
-  expect(get).toHaveBeenCalledWith(
-    expect.objectContaining({
-      city: 'Казань',
-      priceFrom: 10,
-      roomsTo: 4,
-      tags: [{ id: 99, name: '' }],
-    }),
-  );
+  expect(get.mock.calls[0][0]).toMatchObject({
+    city: 'Казань',
+    priceFrom: 10,
+    roomsTo: 4,
+    tags: [{ id: 99, name: '' }],
+  });
+  expect(get.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
   expect(screen.getByRole('button', { name: '#99 ×' })).toBeInTheDocument();
   fireEvent.change(screen.getByRole('textbox', { name: 'Город' }), { target: { value: 'Москва' } });
   expect(get).toHaveBeenCalledTimes(1);
@@ -240,6 +239,8 @@ it('ignores a late next-page response after the profile owner changes', async ()
     store.dispatch(setSession({ user: { ...user, id: 2 }, accessToken: 'new-token' }));
   });
   await screen.findByRole('heading', { name: 'Объявление нового пользователя' });
+  expect(get.mock.calls[1][2]?.signal?.aborted).toBe(true);
+  expect(get.mock.calls[2][2]?.signal?.aborted).toBe(false);
   expect(screen.queryByRole('heading', { name: 'Старое объявление 1' })).not.toBeInTheDocument();
   await act(async () => {
     resolveNext({
@@ -342,7 +343,7 @@ it('opens a first conversation without a fake listing and sends through the sock
 
 it('changes listing context without reopening the dialog or refetching the summary on history retry', async () => {
   login();
-  vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
+  const list = vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
   const summary = vi.spyOn(chatService, 'getSummary').mockResolvedValue({ id: 2, name: 'Михаил' });
   const enter = connectChat();
   let resolveAdvert!: (value: typeof advert) => void;
@@ -354,7 +355,7 @@ it('changes listing context without reopening the dialog or refetching the summa
     .mockReturnValueOnce(pending)
     .mockResolvedValueOnce({ ...advert, id: 43, title: 'Действующее объявление' });
 
-  open(
+  const view = open(
     '/messages/2?listingId=42',
     undefined,
     <Link to="/messages/2?listingId=43">Сменить объявление</Link>,
@@ -388,8 +389,13 @@ it('changes listing context without reopening the dialog or refetching the summa
   expect(enter).toHaveBeenCalledTimes(3);
   expect(enter.mock.calls[2][0].beforeId).toBe(15);
   expect(summary).toHaveBeenCalledTimes(1);
-  expect(readAdvert.mock.calls).toEqual([[42], [43]]);
+  expect(readAdvert.mock.calls.map(([id]) => id)).toEqual([42, 43]);
+  expect(readAdvert.mock.calls[0][1]?.signal?.aborted).toBe(true);
   expect(input).toHaveValue('Черновик');
+  view.unmount();
+  expect(summary.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  expect(readAdvert.mock.calls[1][1]?.signal?.aborted).toBe(true);
+  expect(list.mock.calls[0][1]?.signal?.aborted).toBe(true);
 });
 
 it('discards a previous owner’s late summary when the receiver stays the same', async () => {
@@ -417,6 +423,7 @@ it('discards a previous owner’s late summary when the receiver stays the same'
     await pending;
   });
   expect(thread.queryByText('Устаревший собеседник')).not.toBeInTheDocument();
-  expect(summary.mock.calls).toEqual([[2], [2]]);
+  expect(summary.mock.calls.map(([id]) => id)).toEqual([2, 2]);
+  expect(summary.mock.calls[0][1]?.signal?.aborted).toBe(true);
   expect(enter.mock.calls).toEqual([[expect.objectContaining({ receiverId: 2 })]]);
 });

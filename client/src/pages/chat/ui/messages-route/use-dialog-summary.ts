@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import chatListService from '@entities/chat/api/chatListService';
+import { isRequestCanceled } from '@shared/api/cancellation';
 import type { UserSummary } from '@entities/chat/model/chatListModel';
 
 interface DialogSummary {
@@ -33,8 +34,9 @@ export function useDialogSummary(
     const request = { ownerId, receiverId, attempt };
     const unavailable = 'Собеседник не найден или недоступен.';
     let active = true;
+    const controller = new AbortController();
     void chatListService
-      .getSummary(receiverId)
+      .getSummary(receiverId, { signal: controller.signal })
       .then((summary) => {
         if (active) {
           setResult(
@@ -44,13 +46,18 @@ export function useDialogSummary(
           );
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (active) {
-          setResult({ ...request, summary: null, error: unavailable });
+          setResult({
+            ...request,
+            summary: null,
+            error: isRequestCanceled(error) ? '' : unavailable,
+          });
         }
       });
     return () => {
       active = false;
+      controller.abort();
     };
   }, [ownerId, receiverId, attempt]);
 

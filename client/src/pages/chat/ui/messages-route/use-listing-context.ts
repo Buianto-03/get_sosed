@@ -22,8 +22,9 @@ export function useListingContext(
       return undefined;
     }
     let active = true;
+    const controller = new AbortController();
     void advertService
-      .getAdvertById(listingId)
+      .getAdvertById(listingId, { signal: controller.signal })
       .then((advert) => {
         if (active && advert.id === listingId && advert.userId === receiverId) {
           setResult({ ownerId, receiverId, listingId, listing: toListingContext(advert) });
@@ -32,6 +33,7 @@ export function useListingContext(
       .catch(() => undefined);
     return () => {
       active = false;
+      controller.abort();
     };
   }, [ownerId, receiverId, listingId]);
   return result?.ownerId === ownerId &&

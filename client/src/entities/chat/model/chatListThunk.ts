@@ -4,5 +4,5 @@ import chatListService from '../api/chatListService';
 
 export const getReceiverListThunk = createAsyncThunk(
   'chatList/getReceiverListThunk',
-  (id: ChatListType['senderId']) => chatListService.getChatList(id),
+  (id: ChatListType['senderId'], { signal }) => chatListService.getChatList(id, { signal }),
 );

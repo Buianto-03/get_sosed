@@ -12,27 +12,46 @@ import {
 } from '@entities/advert/model/likedAdvertsSelectors';
 import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
 import { getLikedAdvertsThunk } from '@entities/advert/model/likedAdvertsThunk';
+import { savedLoadRequested } from '@entities/advert/model/likedAdvertsSlice';
 import { store } from './store';
 
 const advert: AdvertType = {
-  id: 7, title: 'Комната', body: null, price: 100, userId: 4, floor: null, rooms: null,
-  square: null, createdAt: '', updatedAt: '', user: null, location: null, AdvertPhotos: [],
+  id: 7,
+  title: 'Комната',
+  body: null,
+  price: 100,
+  userId: 4,
+  floor: null,
+  rooms: null,
+  square: null,
+  createdAt: '',
+  updatedAt: '',
+  user: null,
+  location: null,
+  AdvertPhotos: [],
 };
 const like = { id: 15, advertId: 7, userId: 1 };
 function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => { resolve = done; });
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
   return { promise, resolve };
 }
 const login = (id: number): void => {
-  store.dispatch(setSession({ accessToken: 'token', user: { id, name: 'User', email: 'a@b.c', roleId: 1 } }));
+  store.dispatch(
+    setSession({ accessToken: 'token', user: { id, name: 'User', email: 'a@b.c', roleId: 1 } }),
+  );
 };
 const ready = async (): Promise<void> => {
   vi.spyOn(axiosInstance, 'get').mockResolvedValue({ data: [] });
   login(1);
   await vi.waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Ready));
 };
-afterEach(() => { store.dispatch(clearAuth()); vi.restoreAllMocks(); });
+afterEach(() => {
+  store.dispatch(clearAuth());
+  vi.restoreAllMocks();
+});
 
 describe('shared saved adverts', () => {
   it('confirms save/delete once and updates both IDs and profile cards', async () => {
@@ -55,11 +74,15 @@ describe('shared saved adverts', () => {
     expect(store.getState().likedAdverts.items).toEqual([]);
   });
   it('preserves confirmed state on mutation errors and retries loading', async () => {
-    vi.spyOn(axiosInstance, 'get').mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ data: [] });
+    vi.spyOn(axiosInstance, 'get')
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValue({ data: [] });
     login(1);
     await vi.waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Error));
     await store.dispatch(getLikedAdvertsThunk()).unwrap();
-    vi.spyOn(likeService, 'setLike').mockRejectedValueOnce(new Error('offline')).mockResolvedValue(like);
+    vi.spyOn(likeService, 'setLike')
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValue(like);
     await store.dispatch(saveAdvertThunk(advert));
     expect(selectIsSaved(store.getState(), 7)).toBe(false);
     expect(store.getState().likedAdverts.errors[7]).toBeTruthy();
@@ -111,7 +134,9 @@ describe('shared saved adverts', () => {
     await vi.waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Ready));
     old.resolve({ data: [{ ...like, Advert: advert }] });
     await old.promise;
-    await new Promise((done) => { setTimeout(done, 0); });
+    await new Promise((done) => {
+      setTimeout(done, 0);
+    });
     expect(store.getState().likedAdverts.items).toEqual([]);
   });
   it('keeps data on token refresh and resets immediately on restored/expired sessions', async () => {
@@ -125,10 +150,16 @@ describe('shared saved adverts', () => {
     expect(selectIsSaved(store.getState(), 7)).toBe(true);
     expect(getRequests).toHaveBeenCalledTimes(1);
 
-    store.dispatch(checkAuthThunk.fulfilled({
-      accessToken: 'other-token',
-      user: { id: 2, name: 'Other', email: 'other@b.c', roleId: 1 },
-    }, 'restore', undefined));
+    store.dispatch(
+      checkAuthThunk.fulfilled(
+        {
+          accessToken: 'other-token',
+          user: { id: 2, name: 'Other', email: 'other@b.c', roleId: 1 },
+        },
+        'restore',
+        undefined,
+      ),
+    );
     expect(store.getState().likedAdverts.items).toEqual([]);
     expect(store.getState().likes.userId).toBe(2);
     expect(getRequests).toHaveBeenCalledTimes(2);
@@ -149,5 +180,51 @@ describe('shared saved adverts', () => {
     await request;
     expect(store.getState().likedAdverts.items).toEqual([]);
     expect(store.getState().likes.likes).toEqual([]);
+  });
+});
+
+it('owns shared reads across retries and aborts them only when the session changes', async () => {
+  const get = vi
+    .spyOn(axiosInstance, 'get')
+    .mockResolvedValueOnce({ data: [] })
+    .mockImplementationOnce(
+      () =>
+        new Promise(() => {
+          /* Pending until its owner cancels. */
+        }),
+    )
+    .mockResolvedValueOnce({ data: [] });
+  login(1);
+  await vi.waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Ready));
+  store.dispatch(savedLoadRequested());
+  const signal = get.mock.calls[1][1]?.signal;
+  expect(signal?.aborted).toBe(false);
+  store.dispatch(savedLoadRequested());
+  expect(get).toHaveBeenCalledTimes(2);
+  expect(signal?.aborted).toBe(false);
+  login(2);
+  expect(signal?.aborted).toBe(true);
+  await vi.waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Ready));
+  expect(store.getState().likedAdverts.items).toEqual([]);
+  expect(get).toHaveBeenCalledTimes(3);
+});
+
+it('keeps an initialized empty saved collection ready after a canceled reload', async () => {
+  await ready();
+  vi.spyOn(axiosInstance, 'get').mockImplementationOnce(
+    () =>
+      new Promise(() => {
+        /* Pending until its owner cancels. */
+      }),
+  );
+  const request = store.dispatch(getLikedAdvertsThunk());
+  request.abort();
+  await request;
+  expect(store.getState().likedAdverts).toMatchObject({
+    status: SavedStatus.Ready,
+    items: [],
+    initialized: true,
+    error: null,
+    requestId: null,
   });
 });

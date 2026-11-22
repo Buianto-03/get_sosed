@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { isRequestCanceled } from '@shared/api/cancellation';
 import {
   SavedStatus,
   type SavedState,
@@ -12,6 +13,7 @@ const initialState: SavedState = {
   items: [],
   savedIds: [],
   status: SavedStatus.Idle,
+  initialized: false,
   error: null,
   pending: {},
   errors: {},
@@ -23,28 +25,37 @@ const likedAdvertsSlice = createSlice({
   initialState,
   reducers: {
     resetSavedAdverts: () => initialState,
+    savedLoadRequested: (state) => state,
     savedMutationStarted: (state, { payload }: PayloadAction<SaveRequest>) => {
       state.pending[payload.advertId] = payload.requestId;
       delete state.errors[payload.advertId];
     },
     savedAdvertConfirmed: (state, { payload }: PayloadAction<SaveSuccess>) => {
       const { advertId, requestId, item } = payload;
-      if (state.pending[advertId] !== requestId) return;
+      if (state.pending[advertId] !== requestId) {
+        return;
+      }
       state.items = state.items.filter((entry) => entry.advertId !== advertId);
       state.items.push(item);
-      if (!state.savedIds.includes(advertId)) state.savedIds.push(advertId);
+      if (!state.savedIds.includes(advertId)) {
+        state.savedIds.push(advertId);
+      }
       delete state.pending[advertId];
     },
     savedRemovalConfirmed: (state, { payload }: PayloadAction<SaveRequest>) => {
       const { advertId, requestId } = payload;
-      if (state.pending[advertId] !== requestId) return;
+      if (state.pending[advertId] !== requestId) {
+        return;
+      }
       state.items = state.items.filter((item) => item.advertId !== advertId);
       state.savedIds = state.savedIds.filter((id) => id !== advertId);
       delete state.pending[advertId];
     },
     savedMutationFailed: (state, { payload }: PayloadAction<SaveFailure>) => {
       const { advertId, requestId, error } = payload;
-      if (state.pending[advertId] !== requestId) return;
+      if (state.pending[advertId] !== requestId) {
+        return;
+      }
       delete state.pending[advertId];
       state.errors[advertId] = error;
     },
@@ -57,22 +68,34 @@ const likedAdvertsSlice = createSlice({
         state.requestId = action.meta.requestId;
       })
       .addCase(getLikedAdvertsThunk.fulfilled, (state, action) => {
-        if (state.requestId !== action.meta.requestId) return;
+        if (state.requestId !== action.meta.requestId) {
+          return;
+        }
         state.items = action.payload;
         state.savedIds = [...new Set(action.payload.map((item) => item.advertId))];
         state.status = SavedStatus.Ready;
+        state.initialized = true;
         state.requestId = null;
       })
       .addCase(getLikedAdvertsThunk.rejected, (state, action) => {
-        if (state.requestId !== action.meta.requestId) return;
-        state.status = SavedStatus.Error;
-        state.error = 'Не удалось загрузить избранное.';
+        if (state.requestId !== action.meta.requestId) {
+          return;
+        }
+        const canceled = action.meta.aborted || isRequestCanceled(action.error);
+        if (canceled) {
+          state.status = state.initialized ? SavedStatus.Ready : SavedStatus.Idle;
+          state.error = null;
+        } else {
+          state.status = SavedStatus.Error;
+          state.error = 'Не удалось загрузить избранное.';
+        }
         state.requestId = null;
       });
   },
 });
 export const {
   resetSavedAdverts,
+  savedLoadRequested,
   savedMutationStarted,
   savedAdvertConfirmed,
   savedRemovalConfirmed,

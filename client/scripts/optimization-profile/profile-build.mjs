@@ -1,4 +1,5 @@
 import { build } from 'vite';
+import { execFileSync } from 'node:child_process';
 
 // Transform only the disposable profiling build. Match known call sites exactly so a
 // changed implementation cannot silently register a bogus zero in the baseline.
@@ -84,7 +85,21 @@ function profilingPlugin() {
   };
 }
 
-export async function buildClient(outDir, profile) {
+export async function buildClient(outDir, profile, revision) {
+  const originalSources = revision
+    ? {
+        name: 'optimization-original-revision',
+        enforce: 'pre',
+        transform(_code, id) {
+          const relative = id.split('/client/src/')[1]?.split('?')[0];
+          if (relative) {
+            return execFileSync('git', ['show', `${revision}:client/src/${relative}`], {
+              encoding: 'utf8',
+            });
+          }
+        },
+      }
+    : null;
   await build({
     logLevel: 'error',
     // The benchmark must never use the developer's configured API or WebSocket.
@@ -98,7 +113,10 @@ export async function buildClient(outDir, profile) {
         ? [{ find: /^react-dom(?:\/client)?$/, replacement: 'react-dom/profiling' }]
         : [],
     },
-    plugins: profile ? [profilingPlugin()] : [],
+    plugins: [
+      ...(originalSources ? [originalSources] : []),
+      ...(profile ? [profilingPlugin()] : []),
+    ],
     build: { outDir, emptyOutDir: false },
   });
 }

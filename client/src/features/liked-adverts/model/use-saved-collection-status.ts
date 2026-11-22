@@ -5,7 +5,7 @@ import {
   selectSavedCollectionError,
   selectSavedStatus,
 } from '@entities/advert/model/likedAdvertsSelectors';
-import { getLikedAdvertsThunk } from '@entities/advert/model/likedAdvertsThunk';
+import { savedLoadRequested } from '@entities/advert/model/likedAdvertsSlice';
 
 interface SavedCollectionStatus {
   status: SavedStatus;
@@ -18,7 +18,7 @@ export function useSavedCollectionStatus(): SavedCollectionStatus {
   const status = useAppSelector(selectSavedStatus);
   const error = useAppSelector(selectSavedCollectionError);
   const reload = useCallback((): void => {
-    void dispatch(getLikedAdvertsThunk());
+    dispatch(savedLoadRequested());
   }, [dispatch]);
   return { status, error, reload };
 }

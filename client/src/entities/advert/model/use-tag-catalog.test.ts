@@ -19,7 +19,8 @@ describe('useTagCatalog', () => {
     const { result } = renderHook(useTagCatalog);
     expect(result.current.state).toBe(TagCatalogState.Loading);
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
-    expect(getTags).toHaveBeenCalledWith('');
+    expect(getTags.mock.calls[0][0]).toBe('');
+    expect(getTags.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
     expect(result.current.tags).toEqual(tags);
     expect(getTagCatalogView(result.current.tags).primary.map(({ id }) => id)).toEqual([
       73, 109, 56, 418,
@@ -59,15 +60,53 @@ describe('useTagCatalog', () => {
 
   it('ignores a stale response after retry', async () => {
     let finishOld: (value: TagType[]) => void = () => undefined;
-    const oldResponse = new Promise<TagType[]>((resolve) => { finishOld = resolve; });
-    vi.spyOn(advertService, 'getTagsBySearch')
+    const oldResponse = new Promise<TagType[]>((resolve) => {
+      finishOld = resolve;
+    });
+    const get = vi
+      .spyOn(advertService, 'getTagsBySearch')
       .mockReturnValueOnce(oldResponse)
       .mockResolvedValueOnce(tags);
     const { result } = renderHook(useTagCatalog);
+    const signal = get.mock.calls[0][1]?.signal;
     act(() => result.current.reload());
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
-    await act(async () => { finishOld([]); await oldResponse; });
+    expect(signal?.aborted).toBe(true);
+    await act(async () => {
+      finishOld([]);
+      await oldResponse;
+    });
     expect(result.current.state).toBe(TagCatalogState.Ready);
     expect(result.current.tags).toEqual(tags);
   });
+});
+
+it('aborts only the unmounted catalog consumer and leaves another load active', async () => {
+  let finish!: (value: TagType[]) => void;
+  const get = vi
+    .spyOn(advertService, 'getTagsBySearch')
+    .mockImplementationOnce(
+      () =>
+        new Promise(() => {
+          /* Pending until unmounted. */
+        }),
+    )
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+  const first = renderHook(useTagCatalog);
+  const second = renderHook(useTagCatalog);
+  first.unmount();
+  expect(get.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  expect(get.mock.calls[1][1]?.signal?.aborted).toBe(false);
+  await act(async () => {
+    finish(tags);
+  });
+  await waitFor(() => expect(second.result.current.state).toBe(TagCatalogState.Ready));
+  expect(second.result.current.error).toBeNull();
+  second.unmount();
+  expect(get.mock.calls[1][1]?.signal?.aborted).toBe(true);
 });

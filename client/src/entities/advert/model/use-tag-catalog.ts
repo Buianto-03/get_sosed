@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isRequestCanceled } from '@shared/api/cancellation';
 import advertService from '../api/advertService';
 import { getTagCatalogView, TagCatalogState } from './tag-catalog';
 import type { TagCatalog } from './tag-catalog';
@@ -17,8 +18,9 @@ export function useTagCatalog(): TagCatalog {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     void advertService
-      .getTagsBySearch('')
+      .getTagsBySearch('', { signal: controller.signal })
       .then((tags) => {
         if (!active) {
           return;
@@ -26,17 +28,18 @@ export function useTagCatalog(): TagCatalog {
         const { error } = getTagCatalogView(tags);
         setCatalog({ tags, state: error ? TagCatalogState.Error : TagCatalogState.Ready, error });
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (active) {
           setCatalog((current) => ({
             ...current,
-            state: TagCatalogState.Error,
-            error: 'Не удалось загрузить условия проживания.',
+            state: isRequestCanceled(error) ? TagCatalogState.Ready : TagCatalogState.Error,
+            error: isRequestCanceled(error) ? null : 'Не удалось загрузить условия проживания.',
           }));
         }
       });
     return () => {
       active = false;
+      controller.abort();
     };
   }, [attempt]);
 

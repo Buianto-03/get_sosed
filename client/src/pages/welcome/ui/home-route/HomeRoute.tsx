@@ -12,6 +12,7 @@ import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCar
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { routes } from '@shared/config/routes';
+import { isRequestCanceled } from '@shared/api/cancellation';
 import { freshestAdverts, toHomeCard } from './helper';
 import styles from './HomeRoute.module.scss';
 
@@ -25,9 +26,10 @@ export default function HomeRoute(): JSX.Element {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setState(FreshListingsState.Loading);
     void advertService
-      .getAdverts()
+      .getAdverts({ signal: controller.signal })
       .then((items) => {
         if (!active) {
           return;
@@ -35,13 +37,14 @@ export default function HomeRoute(): JSX.Element {
         setAdverts(freshestAdverts(items));
         setState(FreshListingsState.Ready);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (active) {
-          setState(FreshListingsState.Error);
+          setState(isRequestCanceled(error) ? FreshListingsState.Ready : FreshListingsState.Error);
         }
       });
     return () => {
       active = false;
+      controller.abort();
     };
   }, [attempt]);
 

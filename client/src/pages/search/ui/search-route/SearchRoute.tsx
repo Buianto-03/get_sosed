@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { SearchFilters } from '@features/advert-filter/ui/SearchFilters';
@@ -29,13 +29,18 @@ export default function SearchRoute(): JSX.Element {
   const catalog = useTagCatalog();
   const { error: savedError, reload: reloadSaved } = useSavedCollectionStatus();
   const result = useAppSelector(selectAdverts);
+  const request = useRef<ReturnType<ReturnType<typeof getFilteredAdvertsThunk>>>();
   const load = useCallback((): void => {
+    request.current?.abort();
     const { tagIds, ...values } = filters;
-    void dispatch(
+    request.current = dispatch(
       getFilteredAdvertsThunk({ ...values, tags: tagIds.map((id) => ({ id, name: '' })) }),
     );
   }, [dispatch, filters]);
-  useEffect(load, [load]);
+  useEffect(() => {
+    load();
+    return () => request.current?.abort();
+  }, [load]);
   const returnTo = location.pathname + location.search;
   const openListing = useCallback(
     (id: string) => navigate(routes.listingDetails(id), { state: { searchReturnTo: returnTo } }),
