@@ -1,47 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { isRequestCanceled } from '@shared/api/cancellation';
-import advertService from '../api/advertService';
-import { getTagCatalogView, TagCatalogState } from './tag-catalog';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import type { TagCatalog } from './tag-catalog';
+import { getTagCatalogOrigin } from './tagCatalogModel';
+import { selectTagCatalogEntry } from './tagCatalogSelectors';
+import { getTagCatalogThunk } from './tagCatalogThunk';
 
 export function useTagCatalog(): TagCatalog {
-  const [attempt, setAttempt] = useState(0);
-  const [catalog, setCatalog] = useState<Omit<TagCatalog, 'reload'>>({
-    tags: [],
-    state: TagCatalogState.Loading,
-    error: null,
-  });
+  const dispatch = useAppDispatch();
+  const origin = getTagCatalogOrigin();
+  const { tags, state, error } = useAppSelector((root) => selectTagCatalogEntry(root, origin));
   const reload = useCallback((): void => {
-    setCatalog((current) => ({ ...current, state: TagCatalogState.Loading, error: null }));
-    setAttempt((current) => current + 1);
-  }, []);
+    void dispatch(getTagCatalogThunk({ origin, force: true }));
+  }, [dispatch, origin]);
 
   useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-    void advertService
-      .getTagsBySearch('', { signal: controller.signal })
-      .then((tags) => {
-        if (!active) {
-          return;
-        }
-        const { error } = getTagCatalogView(tags);
-        setCatalog({ tags, state: error ? TagCatalogState.Error : TagCatalogState.Ready, error });
-      })
-      .catch((error: unknown) => {
-        if (active) {
-          setCatalog((current) => ({
-            ...current,
-            state: isRequestCanceled(error) ? TagCatalogState.Ready : TagCatalogState.Error,
-            error: isRequestCanceled(error) ? null : 'Не удалось загрузить условия проживания.',
-          }));
-        }
-      });
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [attempt]);
+    void dispatch(getTagCatalogThunk({ origin }));
+    // The cache owns this public read and retains the result even after the last consumer leaves.
+  }, [dispatch, origin]);
 
-  return useMemo(() => ({ ...catalog, reload }), [catalog, reload]);
+  return useMemo(() => ({ tags, state, error, reload }), [tags, state, error, reload]);
 }
