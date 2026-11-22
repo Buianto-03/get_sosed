@@ -104,6 +104,47 @@ class AdvertController {
     }
   };
 
+  getFilteredAdvertsPage = async (req: Request, res: Response) => {
+    try {
+      const page = await this.advertService.getFilteredAdvertsPage(
+        req.body || {},
+        req.query,
+      );
+      return res.status(200).json(page);
+    } catch (error) {
+      const details = errorDetails(error);
+      if (details.status === 400 && details.code === 'INVALID_PAGINATION') {
+        return res
+          .status(400)
+          .json({ code: details.code, message: details.message });
+      }
+      console.error('Cannot load filtered adverts:', error);
+      return res.status(500).json({
+        code: 'FILTERED_ADVERTS_LOAD_FAILED',
+        message: 'Cannot load filtered adverts',
+      });
+    }
+  };
+
+  getFreshAdverts = async (req: Request, res: Response) => {
+    try {
+      const adverts = await this.advertService.getFreshAdverts(req.query);
+      return res.status(200).json(adverts);
+    } catch (error) {
+      const details = errorDetails(error);
+      if (details.status === 400 && details.code === 'INVALID_PAGINATION') {
+        return res
+          .status(400)
+          .json({ code: details.code, message: details.message });
+      }
+      console.error('Cannot load fresh adverts:', error);
+      return res.status(500).json({
+        code: 'FRESH_ADVERTS_LOAD_FAILED',
+        message: 'Cannot load fresh adverts',
+      });
+    }
+  };
+
   getTagsBySearch = async (req: Request, res: Response) => {
     const query = req.query.query ?? '';
     if (typeof query !== 'string') {

@@ -48,6 +48,8 @@ test('advert DELETE reaches API fallback while advert GET and like DELETE remain
   const noop = (req, res, next) => next();
   const advertController = {
     getAdverts: noop, createAdvert: noop, getFilteredAdverts: noop,
+    getFilteredAdvertsPage: (req, res) => res.json({ page: Number(req.query.page || 1) }),
+    getFreshAdverts: (req, res) => res.json({ limit: Number(req.query.limit || 3) }),
     likedAdvertsHandler: noop, getTopAdvertsByLikes: noop, getTagsBySearch: noop,
     getMine: noop,
     getAdvertById: (req, res) => res.json({ advertId: req.params.advertId }),
@@ -92,6 +94,12 @@ test('advert DELETE reaches API fallback while advert GET and like DELETE remain
   });
   assert.deepEqual(await request(app, 'GET', '/api/adverts/42'), {
     status: 200, body: { advertId: '42' },
+  });
+  assert.deepEqual(await request(app, 'POST', '/api/adverts/filters/page?page=2'), {
+    status: 200, body: { page: 2 },
+  });
+  assert.deepEqual(await request(app, 'GET', '/api/adverts/fresh?limit=2'), {
+    status: 200, body: { limit: 2 },
   });
   assert.deepEqual(await request(app, 'DELETE', '/api/likes/42'), {
     status: 200, body: { advertId: 42, deleted: true },

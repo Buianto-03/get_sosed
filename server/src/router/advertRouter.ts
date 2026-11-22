@@ -15,6 +15,10 @@ advertRouter
   .get(advertController.getFilteredAdverts);
 
 advertRouter.route('/filters').post(advertController.getFilteredAdverts);
+advertRouter
+  .route('/filters/page')
+  .post(advertController.getFilteredAdvertsPage);
+advertRouter.get('/fresh', advertController.getFreshAdverts);
 
 advertRouter
   .route('/liked')

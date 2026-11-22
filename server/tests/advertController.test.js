@@ -84,6 +84,44 @@ test('invalid pagination returns 400 without logging a server failure', async ()
   assert.deepEqual(logs, []);
 });
 
+test('public filtered page forwards body and query and returns the page object', async () => {
+  const filters = { city: 'Belgrade' };
+  const query = { page: '2', limit: '4' };
+  const page = { items: [], total: 0, page: 2, limit: 4 };
+  const { controller } = setup({}, {
+    getFilteredAdvertsPage: async (receivedFilters, pagination) => {
+      assert.equal(receivedFilters, filters);
+      assert.equal(pagination, query);
+      return page;
+    },
+  });
+  const res = response();
+  await controller.getFilteredAdvertsPage({ body: filters, query }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body, page);
+});
+
+test('fresh advert errors use a stable safe code and invalid limits return 400', async () => {
+  const { controller, logs } = setup({}, {
+    getFreshAdverts: async () => { throw new AppError(400, 'INVALID_PAGINATION', 'Invalid pagination parameters'); },
+  });
+  const invalid = response();
+  await controller.getFreshAdverts({ query: { limit: '4' } }, invalid);
+  assert.equal(invalid.statusCode, 400);
+  assert.equal(invalid.body.code, 'INVALID_PAGINATION');
+  const failed = setup({}, {
+    getFreshAdverts: async () => { throw new Error('private SQL details'); },
+  });
+  const res = response();
+  await failed.controller.getFreshAdverts({ query: {} }, res);
+  assert.equal(res.statusCode, 500);
+  assert.equal(JSON.stringify(res.body), JSON.stringify({
+    code: 'FRESH_ADVERTS_LOAD_FAILED', message: 'Cannot load fresh adverts',
+  }));
+  assert.equal(logs.length, 0);
+  assert.equal(failed.logs.length, 1);
+});
+
 test('publication validation errors return 400 with INVALID_ADVERT_DATA and a safe message', async () => {
   const service = load('../build/src/service/publishAdvertService.js', {
     'fs/promises': {},

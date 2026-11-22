@@ -212,6 +212,73 @@ class AdvertService {
     }
   }
 
+  async getFilteredAdvertsPage(
+    filters: Filters,
+    { page = 1, limit = 8 }: { page?: unknown; limit?: unknown } = {},
+  ) {
+    const currentPage = parsePageValue(page);
+    const pageSize = parsePageValue(limit);
+    const offset = (currentPage - 1) * pageSize;
+    if (pageSize > 50 || !Number.isSafeInteger(offset)) {
+      throw invalidPagination();
+    }
+
+    const selectedTagIds = this.getSelectedTagIds(filters.tags);
+    const locationClause = this.getLocationWhere(filters);
+    const whereClause = this.getAdvertWhere(filters);
+    if (selectedTagIds.length > 0) {
+      const hasOutOfRangeTagId = selectedTagIds.some((id) => id > 2147483647);
+      if (hasOutOfRangeTagId) {
+        return { items: [], total: 0, page: currentPage, limit: pageSize };
+      } else {
+        const tagIds = selectedTagIds.join(', ');
+        whereClause.id = {
+          [Op.in]: Sequelize.literal(
+            `(SELECT "advertId" FROM "AdvertTags" WHERE "tagId" IN (${tagIds}) GROUP BY "advertId" HAVING COUNT(DISTINCT "tagId") = ${selectedTagIds.length})`,
+          ),
+        };
+      }
+    }
+
+    const include = this.getReadIncludes(
+      Object.keys(locationClause).length ? locationClause : undefined,
+    );
+    if (Object.keys(locationClause).length) {
+      const locationInclude = include.find(({ as }) => as === 'location');
+      if (locationInclude) {
+        locationInclude.duplicating = true;
+      }
+    }
+
+    const { rows, count } = await this.advert.findAndCountAll({
+      where: whereClause,
+      limit: pageSize,
+      offset,
+      distinct: true,
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+      include,
+    });
+    return { items: rows, total: count, page: currentPage, limit: pageSize };
+  }
+
+  async getFreshAdverts({ limit = 3 }: { limit?: unknown } = {}) {
+    const pageSize = parsePageValue(limit);
+    if (pageSize > 3) {
+      throw invalidPagination();
+    }
+    return this.advert.findAll({
+      limit: pageSize,
+      order: [
+        ['createdAt', 'DESC'],
+        ['id', 'DESC'],
+      ],
+      include: this.getReadIncludes(),
+    });
+  }
+
   async getTagsLikeStr(str: string) {
     try {
       const tags = await this.tags.findAll({

@@ -1,10 +1,44 @@
+import { CanceledError } from 'axios';
+import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { afterEach, expect, it, vi } from 'vitest';
 import axiosInstance from '@shared/api/client';
 import advertService from './advertService';
 
+const originalAdapter = axiosInstance.defaults.adapter;
+
 afterEach(() => {
+  axiosInstance.defaults.adapter = originalAdapter;
   vi.restoreAllMocks();
 });
+
+const filters = {
+  city: '',
+  district: '',
+  metro: '',
+  priceFrom: 0,
+  priceTo: 0,
+  roomsFrom: 0,
+  roomsTo: 0,
+  tags: [],
+};
+
+const advertPage = { items: [], total: 0, page: 1, limit: 8 };
+const advert = {
+  id: 1,
+  title: null,
+  body: null,
+  price: null,
+  userId: null,
+  floor: null,
+  rooms: null,
+  square: null,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  user: null,
+  location: null,
+  tags: [],
+  AdvertPhotos: [],
+};
 
 it('requests default and explicit own-advert pages and parses pagination metadata', async () => {
   const get = vi
@@ -25,4 +59,78 @@ it.each([
 ])('rejects malformed pagination response %#', async ({ data }) => {
   vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({ data });
   await expect(advertService.getMine()).rejects.toThrow();
+});
+
+it('requests filtered pages with default and explicit pagination and preserves filters', async () => {
+  const post = vi
+    .spyOn(axiosInstance, 'post')
+    .mockResolvedValueOnce({ data: advertPage })
+    .mockResolvedValueOnce({ data: { ...advertPage, page: 3, limit: 4 } });
+
+  expect(await advertService.getFilteredAdvertsPage(filters)).toEqual(advertPage);
+  expect(post).toHaveBeenNthCalledWith(1, '/adverts/filters/page', filters, {
+    params: { page: 1, limit: 8 },
+  });
+  expect(await advertService.getFilteredAdvertsPage(filters, 3, 4)).toEqual({
+    ...advertPage,
+    page: 3,
+    limit: 4,
+  });
+  expect(post).toHaveBeenNthCalledWith(2, '/adverts/filters/page', filters, {
+    params: { page: 3, limit: 4 },
+  });
+});
+
+it.each([
+  [],
+  { ...advertPage, extra: true },
+  { ...advertPage, items: 'invalid' },
+  { ...advertPage, total: -1 },
+  { ...advertPage, total: Number.MAX_SAFE_INTEGER + 1 },
+  { ...advertPage, page: 0 },
+  { ...advertPage, page: Number.MAX_SAFE_INTEGER + 1 },
+  { ...advertPage, limit: 51 },
+  { ...advertPage, items: Array.from({ length: 9 }, () => advert) },
+  { ...advertPage, items: [{ ...advert, tags: undefined }] },
+])('rejects malformed filtered page response %#', async (data) => {
+  vi.spyOn(axiosInstance, 'post').mockResolvedValueOnce({ data });
+  await expect(advertService.getFilteredAdvertsPage(filters)).rejects.toThrow();
+});
+
+it('requests fresh adverts with default and explicit limits and accepts only an array', async () => {
+  const get = vi
+    .spyOn(axiosInstance, 'get')
+    .mockResolvedValueOnce({ data: [] })
+    .mockResolvedValueOnce({ data: [] });
+
+  expect(await advertService.getFreshAdverts()).toEqual([]);
+  expect(get).toHaveBeenNthCalledWith(1, '/adverts/fresh', { params: { limit: 3 } });
+  expect(await advertService.getFreshAdverts(2)).toEqual([]);
+  expect(get).toHaveBeenNthCalledWith(2, '/adverts/fresh', { params: { limit: 2 } });
+
+  vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({ data: { items: [] } });
+  await expect(advertService.getFreshAdverts()).rejects.toThrow();
+});
+
+it.each([
+  (options: { signal: AbortSignal }) => advertService.getFilteredAdvertsPage(filters, 1, 8, options),
+  (options: { signal: AbortSignal }) => advertService.getFreshAdverts(3, options),
+])('passes request cancellation through to the Axios adapter', async (read) => {
+  const controller = new AbortController();
+  const adapter = vi.fn(
+    (config: InternalAxiosRequestConfig) =>
+      new Promise<AxiosResponse>((_resolve, reject) => {
+        expect(config.signal).toBe(controller.signal);
+        controller.signal.addEventListener('abort', () => reject(new CanceledError('canceled')), {
+          once: true,
+        });
+      }),
+  );
+  axiosInstance.defaults.adapter = adapter;
+  const request = expect(read({ signal: controller.signal })).rejects.toMatchObject({
+    code: 'ERR_CANCELED',
+  });
+  await vi.waitFor(() => expect(adapter).toHaveBeenCalledOnce());
+  controller.abort();
+  await request;
 });

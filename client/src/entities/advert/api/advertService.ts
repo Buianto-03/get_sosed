@@ -1,7 +1,13 @@
 import type { AxiosInstance } from 'axios';
 import axiosInstance from '@shared/api/client';
 import type { ReadOptions } from '@shared/api/cancellation';
-import { advertPageSchema, advertSchema, tagSchema } from '../model/advertsModel';
+import {
+  advertPageSchema,
+  advertSchema,
+  collectionAdvertSchema,
+  filteredAdvertPageSchema,
+  tagSchema,
+} from '../model/advertsModel';
 import type { AdvertPageType, AdvertType, FilterType, TagType } from '../model/advertsModel';
 import { likedAdvertSchema, type LikedAdvert } from '../model/likedAdvertsModel';
 
@@ -50,6 +56,27 @@ class AdvertService {
   ): Promise<AdvertType[]> {
     const response = await this.client.post('/adverts/filters', filters, options);
     return advertSchema.array().parse(response.data);
+  }
+
+  async getFilteredAdvertsPage(
+    filters: FilterType & { tags: TagType[] },
+    page: number = 1,
+    limit: number = 8,
+    options?: ReadOptions,
+  ): Promise<AdvertPageType> {
+    const response = await this.client.post('/adverts/filters/page', filters, {
+      ...options,
+      params: { page, limit },
+    });
+    return filteredAdvertPageSchema.parse(response.data);
+  }
+
+  async getFreshAdverts(limit: number = 3, options?: ReadOptions): Promise<AdvertType[]> {
+    const response = await this.client.get('/adverts/fresh', {
+      ...options,
+      params: { limit },
+    });
+    return collectionAdvertSchema.array().max(3).parse(response.data);
   }
 
   async getAdvertById(id: AdvertType['id'], options?: ReadOptions): Promise<AdvertType> {

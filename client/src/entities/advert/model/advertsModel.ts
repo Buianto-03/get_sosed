@@ -39,6 +39,11 @@ export const advertSchema = z.object({
   AdvertPhotos: z.array(photoSchema).nullable().optional(),
 });
 
+export const collectionAdvertSchema = advertSchema.extend({
+  tags: tagSchema.array(),
+  AdvertPhotos: photoSchema.array(),
+});
+
 export type AdvertType = z.infer<typeof advertSchema>;
 
 export const advertPageSchema = z.object({
@@ -47,6 +52,18 @@ export const advertPageSchema = z.object({
   page: z.number().int().positive(),
   limit: z.number().int().positive().max(50),
 });
+
+export const filteredAdvertPageSchema = advertPageSchema
+  .extend({
+    items: collectionAdvertSchema.array(),
+    total: advertPageSchema.shape.total.safe(),
+    page: advertPageSchema.shape.page.safe(),
+  })
+  .strict()
+  .refine(({ items, limit }) => items.length <= limit, {
+    path: ['items'],
+    message: 'Page exceeds limit',
+  });
 
 export type AdvertPageType = z.infer<typeof advertPageSchema>;
 

@@ -97,3 +97,57 @@ test('invalid pagination rejects before accessing the database', async () => {
       (error) => error.status === 400 && error.code === 'INVALID_PAGINATION');
   }
 });
+
+test('public filtered page applies tag and location matches before its stable row limit', async () => {
+  const sequelize = new Sequelize('test', 'test', 'test', { dialect: 'postgres', logging: false });
+  try {
+    const models = {};
+    const directory = path.resolve(__dirname, '../build/db/models');
+    for (const file of fs.readdirSync(directory)) {
+      if (!file.endsWith('.js') || file === 'index.js') continue;
+      const model = require(path.join(directory, file))(sequelize, Sequelize.DataTypes);
+      models[model.name] = model;
+    }
+    for (const model of Object.values(models)) model.associate?.(models);
+    const service = load(models);
+    const queries = [];
+    sequelize.query = async (sql, options) => {
+      queries.push(sql);
+      if (options.plain) return { count: 0 };
+      return [];
+    };
+    const result = await service.getFilteredAdvertsPage({
+      tags: [{ id: 4 }, { id: 6 }, { id: 4 }],
+      city: 'Belgrade',
+    }, { page: '2', limit: '5' });
+    assert.equal(JSON.stringify(result), JSON.stringify({ items: [], total: 0, page: 2, limit: 5 }));
+    const count = queries.find((sql) => /count\(/i.test(sql));
+    const rows = queries.find((sql) => /LIMIT 5 OFFSET 5/.test(sql));
+    assert.match(count, /count\(DISTINCT\("Advert"\."id"\)\)/i);
+    assert.match(rows, /"createdAt" DESC, "Advert"\."id" DESC/);
+    assert.match(rows, /"AdvertTags"/);
+    assert.match(rows, /HAVING COUNT\(DISTINCT "tagId"\) = 2/);
+    assert.match(rows, /FROM "Locations" AS "location"/);
+    assert.match(rows, /"location"\."city" = 'Belgrade'/);
+    const locationFilterIndex = rows.indexOf('LIMIT 1 ) IS NOT NULL');
+    const rowLimitIndex = rows.indexOf('LIMIT 5 OFFSET 5');
+    assert.ok(locationFilterIndex >= 0 && locationFilterIndex < rowLimitIndex);
+  } finally {
+    await sequelize.close();
+  }
+});
+
+test('fresh adverts enforce the three row cap and use one bounded query without a count', async () => {
+  const calls = [];
+  const exported = load({});
+  const service = new exported.constructor({
+    findAll: async (options) => { calls.push(options); return []; },
+  });
+  assert.deepEqual(await service.getFreshAdverts(), []);
+  assert.equal(calls[0].limit, 3);
+  assert.equal(JSON.stringify(calls[0].order), JSON.stringify([['createdAt', 'DESC'], ['id', 'DESC']]));
+  await assert.rejects(service.getFreshAdverts({ limit: 4 }),
+    (error) => error.status === 400 && error.code === 'INVALID_PAGINATION');
+  await assert.rejects(service.getFreshAdverts({ limit: ['3'] }),
+    (error) => error.status === 400 && error.code === 'INVALID_PAGINATION');
+});

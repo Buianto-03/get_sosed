@@ -1,0 +1,248 @@
+{
+  "datasets": [
+    {
+      "postgres": "16.15 (Homebrew)",
+      "node": "v24.21.0",
+      "adverts": 100,
+      "samples": [
+        {
+          "trial": 1,
+          "search": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 12956
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4680
+            }
+          }
+        },
+        {
+          "trial": 2,
+          "search": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 12956
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4680
+            }
+          }
+        },
+        {
+          "trial": 3,
+          "search": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 12956
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4680
+            }
+          }
+        },
+        {
+          "trial": 4,
+          "search": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 12956
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4680
+            }
+          }
+        },
+        {
+          "trial": 5,
+          "search": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 12956
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 100,
+              "bytes": 163947
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4680
+            }
+          }
+        }
+      ]
+    },
+    {
+      "postgres": "16.15 (Homebrew)",
+      "node": "v24.21.0",
+      "adverts": 1000,
+      "samples": [
+        {
+          "trial": 1,
+          "search": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664016
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 13116
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664017
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4724
+            }
+          }
+        },
+        {
+          "trial": 2,
+          "search": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664016
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 13116
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664017
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4724
+            }
+          }
+        },
+        {
+          "trial": 3,
+          "search": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664016
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 13116
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664017
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4724
+            }
+          }
+        },
+        {
+          "trial": 4,
+          "search": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664016
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 13116
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664017
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4724
+            }
+          }
+        },
+        {
+          "trial": 5,
+          "search": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664016
+            },
+            "after": {
+              "rows": 8,
+              "bytes": 13116
+            }
+          },
+          "fresh": {
+            "before": {
+              "rows": 1000,
+              "bytes": 1664017
+            },
+            "after": {
+              "rows": 3,
+              "bytes": 4724
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

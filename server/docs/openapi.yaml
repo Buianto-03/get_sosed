@@ -445,6 +445,100 @@ paths:
                     type: string
               example:
                 error: Ошибка на сервере при фильтрации объявлений
+  /api/adverts/filters/page:
+    post:
+      tags:
+        - Adverts
+      operationId: filterAdvertsPage
+      summary: Получить страницу объявлений по фильтрам
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9007199254740991
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 8
+      description:
+        Принимаются только скалярные положительные целые без ведущего нуля.
+        Отклоняются массивы и небезопасное смещение (page - 1) * limit. Тело
+        можно опустить для пустых фильтров. Фильтры сохраняют текущую семантику,
+        включая совпадение всех выбранных тегов. Порядок — createdAt DESC,
+        id DESC. За концом списка items пуст, а total сохраняет фактическое
+        количество совпадений. Offset pagination не обеспечивает снимок базы
+        при изменениях между запросами.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvertFilters'
+      responses:
+        '200':
+          description: Страница совпавших объявлений и полный distinct total.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnAdvertsPage'
+        '400':
+          description: Неверная пагинация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidPaginationError'
+        '500':
+          description: Ошибка загрузки результатов фильтрации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilteredAdvertsLoadError'
+  /api/adverts/fresh:
+    get:
+      tags:
+        - Adverts
+      operationId: listFreshAdverts
+      summary: Получить свежие объявления
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 3
+            default: 3
+      description:
+        Принимаются только скалярные положительные целые без ведущего нуля;
+        массивы и другие значения возвращают INVALID_PAGINATION. Порядок —
+        createdAt DESC, id DESC.
+      responses:
+        '200':
+          description: До трёх свежих объявлений с данными автора, фото, тегами и локацией.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 3
+                items:
+                  $ref: '#/components/schemas/Advert'
+        '400':
+          description: Неверная пагинация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidPaginationError'
+        '500':
+          description: Ошибка загрузки свежих объявлений
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreshAdvertsLoadError'
   /api/adverts/liked:
     get:
       tags:
@@ -1477,6 +1571,45 @@ components:
           type: integer
           minimum: 1
           maximum: 50
+    InvalidPaginationError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_PAGINATION
+        message:
+          type: string
+          example: Invalid pagination parameters
+    FilteredAdvertsLoadError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - FILTERED_ADVERTS_LOAD_FAILED
+        message:
+          type: string
+          example: Cannot load filtered adverts
+    FreshAdvertsLoadError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - FRESH_ADVERTS_LOAD_FAILED
+        message:
+          type: string
+          example: Cannot load fresh adverts
     Like:
       type: object
       required:
