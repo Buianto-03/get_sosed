@@ -53,13 +53,10 @@ afterEach(() => {
 });
 
 it('shows only the three freshest real adverts, leaves search state alone and opens the actual ID', async () => {
-  vi.spyOn(advertService, 'getAdverts').mockResolvedValue([
-    advert(2),
-    advert(4),
-    advert(1),
-    advert(3),
-  ]);
-  const previousSearch = store.getState().advert.adverts;
+  const get = vi
+    .spyOn(advertService, 'getFreshAdverts')
+    .mockResolvedValue([advert(4), advert(3), advert(2)]);
+  const previousSearch = store.getState().advert.search;
   open();
   const titles = await screen.findAllByRole('heading', { level: 3, name: /Квартира/ });
   expect(titles.map((item) => item.textContent)).toEqual([
@@ -67,7 +64,9 @@ it('shows only the three freshest real adverts, leaves search state alone and op
     'Квартира 3',
     'Квартира 2',
   ]);
-  expect(store.getState().advert.adverts).toBe(previousSearch);
+  expect(get.mock.calls[0][0]).toBe(3);
+  expect(get.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  expect(store.getState().advert.search).toBe(previousSearch);
   expect(screen.getAllByText('Цена не указана')).toHaveLength(3);
   expect(screen.getAllByText('Фото не добавлено')).toHaveLength(3);
   fireEvent.click(screen.getByRole('button', { name: 'Открыть объявление: Квартира 4' }));
@@ -77,7 +76,7 @@ it('shows only the three freshest real adverts, leaves search state alone and op
 it('shows loading/error/retry/empty without hiding banner or explanation', async () => {
   let reject!: (error: Error) => void;
   const get = vi
-    .spyOn(advertService, 'getAdverts')
+    .spyOn(advertService, 'getFreshAdverts')
     .mockReturnValueOnce(
       new Promise((_, fail) => {
         reject = fail;
@@ -103,7 +102,7 @@ it('shows loading/error/retry/empty without hiding banner or explanation', async
 });
 
 it('sends guest saving to sign-in and does not post a like', async () => {
-  vi.spyOn(advertService, 'getAdverts').mockResolvedValue([advert(7)]);
+  vi.spyOn(advertService, 'getFreshAdverts').mockResolvedValue([advert(7)]);
   const post = vi.spyOn(likeService, 'setLike');
   open();
   fireEvent.click(await screen.findByRole('button', { name: 'Сохранить объявление' }));
@@ -120,7 +119,7 @@ it('uses the shared saved state, blocks repeated save and preserves the heart on
     }),
   );
   await waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Ready));
-  vi.spyOn(advertService, 'getAdverts').mockResolvedValue([advert(7)]);
+  vi.spyOn(advertService, 'getFreshAdverts').mockResolvedValue([advert(7)]);
   let resolve!: (like: { id: number; userId: number; advertId: number }) => void;
   const post = vi.spyOn(likeService, 'setLike').mockReturnValue(
     new Promise((done) => {
@@ -155,14 +154,14 @@ it('about opens listings through the real navigation callback', () => {
 });
 
 it('aborts its own loading request when the home page unmounts', () => {
-  const get = vi.spyOn(advertService, 'getAdverts').mockImplementation(
+  const get = vi.spyOn(advertService, 'getFreshAdverts').mockImplementation(
     () =>
       new Promise(() => {
         /* Pending until its owner cancels. */
       }),
   );
   const view = open();
-  const signal = get.mock.calls[0][0]?.signal;
+  const signal = get.mock.calls[0][1]?.signal;
   expect(signal?.aborted).toBe(false);
   view.unmount();
   expect(signal?.aborted).toBe(true);

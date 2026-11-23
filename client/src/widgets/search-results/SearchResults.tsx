@@ -1,6 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { LuSearch } from 'react-icons/lu';
-import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
@@ -22,6 +21,9 @@ export interface SearchResultsProps {
   onRetry: () => void;
   totalCount?: number;
   onLoadMore?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  loadMoreError?: string | null;
 }
 
 export function SearchResults({
@@ -31,12 +33,39 @@ export function SearchResults({
   onRetry,
   totalCount = cards.length,
   onLoadMore,
+  hasMore = false,
+  loadingMore = false,
+  loadMoreError = null,
 }: SearchResultsProps): JSX.Element {
+  const sectionRef = useRef<HTMLElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const requestFocus = useFocusAfterUpdate();
-  const currentState = state === SearchResultsState.Ready && cards.length === 0
-    ? SearchResultsState.Empty
-    : state;
+  const addedFrom = useRef<number | null>(null);
+  const currentState =
+    state === SearchResultsState.Ready && cards.length === 0 && totalCount === 0
+      ? SearchResultsState.Empty
+      : state;
+
+  useLayoutEffect(() => {
+    if (currentState !== SearchResultsState.Ready) {
+      addedFrom.current = null;
+      return;
+    }
+    if (loadingMore || addedFrom.current === null) {
+      return;
+    }
+    const target = loadMoreError
+      ? null
+      : gridRef.current?.children[addedFrom.current]?.querySelector('button');
+    if (target) {
+      target.focus();
+    } else if (hasMore) {
+      sectionRef.current?.querySelector<HTMLButtonElement>('[data-search-load-more]')?.focus();
+    } else {
+      // The final page can contain only IDs already present after offset drift.
+      gridRef.current?.focus();
+    }
+    addedFrom.current = null;
+  }, [cards.length, currentState, hasMore, loadingMore, loadMoreError]);
   let countLabel = formatResultCount(totalCount);
   if (currentState === SearchResultsState.Empty) {
     countLabel = formatResultCount(0);
@@ -48,11 +77,18 @@ export function SearchResults({
     countLabel = 'Ошибка загрузки';
   }
 
+  let loadMoreLabel = loadMoreError ? 'Повторить загрузку' : 'Показать ещё';
+  if (loadingMore) {
+    loadMoreLabel = 'Загрузка…';
+  }
+
   return (
-    <section className={styles.results} aria-labelledby="search-results-heading">
+    <section ref={sectionRef} className={styles.results} aria-labelledby="search-results-heading">
       <div className={styles.results__heading}>
         <h2 id="search-results-heading">Объявления</h2>
-        <span className={styles.results__count} role="status">{countLabel}</span>
+        <span className={styles.results__count} role="status">
+          {countLabel}
+        </span>
       </div>
 
       {cards.length > 0 && currentState !== SearchResultsState.Ready && (
@@ -60,18 +96,31 @@ export function SearchResults({
       )}
 
       {cards.length > 0 && (
-        <>
-          <div ref={gridRef} className={styles.results__grid} aria-busy={currentState === SearchResultsState.Loading}>
-            {cards}
-          </div>
-          {cards.length < totalCount && onLoadMore && (
-            <Button disabled={currentState !== SearchResultsState.Ready} onClick={() => {
-              const addedFrom = cards.length;
-              requestFocus(() => gridRef.current?.children[addedFrom]?.querySelector('button'));
-              onLoadMore();
-            }}>Показать ещё</Button>
-          )}
-        </>
+        <div
+          ref={gridRef}
+          className={styles.results__grid}
+          role="group"
+          aria-label="Загруженные объявления"
+          tabIndex={-1}
+          aria-busy={currentState === SearchResultsState.Loading || loadingMore}
+        >
+          {cards}
+        </div>
+      )}
+
+      {loadMoreError && <Alert variant={AlertVariant.Error}>{loadMoreError}</Alert>}
+      {hasMore && onLoadMore && (
+        <Button
+          data-search-load-more
+          disabled={currentState !== SearchResultsState.Ready}
+          loading={loadingMore}
+          onClick={() => {
+            addedFrom.current = cards.length;
+            onLoadMore();
+          }}
+        >
+          {loadMoreLabel}
+        </Button>
       )}
 
       {currentState === SearchResultsState.Loading && cards.length === 0 && (
@@ -92,11 +141,11 @@ export function SearchResults({
           title="Пока ничего не найдено"
           description="Измените фильтры или попробуйте другой район."
           icon={<LuSearch aria-hidden="true" />}
-          action={(
+          action={
             <Button variant={ButtonVariant.Secondary} onClick={onResetFilters}>
               Сбросить фильтры
             </Button>
-          )}
+          }
         />
       )}
 
@@ -105,7 +154,9 @@ export function SearchResults({
           <Alert variant={AlertVariant.Error} title="Не удалось загрузить объявления">
             Проверьте соединение и попробуйте снова.
           </Alert>
-          <Button variant={ButtonVariant.Secondary} onClick={onRetry}>Повторить</Button>
+          <Button variant={ButtonVariant.Secondary} onClick={onRetry}>
+            Повторить
+          </Button>
         </div>
       )}
     </section>

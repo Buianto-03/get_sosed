@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
 import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
 import advertService from '@entities/advert/api/advertService';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import type { AdvertPageType, AdvertType } from '@entities/advert/model/advertsModel';
 import likeService from '@entities/like/api/likeService';
 import { clearAuth } from '@entities/session/model/authSlice';
 import { store } from '../store/store';
@@ -66,34 +66,35 @@ afterEach(() => {
 });
 
 it('aborts superseded search requests and keeps the latest result after late responses', async () => {
-  const first = deferred<AdvertType[]>();
-  const second = deferred<AdvertType[]>();
-  const latest = deferred<AdvertType[]>();
+  const first = deferred<AdvertPageType>();
+  const second = deferred<AdvertPageType>();
+  const latest = deferred<AdvertPageType>();
   const get = vi
-    .spyOn(advertService, 'getFilteredAdverts')
+    .spyOn(advertService, 'getFilteredAdvertsPage')
     .mockReturnValueOnce(first.promise)
     .mockReturnValueOnce(second.promise)
     .mockReturnValueOnce(latest.promise);
   const view = open('/listings');
   fireEvent.click(screen.getByRole('link', { name: 'Москва' }));
   await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
-  expect(get.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  expect(get.mock.calls[0][3]?.signal?.aborted).toBe(true);
   fireEvent.click(screen.getByRole('link', { name: 'Казань' }));
   await waitFor(() => expect(get).toHaveBeenCalledTimes(3));
-  expect(get.mock.calls[1][1]?.signal?.aborted).toBe(true);
-  expect(get.mock.calls[2][1]?.signal?.aborted).toBe(false);
+  expect(get.mock.calls[1][3]?.signal?.aborted).toBe(true);
+  expect(get.mock.calls[2][3]?.signal?.aborted).toBe(false);
   await act(async () => {
-    latest.resolve([advert]);
+    latest.resolve({ items: [advert], total: 1, page: 1, limit: 8 });
   });
   expect(await screen.findByRole('heading', { name: advert.title ?? '' })).toBeInTheDocument();
   await act(async () => {
-    first.resolve([]);
-    second.resolve([]);
+    first.resolve({ items: [], total: 0, page: 1, limit: 8 });
+    second.resolve({ items: [], total: 0, page: 1, limit: 8 });
   });
   expect(screen.getByRole('heading', { name: advert.title ?? '' })).toBeInTheDocument();
-  expect(store.getState().advert.error).toBeNull();
+  expect(store.getState().advert.search.error).toBeNull();
   view.unmount();
-  expect(get.mock.calls[2][1]?.signal?.aborted).toBe(true);
+  // Completed requests are released by the route; only in-flight work needs abort.
+  expect(get.mock.calls[2][3]?.signal?.aborted).toBe(false);
 });
 
 it('aborts detail and interested-people reads when the ID changes and the page unmounts', async () => {

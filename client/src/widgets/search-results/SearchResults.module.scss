@@ -36,6 +36,11 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: tokens.$space-5;
   margin-bottom: tokens.$space-5;
+
+  &:focus-visible {
+    outline: 2px solid tokens.$color-accent;
+    outline-offset: 4px;
+  }
 }
 
 .results__map {
@@ -46,7 +51,11 @@
   padding: tokens.$space-4;
   border: 1px solid tokens.$color-border;
   border-radius: tokens.$radius-lg;
-  background: repeating-linear-gradient(32deg, tokens.$color-page 0 10px, tokens.$color-soft 10px 14px);
+  background: repeating-linear-gradient(
+    32deg,
+    tokens.$color-page 0 10px,
+    tokens.$color-soft 10px 14px
+  );
   color: tokens.$color-accent;
   font-size: tokens.$font-size-sm;
   font-weight: 650;

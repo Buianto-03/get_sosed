@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { SearchFilters } from '@features/advert-filter/ui/SearchFilters';
 import { readFilters, writeFilters } from '@features/advert-filter/model/filters';
 import { toSearchValues, toAppliedFilters } from '@features/advert-filter/model/searchFilterValues';
@@ -8,18 +7,15 @@ import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-save
 import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
 import { useTagCatalog } from '@entities/advert/model/use-tag-catalog';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
-import { getFilteredAdvertsThunk } from '@entities/advert/model/advertsThunk';
-import { loadCards } from '@entities/advert/model/advertsSlice';
-import { selectAdverts } from '@entities/advert/model/advertsSelectors';
 import { SearchResults, SearchResultsState } from '@widgets/search-results/SearchResults';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button } from '@shared/ui/button/Button';
 import { routes } from '@shared/config/routes';
 import { toSearchCard } from './helper';
+import { useSearchAdverts } from './use-search-adverts';
 import styles from './SearchRoute.module.scss';
 
 export default function SearchRoute(): JSX.Element {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
@@ -28,19 +24,7 @@ export default function SearchRoute(): JSX.Element {
   const applied = useMemo(() => toSearchValues(filters), [filters]);
   const catalog = useTagCatalog();
   const { error: savedError, reload: reloadSaved } = useSavedCollectionStatus();
-  const result = useAppSelector(selectAdverts);
-  const request = useRef<ReturnType<ReturnType<typeof getFilteredAdvertsThunk>>>();
-  const load = useCallback((): void => {
-    request.current?.abort();
-    const { tagIds, ...values } = filters;
-    request.current = dispatch(
-      getFilteredAdvertsThunk({ ...values, tags: tagIds.map((id) => ({ id, name: '' })) }),
-    );
-  }, [dispatch, filters]);
-  useEffect(() => {
-    load();
-    return () => request.current?.abort();
-  }, [load]);
+  const result = useSearchAdverts(filters, query);
   const returnTo = location.pathname + location.search;
   const openListing = useCallback(
     (id: string) => navigate(routes.listingDetails(id), { state: { searchReturnTo: returnTo } }),
@@ -71,8 +55,8 @@ export default function SearchRoute(): JSX.Element {
       )}
       <SearchResults
         state={state}
-        totalCount={result.adverts.length}
-        cards={result.adverts.slice(0, result.visitableCards).map((advert) => (
+        totalCount={result.total}
+        cards={result.items.map((advert) => (
           <ListingCardWithSave
             key={advert.id}
             advert={advert}
@@ -81,9 +65,12 @@ export default function SearchRoute(): JSX.Element {
             onOpen={openListing}
           />
         ))}
-        onRetry={load}
+        onRetry={result.retry}
         onResetFilters={() => setParams(writeFilters(params, readFilters(new URLSearchParams())))}
-        onLoadMore={() => dispatch(loadCards())}
+        hasMore={result.hasMore}
+        loadingMore={result.loadingMore}
+        loadMoreError={result.loadMoreError}
+        onLoadMore={result.loadMore}
       />
     </main>
   );

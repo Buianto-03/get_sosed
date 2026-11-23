@@ -13,7 +13,7 @@ import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { routes } from '@shared/config/routes';
 import { isRequestCanceled } from '@shared/api/cancellation';
-import { freshestAdverts, toHomeCard } from './helper';
+import { toHomeCard } from './helper';
 import styles from './HomeRoute.module.scss';
 
 export default function HomeRoute(): JSX.Element {
@@ -29,12 +29,12 @@ export default function HomeRoute(): JSX.Element {
     const controller = new AbortController();
     setState(FreshListingsState.Loading);
     void advertService
-      .getAdverts({ signal: controller.signal })
+      .getFreshAdverts(3, { signal: controller.signal })
       .then((items) => {
         if (!active) {
           return;
         }
-        setAdverts(freshestAdverts(items));
+        setAdverts(items);
         setState(FreshListingsState.Ready);
       })
       .catch((error: unknown) => {

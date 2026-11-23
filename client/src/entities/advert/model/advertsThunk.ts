@@ -2,15 +2,34 @@ import { isAxiosError } from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { isRequestCanceled } from '@shared/api/cancellation';
 import advertService from '../api/advertService';
-import type { AdvertType, FilterType, TagType } from './advertsModel';
+import type { AdvertPageType, AdvertSearchRequest, AdvertSliceT, AdvertType } from './advertsModel';
 
-export const getAdvertsThunk = createAsyncThunk('adverts/getAdvertsThunk', (_, { signal }) =>
-  advertService.getAdverts({ signal }),
-);
-export const getFilteredAdvertsThunk = createAsyncThunk(
+export const getFilteredAdvertsThunk = createAsyncThunk<
+  AdvertPageType,
+  AdvertSearchRequest,
+  { state: { advert: AdvertSliceT } }
+>(
   'adverts/getFilteredAdverts',
-  async (filters: FilterType & { tags: TagType[] }, { signal }) =>
-    advertService.getFilteredAdverts(filters, { signal }),
+  async ({ filters, page, limit }, { signal }) =>
+    advertService.getFilteredAdvertsPage(filters, page, limit, { signal }),
+  {
+    condition: ({ searchKey, page, limit }, { getState }) => {
+      if (page === 1) {
+        return true;
+      }
+      const { search } = getState().advert;
+      return (
+        search.searchKey === searchKey &&
+        search.requestId === null &&
+        !search.loading &&
+        !search.error &&
+        search.page > 0 &&
+        search.page + 1 === page &&
+        search.limit === limit &&
+        search.page * search.limit < search.total
+      );
+    },
+  },
 );
 
 export const getAdvertByIdThunk = createAsyncThunk<AdvertType, number, { rejectValue: number }>(

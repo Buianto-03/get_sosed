@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { Link, MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Link, MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
 import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
@@ -121,8 +121,108 @@ const login = (): void => {
   store.dispatch(setSession({ user, accessToken: 'keep-token' }));
 };
 
+function HistoryNavigation(): JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <>
+      <button type="button" onClick={() => navigate(-1)}>
+        Назад
+      </button>
+      <button type="button" onClick={() => navigate(1)}>
+        Вперёд
+      </button>
+    </>
+  );
+}
+
+it('loads search pages on demand, retains cards on failure and retries the same page without duplicates', async () => {
+  const first = Array.from({ length: 8 }, (_, index) => ({
+    ...advert,
+    id: 100 + index,
+    title: `Результат ${index + 1}`,
+  }));
+  const get = vi
+    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .mockResolvedValueOnce({ items: first, total: 10, page: 1, limit: 8 })
+    .mockRejectedValueOnce(new Error('offline'))
+    .mockResolvedValueOnce({
+      items: [
+        first[7],
+        { ...advert, id: 108, title: 'Результат 9' },
+        { ...advert, id: 109, title: 'Результат 10' },
+      ],
+      total: 10,
+      page: 2,
+      limit: 8,
+    });
+  open('/listings?city=Казань&tags=99');
+  await screen.findByRole('heading', { name: 'Результат 8' });
+  expect(
+    within(screen.getByRole('region', { name: 'Объявления' })).getByRole('status'),
+  ).toHaveTextContent('10 вариантов');
+  expect(get).toHaveBeenCalledTimes(1);
+  const more = screen.getByRole('button', { name: 'Показать ещё' });
+  fireEvent.click(more);
+  fireEvent.click(more);
+  expect(get).toHaveBeenCalledTimes(2);
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Не удалось загрузить следующие объявления',
+  );
+  expect(screen.getAllByRole('article')).toHaveLength(8);
+  expect(screen.queryByText('Показаны предыдущие результаты поиска.')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Повторить загрузку' }));
+  await screen.findByRole('heading', { name: 'Результат 10' });
+  expect(screen.getAllByRole('article')).toHaveLength(10);
+  expect(screen.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
+  expect(get.mock.calls.map(([, page, limit]) => [page, limit])).toEqual([
+    [1, 8],
+    [2, 8],
+    [2, 8],
+  ]);
+  expect(get.mock.calls.every(([body]) => body.city === 'Казань' && body.tags[0].id === 99)).toBe(
+    true,
+  );
+});
+
+it('starts at page one with the URL filters on Back and Forward', async () => {
+  const get = vi
+    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .mockImplementation((filters, page = 1) =>
+      Promise.resolve({ items: [{ ...advert, title: filters.city }], total: 1, page, limit: 8 }),
+    );
+  open(
+    '/listings?city=Казань&tags=99',
+    undefined,
+    <>
+      <Link to="/listings?city=Москва&priceFrom=10">Москва</Link>
+      <HistoryNavigation />
+    </>,
+  );
+  await screen.findByRole('heading', { name: 'Казань' });
+  fireEvent.click(screen.getByRole('link', { name: 'Москва' }));
+  await screen.findByRole('heading', { name: 'Москва' });
+  fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+  await screen.findByRole('heading', { name: 'Казань' });
+  expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('Казань');
+  expect(screen.getByRole('button', { name: '#99 ×' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Вперёд' }));
+  await screen.findByRole('heading', { name: 'Москва' });
+  expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('Москва');
+  expect(get.mock.calls.map(([body, page]) => [body.city, page])).toEqual([
+    ['Казань', 1],
+    ['Москва', 1],
+    ['Казань', 1],
+    ['Москва', 1],
+  ]);
+});
+
 it('loads search from the URL only, keeps unknown tags and returns from details to the complete filter query', async () => {
-  const get = vi.spyOn(advertService, 'getFilteredAdverts').mockResolvedValue([advert]);
+  const get = vi.spyOn(advertService, 'getFilteredAdvertsPage').mockResolvedValue({
+    items: [advert],
+    total: 1,
+    page: 1,
+    limit: 8,
+  });
   vi.spyOn(advertService, 'getAdvertById').mockResolvedValue(advert);
   open('/listings?city=Казань&priceFrom=10&roomsTo=4&tags=99');
   expect(await screen.findByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
@@ -132,7 +232,7 @@ it('loads search from the URL only, keeps unknown tags and returns from details 
     roomsTo: 4,
     tags: [{ id: 99, name: '' }],
   });
-  expect(get.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  expect(get.mock.calls[0][3]?.signal).toBeInstanceOf(AbortSignal);
   expect(screen.getByRole('button', { name: '#99 ×' })).toBeInTheDocument();
   fireEvent.change(screen.getByRole('textbox', { name: 'Город' }), { target: { value: 'Москва' } });
   expect(get).toHaveBeenCalledTimes(1);

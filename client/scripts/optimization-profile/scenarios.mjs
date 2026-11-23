@@ -11,7 +11,7 @@ const messageRegion = text('[role=region][aria-label="Сообщения"]');
 const messageRows = '[role=region][aria-label="Сообщения"] [data-message-id]';
 const olderButton = `Array.from(document.querySelectorAll('button')).find(
   (button) => button.textContent.includes('Загрузить предыдущие сообщения'))`;
-const save = text('article button[aria-pressed]');
+const save = 'window.__saveTarget';
 const favorites = 'section[aria-labelledby=favorites] article';
 const firstFavorite = text(`${favorites} button[aria-pressed]`);
 
@@ -121,6 +121,9 @@ export async function checkHistoryPagination(page, server, size) {
 
 export async function interact(page, server, route) {
   if (route === '/listings') {
+    await page.evaluate(
+      "void (window.__saveTarget = document.querySelector('article button[aria-pressed=false]'))",
+    );
     const filterCity = await type(page, city, 'М');
     const filterPrice = await type(page, priceFrom, '3');
     assert.equal(await page.evaluate(`${save}.getAttribute('aria-pressed')`), 'false');

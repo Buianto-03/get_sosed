@@ -280,10 +280,26 @@ export function createFixture(size, { photos = false } = {}) {
         return result({ accessToken: 'synthetic-profile-token', user: signedInUser });
       case 'GET /api/adverts':
         return result(adverts);
+      case 'GET /api/adverts/fresh': {
+        const limit = readPageNumber(searchParams, 'limit', 3, 3);
+        return result([...adverts].reverse().slice(0, limit));
+      }
       case 'GET /api/adverts/top':
         return result([...liked.keys()].slice(0, 4).map((id) => adverts[id - 1]));
       case 'POST /api/adverts/filters':
         return result(adverts.filter((advert) => matchesFilters(advert, body)));
+      case 'POST /api/adverts/filters/page': {
+        const page = readPageNumber(searchParams, 'page', 1);
+        const limit = readPageNumber(searchParams, 'limit', 8, 50);
+        const matches = [...adverts].reverse().filter((advert) => matchesFilters(advert, body));
+        const offset = (page - 1) * limit;
+        return result({
+          items: matches.slice(offset, offset + limit),
+          total: matches.length,
+          page,
+          limit,
+        });
+      }
       case 'GET /api/adverts/tags': {
         const query = (searchParams.get('query') ?? '').toLowerCase();
         return result(tags.filter(({ name }) => name.toLowerCase().includes(query)));

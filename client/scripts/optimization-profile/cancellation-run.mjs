@@ -97,7 +97,7 @@ try {
                   ),
               );
               if (scenario === 'search') {
-                server.holdReads(['/api/adverts/filters']);
+                server.holdReads(['/api/adverts/filters', '/api/adverts/filters/page']);
                 await navigate(page, '/listings');
                 await page.wait(
                   `document.querySelectorAll('input[type=checkbox]:enabled').length === ${size === 'large' ? 200 : 20}`,

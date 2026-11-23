@@ -27,12 +27,15 @@ function listingCards(onOpenListing = vi.fn(), onSaveListing = vi.fn()): React.R
   ));
 }
 
-function renderResults(state = SearchResultsState.Ready, cards?: React.ReactElement[]): {
-  onOpenListing: ReturnType<typeof vi.fn>;
-  onSaveListing: ReturnType<typeof vi.fn>;
-  onResetFilters: ReturnType<typeof vi.fn>;
-  onRetry: ReturnType<typeof vi.fn>;
-} {
+function renderResults(
+  state = SearchResultsState.Ready,
+  cards?: React.ReactElement[],
+): {
+    onOpenListing: ReturnType<typeof vi.fn>;
+    onSaveListing: ReturnType<typeof vi.fn>;
+    onResetFilters: ReturnType<typeof vi.fn>;
+    onRetry: ReturnType<typeof vi.fn>;
+  } {
   const onOpenListing = vi.fn();
   const onSaveListing = vi.fn();
   const onResetFilters = vi.fn();
@@ -66,11 +69,13 @@ describe('SearchResults', () => {
   it('focuses the first added card after loading more, including the last batch', () => {
     const props = { totalCount: 2, onLoadMore: vi.fn(), onResetFilters: vi.fn(), onRetry: vi.fn() };
     const cards = listingCards();
-    const { rerender } = render(<SearchResults {...props} cards={cards.slice(0, 1)} />);
+    const { rerender } = render(<SearchResults {...props} cards={cards.slice(0, 1)} hasMore />);
     fireEvent.click(screen.getByRole('button', { name: 'Показать ещё' }));
-    rerender(<SearchResults {...props} cards={cards.slice(0, 1)} state={SearchResultsState.Loading} />);
+    rerender(<SearchResults {...props} cards={cards.slice(0, 1)} hasMore loadingMore />);
     rerender(<SearchResults {...props} cards={cards} />);
-    expect(screen.getByRole('button', { name: 'Открыть объявление: Вторая квартира' })).toHaveFocus();
+    expect(
+      screen.getByRole('button', { name: 'Открыть объявление: Вторая квартира' }),
+    ).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
 
     const firstCard = screen.getByRole('button', { name: 'Открыть объявление: Первая квартира' });
@@ -89,6 +94,55 @@ describe('SearchResults', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Подробнее' })[0]);
     expect(actions.onSaveListing).toHaveBeenCalledWith('one', true);
     expect(actions.onOpenListing).toHaveBeenCalledWith('one');
+  });
+
+  it('keeps cards and the server count on a next-page error and focuses the added retry result', () => {
+    const props = { onLoadMore: vi.fn(), onResetFilters: vi.fn(), onRetry: vi.fn(), totalCount: 9 };
+    const cards = listingCards();
+    const { rerender } = render(<SearchResults {...props} cards={cards.slice(0, 1)} hasMore />);
+    const more = screen.getByRole('button', { name: 'Показать ещё' });
+    more.focus();
+    fireEvent.click(more);
+    rerender(<SearchResults {...props} cards={cards.slice(0, 1)} hasMore loadingMore />);
+    expect(screen.getByRole('button', { name: 'Загрузка…' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('9 вариантов');
+    rerender(
+      <SearchResults
+        {...props}
+        cards={cards.slice(0, 1)}
+        hasMore
+        loadMoreError="Ошибка догрузки"
+      />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Ошибка догрузки');
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    const retry = screen.getByRole('button', { name: 'Повторить загрузку' });
+    expect(retry).toHaveFocus();
+    fireEvent.click(retry);
+    rerender(<SearchResults {...props} cards={cards.slice(0, 1)} hasMore loadingMore />);
+    rerender(<SearchResults {...props} cards={cards} />);
+    expect(props.onLoadMore).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole('button', { name: 'Открыть объявление: Вторая квартира' }),
+    ).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
+  });
+
+  it('uses hasMore when deduplication leaves fewer cards than total and focuses the grid on a duplicate-only final page', () => {
+    const props = {
+      cards: listingCards(),
+      totalCount: 10,
+      onLoadMore: vi.fn(),
+      onResetFilters: vi.fn(),
+      onRetry: vi.fn(),
+    };
+    const { rerender } = render(<SearchResults {...props} hasMore />);
+    fireEvent.click(screen.getByRole('button', { name: 'Показать ещё' }));
+    rerender(<SearchResults {...props} hasMore loadingMore />);
+    rerender(<SearchResults {...props} />);
+    expect(screen.getByRole('group', { name: 'Загруженные объявления' })).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('10 вариантов');
   });
 
   it('shows loading without stale cards on an initial empty response', () => {

@@ -53,7 +53,9 @@ export async function serve(root, { photos = false } = {}) {
   let release;
   let gate;
   const heldReads = new Map();
+  const failedReads = new Set();
   const reads = [];
+  const collections = [];
   const failures = [];
   const server = createServer(async (req, res) => {
     try {
@@ -87,12 +89,14 @@ export async function serve(root, { photos = false } = {}) {
             return;
           }
         }
-        const answer = fixture.request(
-          req.method,
-          url.pathname,
-          url.searchParams,
-          input ? JSON.parse(input) : undefined,
-        );
+        const answer = failedReads.delete(url.pathname)
+          ? { status: 503, data: { error: 'Synthetic temporary failure' } }
+          : fixture.request(
+              req.method,
+              url.pathname,
+              url.searchParams,
+              input ? JSON.parse(input) : undefined,
+            );
         if (answer.delayMs) {
           await delay(answer.delayMs);
         }
@@ -103,7 +107,25 @@ export async function serve(root, { photos = false } = {}) {
           await gate;
         }
         status = answer.status;
-        body = gzipSync(JSON.stringify(answer.data));
+        const json = JSON.stringify(answer.data);
+        body = gzipSync(json);
+        if (
+          [
+            '/api/adverts',
+            '/api/adverts/filters',
+            '/api/adverts/filters/page',
+            '/api/adverts/fresh',
+          ].includes(url.pathname)
+        ) {
+          collections.push({
+            path: url.pathname + url.search,
+            status,
+            items: Array.isArray(answer.data) ? answer.data.length : answer.data.items?.length ?? 0,
+            total: Array.isArray(answer.data) ? answer.data.length : answer.data.total ?? 0,
+            jsonBytes: Buffer.byteLength(json),
+            gzipBytes: body.length,
+          });
+        }
         type = 'application/json';
         compressed = true;
       } else if (photos && /^\/fixture-photos\/[1-9]\d*\/[1-6]\.webp$/.test(url.pathname)) {
@@ -153,6 +175,10 @@ export async function serve(root, { photos = false } = {}) {
     origin: 'http://127.0.0.1:' + server.address().port,
     failures,
     reads,
+    collections,
+    failNextRead(path) {
+      failedReads.add(path);
+    },
     holdReads(paths) {
       for (const path of paths) {
         let releaseRead;
@@ -170,6 +196,8 @@ export async function serve(root, { photos = false } = {}) {
     },
     reset(size) {
       reads.length = 0;
+      collections.length = 0;
+      failedReads.clear();
       fixture = createFixture(size, { photos });
     },
     neighbor() {

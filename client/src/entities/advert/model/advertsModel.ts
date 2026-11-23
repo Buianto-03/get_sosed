@@ -88,14 +88,30 @@ export enum AdvertDetailStatus {
   Error = 'error',
 }
 
-export type AdvertSliceT = {
-  adverts: AdvertType[];
-  chosenAdvert: AdvertType | null;
-  visitableCards: number;
-  populars: AdvertType[];
+export interface AdvertSearchRequest {
+  filters: FilterType & { tags: TagType[] };
+  searchKey: string;
+  page: number;
+  limit: number;
+}
+
+export interface AdvertSearchState {
+  items: AdvertType[];
+  total: number;
+  page: number;
+  limit: number;
+  searchKey: string | null;
   loading: boolean;
   error: string | null;
-  filterRequestId: string | null;
+  loadingMore: boolean;
+  loadMoreError: string | null;
+  requestId: string | null;
+}
+
+export type AdvertSliceT = {
+  search: AdvertSearchState;
+  chosenAdvert: AdvertType | null;
+  populars: AdvertType[];
   detailStatus: AdvertDetailStatus;
   detailRequestId: string | null;
 };
