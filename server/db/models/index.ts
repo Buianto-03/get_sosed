@@ -1,7 +1,7 @@
 import Sequelize = require('sequelize');
-import createAdvert = require('./advert');
-import createAdvertPhoto = require('./advertphoto');
-import createAdvertTags = require('./adverttags');
+import createListing = require('./listing');
+import createListingPhoto = require('./listingphoto');
+import createListingTags = require('./listingtags');
 import createChat = require('./chat');
 import createLike = require('./like');
 import createLocation = require('./location');
@@ -30,9 +30,9 @@ const sequelize = config.use_env_variable
     );
 
 const models = {
-  Advert: createAdvert(sequelize, Sequelize.DataTypes),
-  AdvertPhoto: createAdvertPhoto(sequelize, Sequelize.DataTypes),
-  AdvertTags: createAdvertTags(sequelize, Sequelize.DataTypes),
+  Listing: createListing(sequelize, Sequelize.DataTypes),
+  ListingPhoto: createListingPhoto(sequelize, Sequelize.DataTypes),
+  ListingTags: createListingTags(sequelize, Sequelize.DataTypes),
   Chat: createChat(sequelize, Sequelize.DataTypes),
   Like: createLike(sequelize, Sequelize.DataTypes),
   Location: createLocation(sequelize, Sequelize.DataTypes),

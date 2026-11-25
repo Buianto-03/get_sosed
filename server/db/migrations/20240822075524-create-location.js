@@ -24,10 +24,10 @@ module.exports = {
       coordinates: {
         type: Sequelize.STRING
       },
-      advertId: {
+      listingId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Adverts',
+          model: 'Listings',
           key: 'id'
         },
         onDelete: 'CASCADE',

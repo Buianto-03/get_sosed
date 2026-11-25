@@ -1,4 +1,4 @@
-// Run against an empty, migrated scratch database named o06_adverts or o06_adverts_small on a private Unix socket.
+// Run against an empty, migrated scratch database named o06_listings or o06_listings_small on a private Unix socket.
 const assert = require('node:assert/strict');
 const { once } = require('node:events');
 const { writeFile } = require('node:fs/promises');
@@ -7,7 +7,7 @@ const { isAbsolute } = require('node:path');
 const { DB_HOST, DB_NAME, DB_USER, NODE_ENV } = process.env;
 assert.ok(
   NODE_ENV === 'development' &&
-    ['o06_adverts', 'o06_adverts_small'].includes(DB_NAME) &&
+    ['o06_listings', 'o06_listings_small'].includes(DB_NAME) &&
     DB_USER &&
     DB_HOST &&
     isAbsolute(DB_HOST),
@@ -34,7 +34,7 @@ async function seed(size) {
     const tags = await db.Tags.bulkCreate([{ name: 'Один' }, { name: 'Два' }, { name: 'Три' }], {
       transaction,
     });
-    const adverts = await db.Advert.bulkCreate(
+    const listings = await db.Listing.bulkCreate(
       Array.from({ length: size }, (_, index) => ({
         title: `Объявление ${index + 1}`,
         body: `Синтетическое описание объявления ${index + 1}. `.repeat(10),
@@ -46,26 +46,26 @@ async function seed(size) {
       })),
       { transaction },
     );
-    const locations = adverts.slice(0, -1).map(({ id }, index) => ({
-      advertId: id,
+    const locations = listings.slice(0, -1).map(({ id }, index) => ({
+      listingId: id,
       city: (index + 1) % 5 === 0 ? 'Казань' : 'Москва',
       district: null,
       metro: null,
     }));
     // The current schema allows duplicate locations despite Sequelize's hasOne association.
     await db.Location.bulkCreate([...locations, locations[size - 3]], { transaction });
-    await db.AdvertTags.bulkCreate(
-      adverts.flatMap(({ id }, index) => [
-        { advertId: id, tagId: tags[0].id },
-        { advertId: id, tagId: tags[2].id },
-        ...((index + 1) % 2 === 0 ? [{ advertId: id, tagId: tags[1].id }] : []),
+    await db.ListingTags.bulkCreate(
+      listings.flatMap(({ id }, index) => [
+        { listingId: id, tagId: tags[0].id },
+        { listingId: id, tagId: tags[2].id },
+        ...((index + 1) % 2 === 0 ? [{ listingId: id, tagId: tags[1].id }] : []),
       ]),
       { transaction },
     );
-    await db.AdvertPhoto.bulkCreate(
-      adverts.flatMap(({ id }) =>
+    await db.ListingPhoto.bulkCreate(
+      listings.flatMap(({ id }) =>
         [1, 2, 3].map((number) => ({
-          advertId: id,
+          listingId: id,
           photo: `/images/o06/${id}/${number}.webp`,
         })),
       ),
@@ -78,7 +78,7 @@ async function seed(size) {
 async function run() {
   const size = Number(process.env.O06_ROWS ?? 1000);
   assert.ok([100, 1000].includes(size), 'Choose the O01 fixture size of 100 or 1000.');
-  assert.equal(await db.Advert.count(), 0, 'The scratch database must be empty.');
+  assert.equal(await db.Listing.count(), 0, 'The scratch database must be empty.');
   assert.equal(await db.User.count(), 0, 'The scratch database must be empty.');
   const [version] = await db.sequelize.query('SHOW server_version', {
     type: db.Sequelize.QueryTypes.SELECT,
@@ -147,7 +147,7 @@ async function run() {
   assert.deepEqual(Object.keys(first.data.items[0].user).sort(), ['email', 'id', 'name']);
   assert.equal(first.data.items[0].location.metro, null);
   assert.equal(first.data.items[0].tags.length, 3);
-  const photos = ids(first.data.items[0].AdvertPhotos);
+  const photos = ids(first.data.items[0].ListingPhotos);
   assert.equal(photos.length, 3);
   assert.deepEqual(
     photos,
@@ -180,7 +180,7 @@ async function run() {
     assert.equal(result.data.code, 'INVALID_PAGINATION', path);
   }
 
-  // Compare only completed response bodies. The old home route fetched all adverts.
+  // Compare only completed response bodies. The old home route fetched all listings.
   const samples = [];
   for (let trial = 1; trial <= 5; trial += 1) {
     const searchBefore = await request('/filters', {});
@@ -211,7 +211,7 @@ async function run() {
   const output = {
     postgres: version.server_version,
     node: process.version,
-    adverts: size,
+    listings: size,
     samples,
   };
   if (process.argv[2]) {

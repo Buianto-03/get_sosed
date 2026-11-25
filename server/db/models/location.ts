@@ -21,7 +21,7 @@ const createLocation = (
     declare address: string | null;
     declare metro: string | null;
     declare coordinates: string | null;
-    declare advertId: number | null;
+    declare listingId: number | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
@@ -30,8 +30,8 @@ const createLocation = (
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Advert }: Pick<typeof db, 'Advert'>) {
-      this.belongsTo(Advert, { foreignKey: 'advertId' });
+    static associate({ Listing }: Pick<typeof db, 'Listing'>) {
+      this.belongsTo(Listing, { foreignKey: 'listingId' });
     }
   }
   Location.init(
@@ -42,7 +42,7 @@ const createLocation = (
       address: DataTypes.STRING,
       metro: DataTypes.STRING,
       coordinates: DataTypes.STRING,
-      advertId: DataTypes.INTEGER,
+      listingId: DataTypes.INTEGER,
     },
     {
       sequelize,

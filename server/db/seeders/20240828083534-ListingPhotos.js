@@ -5,15 +5,15 @@ const path = require('path');
 const photos = [];
 
 for (let i = 1; i < 41; i++) {
-  const dirPath = path.resolve(__dirname, `../../public/images/adverts/advert-${i}`);
+  const dirPath = path.resolve(__dirname, `../../public/images/listings/listing-${i}`);
   
   if (fs.existsSync(dirPath)) {
     const dir = fs.readdirSync(dirPath);
 
     for (let j = 0; j < dir.length; j++) {
       photos.push({
-        photo: `/images/adverts/advert-${i}/${dir[j]}`,
-        advertId: i,
+        photo: `/images/listings/listing-${i}/${dir[j]}`,
+        listingId: i,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -27,7 +27,7 @@ for (let i = 1; i < 41; i++) {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('AdvertPhotos', photos, {});
+    await queryInterface.bulkInsert('ListingPhotos', photos, {});
 
     /**
      * Add seed commands here.

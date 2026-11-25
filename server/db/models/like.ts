@@ -18,7 +18,7 @@ const createLike = (
     InferCreationAttributes<Like>
   > {
     declare id: CreationOptional<number>;
-    declare advertId: number | null;
+    declare listingId: number | null;
     declare userId: number | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
@@ -27,17 +27,17 @@ const createLike = (
     > | null>;
 
     static associate({
-      Advert,
+      Listing,
       User,
-    }: Pick<typeof db, 'Advert' | 'User'>) {
-      this.belongsTo(Advert, { foreignKey: 'advertId' });
+    }: Pick<typeof db, 'Listing' | 'User'>) {
+      this.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
       this.belongsTo(User, { foreignKey: 'userId' });
     }
   }
   Like.init(
     {
       ...commonAttributes(),
-      advertId: DataTypes.INTEGER,
+      listingId: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
     },
     {

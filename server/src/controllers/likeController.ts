@@ -11,8 +11,8 @@ class LikeController {
 
   getLikes = async (req: Request, res: Response) => {
     try {
-      const { listingId: advertId } = req.params;
-      const likes = await this.service.getLikesByAdvertId(advertId);
+      const { listingId: listingId } = req.params;
+      const likes = await this.service.getLikesByListingId(listingId);
       res.status(200).json(likes);
     } catch (error) {
       res.status(500).json({ error: errorDetails(error).message });
@@ -21,9 +21,9 @@ class LikeController {
 
   setLike = async (req: Request, res: AuthResponse) => {
     try {
-      const { listingId: advertId } = req.params;
+      const { listingId: listingId } = req.params;
       const userId = res.locals.user.id;
-      const { like, created } = await this.service.postLike(advertId, userId);
+      const { like, created } = await this.service.postLike(listingId, userId);
       return res.status(created ? 201 : 200).json(like);
     } catch (error) {
       res.status(500).json({ error: errorDetails(error).message });
@@ -32,9 +32,9 @@ class LikeController {
 
   deleteLike = async (req: Request, res: AuthResponse) => {
     try {
-      const { listingId: advertId } = req.params;
+      const { listingId: listingId } = req.params;
       const userId = res.locals.user.id;
-      const like = await this.service.deleteLike(advertId, userId);
+      const like = await this.service.deleteLike(listingId, userId);
       res.status(200).json(like);
     } catch (error) {
       res.status(500).json({ error: errorDetails(error).message });

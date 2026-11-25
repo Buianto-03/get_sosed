@@ -10,9 +10,9 @@ import db = require('../../db/models');
 import AppError = require('../utils/appError');
 
 const { Op } = Sequelize;
-const { Advert, Location, Tags, User, Like, AdvertPhoto, AdvertTags } = db;
+const { Listing, Location, Tags, User, Like, ListingPhoto, ListingTags } = db;
 
-type AdvertAttributes = Attributes<InstanceType<typeof db.Advert>>;
+type ListingAttributes = Attributes<InstanceType<typeof db.Listing>>;
 type LocationAttributes = Attributes<InstanceType<typeof db.Location>>;
 
 function invalidPagination() {
@@ -45,15 +45,15 @@ function parsePageValue(value: unknown) {
   return Number(value);
 }
 
-class AdvertService {
+class ListingService {
   constructor(
-    private readonly advert: typeof db.Advert,
+    private readonly listing: typeof db.Listing,
     private readonly location: typeof db.Location,
     private readonly tags: typeof db.Tags,
     private readonly user: typeof db.User,
     private readonly like: typeof db.Like,
-    private readonly advertPhoto: typeof db.AdvertPhoto,
-    private readonly advertTag: typeof db.AdvertTags,
+    private readonly listingPhoto: typeof db.ListingPhoto,
+    private readonly listingTag: typeof db.ListingTags,
   ) {}
 
   getReadIncludes(locationWhere?: WhereOptions<LocationAttributes>): IncludeOptions[] {
@@ -65,8 +65,8 @@ class AdvertService {
         ...(locationWhere ? { where: locationWhere } : {}),
       },
       {
-        model: this.advertPhoto,
-        as: 'AdvertPhotos',
+        model: this.listingPhoto,
+        as: 'photos',
         separate: true,
         order: [['id', 'ASC']],
       },
@@ -90,7 +90,7 @@ class AdvertService {
     if (pageSize > 50 || !Number.isSafeInteger(offset)) {
       throw invalidPagination();
     }
-    const { rows, count } = await this.advert.findAndCountAll({
+    const { rows, count } = await this.listing.findAndCountAll({
       where: { userId },
       limit: pageSize,
       offset,
@@ -104,23 +104,25 @@ class AdvertService {
     return { items: rows, total: count, page: currentPage, limit: pageSize };
   }
 
-  async getAdverts() {
-    return this.advert.findAll({
+  async getListings() {
+    return this.listing.findAll({
       order: [['id', 'ASC']],
       include: this.getReadIncludes(),
     });
   }
 
-  async getAdvertById(id: number) {
-    return this.advert.findByPk(id, {
+  async getListingById(id: number) {
+    return this.listing.findByPk(id, {
       include: this.getReadIncludes(),
     });
   }
 
-  async likedAdverts(id: number) {
+  async likedListings(id: number) {
     return this.like.findAll({
       where: { userId: id },
-      include: [{ model: this.advert, include: this.getReadIncludes() }],
+      include: [
+        { model: this.listing, as: 'listing', include: this.getReadIncludes() },
+      ],
     });
   }
 
@@ -148,8 +150,8 @@ class AdvertService {
     return locationClause;
   }
 
-  getAdvertWhere(filters: Filters) {
-    const whereClause: WhereAttributeHash<AdvertAttributes> = {};
+  getListingWhere(filters: Filters) {
+    const whereClause: WhereAttributeHash<ListingAttributes> = {};
     if (filters.priceFrom || filters.priceTo) {
       const priceRange: WhereOperators<number> = {};
       if (filters.priceFrom !== undefined) {
@@ -174,45 +176,45 @@ class AdvertService {
     return whereClause;
   }
 
-  async getAdvertIdsByTags(tagIds: number[]) {
-    const matches = await this.advertTag.findAll({
-      attributes: ['advertId'],
+  async getListingIdsByTags(tagIds: number[]) {
+    const matches = await this.listingTag.findAll({
+      attributes: ['listingId'],
       where: { tagId: { [Op.in]: tagIds } },
-      group: ['advertId'],
+      group: ['listingId'],
       having: Sequelize.where(
         Sequelize.fn('COUNT', Sequelize.fn('DISTINCT', Sequelize.col('tagId'))),
         tagIds.length,
       ),
     });
     return matches
-      .map(({ advertId }) => advertId)
+      .map(({ listingId }) => listingId)
       .filter((id): id is number => id !== null);
   }
 
-  async getFilteredAdverts(filters: Filters) {
+  async getFilteredListings(filters: Filters) {
     const selectedTagIds = this.getSelectedTagIds(filters.tags);
     const locationClause = this.getLocationWhere(filters);
-    const whereClause = this.getAdvertWhere(filters);
+    const whereClause = this.getListingWhere(filters);
     try {
       if (selectedTagIds.length > 0) {
-        const advertIds = await this.getAdvertIdsByTags(selectedTagIds);
-        whereClause.id = { [Op.in]: advertIds };
+        const listingIds = await this.getListingIdsByTags(selectedTagIds);
+        whereClause.id = { [Op.in]: listingIds };
       }
 
-      const adverts = await this.advert.findAll({
+      const listings = await this.listing.findAll({
         where: whereClause,
         include: this.getReadIncludes(
           Object.keys(locationClause).length ? locationClause : undefined,
         ),
       });
-      return adverts;
+      return listings;
     } catch (error) {
       console.error('Ошибка при фильтрации объявлений:', error);
       throw error;
     }
   }
 
-  async getFilteredAdvertsPage(
+  async getFilteredListingsPage(
     filters: Filters,
     { page = 1, limit = 8 }: { page?: unknown; limit?: unknown } = {},
   ) {
@@ -225,7 +227,7 @@ class AdvertService {
 
     const selectedTagIds = this.getSelectedTagIds(filters.tags);
     const locationClause = this.getLocationWhere(filters);
-    const whereClause = this.getAdvertWhere(filters);
+    const whereClause = this.getListingWhere(filters);
     if (selectedTagIds.length > 0) {
       const hasOutOfRangeTagId = selectedTagIds.some((id) => id > 2147483647);
       if (hasOutOfRangeTagId) {
@@ -234,7 +236,7 @@ class AdvertService {
         const tagIds = selectedTagIds.join(', ');
         whereClause.id = {
           [Op.in]: Sequelize.literal(
-            `(SELECT "advertId" FROM "AdvertTags" WHERE "tagId" IN (${tagIds}) GROUP BY "advertId" HAVING COUNT(DISTINCT "tagId") = ${selectedTagIds.length})`,
+            `(SELECT "listingId" FROM "ListingTags" WHERE "tagId" IN (${tagIds}) GROUP BY "listingId" HAVING COUNT(DISTINCT "tagId") = ${selectedTagIds.length})`,
           ),
         };
       }
@@ -250,7 +252,7 @@ class AdvertService {
       }
     }
 
-    const { rows, count } = await this.advert.findAndCountAll({
+    const { rows, count } = await this.listing.findAndCountAll({
       where: whereClause,
       limit: pageSize,
       offset,
@@ -264,12 +266,12 @@ class AdvertService {
     return { items: rows, total: count, page: currentPage, limit: pageSize };
   }
 
-  async getFreshAdverts({ limit = 3 }: { limit?: unknown } = {}) {
+  async getFreshListings({ limit = 3 }: { limit?: unknown } = {}) {
     const pageSize = parsePageValue(limit);
     if (pageSize > 3) {
       throw invalidPagination();
     }
-    return this.advert.findAll({
+    return this.listing.findAll({
       limit: pageSize,
       order: [
         ['createdAt', 'DESC'],
@@ -293,9 +295,9 @@ class AdvertService {
     }
   }
 
-  async getTopAdvertsByLikes() {
+  async getTopListingsByLikes() {
     try {
-      const topAdverts = await this.advert.findAll({
+      const topListings = await this.listing.findAll({
         attributes: [
           'id',
           'title',
@@ -311,7 +313,7 @@ class AdvertService {
             Sequelize.literal(`(
             SELECT COUNT(*)
             FROM "Likes"
-            WHERE "Likes"."advertId" = "Advert"."id"
+            WHERE "Likes"."listingId" = "Listing"."id"
           )`),
             'likeCount',
           ],
@@ -320,22 +322,22 @@ class AdvertService {
         limit: 4,
         include: this.getReadIncludes(),
       });
-      return topAdverts;
+      return topListings;
     } catch (error) {
-      console.error('Error fetching top adverts by likes:', error);
+      console.error('Error fetching top listings by likes:', error);
       throw error;
     }
   }
 }
 
-const advertService = new AdvertService(
-  Advert,
+const listingService = new ListingService(
+  Listing,
   Location,
   Tags,
   User,
   Like,
-  AdvertPhoto,
-  AdvertTags,
+  ListingPhoto,
+  ListingTags,
 );
 
-export = advertService;
+export = listingService;

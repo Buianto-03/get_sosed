@@ -13,7 +13,7 @@ async function run() {
   const origin = `http://127.0.0.1:${app.address().port}`;
   const saved = {
     users: [],
-    adverts: [],
+    listings: [],
     people: [],
     password: 'SmokeOnly123',
   };
@@ -186,12 +186,12 @@ async function run() {
       floor: '3',
       tagIds: JSON.stringify(tags.slice(0, 2).map((tag) => tag.id)),
     };
-    const before = await db.Advert.count({ where: { userId: a.id } });
+    const before = await db.Listing.count({ where: { userId: a.id } });
     await request('/api/listings', 'POST', form(fields), a, 400);
     const bad = form(fields);
     bad.append('files', new Blob(['broken'], { type: 'image/png' }), 'bad.png');
     await request('/api/listings', 'POST', bad, a, 400);
-    assert.equal(await db.Advert.count({ where: { userId: a.id } }), before);
+    assert.equal(await db.Listing.count({ where: { userId: a.id } }), before);
     const publication = form(fields);
     for (const name of ['main.png', 'second.png'])
       publication.append(
@@ -199,25 +199,25 @@ async function run() {
         new Blob([image], { type: 'image/png' }),
         name,
       );
-    const advert = (await request('/api/listings', 'POST', publication, a, 201))
+    const listing = (await request('/api/listings', 'POST', publication, a, 201))
       .data;
-    saved.adverts.push(advert.id);
+    saved.listings.push(listing.id);
     await fs.writeFile(
       '/tmp/get-sosed-redesign-smoke.json',
       JSON.stringify(saved),
     );
-    assert.equal(advert.userId, a.id);
-    assert.equal(advert.AdvertPhotos.length, 2);
-    assert.equal(advert.tags.length, 2);
-    assert.equal(advert.location.metro, null);
-    assert.ok(advert.AdvertPhotos[0].photo.endsWith('photo-0.webp'));
+    assert.equal(listing.userId, a.id);
+    assert.equal(listing.photos.length, 2);
+    assert.equal(listing.tags.length, 2);
+    assert.equal(listing.location.metro, null);
+    assert.ok(listing.photos[0].photo.endsWith('photo-0.webp'));
     assert.deepEqual(
-      (await request(`/api/listings/${advert.id}`)).data.AdvertPhotos,
-      advert.AdvertPhotos,
+      (await request(`/api/listings/${listing.id}`)).data.photos,
+      listing.photos,
     );
     assert.ok(
       (await request('/api/listings/mine', 'GET', undefined, a)).data.items.some(
-        (item) => item.id === advert.id,
+        (item) => item.id === listing.id,
       ),
     );
     assert.equal(
@@ -230,18 +230,18 @@ async function run() {
           city: 'Казань',
           tags: tags.slice(0, 2),
         })
-      ).data.some((item) => item.id === advert.id),
+      ).data.some((item) => item.id === listing.id),
     );
-    await request(`/api/likes/${advert.id}`, 'POST', undefined, b, 201);
-    await request(`/api/likes/${advert.id}`, 'POST', undefined, b);
+    await request(`/api/likes/${listing.id}`, 'POST', undefined, b, 201);
+    await request(`/api/likes/${listing.id}`, 'POST', undefined, b);
     assert.ok(
       (await request('/api/listings/liked', 'GET', undefined, b)).data.some(
-        (item) => item.advertId === advert.id,
+        (item) => item.listingId === listing.id,
       ),
     );
-    await request(`/api/likes/${advert.id}`, 'DELETE', undefined, b);
+    await request(`/api/likes/${listing.id}`, 'DELETE', undefined, b);
     assert.equal(
-      (await request(`/api/likes/${advert.id}`, 'DELETE', undefined, b)).data
+      (await request(`/api/likes/${listing.id}`, 'DELETE', undefined, b)).data
         .deleted,
       false,
     );

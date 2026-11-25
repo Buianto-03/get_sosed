@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const Sequelize = require('sequelize');
 
 function load(models) {
-  const filename = path.resolve(__dirname, '../build/src/service/advertService.js');
+  const filename = path.resolve(__dirname, '../build/src/service/listingService.js');
   const sandbox = {
     module: { exports: {} },
     require: (name) => {
@@ -24,7 +24,7 @@ function load(models) {
   return sandbox.module.exports;
 }
 
-test('own advert pagination scopes both SQL queries to the owner, counts distinct adverts and limits ordered rows', async () => {
+test('own listing pagination scopes both SQL queries to the owner, counts distinct listings and limits ordered rows', async () => {
   const sequelize = new Sequelize('test', 'test', 'test', { dialect: 'postgres', logging: false });
   try {
     const models = {};
@@ -41,8 +41,8 @@ test('own advert pagination scopes both SQL queries to the owner, counts distinc
     sequelize.query = async (sql, options) => {
       queries.push(sql);
       if (options.plain) return { count: 6 };
-      if (options.model === models.Advert && !empty) {
-        return [4, 3].map((id) => models.Advert.build({ id, userId: 7 }, {
+      if (options.model === models.Listing && !empty) {
+        return [4, 3].map((id) => models.Listing.build({ id, userId: 7 }, {
           isNewRecord: false, include: options.include,
         }));
       }
@@ -55,11 +55,11 @@ test('own advert pagination scopes both SQL queries to the owner, counts distinc
     assert.equal(result.limit, 2);
     const count = queries.find((sql) => /count\(/i.test(sql));
     const rows = queries.find((sql) => /LIMIT 2 OFFSET 2/.test(sql));
-    assert.match(count, /count\(DISTINCT\("Advert"\."id"\)\)/i);
-    for (const sql of [count, rows]) assert.match(sql, /"Advert"\."userId" = 7/);
-    assert.match(rows, /"Advert"\."createdAt" DESC, "Advert"\."id" DESC/);
+    assert.match(count, /count\(DISTINCT\("Listing"\."id"\)\)/i);
+    for (const sql of [count, rows]) assert.match(sql, /"Listing"\."userId" = 7/);
+    assert.match(rows, /"Listing"\."createdAt" DESC, "Listing"\."id" DESC/);
     assert.doesNotMatch(rows, /hashpass/);
-    assert.equal(queries.filter((sql) => /FROM "AdvertPhotos"/.test(sql)).length, 1);
+    assert.equal(queries.filter((sql) => /FROM "ListingPhotos"/.test(sql)).length, 1);
     empty = true;
     const beyond = await service.getMine(7, { page: 4, limit: 2 });
     assert.equal(beyond.items.length, 0);
@@ -116,16 +116,16 @@ test('public filtered page applies tag and location matches before its stable ro
       if (options.plain) return { count: 0 };
       return [];
     };
-    const result = await service.getFilteredAdvertsPage({
+    const result = await service.getFilteredListingsPage({
       tags: [{ id: 4 }, { id: 6 }, { id: 4 }],
       city: 'Belgrade',
     }, { page: '2', limit: '5' });
     assert.equal(JSON.stringify(result), JSON.stringify({ items: [], total: 0, page: 2, limit: 5 }));
     const count = queries.find((sql) => /count\(/i.test(sql));
     const rows = queries.find((sql) => /LIMIT 5 OFFSET 5/.test(sql));
-    assert.match(count, /count\(DISTINCT\("Advert"\."id"\)\)/i);
-    assert.match(rows, /"createdAt" DESC, "Advert"\."id" DESC/);
-    assert.match(rows, /"AdvertTags"/);
+    assert.match(count, /count\(DISTINCT\("Listing"\."id"\)\)/i);
+    assert.match(rows, /"createdAt" DESC, "Listing"\."id" DESC/);
+    assert.match(rows, /"ListingTags"/);
     assert.match(rows, /HAVING COUNT\(DISTINCT "tagId"\) = 2/);
     assert.match(rows, /FROM "Locations" AS "location"/);
     assert.match(rows, /"location"\."city" = 'Belgrade'/);
@@ -137,17 +137,17 @@ test('public filtered page applies tag and location matches before its stable ro
   }
 });
 
-test('fresh adverts enforce the three row cap and use one bounded query without a count', async () => {
+test('fresh listings enforce the three row cap and use one bounded query without a count', async () => {
   const calls = [];
   const exported = load({});
   const service = new exported.constructor({
     findAll: async (options) => { calls.push(options); return []; },
   });
-  assert.deepEqual(await service.getFreshAdverts(), []);
+  assert.deepEqual(await service.getFreshListings(), []);
   assert.equal(calls[0].limit, 3);
   assert.equal(JSON.stringify(calls[0].order), JSON.stringify([['createdAt', 'DESC'], ['id', 'DESC']]));
-  await assert.rejects(service.getFreshAdverts({ limit: 4 }),
+  await assert.rejects(service.getFreshListings({ limit: 4 }),
     (error) => error.status === 400 && error.code === 'INVALID_PAGINATION');
-  await assert.rejects(service.getFreshAdverts({ limit: ['3'] }),
+  await assert.rejects(service.getFreshListings({ limit: ['3'] }),
     (error) => error.status === 400 && error.code === 'INVALID_PAGINATION');
 });

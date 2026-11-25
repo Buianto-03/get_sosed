@@ -16,11 +16,11 @@ async function cleanup() {
   const ids = users.map((user) => user.id);
   if (ids.length !== saved.users.length)
     throw new Error('Smoke account identity check failed; cleanup stopped');
-  const adverts = await db.Advert.findAll({
+  const listings = await db.Listing.findAll({
     where: { userId: { [Op.in]: ids } },
     attributes: ['id'],
   });
-  const advertIds = adverts.map((advert) => advert.id);
+  const listingIds = listings.map((listing) => listing.id);
   await db.sequelize.transaction(async (transaction) => {
     await db.Chat.destroy({
       where: {
@@ -35,18 +35,18 @@ async function cleanup() {
       where: {
         [Op.or]: [
           { userId: { [Op.in]: ids } },
-          { advertId: { [Op.in]: advertIds } },
+          { listingId: { [Op.in]: listingIds } },
         ],
       },
       transaction,
     });
-    for (const model of [db.AdvertTags, db.AdvertPhoto, db.Location])
+    for (const model of [db.ListingTags, db.ListingPhoto, db.Location])
       await model.destroy({
-        where: { advertId: { [Op.in]: advertIds } },
+        where: { listingId: { [Op.in]: listingIds } },
         transaction,
       });
-    await db.Advert.destroy({
-      where: { id: { [Op.in]: advertIds } },
+    await db.Listing.destroy({
+      where: { id: { [Op.in]: listingIds } },
       transaction,
     });
     await db.UserPhoto.destroy({
@@ -64,14 +64,14 @@ async function cleanup() {
       recursive: true,
       force: true,
     });
-  for (const id of advertIds)
-    await fs.rm(`./public/images/adverts/advert-${id}`, {
+  for (const id of listingIds)
+    await fs.rm(`./public/images/listings/listing-${id}`, {
       recursive: true,
       force: true,
     });
   await fs.rm('/tmp/get-sosed-redesign-smoke.json');
   console.log(
-    `Removed ${ids.length} synthetic accounts and ${advertIds.length} own test adverts`,
+    `Removed ${ids.length} synthetic accounts and ${listingIds.length} own test listings`,
   );
 }
 cleanup()

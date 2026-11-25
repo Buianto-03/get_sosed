@@ -30,33 +30,36 @@ function createService(logger = console) {
     models[model.name] = model;
   }
   for (const model of Object.values(models)) model.associate?.(models);
-  const service = loadWithDependency('../build/src/service/advertService.js', '../../db/models', models, logger);
+  const service = loadWithDependency('../build/src/service/listingService.js', '../../db/models', models, logger);
   return { service, sequelize, models };
 }
 
 test('all listing reads generate SQL with safe author fields and tags, preserving empty results', async () => {
-  const { service, sequelize } = createService();
+  const { service, sequelize, models } = createService();
   const queries = [];
   // Exercise Sequelize query generation without connecting to a database.
   sequelize.query = async (sql, options) => {
     queries.push(sql);
     return options.plain ? null : [];
   };
-  assert.deepEqual(await service.getAdverts(), []);
-  assert.equal(await service.getAdvertById(1), null);
-  assert.deepEqual(await service.likedAdverts(2), []);
-  assert.deepEqual(await service.getFilteredAdverts({}), []);
-  assert.deepEqual(await service.getTopAdvertsByLikes(), []);
+  assert.deepEqual(await service.getListings(), []);
+  assert.equal(await service.getListingById(1), null);
+  assert.equal(models.Listing.associations.photos.as, 'photos');
+  assert.equal(models.Like.associations.listing.as, 'listing');
+  assert.deepEqual(await service.likedListings(2), []);
+  assert.deepEqual(await service.getFilteredListings({}), []);
+  assert.deepEqual(await service.getTopListingsByLikes(), []);
   assert.equal(queries.length, 5);
+  assert.match(queries[2], /LEFT OUTER JOIN "Listings" AS "listing"/);
   for (const sql of queries) {
     assert.doesNotMatch(sql, /hashpass/);
     assert.match(sql, /user\.email/);
     assert.match(sql, /tags\.name/);
     assert.match(sql, /LEFT OUTER JOIN "Locations"/);
   }
-  await service.getFilteredAdverts({ city: 'Москва' });
+  await service.getFilteredListings({ city: 'Москва' });
   assert.match(queries.at(-1), /INNER JOIN "Locations"/);
-  await service.getFilteredAdverts({
+  await service.getFilteredListings({
     city: 'Москва', district: 'Центр', metro: 'Арбатская',
   });
   assert.match(queries.at(-1), /"location"\."city" = 'Москва'/);
@@ -64,14 +67,14 @@ test('all listing reads generate SQL with safe author fields and tags, preservin
   assert.match(queries.at(-1), /"location"\."metro" = 'Арбатская'/);
 });
 
-test('top adverts use the injected model and preserve the result, fields and ranking query', async () => {
+test('top listings use the injected model and preserve the result, fields and ranking query', async () => {
   const { service, models } = createService();
-  models.Advert.findAll = async () => {
-    assert.fail('The imported advert model must not be queried');
+  models.Listing.findAll = async () => {
+    assert.fail('The imported listing model must not be queried');
   };
   const rows = [{ id: 42, title: 'Комната', likeCount: '3' }];
   let query;
-  const advert = {
+  const listing = {
     findAll: async (options) => {
       query = options;
       return rows;
@@ -80,9 +83,9 @@ test('top adverts use the injected model and preserve the result, fields and ran
   const location = {};
   const tags = {};
   const user = {};
-  const advertPhoto = {};
-  const isolated = new service.constructor(advert, location, tags, user, {}, advertPhoto, {});
-  assert.equal(await isolated.getTopAdvertsByLikes(), rows);
+  const listingPhoto = {};
+  const isolated = new service.constructor(listing, location, tags, user, {}, listingPhoto, {});
+  assert.equal(await isolated.getTopListingsByLikes(), rows);
   assert.equal(query.limit, 4);
   assert.deepEqual(Array.from(query.attributes.slice(0, -1)), [
     'id', 'title', 'body', 'price', 'floor', 'square', 'rooms',
@@ -91,35 +94,38 @@ test('top adverts use the injected model and preserve the result, fields and ran
   const [count, alias] = query.attributes.at(-1);
   assert.equal(alias, 'likeCount');
   assert.match(count.val, /SELECT COUNT\(\*\)/);
-  assert.match(count.val, /"Likes"\."advertId" = "Advert"\."id"/);
+  assert.match(count.val, /"Likes"\."listingId" = "Listing"\."id"/);
   assert.equal(query.order[0][0].val, '"likeCount"');
   assert.equal(query.order[0][1], 'DESC');
   assert.equal(query.include[0].model, user);
   assert.deepEqual(Array.from(query.include[0].attributes), ['id', 'name', 'email']);
   assert.equal(query.include[1].model, location);
-  assert.equal(query.include[2].model, advertPhoto);
+  assert.equal(query.include[2].model, listingPhoto);
+  assert.equal(query.include[2].as, 'photos');
   assert.equal(query.include[3].model, tags);
 });
 
-test('photos use one batch query ordered by ID for multiple adverts', async () => {
+test('photos use one batch query ordered by ID for multiple listings', async () => {
   const { service, sequelize, models } = createService();
   const queries = [];
   sequelize.query = async (sql, options) => {
     queries.push(sql);
-    if (options.model === models.Advert) {
-      return [1, 2].map((id) => models.Advert.build({ id, user: { id: 7, name: 'Автор', email: 'author@example.com' }, location: null }, {
+    if (options.model === models.Listing) {
+      return [1, 2].map((id) => models.Listing.build({ id, user: { id: 7, name: 'Автор', email: 'author@example.com' }, location: null }, {
         isNewRecord: false, include: options.include,
       }));
     }
     return [];
   };
-  const adverts = await service.getAdverts();
+  const listings = await service.getListings();
   assert.equal(queries.length, 2);
-  assert.match(queries[1], /"advertId" IN \(1, 2\)/);
-  assert.match(queries[1], /ORDER BY "AdvertPhoto"\."id" ASC/);
-  assert.deepEqual(adverts.map((advert) => advert.toJSON().AdvertPhotos), [[], []]);
-  for (const advert of adverts) {
-    const data = advert.toJSON();
+  assert.match(queries[1], /"listingId" IN \(1, 2\)/);
+  assert.match(queries[1], /ORDER BY "ListingPhoto"\."id" ASC/);
+  assert.deepEqual(listings.map((listing) => listing.toJSON().photos), [[], []]);
+  const likedListings = await service.likedListings(2);
+  assert.deepEqual(likedListings, []);
+  for (const listing of listings) {
+    const data = listing.toJSON();
     assert.equal(data.user.name, 'Автор');
     assert.equal(data.location, null);
     assert.equal(Object.hasOwn(data, 'User'), false);
@@ -128,9 +134,9 @@ test('photos use one batch query ordered by ID for multiple adverts', async () =
 });
 
 test('details return 200, 404 for absent/invalid IDs, and 500 on rejected reads', async () => {
-  const service = { getAdvertById: async (id) => id === 1 ? { id } : null };
+  const service = { getListingById: async (id) => id === 1 ? { id } : null };
   const controller = loadWithDependency(
-    '../build/src/controllers/advertController.js', '../service/advertService', service,
+    '../build/src/controllers/listingController.js', '../service/listingService', service,
   );
   const response = () => ({
     code: null, body: null,
@@ -139,15 +145,15 @@ test('details return 200, 404 for absent/invalid IDs, and 500 on rejected reads'
   });
   for (const [id, status] of [['1', 200], ['2', 404], ['abc', 404], ['0', 404]]) {
     const res = response();
-    await controller.getAdvertById({ params: { listingId: id } }, res);
+    await controller.getListingById({ params: { listingId: id } }, res);
     assert.equal(res.code, status);
   }
-  service.getAdvertById = async () => { throw new Error('database unavailable'); };
+  service.getListingById = async () => { throw new Error('database unavailable'); };
   const res = response();
-  await controller.getAdvertById({ params: { listingId: '1' } }, res);
+  await controller.getListingById({ params: { listingId: '1' } }, res);
   assert.equal(res.code, 500);
-  service.getAdverts = async () => { throw new Error('database unavailable'); };
-  await controller.getAdverts({}, res);
+  service.getListings = async () => { throw new Error('database unavailable'); };
+  await controller.getListings({}, res);
   assert.equal(res.code, 500);
 });
 
@@ -171,7 +177,7 @@ test('tag catalog returns stable IDs and only id/name; searching preserves all c
 test('tag endpoint accepts absent query, rejects structured query and handles service failures', async () => {
   let receivedQuery;
   const controller = loadWithDependency(
-    '../build/src/controllers/advertController.js', '../service/advertService', {
+    '../build/src/controllers/listingController.js', '../service/listingService', {
       getTagsLikeStr: async (query) => {
         receivedQuery = query;
         if (query === 'fail') throw new Error('offline');
@@ -195,10 +201,10 @@ test('tag endpoint accepts absent query, rejects structured query and handles se
   }
 });
 
-test('tag seeds include all conditions once and preserve demo advert tag IDs', async () => {
+test('tag seeds include all conditions once and preserve demo listing tag IDs', async () => {
   const tagSeed = require('../db/seeders/20240827092605-Tags');
-  const advertTagSeed = require('../db/seeders/20240827101623-AdvertTags');
-  const tables = { Tags: [], AdvertTags: [] };
+  const listingTagSeed = require('../db/seeders/20240827101623-ListingTags');
+  const tables = { Tags: [], ListingTags: [] };
   const queryInterface = {
     bulkInsert: async (table, rows) => {
       for (const row of rows) {
@@ -207,7 +213,7 @@ test('tag seeds include all conditions once and preserve demo advert tag IDs', a
     },
   };
   await tagSeed.up(queryInterface, Sequelize);
-  await advertTagSeed.up(queryInterface, Sequelize);
+  await listingTagSeed.up(queryInterface, Sequelize);
   const names = tables.Tags.map((tag) => tag.name);
   assert.equal(new Set(names).size, names.length);
   for (const name of [
@@ -215,16 +221,16 @@ test('tag seeds include all conditions once and preserve demo advert tag IDs', a
   ]) {
     assert.ok(names.includes(name));
     const tag = tables.Tags.find((entry) => entry.name === name);
-    assert.ok(tables.AdvertTags.some((link) => link.tagId === tag.id));
+    assert.ok(tables.ListingTags.some((link) => link.tagId === tag.id));
   }
   assert.deepEqual(
-    tables.AdvertTags.filter((link) => link.advertId === 1)
+    tables.ListingTags.filter((link) => link.listingId === 1)
       .map((link) => tables.Tags.find((tag) => tag.id === link.tagId)?.name),
     ['Двухкомнатная', 'С мебелью', 'Для некурящих', 'Тихие вечера'],
   );
-  const links = tables.AdvertTags.map((link) => `${link.advertId}:${link.tagId}`);
+  const links = tables.ListingTags.map((link) => `${link.listingId}:${link.tagId}`);
   assert.equal(new Set(links).size, links.length);
-  for (const link of tables.AdvertTags) {
+  for (const link of tables.ListingTags) {
     assert.ok(tables.Tags.some((tag) => tag.id === link.tagId));
   }
 });
@@ -234,16 +240,16 @@ test('selected tags normalize IDs, use HAVING COUNT DISTINCT for an AND match an
   const queries = [];
   sequelize.query = async (sql) => {
     queries.push(sql);
-    return queries.length === 1 ? [{ advertId: 42 }, { advertId: 77 }] : [];
+    return queries.length === 1 ? [{ listingId: 42 }, { listingId: 77 }] : [];
   };
-  await service.getFilteredAdverts({ tags: [
+  await service.getFilteredListings({ tags: [
     { id: '73' }, { id: 109 }, { id: 73 },
     { id: 0 }, { id: -1 }, { id: 1.5 }, { id: 'bad' },
   ] });
   assert.equal(queries.length, 2);
   assert.match(queries[0], /"tagId" IN \(73, 109\)/);
   assert.match(queries[0], /HAVING COUNT\(DISTINCT\("tagId"\)\) = 2/);
-  assert.match(queries[1], /"Advert"\."id" IN \(42, 77\)/);
+  assert.match(queries[1], /"Listing"\."id" IN \(42, 77\)/);
 });
 
 test('price and room ranges preserve single bounds, combined bounds and numeric versus string zero', async () => {
@@ -267,7 +273,7 @@ test('price and room ranges preserve single bounds, combined bounds and numeric 
   ];
   for (const field of ['price', 'rooms']) {
     for (const { from, to, expectedFrom, expectedTo } of cases) {
-      assert.deepEqual(await service.getFilteredAdverts({
+      assert.deepEqual(await service.getFilteredListings({
         [`${field}From`]: from,
         [`${field}To`]: to,
       }), []);
@@ -285,30 +291,30 @@ test('price and room ranges preserve single bounds, combined bounds and numeric 
   }
 });
 
-test('a tag search without matches keeps an empty ID filter instead of returning every advert', async () => {
+test('a tag search without matches keeps an empty ID filter instead of returning every listing', async () => {
   const { service, sequelize } = createService();
   const queries = [];
   sequelize.query = async (sql) => {
     queries.push(sql);
     return [];
   };
-  assert.deepEqual(await service.getFilteredAdverts({ tags: [{ id: 73 }] }), []);
+  assert.deepEqual(await service.getFilteredListings({ tags: [{ id: 73 }] }), []);
   assert.equal(queries.length, 2);
-  assert.match(queries[1], /"Advert"\."id" IN \(NULL\)/);
+  assert.match(queries[1], /"Listing"\."id" IN \(NULL\)/);
 });
 
-test('tag search excludes null advert IDs and retains an empty ID filter when necessary', async () => {
+test('tag search excludes null listing IDs and retains an empty ID filter when necessary', async () => {
   for (const [ids, expected] of [
-    [[null, 42], /"Advert"\."id" IN \(42\)/],
-    [[null], /"Advert"\."id" IN \(NULL\)/],
+    [[null, 42], /"Listing"\."id" IN \(42\)/],
+    [[null], /"Listing"\."id" IN \(NULL\)/],
   ]) {
     const { service, sequelize } = createService();
     const queries = [];
     sequelize.query = async (sql) => {
       queries.push(sql);
-      return queries.length === 1 ? ids.map((advertId) => ({ advertId })) : [];
+      return queries.length === 1 ? ids.map((listingId) => ({ listingId })) : [];
     };
-    assert.deepEqual(await service.getFilteredAdverts({ tags: [{ id: 73 }] }), []);
+    assert.deepEqual(await service.getFilteredListings({ tags: [{ id: 73 }] }), []);
     assert.equal(queries.length, 2);
     assert.match(queries[1], expected);
   }
@@ -322,9 +328,9 @@ test('absent, empty and invalid-only tag selections skip the tag query and ID re
       queries.push(sql);
       return [];
     };
-    assert.deepEqual(await service.getFilteredAdverts({ tags }), []);
+    assert.deepEqual(await service.getFilteredListings({ tags }), []);
     assert.equal(queries.length, 1);
-    assert.doesNotMatch(queries[0], /HAVING|"Advert"\."id" IN/);
+    assert.doesNotMatch(queries[0], /HAVING|"Listing"\."id" IN/);
   }
 });
 
@@ -342,7 +348,7 @@ test('filtering logs and preserves the original error from either database query
       return [];
     };
     await assert.rejects(
-      service.getFilteredAdverts({ tags: [{ id: 73 }] }),
+      service.getFilteredListings({ tags: [{ id: 73 }] }),
       (error) => error === failure,
     );
     assert.equal(queries, failedQuery);
@@ -359,7 +365,7 @@ test('filter preparation errors stay outside database access and database-error 
     return [];
   };
   await assert.rejects(
-    service.getFilteredAdverts({ tags: {} }),
+    service.getFilteredListings({ tags: {} }),
     (error) => error.name === 'TypeError',
   );
   assert.equal(queries, 0);

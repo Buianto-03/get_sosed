@@ -46,23 +46,23 @@ function request(app, method, url) {
 
 test('listing DELETE reaches API fallback while listing GET and like DELETE remain available', async () => {
   const noop = (req, res, next) => next();
-  const advertController = {
-    getAdverts: noop, createAdvert: noop, getFilteredAdverts: noop,
-    getFilteredAdvertsPage: (req, res) => res.json({ page: Number(req.query.page || 1) }),
-    getFreshAdverts: (req, res) => res.json({ limit: Number(req.query.limit || 3) }),
-    likedAdvertsHandler: noop, getTopAdvertsByLikes: noop, getTagsBySearch: noop,
+  const listingController = {
+    getListings: noop, createListing: noop, getFilteredListings: noop,
+    getFilteredListingsPage: (req, res) => res.json({ page: Number(req.query.page || 1) }),
+    getFreshListings: (req, res) => res.json({ limit: Number(req.query.limit || 3) }),
+    likedListingsHandler: noop, getTopListingsByLikes: noop, getTagsBySearch: noop,
     getMine: noop,
-    getAdvertById: (req, res) => res.json({ advertId: req.params.listingId }),
+    getListingById: (req, res) => res.json({ listingId: req.params.listingId }),
   };
   const likeController = {
     getLikes: noop, setLike: noop,
-    deleteLike: (req, res) => res.json({ advertId: Number(req.params.listingId), deleted: true }),
+    deleteLike: (req, res) => res.json({ listingId: Number(req.params.listingId), deleted: true }),
   };
-  const advertRouter = load('../build/src/router/advertRouter.js', {
+  const listingRouter = load('../build/src/router/listingRouter.js', {
     express,
     '../middlewares/verifyAccessToken': noop,
     '../middlewares/handleUpload': () => noop,
-    '../controllers/advertController': advertController,
+    '../controllers/listingController': listingController,
   });
   const likeRouter = load('../build/src/router/likeRouter.js', {
     express,
@@ -80,7 +80,7 @@ test('listing DELETE reaches API fallback while listing GET and like DELETE rema
     cors: () => noop,
     './router/tokensRouter': noop,
     './router/authRouter': noop,
-    './router/advertRouter': advertRouter,
+    './router/listingRouter': listingRouter,
     './router/userRouter': noop,
     './router/likeRouter': likeRouter,
     './ws/upgrade': noop,
@@ -93,7 +93,7 @@ test('listing DELETE reaches API fallback while listing GET and like DELETE rema
     body: { code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' },
   });
   assert.deepEqual(await request(app, 'GET', '/api/listings/42'), {
-    status: 200, body: { advertId: '42' },
+    status: 200, body: { listingId: '42' },
   });
   assert.deepEqual(await request(app, 'POST', '/api/listings/filters/page?page=2'), {
     status: 200, body: { page: 2 },
@@ -102,9 +102,9 @@ test('listing DELETE reaches API fallback while listing GET and like DELETE rema
     status: 200, body: { limit: 2 },
   });
   assert.deepEqual(await request(app, 'DELETE', '/api/likes/42'), {
-    status: 200, body: { advertId: 42, deleted: true },
+    status: 200, body: { listingId: 42, deleted: true },
   });
-  assert.deepEqual(await request(app, 'GET', '/api/adverts/42'), {
+  assert.deepEqual(await request(app, 'GET', '/api/unknown'), {
     status: 404,
     body: { code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' },
   });

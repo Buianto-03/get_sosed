@@ -2,28 +2,37 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('AdvertTags', {
+    await queryInterface.createTable('Listings', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      tagId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Tags',
-          key: 'id',
-        },
-        onDelete: 'CASCADE',
+      title: {
+        type: Sequelize.STRING,
       },
-      advertId: {
+      body: {
+        type: Sequelize.TEXT,
+      },
+      rooms: {
+        type: Sequelize.INTEGER,
+      },
+      floor: {
+        type: Sequelize.INTEGER,
+      },
+      square: {
+        type: Sequelize.INTEGER,
+      },
+      userId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Adverts',
+          model: 'Users',
           key: 'id',
         },
-        onDelete: 'CASCADE',
+      },
+      price: {
+        type: Sequelize.INTEGER,
       },
       createdAt: {
         allowNull: false,
@@ -36,6 +45,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('AdvertTags');
+    await queryInterface.dropTable('Listings');
   },
 };

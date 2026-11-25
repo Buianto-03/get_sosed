@@ -32,17 +32,17 @@ const createUser = (
       Role,
       UserProfile,
       Like,
-      Advert,
+      Listing,
       Chat,
       UserPhoto,
     }: Pick<
       typeof db,
-      'Role' | 'UserProfile' | 'Like' | 'Advert' | 'Chat' | 'UserPhoto'
+      'Role' | 'UserProfile' | 'Like' | 'Listing' | 'Chat' | 'UserPhoto'
     >) {
       this.belongsTo(Role, { foreignKey: 'roleId' });
       this.hasOne(UserProfile, { foreignKey: 'userId' });
       this.hasMany(Like, { foreignKey: 'userId' });
-      this.hasMany(Advert, { foreignKey: 'userId' });
+      this.hasMany(Listing, { foreignKey: 'userId' });
       this.hasMany(Chat, { foreignKey: 'senderId', as: 'sentChats' });
       this.hasMany(Chat, { foreignKey: 'receiverId', as: 'receivedChats' });
       this.hasMany(UserPhoto, { foreignKey: 'userId' });

@@ -2,36 +2,36 @@ import type { Request, Response } from 'express';
 import type { AuthResponse } from '../types/auth';
 import errorDetails = require('../utils/errorDetails');
 
-import advertServiceInstance = require('../service/advertService');
-import publishAdvertServiceInstance = require('../service/publishAdvertService');
+import listingServiceInstance = require('../service/listingService');
+import publishListingServiceInstance = require('../service/publishListingService');
 
-class AdvertController {
+class ListingController {
   constructor(
-    private readonly advertService: typeof advertServiceInstance,
-    private readonly publishAdvertService: typeof publishAdvertServiceInstance,
+    private readonly listingService: typeof listingServiceInstance,
+    private readonly publishListingService: typeof publishListingServiceInstance,
   ) {}
 
-  getAdverts = async (req: Request, res: Response) => {
+  getListings = async (req: Request, res: Response) => {
     try {
-      const adverts = await this.advertService.getAdverts();
-      res.status(200).json(adverts);
+      const listings = await this.listingService.getListings();
+      res.status(200).json(listings);
     } catch (error) {
-      console.error('Cannot read adverts:', errorDetails(error).message);
+      console.error('Cannot read listings:', errorDetails(error).message);
       res.status(500).json({ message: 'server error' });
     }
   };
 
-  getAdvertById = async (req: Request, res: Response) => {
+  getListingById = async (req: Request, res: Response) => {
     try {
-      const advertId = Number(req.params.listingId);
-      if (!Number.isSafeInteger(advertId) || advertId <= 0) {
-        return res.status(404).json({ message: 'Advert not found' });
+      const listingId = Number(req.params.listingId);
+      if (!Number.isSafeInteger(listingId) || listingId <= 0) {
+        return res.status(404).json({ message: 'Listing not found' });
       }
-      const advert = await this.advertService.getAdvertById(advertId);
-      if (!advert) {
-        return res.status(404).json({ message: 'Advert not found' });
+      const listing = await this.listingService.getListingById(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: 'Listing not found' });
       }
-      return res.status(200).json(advert);
+      return res.status(200).json(listing);
     } catch (error) {
       return res.status(500).json({ message: 'server error' });
     }
@@ -40,7 +40,7 @@ class AdvertController {
   getMine = async (req: Request, res: AuthResponse) => {
     try {
       return res.json(
-        await this.advertService.getMine(res.locals.user.id, req.query),
+        await this.listingService.getMine(res.locals.user.id, req.query),
       );
     } catch (error) {
       const details = errorDetails(error);
@@ -49,21 +49,21 @@ class AdvertController {
           .status(400)
           .json({ code: details.code, message: details.message });
       }
-      console.error('Cannot load own adverts:', error);
+      console.error('Cannot load own listings:', error);
       return res.status(500).json({
-        code: 'OWN_ADVERTS_LOAD_FAILED',
-        message: 'Cannot load own adverts',
+        code: 'OWN_LISTINGS_LOAD_FAILED',
+        message: 'Cannot load own listings',
       });
     }
   };
 
-  createAdvert = async (req: Request, res: AuthResponse) => {
+  createListing = async (req: Request, res: AuthResponse) => {
     try {
       const files = Array.isArray(req.files) ? req.files : undefined;
       return res
         .status(201)
         .json(
-          await this.publishAdvertService.publishAdvert(
+          await this.publishListingService.publishListing(
             req.body,
             files,
             res.locals.user.id,
@@ -72,7 +72,7 @@ class AdvertController {
     } catch (error) {
       const details = errorDetails(error);
       const isExpectedError =
-        details.status === 400 && details.code === 'INVALID_ADVERT_DATA';
+        details.status === 400 && details.code === 'INVALID_LISTING_DATA';
       const status =
         isExpectedError ||
         (details.status !== undefined &&
@@ -81,21 +81,21 @@ class AdvertController {
           ? (details.status ?? 500)
           : 500;
       if (!isExpectedError) {
-        console.error('Cannot publish advert:', error);
+        console.error('Cannot publish listing:', error);
       }
       return res.status(status).json({
-        code: isExpectedError ? details.code : 'ADVERT_PUBLISH_FAILED',
-        message: isExpectedError ? details.message : 'Cannot publish advert',
+        code: isExpectedError ? details.code : 'LISTING_PUBLISH_FAILED',
+        message: isExpectedError ? details.message : 'Cannot publish listing',
       });
     }
   };
 
-  getFilteredAdverts = async (req: Request, res: Response) => {
+  getFilteredListings = async (req: Request, res: Response) => {
     try {
       const filters = req.body;
-      const filteredAdverts =
-        await this.advertService.getFilteredAdverts(filters);
-      res.json(filteredAdverts);
+      const filteredListings =
+        await this.listingService.getFilteredListings(filters);
+      res.json(filteredListings);
     } catch (error) {
       console.log('Ошибка при фильтрации объявлений:', error);
       res
@@ -104,9 +104,9 @@ class AdvertController {
     }
   };
 
-  getFilteredAdvertsPage = async (req: Request, res: Response) => {
+  getFilteredListingsPage = async (req: Request, res: Response) => {
     try {
-      const page = await this.advertService.getFilteredAdvertsPage(
+      const page = await this.listingService.getFilteredListingsPage(
         req.body || {},
         req.query,
       );
@@ -118,18 +118,18 @@ class AdvertController {
           .status(400)
           .json({ code: details.code, message: details.message });
       }
-      console.error('Cannot load filtered adverts:', error);
+      console.error('Cannot load filtered listings:', error);
       return res.status(500).json({
-        code: 'FILTERED_ADVERTS_LOAD_FAILED',
-        message: 'Cannot load filtered adverts',
+        code: 'FILTERED_LISTINGS_LOAD_FAILED',
+        message: 'Cannot load filtered listings',
       });
     }
   };
 
-  getFreshAdverts = async (req: Request, res: Response) => {
+  getFreshListings = async (req: Request, res: Response) => {
     try {
-      const adverts = await this.advertService.getFreshAdverts(req.query);
-      return res.status(200).json(adverts);
+      const listings = await this.listingService.getFreshListings(req.query);
+      return res.status(200).json(listings);
     } catch (error) {
       const details = errorDetails(error);
       if (details.status === 400 && details.code === 'INVALID_PAGINATION') {
@@ -137,10 +137,10 @@ class AdvertController {
           .status(400)
           .json({ code: details.code, message: details.message });
       }
-      console.error('Cannot load fresh adverts:', error);
+      console.error('Cannot load fresh listings:', error);
       return res.status(500).json({
-        code: 'FRESH_ADVERTS_LOAD_FAILED',
-        message: 'Cannot load fresh adverts',
+        code: 'FRESH_LISTINGS_LOAD_FAILED',
+        message: 'Cannot load fresh listings',
       });
     }
   };
@@ -151,19 +151,19 @@ class AdvertController {
       return res.status(400).json({ error: 'query must be a string' });
     }
     try {
-      const tags = await this.advertService.getTagsLikeStr(query.trim());
+      const tags = await this.listingService.getTagsLikeStr(query.trim());
       return res.status(200).json(tags);
     } catch (error) {
       return res.status(500).json({ error: 'Ошибка при поиске тегов' });
     }
   };
 
-  likedAdvertsHandler = async (req: Request, res: AuthResponse) => {
+  likedListingsHandler = async (req: Request, res: AuthResponse) => {
     const { id } = res.locals.user;
 
     try {
-      const likedAdverts = await this.advertService.likedAdverts(id);
-      res.status(200).json(likedAdverts);
+      const likedListings = await this.listingService.likedListings(id);
+      res.status(200).json(likedListings);
     } catch (error) {
       console.log(error);
       res
@@ -172,19 +172,19 @@ class AdvertController {
     }
   };
 
-  getTopAdvertsByLikes = async (req: Request, res: Response) => {
+  getTopListingsByLikes = async (req: Request, res: Response) => {
     try {
-      const topAdverts = await this.advertService.getTopAdvertsByLikes();
-      res.status(200).json(topAdverts);
+      const topListings = await this.listingService.getTopListingsByLikes();
+      res.status(200).json(topListings);
     } catch (error) {
       res.status(500).json({ error: 'Ошибка при получении топ-объявлений' });
     }
   };
 }
 
-const advertController = new AdvertController(
-  advertServiceInstance,
-  publishAdvertServiceInstance,
+const listingController = new ListingController(
+  listingServiceInstance,
+  publishListingServiceInstance,
 );
 
-export = advertController;
+export = listingController;

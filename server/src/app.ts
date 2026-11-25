@@ -7,7 +7,7 @@ import cors = require('cors');
 
 import tokensRouter = require('./router/tokensRouter');
 import authRouter = require('./router/authRouter');
-import advertRouter = require('./router/advertRouter');
+import listingRouter = require('./router/listingRouter');
 import userRouter = require('./router/userRouter');
 import upgradeCb = require('./ws/upgrade');
 import wsServer = require('./ws/wsServer');
@@ -28,7 +28,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/listings', advertRouter);
+app.use('/api/listings', listingRouter);
 app.use('/api/users', userRouter);
 app.use('/api/tokens', tokensRouter);
 app.use('/api/auth', authRouter);

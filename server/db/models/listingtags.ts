@@ -7,39 +7,40 @@ import {
 } from 'sequelize';
 import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
-const createAdvertTags = (
+const createListingTags = (
   sequelize: Sequelize,
   DataTypes: typeof import('sequelize').DataTypes,
 ) => {
-  class AdvertTags extends Model<
-    InferAttributes<AdvertTags>,
-    InferCreationAttributes<AdvertTags>
+  class ListingTags extends Model<
+    InferAttributes<ListingTags>,
+    InferCreationAttributes<ListingTags>
   > {
     declare tagId: number | null;
-    declare advertId: number | null;
+    declare listingId: number | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
     static associate({
-      Advert,
+      Listing,
       Tags,
-    }: Pick<typeof db, 'Advert' | 'Tags'>) {
-      this.belongsTo(Advert, { foreignKey: 'advertId' });
+    }: Pick<typeof db, 'Listing' | 'Tags'>) {
+      this.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
       this.belongsTo(Tags, { foreignKey: 'tagId' });
     }
   }
-  AdvertTags.init(
+  ListingTags.init(
     {
       ...commonAttributes(),
       tagId: DataTypes.INTEGER,
-      advertId: DataTypes.INTEGER,
+      listingId: DataTypes.INTEGER,
     },
     {
       sequelize,
-      modelName: 'AdvertTags',
+      modelName: 'ListingTags',
+      tableName: 'ListingTags',
     },
   );
-  return AdvertTags;
+  return ListingTags;
 };
 
-export = createAdvertTags;
+export = createListingTags;

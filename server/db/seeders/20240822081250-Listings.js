@@ -4,7 +4,7 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.bulkInsert(
-      'Adverts',
+      'Listings',
       [
         {
           title: 'Светлая квартира в центре города',

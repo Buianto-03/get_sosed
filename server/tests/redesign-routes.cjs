@@ -20,7 +20,7 @@ async function run() {
       '/messages/2',
       '/unknown',
       '/unknown.html',
-      '/advert/1',
+      '/listing/1',
     ]) {
       const response = await fetch(origin + path);
       assert.equal(response.status, 200, path);

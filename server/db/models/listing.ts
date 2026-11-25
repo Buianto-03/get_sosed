@@ -7,13 +7,13 @@ import {
 } from 'sequelize';
 import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
-const createAdvert = (
+const createListing = (
   sequelize: Sequelize,
   DataTypes: typeof import('sequelize').DataTypes,
 ) => {
-  class Advert extends Model<
-    InferAttributes<Advert>,
-    InferCreationAttributes<Advert>
+  class Listing extends Model<
+    InferAttributes<Listing>,
+    InferCreationAttributes<Listing>
   > {
     declare id: CreationOptional<number>;
     declare title: string | null;
@@ -27,30 +27,30 @@ const createAdvert = (
     declare updatedAt: CreationOptional<Date>;
 
     static associate({
-      AdvertPhoto,
+      ListingPhoto,
       User,
       Location,
-      AdvertTags,
+      ListingTags,
       Like,
       Tags,
     }: Pick<
       typeof db,
-      'AdvertPhoto' | 'User' | 'Location' | 'AdvertTags' | 'Like' | 'Tags'
+      'ListingPhoto' | 'User' | 'Location' | 'ListingTags' | 'Like' | 'Tags'
     >) {
       // define association here
-      this.hasMany(AdvertPhoto, { foreignKey: 'advertId' });
+      this.hasMany(ListingPhoto, { foreignKey: 'listingId', as: 'photos' });
       this.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-      this.hasOne(Location, { foreignKey: 'advertId', as: 'location' });
-      this.hasMany(AdvertTags, { foreignKey: 'advertId', as: 'advertsTags' });
-      this.hasMany(Like, { foreignKey: 'advertId' });
+      this.hasOne(Location, { foreignKey: 'listingId', as: 'location' });
+      this.hasMany(ListingTags, { foreignKey: 'listingId', as: 'listingTags' });
+      this.hasMany(Like, { foreignKey: 'listingId', as: 'likes' });
       this.belongsToMany(Tags, {
-        through: AdvertTags,
-        foreignKey: 'advertId',
+        through: ListingTags,
+        foreignKey: 'listingId',
         as: 'tags',
       });
     }
   }
-  Advert.init(
+  Listing.init(
     {
       ...commonAttributes(),
       title: DataTypes.STRING,
@@ -63,10 +63,11 @@ const createAdvert = (
     },
     {
       sequelize,
-      modelName: 'Advert',
+      modelName: 'Listing',
+      tableName: 'Listings',
     },
   );
-  return Advert;
+  return Listing;
 };
 
-export = createAdvert;
+export = createListing;

@@ -19,7 +19,7 @@ servers:
 tags:
   - name: Auth
     description: Регистрация, вход и обновление сессии
-  - name: Adverts
+  - name: Listings
     description: Объявления, фильтры и избранное
   - name: Users
     description: Профили и список диалогов
@@ -313,8 +313,8 @@ paths:
   /api/listings:
     get:
       tags:
-        - Adverts
-      operationId: listAdverts
+        - Listings
+      operationId: listListings
       summary: Получить все объявления
       description:
         GET не применяет фильтры. Для фильтрации используйте POST
@@ -327,7 +327,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Advert'
+                  $ref: '#/components/schemas/Listing'
         '500':
           description: Ошибка сервера
           content:
@@ -343,8 +343,8 @@ paths:
                 message: server error
     post:
       tags:
-        - Adverts
-      operationId: publishAdvert
+        - Listings
+      operationId: publishListing
       summary: Опубликовать объявление
       security:
         - bearerAuth: []
@@ -353,7 +353,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PublishAdvertInput'
+              $ref: '#/components/schemas/PublishListingInput'
       description:
         Владелец определяется из access token. Фото сохраняются как WebP; ID
         тегов должны существовать.
@@ -363,7 +363,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Advert'
+                $ref: '#/components/schemas/Listing'
         '400':
           description: Неверные поля, теги или фотографии
           content:
@@ -379,11 +379,11 @@ paths:
                   code:
                     type: string
                     enum:
-                      - INVALID_ADVERT_DATA
+                      - INVALID_LISTING_DATA
                       - INVALID_UPLOAD
               example:
                 message: Invalid title
-                code: INVALID_ADVERT_DATA
+                code: INVALID_LISTING_DATA
         5XX:
           description: Не удалось опубликовать объявление
           content:
@@ -399,24 +399,24 @@ paths:
                   code:
                     type: string
                     enum:
-                      - ADVERT_PUBLISH_FAILED
+                      - LISTING_PUBLISH_FAILED
               example:
-                message: Cannot publish advert
-                code: ADVERT_PUBLISH_FAILED
+                message: Cannot publish listing
+                code: LISTING_PUBLISH_FAILED
         '403':
           $ref: '#/components/responses/InvalidAccessToken'
   /api/listings/filters:
     post:
       tags:
-        - Adverts
-      operationId: filterAdverts
+        - Listings
+      operationId: filterListings
       summary: Отфильтровать объявления
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdvertFilters'
+              $ref: '#/components/schemas/ListingFilters'
             example:
               city: Москва
               priceFrom: 20000
@@ -431,7 +431,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Advert'
+                  $ref: '#/components/schemas/Listing'
         '500':
           description: Ошибка фильтрации
           content:
@@ -448,8 +448,8 @@ paths:
   /api/listings/filters/page:
     post:
       tags:
-        - Adverts
-      operationId: filterAdvertsPage
+        - Listings
+      operationId: filterListingsPage
       summary: Получить страницу объявлений по фильтрам
       parameters:
         - name: page
@@ -479,14 +479,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdvertFilters'
+              $ref: '#/components/schemas/ListingFilters'
       responses:
         '200':
           description: Страница совпавших объявлений и полный distinct total.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OwnAdvertsPage'
+                $ref: '#/components/schemas/OwnListingsPage'
         '400':
           description: Неверная пагинация
           content:
@@ -498,12 +498,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FilteredAdvertsLoadError'
+                $ref: '#/components/schemas/FilteredListingsLoadError'
   /api/listings/fresh:
     get:
       tags:
-        - Adverts
-      operationId: listFreshAdverts
+        - Listings
+      operationId: listFreshListings
       summary: Получить свежие объявления
       parameters:
         - name: limit
@@ -526,7 +526,7 @@ paths:
                 type: array
                 maxItems: 3
                 items:
-                  $ref: '#/components/schemas/Advert'
+                  $ref: '#/components/schemas/Listing'
         '400':
           description: Неверная пагинация
           content:
@@ -538,24 +538,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FreshAdvertsLoadError'
+                $ref: '#/components/schemas/FreshListingsLoadError'
   /api/listings/liked:
     get:
       tags:
-        - Adverts
-      operationId: listLikedAdverts
+        - Listings
+      operationId: listLikedListings
       summary: Получить свои избранные объявления
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Записи избранного с вложенным Advert.
+          description: Записи избранного с вложенным listing.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LikedAdvert'
+                  $ref: '#/components/schemas/LikedListing'
         '500':
           description: Ошибка загрузки избранного
           content:
@@ -574,8 +574,8 @@ paths:
   /api/listings/top:
     get:
       tags:
-        - Adverts
-      operationId: listTopAdverts
+        - Listings
+      operationId: listTopListings
       summary: Получить до четырёх самых популярных объявлений
       responses:
         '200':
@@ -586,7 +586,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TopAdvert'
+                  $ref: '#/components/schemas/TopListing'
                 maxItems: 4
         '500':
           description: Ошибка загрузки популярных объявлений
@@ -604,7 +604,7 @@ paths:
   /api/listings/tags:
     get:
       tags:
-        - Adverts
+        - Listings
       operationId: searchTags
       summary: Найти теги
       parameters:
@@ -654,8 +654,8 @@ paths:
   /api/listings/mine:
     get:
       tags:
-        - Adverts
-      operationId: listOwnAdverts
+        - Listings
+      operationId: listOwnListings
       summary: Получить страницу своих объявлений
       security:
         - bearerAuth: []
@@ -685,7 +685,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OwnAdvertsPage'
+                $ref: '#/components/schemas/OwnListingsPage'
         '400':
           description: Неверная пагинация
           content:
@@ -720,10 +720,10 @@ paths:
                   code:
                     type: string
                     enum:
-                      - OWN_ADVERTS_LOAD_FAILED
+                      - OWN_LISTINGS_LOAD_FAILED
               example:
-                message: Cannot load own adverts
-                code: OWN_ADVERTS_LOAD_FAILED
+                message: Cannot load own listings
+                code: OWN_LISTINGS_LOAD_FAILED
         '403':
           $ref: '#/components/responses/InvalidAccessToken'
   /api/listings/{listingId}:
@@ -737,8 +737,8 @@ paths:
           maximum: 9007199254740991
     get:
       tags:
-        - Adverts
-      operationId: getAdvert
+        - Listings
+      operationId: getListing
       summary: Получить объявление по ID
       responses:
         '200':
@@ -746,7 +746,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Advert'
+                $ref: '#/components/schemas/Listing'
         '404':
           description: Объявление не найдено или ID некорректен
           content:
@@ -759,7 +759,7 @@ paths:
                   message:
                     type: string
               example:
-                message: Advert not found
+                message: Listing not found
         '500':
           description: Ошибка сервера
           content:
@@ -1142,10 +1142,10 @@ paths:
               schema:
                 type: object
                 required:
-                  - advertId
+                  - listingId
                   - deleted
                 properties:
-                  advertId:
+                  listingId:
                     type: integer
                   deleted:
                     type: boolean
@@ -1396,7 +1396,7 @@ components:
       type: object
       required:
         - id
-        - advertId
+        - listingId
         - city
         - district
         - address
@@ -1409,7 +1409,7 @@ components:
           type: integer
           minimum: 1
           maximum: 9007199254740991
-        advertId:
+        listingId:
           type: integer
           minimum: 1
           maximum: 9007199254740991
@@ -1437,11 +1437,11 @@ components:
           type: string
           format: date-time
       nullable: true
-    AdvertPhoto:
+    ListingPhoto:
       type: object
       required:
         - id
-        - advertId
+        - listingId
         - photo
         - createdAt
         - updatedAt
@@ -1450,7 +1450,7 @@ components:
           type: integer
           minimum: 1
           maximum: 9007199254740991
-        advertId:
+        listingId:
           type: integer
           minimum: 1
           maximum: 9007199254740991
@@ -1462,7 +1462,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-    Advert:
+    Listing:
       type: object
       required:
         - id
@@ -1477,7 +1477,7 @@ components:
         - updatedAt
         - user
         - location
-        - AdvertPhotos
+        - photos
         - tags
       properties:
         id:
@@ -1529,17 +1529,17 @@ components:
           nullable: true
         location:
           $ref: '#/components/schemas/Location'
-        AdvertPhotos:
+        photos:
           type: array
           items:
-            $ref: '#/components/schemas/AdvertPhoto'
+            $ref: '#/components/schemas/ListingPhoto'
         tags:
           type: array
           items:
             $ref: '#/components/schemas/Tag'
-    TopAdvert:
+    TopListing:
       allOf:
-        - $ref: '#/components/schemas/Advert'
+        - $ref: '#/components/schemas/Listing'
         - type: object
           required:
             - likeCount
@@ -1549,7 +1549,7 @@ components:
               pattern: ^[0-9]+$
               description: PostgreSQL COUNT возвращает bigint строкой.
               example: '12'
-    OwnAdvertsPage:
+    OwnListingsPage:
       type: object
       required:
         - items
@@ -1560,7 +1560,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Advert'
+            $ref: '#/components/schemas/Listing'
         total:
           type: integer
           minimum: 0
@@ -1584,7 +1584,7 @@ components:
         message:
           type: string
           example: Invalid pagination parameters
-    FilteredAdvertsLoadError:
+    FilteredListingsLoadError:
       type: object
       required:
         - code
@@ -1593,11 +1593,11 @@ components:
         code:
           type: string
           enum:
-            - FILTERED_ADVERTS_LOAD_FAILED
+            - FILTERED_LISTINGS_LOAD_FAILED
         message:
           type: string
-          example: Cannot load filtered adverts
-    FreshAdvertsLoadError:
+          example: Cannot load filtered listings
+    FreshListingsLoadError:
       type: object
       required:
         - code
@@ -1606,16 +1606,16 @@ components:
         code:
           type: string
           enum:
-            - FRESH_ADVERTS_LOAD_FAILED
+            - FRESH_LISTINGS_LOAD_FAILED
         message:
           type: string
-          example: Cannot load fresh adverts
+          example: Cannot load fresh listings
     Like:
       type: object
       required:
         - id
         - userId
-        - advertId
+        - listingId
         - createdAt
         - updatedAt
         - User
@@ -1628,7 +1628,7 @@ components:
           type: integer
           minimum: 1
           maximum: 9007199254740991
-        advertId:
+        listingId:
           type: integer
           minimum: 1
           maximum: 9007199254740991
@@ -1645,7 +1645,7 @@ components:
       required:
         - id
         - userId
-        - advertId
+        - listingId
         - User
       properties:
         id:
@@ -1656,7 +1656,7 @@ components:
           type: integer
           minimum: 1
           maximum: 9007199254740991
-        advertId:
+        listingId:
           type: integer
           minimum: 1
           maximum: 9007199254740991
@@ -1675,15 +1675,15 @@ components:
               type: string
             UserProfile:
               $ref: '#/components/schemas/Profile'
-    LikedAdvert:
+    LikedListing:
       type: object
       required:
         - id
         - userId
-        - advertId
+        - listingId
         - createdAt
         - updatedAt
-        - Advert
+        - listing
       properties:
         id:
           type: integer
@@ -1693,7 +1693,7 @@ components:
           type: integer
           minimum: 1
           maximum: 9007199254740991
-        advertId:
+        listingId:
           type: integer
           minimum: 1
           maximum: 9007199254740991
@@ -1703,10 +1703,10 @@ components:
         updatedAt:
           type: string
           format: date-time
-        Advert:
-          $ref: '#/components/schemas/Advert'
+        listing:
+          $ref: '#/components/schemas/Listing'
       description:
-        Избранное возвращается массивом записей Like с вложенным Advert.
+        Избранное возвращается массивом записей Like с вложенным listing.
     SignupInput:
       type: object
       required:
@@ -1738,7 +1738,7 @@ components:
           description:
             JPG, PNG или WebP; проверяется возможность декодирования
             изображения. Необязательно, до 10 MiB.
-    PublishAdvertInput:
+    PublishListingInput:
       type: object
       required:
         - title
@@ -1814,7 +1814,7 @@ components:
           maxItems: 10
           description:
             'Повторяемое поле files: 1–10 фотографий, до 10 MiB каждая.'
-    AdvertFilters:
+    ListingFilters:
       type: object
       properties:
         city:

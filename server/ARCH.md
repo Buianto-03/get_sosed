@@ -36,9 +36,9 @@ Authentication routes delegate to `AuthController`. Login credential checks and 
 - Use camelCase for functions, methods, and variables.
 - Name files in camelCase with their responsibility: `userController.ts`, `userService.ts`.
 - Prefix boolean names with `is`, `has`, `can`, or `should`: `isValid`, `hasPhoto`.
-- Use plural names for collections: `users`, `advertIds`.
-- Prefer descriptive names such as `error`, `transaction`, and `advert` over `e`, `t`, and generic `item` when the entity is known.
-- Name operations with a verb and the relevant entity: `getUserSummary`, `publishAdvert`, `updateProfile`.
+- Use plural names for collections: `users`, `listingIds`.
+- Prefer descriptive names such as `error`, `transaction`, and `listing` over `e`, `t`, and generic `item` when the entity is known.
+- Name operations with a verb and the relevant entity: `getUserSummary`, `publishListing`, `updateProfile`.
 
 ### Variables and Functions
 
@@ -79,26 +79,26 @@ Authentication routes delegate to `AuthController`. Login credential checks and 
 - Query only the fields needed for the operation and exclude password hashes from public responses.
 - Use stable ordering and pagination for collection endpoints. Include a unique tie-breaker when sorting by a non-unique field.
 
-## Own Advert Pagination
+## Own Listing Pagination
 
 `GET /api/listings/mine` authenticates the request and selects the owner from `res.locals.user.id`. The optional `page` and `limit` query parameters are positive integers, defaulting to `1` and `12`; `limit` must not exceed `50`. Reject invalid scalar values, arrays, and unsafe offsets with `400 { code: 'INVALID_PAGINATION', message: 'Invalid pagination parameters' }` before querying the database.
 
 Return `{ items, total, page, limit }`. Apply the owner filter to both the rows and the total count. Use `findAndCountAll` with `distinct: true` so tag joins do not inflate the count; bound the row query with `limit`/`offset` and sort by `createdAt DESC, id DESC`. A page past the end returns empty `items` and the actual total. The client and manual integration checks consume this paginated object rather than the former array response.
 
-## Public Advert Collections
+## Public Listing Collections
 
-`POST /api/listings/filters/page` accepts the existing advert filter body and
+`POST /api/listings/filters/page` accepts the existing listing filter body and
 optional scalar positive integer query parameters `page` and `limit`. Defaults
 are `1` and `8`, and the maximum limit is `50`. Invalid values or unsafe
 offsets return `400 { code: 'INVALID_PAGINATION', message: 'Invalid pagination parameters' }` before a database query. The response is
 `{ items, total, page, limit }`, with stable `createdAt DESC, id DESC` ordering,
-distinct advert counts, the existing all-selected-tags filter, and the existing
-location and advert response shape. Required location matching is applied
-inside the paginated advert query before its row limit. Tag matches use a SQL
-subquery instead of materializing an unbounded list of advert IDs in Node.
+distinct listing counts, the existing all-selected-tags filter, and the existing
+location and listing response shape. Required location matching is applied
+inside the paginated listing query before its row limit. Tag matches use a SQL
+subquery instead of materializing an unbounded list of listing IDs in Node.
 
 `GET /api/listings/fresh` accepts `limit` defaulting to and capped at `3`, with
-the same strict positive scalar parsing. It returns a bounded advert array in
+the same strict positive scalar parsing. It returns a bounded listing array in
 the same stable order and uses the shared author, location, photo, and tag
 includes. Both routes are public. The legacy `POST /api/listings/filters` keeps
 its array response for the O07 consumer migration.

@@ -20,7 +20,7 @@ test('unknown API requests return 404 JSON with API_ROUTE_NOT_FOUND', () => {
     cors: () => noop,
     './router/tokensRouter': noop,
     './router/authRouter': noop,
-    './router/advertRouter': noop,
+    './router/listingRouter': noop,
     './router/userRouter': noop,
     './router/likeRouter': noop,
     './ws/upgrade': noop,

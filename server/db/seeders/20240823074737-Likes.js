@@ -9,14 +9,14 @@ const usedCombinations = new Set();
 
 while (likes.length < 50) {
   const userId = generateRandomInt(1, 25);
-  const advertId = generateRandomInt(1, 40);
-  const combination = `${userId}-${advertId}`;
+  const listingId = generateRandomInt(1, 40);
+  const combination = `${userId}-${listingId}`;
 
   if (!usedCombinations.has(combination)) {
     usedCombinations.add(combination);
     likes.push({
       userId,
-      advertId,
+      listingId,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

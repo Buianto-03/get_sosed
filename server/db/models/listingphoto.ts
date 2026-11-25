@@ -7,37 +7,38 @@ import {
 } from 'sequelize';
 import type db = require('./index');
 import commonAttributes = require('./commonAttributes');
-const createAdvertPhoto = (
+const createListingPhoto = (
   sequelize: Sequelize,
   DataTypes: typeof import('sequelize').DataTypes,
 ) => {
-  class AdvertPhoto extends Model<
-    InferAttributes<AdvertPhoto>,
-    InferCreationAttributes<AdvertPhoto>
+  class ListingPhoto extends Model<
+    InferAttributes<ListingPhoto>,
+    InferCreationAttributes<ListingPhoto>
   > {
     declare id: CreationOptional<number>;
-    declare advertId: number | null;
+    declare listingId: number | null;
     declare photo: string | null;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
-    static associate({ Advert }: Pick<typeof db, 'Advert'>) {
+    static associate({ Listing }: Pick<typeof db, 'Listing'>) {
       // define association here
-      this.belongsTo(Advert, { foreignKey: 'advertId' });
+      this.belongsTo(Listing, { foreignKey: 'listingId', as: 'listing' });
     }
   }
-  AdvertPhoto.init(
+  ListingPhoto.init(
     {
       ...commonAttributes(),
-      advertId: DataTypes.INTEGER,
+      listingId: DataTypes.INTEGER,
       photo: DataTypes.STRING,
     },
     {
       sequelize,
-      modelName: 'AdvertPhoto',
+      modelName: 'ListingPhoto',
+      tableName: 'ListingPhotos',
     },
   );
-  return AdvertPhoto;
+  return ListingPhoto;
 };
 
-export = createAdvertPhoto;
+export = createListingPhoto;

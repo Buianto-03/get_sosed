@@ -55,11 +55,11 @@ if (error instanceof UniqueConstraintError) {
 
 **3. Тип файлов Multer теряется на входе в сервис и восстанавливается через `as`**
 
-Места: [publishAdvertService.ts:134](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/publishAdvertService.ts:134), строки 134–139; [publishAdvertService.ts:235](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/publishAdvertService.ts:235), строки 235–236; [advertController.ts:65](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/advertController.ts:65).
+Места: [publishListingService.ts:134](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/publishListingService.ts:134), строки 134–139; [publishListingService.ts:235](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/publishListingService.ts:235), строки 235–236; [listingController.ts:65](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/listingController.ts:65).
 
 Приоритет: средний. Категория: сохранение готового библиотечного типа между слоями.
 
-`req.files` уже типизирован расширением Express из `@types/multer`. Но `publishAdvert` и `preparePhotos` принимают `files: unknown`, после чего цикл использует `files as Express.Multer.File[]`. Проверка `Array.isArray` доказывает только наличие массива, а не структуру его элементов.
+`req.files` уже типизирован расширением Express из `@types/multer`. Но `publishListing` и `preparePhotos` принимают `files: unknown`, после чего цикл использует `files as Express.Multer.File[]`. Проверка `Array.isArray` доказывает только наличие массива, а не структуру его элементов.
 
 Для текущего маршрута, использующего `upload.array`, можно сузить форму контейнера в контроллере:
 
@@ -67,7 +67,7 @@ if (error instanceof UniqueConstraintError) {
 const files = Array.isArray(req.files) ? req.files : undefined;
 ```
 
-Оба метода сервиса тогда принимают `Express.Multer.File[] | undefined`, а цикл становится обычным `for (const file of files)`. Проверки наличия массива, количества, MIME-типа, размера и декодирования изображения остаются в сервисе. Отсутствующий файл или словарь вместо массива по-прежнему должны приводить к `INVALID_ADVERT_DATA`, а не к успешному ответу.
+Оба метода сервиса тогда принимают `Express.Multer.File[] | undefined`, а цикл становится обычным `for (const file of files)`. Проверки наличия массива, количества, MIME-типа, размера и декодирования изображения остаются в сервисе. Отсутствующий файл или словарь вместо массива по-прежнему должны приводить к `INVALID_LISTING_DATA`, а не к успешному ответу.
 
 Вариант с такими сигнатурами и сужением в контроллере проверен компилятором в памяти. Библиотечный контракт находится в [@types/multer:8](/Users/buantosagdurov/Desktop/github/get-sosed/server/node_modules/@types/multer/index.d.ts:8) и [Request.files:46](/Users/buantosagdurov/Desktop/github/get-sosed/server/node_modules/@types/multer/index.d.ts:46); он также опубликован в [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/multer/index.d.ts).
 
@@ -89,32 +89,32 @@ wsServer.emit('connection', ws, request, user);
 
 **5. Типы Sequelize для фильтров используются без параметров модели**
 
-Места: [advertService.ts:54](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/advertService.ts:54), [advertService.ts:133](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/advertService.ts:133), [advertService.ts:147](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/advertService.ts:147).
+Места: [listingService.ts:54](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/listingService.ts:54), [listingService.ts:133](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/listingService.ts:133), [listingService.ts:147](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/listingService.ts:147).
 
 Приоритет: средний. Категория: исправление использования готовых библиотечных типов; это не однострочное упрощение.
 
-`WhereOptions` и `WhereAttributeHash` уже импортированы из Sequelize, но используются без generic-параметров. В версии 6 их параметр атрибутов по умолчанию равен `any`. Поэтому локально создаваемые объекты условий не связаны с `Advert` и `Location`, а опечатки в обычных названиях полей не обнаруживаются.
+`WhereOptions` и `WhereAttributeHash` уже импортированы из Sequelize, но используются без generic-параметров. В версии 6 их параметр атрибутов по умолчанию равен `any`. Поэтому локально создаваемые объекты условий не связаны с `Listing` и `Location`, а опечатки в обычных названиях полей не обнаруживаются.
 
 Библиотечные `Attributes`, `WhereAttributeHash`, `WhereOptions` и `WhereOperators` позволяют связать условия с существующими моделями без ручного повторения их полей:
 
 ```ts
-type AdvertAttributes = Attributes<InstanceType<typeof db.Advert>>;
+type ListingAttributes = Attributes<InstanceType<typeof db.Listing>>;
 type LocationAttributes = Attributes<InstanceType<typeof db.Location>>;
 
-const whereClause: WhereAttributeHash<AdvertAttributes> = {};
+const whereClause: WhereAttributeHash<ListingAttributes> = {};
 const locationClause: WhereAttributeHash<LocationAttributes> = {};
 const priceRange: WhereOperators<number> = {};
 ```
 
 В `getReadIncludes` подходит `WhereOptions<LocationAttributes>`. Диапазоны цены и числа комнат стоит сначала собирать как `WhereOperators<number>` и затем присваивать целиком: непосредственная запись `whereClause.price[Op.gte]` после добавления generic сталкивается с union-типом значения условия.
 
-При проверке обнаружилось и скрытое несовпадение: `getAdvertIdsByTags` возвращает `(number | null)[]`, поскольку `AdvertTags.advertId` объявлен nullable, а `Advert.id` — число. Перед использованием массива в `Op.in` нужно явно обработать `null`; делать приведение к `number[]` вместо этого не следует. Значения города, района и метро также следует сузить до допустимых значений перед построением SQL-условий.
+При проверке обнаружилось и скрытое несовпадение: `getListingIdsByTags` возвращает `(number | null)[]`, поскольку `ListingTags.listingId` объявлен nullable, а `Listing.id` — число. Перед использованием массива в `Op.in` нужно явно обработать `null`; делать приведение к `number[]` вместо этого не следует. Значения города, района и метро также следует сузить до допустимых значений перед построением SQL-условий.
 
 Вариант с параметрами моделей, отдельными диапазонами и исключением `null` из ID прошёл проверку компилятора в памяти. Это улучшает проверку известных полей, но не заменяет runtime-валидацию: типы Sequelize v6 допускают гибкие JSON-условия и не запрещают все неподходящие объектные значения. Источники: [WhereOptions](/Users/buantosagdurov/Desktop/github/get-sosed/server/node_modules/sequelize/types/model.d.ts:157), [WhereAttributeHash](/Users/buantosagdurov/Desktop/github/get-sosed/server/node_modules/sequelize/types/model.d.ts:580), [описание типов Sequelize v6](https://sequelize.org/docs/v6/other-topics/typescript/).
 
 **6. Зависимости `associate` следует брать из конкретного реестра проекта**
 
-Места: [role.ts:23](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/role.ts:23), [advert.ts:29](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/advert.ts:29), [user.ts:31](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/user.ts:31). Аналогичная сигнатура присутствует во всех 11 моделях.
+Места: [role.ts:23](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/role.ts:23), [listing.ts:29](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/listing.ts:29), [user.ts:31](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/user.ts:31). Аналогичная сигнатура присутствует во всех 11 моделях.
 
 Приоритет: низкий. Категория: уточнение контракта через выведение типов существующих моделей.
 
@@ -135,7 +135,7 @@ static associate({ User }: Pick<typeof db, 'User'>) {
 
 Для каждой модели нужно перечислить только реально используемые связи. `Pick<typeof db, ...>` ограничивает имена фактическими экспортами реестра и сохраняет конкретные типы моделей. Например, `'Tag'` вместо `'Tags'` вызовет ошибку в самом `Pick`, а отсутствие обязательной зависимости — при вызове `associate`. Отдельный ручной интерфейс реестра не нужен.
 
-`import type` удаляется при компиляции и не создаёт runtime-импорт `index.ts` из модели. Вариант проверен компилятором в памяти для всех 11 моделей: корректные имена компилируются, замена `Tags` на `Tag` обнаруживается непосредственно в `advert.ts`. TypeScript проверяет совместимость типов, а не идентичность классов во время выполнения. Типизированные зависимости сервисов `typeof db.User` и аналогичные сохраняются.
+`import type` удаляется при компиляции и не создаёт runtime-импорт `index.ts` из модели. Вариант проверен компилятором в памяти для всех 11 моделей: корректные имена компилируются, замена `Tags` на `Tag` обнаруживается непосредственно в `listing.ts`. TypeScript проверяет совместимость типов, а не идентичность классов во время выполнения. Типизированные зависимости сервисов `typeof db.User` и аналогичные сохраняются.
 
 **7. Express-типы искусственно используются для обычного HTTP upgrade**
 
@@ -153,11 +153,11 @@ static associate({ User }: Pick<typeof db, 'User'>) {
 
 Следующие три места выходят за рамки простого упрощения, но показывают, где TypeScript сейчас скрывает несоответствие кода его контракту.
 
-- **Динамическая проверка отсутствующего метода сервиса.** В [advertController.ts:94](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/advertController.ts:94) проверки `'deletePost' in this.advertService` и `typeof ... === 'function'` обходят статический факт: в `AdvertService` метода нет. После проверки получается общий вызываемый `Function`, без конкретного контракта аргументов и результата. Проблема legacy endpoint уже описана в [server/docs/README.md:105](/Users/buantosagdurov/Desktop/github/get-sosed/server/docs/README.md:105); это не новая обнаруженная регрессия. Нужно отдельно решить судьбу endpoint: при сохранении операции добавить реальный метод сервиса и использовать существующий `typeof advertServiceInstance`, при удалении — убрать устаревший маршрут. Одного удаления guard недостаточно.
+- **Динамическая проверка отсутствующего метода сервиса.** В [listingController.ts:94](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/listingController.ts:94) проверки `'deletePost' in this.listingService` и `typeof ... === 'function'` обходят статический факт: в `ListingService` метода нет. После проверки получается общий вызываемый `Function`, без конкретного контракта аргументов и результата. Проблема legacy endpoint уже описана в [server/docs/README.md:105](/Users/buantosagdurov/Desktop/github/get-sosed/server/docs/README.md:105); это не новая обнаруженная регрессия. Нужно отдельно решить судьбу endpoint: при сохранении операции добавить реальный метод сервиса и использовать существующий `typeof listingServiceInstance`, при удалении — убрать устаревший маршрут. Одного удаления guard недостаточно.
 
 - **Неиспользуемый middleware обходит типизированный импорт моделей.** В [checkAuthor.ts:4](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/middlewares/checkAuthor.ts:4) `const { Message } = require('../../db/models')` даёт `any`, поэтому компилятор пропускает обращение к модели `Message`, которой нет в экспортах. Принятый в проекте `import db = require('../../db/models')` выявил бы это несоответствие. Middleware нигде не подключён, поэтому приоритет низкий. Нельзя автоматически заменить `Message` на `Chat`: у последней другие поля участников и другой контракт доступа. Сначала стоит определить, нужен ли этот файл.
 
-- **`AdvertTags.id` не соответствует модели после настройки связей.** В [adverttags.ts:18](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/adverttags.ts:18) объявлен `id: CreationOptional<number>`. После регистрации many-to-many связей Sequelize удаляет этот сгенерированный атрибут из ORM-модели; это намеренно сохранено через `_autoGenerated` и описано в архитектуре. Проверка моделей без подключения к БД показала атрибуты `createdAt`, `updatedAt`, `tagId`, `advertId`, составной первичный ключ и `undefined` при чтении `id` у нового экземпляра. `CreationOptional` разрешает отсутствие при создании, но продолжает обещать число при чтении. Направление исправления — убрать ложное объявление `id` именно из `AdvertTags`, сохранив поведение инициализации. Физическая колонка в старой миграции и контракт ORM после настройки связей — разные уровни. Текущих обращений к `AdvertTags.id` в серверном коде не найдено.
+- **`ListingTags.id` не соответствует модели после настройки связей.** В [listingtags.ts:18](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/listingtags.ts:18) объявлен `id: CreationOptional<number>`. После регистрации many-to-many связей Sequelize удаляет этот сгенерированный атрибут из ORM-модели; это намеренно сохранено через `_autoGenerated` и описано в архитектуре. Проверка моделей без подключения к БД показала атрибуты `createdAt`, `updatedAt`, `tagId`, `listingId`, составной первичный ключ и `undefined` при чтении `id` у нового экземпляра. `CreationOptional` разрешает отсутствие при создании, но продолжает обещать число при чтении. Направление исправления — убрать ложное объявление `id` именно из `ListingTags`, сохранив поведение инициализации. Физическая колонка в старой миграции и контракт ORM после настройки связей — разные уровни. Текущих обращений к `ListingTags.id` в серверном коде не найдено.
 
 **Какие конструкции стоит сохранить**
 
@@ -165,7 +165,7 @@ static associate({ User }: Pick<typeof db, 'User'>) {
 - `InstanceType<ReturnType<typeof createUserProfile>>` и аналогичный тип `User` выглядят громоздко, но следуют из текущей структуры фабрик моделей. Короткий алиас может улучшить чтение; замена на общий `Model` потеряет типы полей. Перестройка фабрик только ради длины этой записи не обоснована.
 - `commonAttributes()` сохраняет runtime-метаданные Sequelize, в том числе поведение промежуточной таблицы. Это не лишняя типовая обёртка; удалять её или `_autoGenerated` ради упрощения не следует.
 - `AuthResponse = Response<unknown, AuthLocals>` и `AuthPayload extends JwtPayload` уже используют библиотечные типы, дополняя их данными приложения. Проверки в `getTokenUser` нужны: корректная подпись JWT не подтверждает форму вложенного `user`.
-- `unknown` во входных данных регистрации, логина, фильтров и JSON-полей обычно оправдан до валидации. `AdvertValues` описывает проверенные данные операции из нескольких сущностей; замена на `CreationAttributes<Advert>` не выразит адрес и `tagIds`, а nullable-поля модели не повторяют ограничения формы публикации.
+- `unknown` во входных данных регистрации, логина, фильтров и JSON-полей обычно оправдан до валидации. `ListingValues` описывает проверенные данные операции из нескольких сущностей; замена на `CreationAttributes<Listing>` не выразит адрес и `tagIds`, а nullable-поля модели не повторяют ограничения формы публикации.
 - `typeof` для внедряемых сервисов и моделей соответствует `server/ARCH.md` и сохраняет настоящие сигнатуры зависимостей. Дублирующие интерфейсы сервисов или повсеместные `ModelStatic<Model>` ухудшат этот подход.
 - `DatabaseConfig extends Sequelize.Options` не является полным ручным дубликатом: он добавляет CLI-поле `use_env_variable` и делает часть настроек обязательной. Простая замена на `Options` потеряет эти условия. Проверка реальных переменных окружения — отдельная задача.
 - Замена всех параметров `Request`, `Response`, `NextFunction` на `RequestHandler` дала бы преимущественно косметический эффект. Она не включена в замечания как обязательная переработка.
@@ -174,7 +174,7 @@ static associate({ User }: Pick<typeof db, 'User'>) {
 
 `cd server && npm run typecheck` завершился успешно. `cd server && npm test` успешно собрал сервер и выполнил все 93 теста. Эти проверки фиксируют текущее состояние; предложения из отчёта в исходники не применялись, поэтому тесты не являются проверкой их полного будущего внедрения.
 
-Отдельно выполнены проверки предлагаемых типов через TypeScript Compiler API с подменой содержимого файлов только в памяти: JWT `SignOptions`, удаление приведения к `EventEmitter`, типизация файлов Multer и параметризованные условия Sequelize. Контракт `associate` проверен временным TypeScript-примером; состояние атрибутов `AdvertTags` — инициализацией моделей без подключения к БД. Интеграционные проверки с реальной PostgreSQL не проводились.
+Отдельно выполнены проверки предлагаемых типов через TypeScript Compiler API с подменой содержимого файлов только в памяти: JWT `SignOptions`, удаление приведения к `EventEmitter`, типизация файлов Multer и параметризованные условия Sequelize. Контракт `associate` проверен временным TypeScript-примером; состояние атрибутов `ListingTags` — инициализацией моделей без подключения к БД. Интеграционные проверки с реальной PostgreSQL не проводились.
 
 ---
 
@@ -192,7 +192,7 @@ static associate({ User }: Pick<typeof db, 'User'>) {
 | 3 | Ошибка Sequelize распознаётся по библиотечному классу | Замечание 2 |
 | 4 | Тип Multer сохраняется от контроллера до обработки фото | Замечание 3 |
 | 5 | `associate` проверяет имена и типы зависимостей по реестру проекта | Замечание 6 |
-| 6 | Тип `AdvertTags` соответствует атрибутам ORM | Дополнительное замечание об `id` |
+| 6 | Тип `ListingTags` соответствует атрибутам ORM | Дополнительное замечание об `id` |
 | 7 | SQL-условия связаны с атрибутами конкретных моделей | Замечание 5 |
 | 8 | HTTP upgrade разбирает cookie без фиктивных Express-объектов | Замечание 7 |
 | 9 | Удалён неиспользуемый `checkAuthor` с нетипизированной зависимостью | Дополнительное замечание о `Message` |
@@ -266,18 +266,18 @@ node --test tests/нужный-тест.test.js
 
 **Этап 4. Сохранить тип файлов Multer между контроллером и сервисом**
 
-Статус: выполнен 4 ноября 2026 года. Проверены typecheck, сборка и 21 тест из `advertController.test.js` и `redesign-write.test.js`, включая отсутствие файлов и словарь Multer.
+Статус: выполнен 4 ноября 2026 года. Проверены typecheck, сборка и 21 тест из `listingController.test.js` и `redesign-write.test.js`, включая отсутствие файлов и словарь Multer.
 
-Файлы: [advertController.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/advertController.ts), [publishAdvertService.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/publishAdvertService.ts), [advertController.test.js](/Users/buantosagdurov/Desktop/github/get-sosed/server/tests/advertController.test.js).
+Файлы: [listingController.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/listingController.ts), [publishListingService.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/publishListingService.ts), [listingController.test.js](/Users/buantosagdurov/Desktop/github/get-sosed/server/tests/listingController.test.js).
 
-1. В `createAdvert` получить массив как `Array.isArray(req.files) ? req.files : undefined`. Сам массив передавать без копирования.
-2. Одновременно изменить параметр `files` у `publishAdvert` и `preparePhotos` на `Express.Multer.File[] | undefined`.
+1. В `createListing` получить массив как `Array.isArray(req.files) ? req.files : undefined`. Сам массив передавать без копирования.
+2. Одновременно изменить параметр `files` у `publishListing` и `preparePhotos` на `Express.Multer.File[] | undefined`.
 3. Удалить `as Express.Multer.File[]` из цикла обработки.
 4. Оставить в сервисе проверки наличия массива, количества 1–10, MIME-типа, размера и успешного декодирования. Они нужны и при вызовах из JavaScript-тестов, где аннотаций TypeScript нет.
-5. Сохранить порядок `parseAdvert` → `preparePhotos` → транзакция. Контроллер только сужает контейнер, а не выбрасывает новую ошибку раньше проверки тела запроса. Это сохраняет первую возвращаемую ошибку, если одновременно неверны body и files.
-6. Дополнить тест контроллера случаями отсутствующего `files` и словаря Multer с корректным body. Проверять путь до настоящей сервисной валидации и ответ `400 / INVALID_ADVERT_DATA`. Имеющийся тест с пустым body останавливается на заголовке и не подтверждает этот сценарий.
-7. Убедиться, что успешный вызов по-прежнему получает автора из `res.locals.user.id` и возвращает 201. Ошибки middleware остаются `INVALID_UPLOAD`; ошибки проверки данных публикации — `INVALID_ADVERT_DATA`.
-8. После сборки выполнить `advertController.test.js` и `redesign-write.test.js`: в последнем уже есть случаи `undefined`, `{}`, пустого массива, 11 файлов, неподходящего MIME, превышения размера и ошибки декодирования.
+5. Сохранить порядок `parseListing` → `preparePhotos` → транзакция. Контроллер только сужает контейнер, а не выбрасывает новую ошибку раньше проверки тела запроса. Это сохраняет первую возвращаемую ошибку, если одновременно неверны body и files.
+6. Дополнить тест контроллера случаями отсутствующего `files` и словаря Multer с корректным body. Проверять путь до настоящей сервисной валидации и ответ `400 / INVALID_LISTING_DATA`. Имеющийся тест с пустым body останавливается на заголовке и не подтверждает этот сценарий.
+7. Убедиться, что успешный вызов по-прежнему получает автора из `res.locals.user.id` и возвращает 201. Ошибки middleware остаются `INVALID_UPLOAD`; ошибки проверки данных публикации — `INVALID_LISTING_DATA`.
+8. После сборки выполнить `listingController.test.js` и `redesign-write.test.js`: в последнем уже есть случаи `undefined`, `{}`, пустого массива, 11 файлов, неподходящего MIME, превышения размера и ошибки декодирования.
 
 Критерий готовности: от `req.files` до обработчика изображения сохраняется библиотечный тип, необоснованного `as` нет, ошибочные загрузки отклоняются до транзакции и файловых операций. Объекты Express `Request` и `Response` в сервис не передаются.
 
@@ -288,25 +288,25 @@ node --test tests/нужный-тест.test.js
 Файлы: все 11 моделей в [server/db/models](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models). Точка регистрации: [index.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/index.ts).
 
 1. В каждой модели выписать имена моделей, которые реально деструктурируются параметром `associate`.
-2. Добавить в каждую модель `import type db = require('./index')`. Заменить уже введённый `Pick<Sequelize['models'], ...>` на `Pick<typeof db, ...>` с выбранными ключами. Если где-то остался исходный `Record<string, ModelStatic<Model>>`, заменить и его. Например, `Role` требует `'User'`, а `AdvertTags` — `'Advert' | 'Tags'`.
+2. Добавить в каждую модель `import type db = require('./index')`. Заменить уже введённый `Pick<Sequelize['models'], ...>` на `Pick<typeof db, ...>` с выбранными ключами. Если где-то остался исходный `Record<string, ModelStatic<Model>>`, заменить и его. Например, `Role` требует `'User'`, а `ListingTags` — `'Listing' | 'Tags'`.
 3. Удалить импорты `ModelStatic` там, где они больше не используются. Сохранить `Model` для наследования и `Sequelize` для параметра фабрики. Импорт реестра должен оставаться `import type`, чтобы не добавлять runtime-зависимость модели от точки регистрации.
 4. Сохранить имена связей, `foreignKey`, порядок регистрации и фабрики. Не заменять конкретные зависимости сервисов `typeof db.User` общим реестром.
 5. Выполнить полный typecheck: он должен проверить и цикл `model.associate(models)` в точке регистрации всех моделей.
-6. Через отдельные проверки типов в памяти подтвердить положительные примеры `Role.associate({ User: db.User })` и `AdvertTags.associate({ Advert: db.Advert, Tags: db.Tags })`; отрицательные — отсутствие `User` либо `Tags`, а также опечатка `'Tag'` в `Pick<typeof db, ...>`. Ошибка опечатки должна возникать в объявлении зависимости модели, а не только в точке регистрации. Для ожидаемых ошибок использовать `@ts-expect-error` только в проверочном примере, не в исходниках приложения.
+6. Через отдельные проверки типов в памяти подтвердить положительные примеры `Role.associate({ User: db.User })` и `ListingTags.associate({ Listing: db.Listing, Tags: db.Tags })`; отрицательные — отсутствие `User` либо `Tags`, а также опечатка `'Tag'` в `Pick<typeof db, ...>`. Ошибка опечатки должна возникать в объявлении зависимости модели, а не только в точке регистрации. Для ожидаемых ошибок использовать `@ts-expect-error` только в проверочном примере, не в исходниках приложения.
 
 Критерий готовности: опечатки в именах зависимостей выявляются непосредственно в объявлении типа; отсутствующие зависимости выявляются при вызове; типы конкретных моделей сохраняются. Runtime-регистрация связей и скомпилированный JavaScript моделей не изменились. Дополнительный ручной реестр и runtime-импорт `index.ts` не введены.
 
-**Этап 6. Исправить объявление `AdvertTags.id`**
+**Этап 6. Исправить объявление `ListingTags.id`**
 
 Статус: выполнен 4 ноября 2026 года. Прошли typecheck, проверки типов и модели без подключения к БД, сравнение скомпилированного JavaScript и SQL, а также 29 тестов из трёх указанных файлов.
 
-Файл: [adverttags.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/adverttags.ts). Этап удобно выполнять вместе с этапом 5.
+Файл: [listingtags.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/db/models/listingtags.ts). Этап удобно выполнять вместе с этапом 5.
 
-1. Удалить только `declare id: CreationOptional<number>` из `AdvertTags`.
+1. Удалить только `declare id: CreationOptional<number>` из `ListingTags`.
 2. Оставить `CreationOptional` для дат и сохранить `...commonAttributes()` в `init`. Общий helper, `_autoGenerated`, миграции и физическую схему БД не менять: исправляется описание уже существующего поведения ORM.
-3. Проверить типы: `Attributes<InstanceType<typeof db.AdvertTags>>` больше не содержит `id`, чтение `AdvertTags.build(...).id` отвергается, создание с `advertId` и `tagId` без ID и дат допустимо. У обычного `Advert` поле `id` остаётся числом.
-4. Однократно инициализировать все модели и связи с тестовыми параметрами Sequelize без `authenticate`, `sync`, запросов к БД и миграций. Проверить отсутствие `id` у `AdvertTags`, составной ключ `tagId`/`advertId`, сохранение timestamps и ID у обычных моделей.
-5. После сборки выполнить `advert-read.test.js`, `advertPagination.test.js` и `redesign-write.test.js`. Первые два проверяют модели и генерацию SQL без реальной БД; последний подтверждает прежнюю публикацию связей. Он использует подмену `bulkCreate` и сам по себе не доказывает устройство модели.
+3. Проверить типы: `Attributes<InstanceType<typeof db.ListingTags>>` больше не содержит `id`, чтение `ListingTags.build(...).id` отвергается, создание с `listingId` и `tagId` без ID и дат допустимо. У обычного `Listing` поле `id` остаётся числом.
+4. Однократно инициализировать все модели и связи с тестовыми параметрами Sequelize без `authenticate`, `sync`, запросов к БД и миграций. Проверить отсутствие `id` у `ListingTags`, составной ключ `tagId`/`listingId`, сохранение timestamps и ID у обычных моделей.
+5. После сборки выполнить `listing-read.test.js`, `listingPagination.test.js` и `redesign-write.test.js`. Первые два проверяют модели и генерацию SQL без реальной БД; последний подтверждает прежнюю публикацию связей. Он использует подмену `bulkCreate` и сам по себе не доказывает устройство модели.
 
 Критерий готовности: статические атрибуты соответствуют ORM после регистрации связей. Скомпилированный код и SQL не должны измениться от удаления одной `declare`-декларации; постоянный тест, повторяющий сам текст декларации, не нужен.
 
@@ -314,17 +314,17 @@ node --test tests/нужный-тест.test.js
 
 Статус: выполнен 4 ноября 2026 года. Проверены typecheck, сборка, отклонение опечатки в поле модели и 25 тестов из трёх указанных файлов, включая nullable ID и пустой фильтр.
 
-Файлы: [advertService.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/advertService.ts), [advert-read.test.js](/Users/buantosagdurov/Desktop/github/get-sosed/server/tests/advert-read.test.js). Начать после проверки моделей в этапах 5–6.
+Файлы: [listingService.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/service/listingService.ts), [listing-read.test.js](/Users/buantosagdurov/Desktop/github/get-sosed/server/tests/listing-read.test.js). Начать после проверки моделей в этапах 5–6.
 
-1. Добавить библиотечные типы `Attributes` и `WhereOperators`. Создать локальные алиасы атрибутов `Advert` и `Location` через уже существующие модели.
+1. Добавить библиотечные типы `Attributes` и `WhereOperators`. Создать локальные алиасы атрибутов `Listing` и `Location` через уже существующие модели.
 2. Параметризовать обе переменные `WhereAttributeHash` и `WhereOptions` аргумента `getReadIncludes`.
 3. Собирать диапазоны цены и комнат в отдельных переменных `WhereOperators<number>`, затем присваивать готовые объекты в `whereClause.price` и `whereClause.rooms`.
 4. Сохранить текущие условия включения границ буквально. Числовой `0`, строковый `'0'`, `null` и отсутствие значения сейчас обрабатываются неодинаково, и это закреплено тестами. Не совмещать изменение типов с нормализацией этих правил.
-5. В `getAdvertIdsByTags` явно исключить `null` из `advertId`, например сужающим фильтром `(id): id is number => id !== null`. Не использовать `as number[]` и не объявлять nullable-колонку обязательной без отдельного анализа схемы.
-6. При наличии выбранных тегов всегда устанавливать `whereClause.id = { [Op.in]: advertIds }`, даже если найденных ID нет. Иначе вместо пустого результата можно случайно вернуть все объявления.
+5. В `getListingIdsByTags` явно исключить `null` из `listingId`, например сужающим фильтром `(id): id is number => id !== null`. Не использовать `as number[]` и не объявлять nullable-колонку обязательной без отдельного анализа схемы.
+6. При наличии выбранных тегов всегда устанавливать `whereClause.id = { [Op.in]: listingIds }`, даже если найденных ID нет. Иначе вместо пустого результата можно случайно вернуть все объявления.
 7. Дополнить тест результатов запроса тегов вариантами `[null, 42]` и `[null]`: в первом остаётся ограничение ID 42, во втором сохраняется пустой `Op.in`.
 8. Проверить компилятором в памяти, что опечатка вроде `locationClause.citty` отклоняется. Не ожидать от Sequelize v6 полной проверки всех JSON-значений условий.
-9. После сборки выполнить `advert-read.test.js`, `advertPagination.test.js` и `advertController.test.js`. Проверить AND-семантику тегов, `COUNT DISTINCT`, пустые выборки, одиночные и совместные границы диапазонов, порядок логирования и проброс исходных ошибок.
+9. После сборки выполнить `listing-read.test.js`, `listingPagination.test.js` и `listingController.test.js`. Проверить AND-семантику тегов, `COUNT DISTINCT`, пустые выборки, одиночные и совместные границы диапазонов, порядок логирования и проброс исходных ошибок.
 
 Отдельная граница этого этапа — `city`, `district`, `metro`. Параметризация типов не означает, что появилось новое правило входной валидации. В текущей версии Sequelize generic допускает часть объектных значений. Добавление проверок `typeof value === 'string'`, отказ от массивов/объектов и новый HTTP 400 следует выполнить отдельным изменением API, если оно будет включено в реализацию.
 
@@ -367,16 +367,16 @@ node --test tests/нужный-тест.test.js
 
 Статус: выполнен 4 ноября 2026 года. Устаревшие маршруты и обработчик удалены, документация обновлена; typecheck, сборка и 29 тестов из указанных файлов прошли, включая маршрутизацию через Express и API fallback.
 
-Файлы: [advertRouter.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/router/advertRouter.ts), [advertController.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/advertController.ts), [openapi.yaml](/Users/buantosagdurov/Desktop/github/get-sosed/server/docs/openapi.yaml), [README.md](/Users/buantosagdurov/Desktop/github/get-sosed/server/docs/README.md), тесты маршрутизации.
+Файлы: [listingRouter.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/router/listingRouter.ts), [listingController.ts](/Users/buantosagdurov/Desktop/github/get-sosed/server/src/controllers/listingController.ts), [openapi.yaml](/Users/buantosagdurov/Desktop/github/get-sosed/server/docs/openapi.yaml), [README.md](/Users/buantosagdurov/Desktop/github/get-sosed/server/docs/README.md), тесты маршрутизации.
 
-Для текущего репозитория рекомендуемый вариант — удалить неработающую операцию. При подготовке плана вызовы DELETE объявления в клиенте и серверных тестах не найдены. Удаление из избранного использует другой ресурс — `/api/likes/:advertId`. Наличие внешних потребителей из содержимого репозитория установить нельзя.
+Для текущего репозитория рекомендуемый вариант — удалить неработающую операцию. При подготовке плана вызовы DELETE объявления в клиенте и серверных тестах не найдены. Удаление из избранного использует другой ресурс — `/api/likes/:listingId`. Наличие внешних потребителей из содержимого репозитория установить нельзя.
 
 1. Повторно проверить потребителей и документацию. Зафиксировать выбранный контракт: текущий план предполагает отсутствие операции удаления объявления и использование общего ответа на неизвестный API-маршрут.
-2. Удалить обе регистрации удаления: `/:postId` и `.delete(...)` у `/:advertId`. Сохранить GET объявления по ID.
-3. Удалить `AdvertController.deletePost` целиком вместе с динамической проверкой наличия метода. Не добавлять optional-метод или общий `Function` в тип сервиса ради сохранения неработающего обработчика.
-4. Удалить deprecated DELETE-операцию из OpenAPI и обновить описание ограничения в README. Описать итог: DELETE `/api/adverts/:id` получает существующий ответ `404 { code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' }`.
-5. Добавить тест маршрутизации через настоящий Express router с тестовыми зависимостями и API fallback. Проверять, что DELETE доходит до 404, GET по ID остаётся рабочим, а `/api/likes/:advertId` не затронут. Текущий `apiFallback.test.js` проверяет только отдельный fallback и не доказывает прохождение через router.
-6. После сборки выполнить тесты маршрутизации, `advert-read.test.js`, `advertController.test.js`, `apiFallback.test.js` и `likes.test.js`.
+2. Удалить обе регистрации удаления: `/:postId` и `.delete(...)` у `/:listingId`. Сохранить GET объявления по ID.
+3. Удалить `ListingController.deletePost` целиком вместе с динамической проверкой наличия метода. Не добавлять optional-метод или общий `Function` в тип сервиса ради сохранения неработающего обработчика.
+4. Удалить deprecated DELETE-операцию из OpenAPI и обновить описание ограничения в README. Описать итог: DELETE `/api/listings/:id` получает существующий ответ `404 { code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' }`.
+5. Добавить тест маршрутизации через настоящий Express router с тестовыми зависимостями и API fallback. Проверять, что DELETE доходит до 404, GET по ID остаётся рабочим, а `/api/likes/:listingId` не затронут. Текущий `apiFallback.test.js` проверяет только отдельный fallback и не доказывает прохождение через router.
+6. После сборки выполнить тесты маршрутизации, `listing-read.test.js`, `listingController.test.js`, `apiFallback.test.js` и `likes.test.js`.
 
 Если удаление объявления необходимо как функция продукта, вместо шагов удаления нужен самостоятельный этап разработки: определить URL и статусы, добавить авторизацию, проверять владельца в сервисе, обработать связанные записи в транзакции, определить порядок очистки файлов после commit и покрыть отказ в доступе/ошибки БД тестами. Только после появления реального метода можно вызывать его напрямую через существующий `typeof` зависимости. Удаление одного guard без реализации сервиса проблему не решает.
 

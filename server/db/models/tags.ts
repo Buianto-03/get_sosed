@@ -21,14 +21,14 @@ const createTags = (
     declare updatedAt: CreationOptional<Date>;
 
     static associate({
-      AdvertTags,
-      Advert,
-    }: Pick<typeof db, 'AdvertTags' | 'Advert'>) {
-      this.hasMany(AdvertTags, { foreignKey: 'tagId', as: 'advertsTags' });
-      this.belongsToMany(Advert, {
-        through: AdvertTags,
+      ListingTags,
+      Listing,
+    }: Pick<typeof db, 'ListingTags' | 'Listing'>) {
+      this.hasMany(ListingTags, { foreignKey: 'tagId', as: 'listingTags' });
+      this.belongsToMany(Listing, {
+        through: ListingTags,
         foreignKey: 'tagId',
-        as: 'adverts',
+        as: 'listings',
       });
     }
   }

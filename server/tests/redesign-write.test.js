@@ -68,7 +68,7 @@ function publication(options = {}) {
           : query.where.id[Sequelize.Op.in].map((id) => ({ id }));
       },
     },
-    Advert: {
+    Listing: {
       create: async (values, query) => {
         assert.equal(query.transaction, transaction);
         rows.push(values);
@@ -94,7 +94,7 @@ function publication(options = {}) {
         locations.push(values);
       },
     },
-    AdvertTags: {
+    ListingTags: {
       bulkCreate: async (values, query) => {
         assert.equal(query.transaction, transaction);
         if (options.tagsError) {
@@ -103,7 +103,7 @@ function publication(options = {}) {
         tagBatches.push(values);
       },
     },
-    AdvertPhoto: {
+    ListingPhoto: {
       create: async (values, query) => {
         assert.equal(query.transaction, transaction);
         sideEffects.push('photoRecord');
@@ -114,10 +114,10 @@ function publication(options = {}) {
       },
     },
   };
-  const exported = load('../build/src/service/publishAdvertService.js', {
+  const exported = load('../build/src/service/publishListingService.js', {
     sequelize: Sequelize,
     '../../db/models': {},
-    './advertService': {},
+    './listingService': {},
     sharp: () => ({
       webp: () => ({
         toBuffer: async () => {
@@ -131,7 +131,7 @@ function publication(options = {}) {
     'fs/promises': {
       mkdir: async (directory, args) => {
         sideEffects.push('mkdir');
-        assert.equal(directory, './public/images/adverts/advert-42');
+        assert.equal(directory, './public/images/listings/listing-42');
         assert.equal(args.recursive, true);
         if (options.mkdirError) {
           throw options.mkdirError;
@@ -147,7 +147,7 @@ function publication(options = {}) {
       },
       rm: async (directory, args) => {
         sideEffects.push('rm');
-        assert.equal(directory, './public/images/adverts/advert-42');
+        assert.equal(directory, './public/images/listings/listing-42');
         assert.equal(args.recursive, true);
         assert.equal(args.force, true);
         if (options.cleanupError) {
@@ -163,11 +163,11 @@ function publication(options = {}) {
   }, { console: { error: (...args) => logs.push(args) } });
   const service = new exported.constructor(
     db.sequelize,
-    db.Advert,
+    db.Listing,
     db.Location,
     db.Tags,
-    db.AdvertTags,
-    db.AdvertPhoto,
+    db.ListingTags,
+    db.ListingPhoto,
     { getReadIncludes: () => readIncludes },
   );
   return { service, rows, images, sideEffects, locations, tagBatches, files, logs };
@@ -188,18 +188,18 @@ test('publication validates numeric fields, actual tag IDs and photos before lea
     { tagIds: '{' },
   ]) {
     await assert.rejects(
-      service.publishAdvert({ ...fields, ...invalid }, photos, 7),
-      (error) => error.status === 400 && error.code === 'INVALID_ADVERT_DATA',
+      service.publishListing({ ...fields, ...invalid }, photos, 7),
+      (error) => error.status === 400 && error.code === 'INVALID_LISTING_DATA',
     );
   }
   await assert.rejects(
-    service.publishAdvert(fields, [], 7),
-    (error) => error.status === 400 && error.code === 'INVALID_ADVERT_DATA',
+    service.publishListing(fields, [], 7),
+    (error) => error.status === 400 && error.code === 'INVALID_LISTING_DATA',
   );
   const unknown = publication({ unknown: true });
   await assert.rejects(
-    unknown.service.publishAdvert(fields, photos, 7),
-    (error) => error.status === 400 && error.code === 'INVALID_ADVERT_DATA',
+    unknown.service.publishListing(fields, photos, 7),
+    (error) => error.status === 400 && error.code === 'INVALID_LISTING_DATA',
   );
   assert.equal(rows.length, 0);
   assert.equal(unknown.rows.length, 0);
@@ -223,10 +223,10 @@ test('publication rejects invalid photos before opening a transaction or touchin
   for (const { files, invalidPhoto, message } of cases) {
     const env = publication({ invalidPhoto });
     await assert.rejects(
-      env.service.publishAdvert(fields, files, 7),
+      env.service.publishListing(fields, files, 7),
       (error) =>
         error.status === 400 &&
-        error.code === 'INVALID_ADVERT_DATA' &&
+        error.code === 'INVALID_LISTING_DATA' &&
         error.message === message,
     );
     assert.deepEqual(env.sideEffects, []);
@@ -235,20 +235,20 @@ test('publication rejects invalid photos before opening a transaction or touchin
 });
 test('publication awaits ordered photo writes, deduplicates tags and scopes author to session', async () => {
   const { service, rows, files, sideEffects } = publication();
-  assert.equal(service.parseAdvert(fields).tagIds.length, 2);
-  const result = await service.publishAdvert(
+  assert.equal(service.parseListing(fields).tagIds.length, 2);
+  const result = await service.publishListing(
     { ...fields, userId: '999' },
     photos,
     7,
   );
   assert.equal(rows[0].userId, 7);
   assert.deepEqual(result.photos, [
-    '/images/adverts/advert-42/photo-0.webp',
-    '/images/adverts/advert-42/photo-1.webp',
+    '/images/listings/listing-42/photo-0.webp',
+    '/images/listings/listing-42/photo-1.webp',
   ]);
   assert.deepEqual([...files], [
-    './public/images/adverts/advert-42/photo-0.webp',
-    './public/images/adverts/advert-42/photo-1.webp',
+    './public/images/listings/listing-42/photo-0.webp',
+    './public/images/listings/listing-42/photo-1.webp',
   ]);
   assert.deepEqual(sideEffects, [
     'transaction', 'mkdir', 'writeFile', 'photoRecord',
@@ -258,13 +258,13 @@ test('publication awaits ordered photo writes, deduplicates tags and scopes auth
 test('publication uses one transaction for all related queries and skips empty tag links', async () => {
   for (const tagIds of ['[1,1,2]', '[]']) {
     const env = publication();
-    await env.service.publishAdvert({ ...fields, tagIds, userId: '999' }, photos, 7);
+    await env.service.publishListing({ ...fields, tagIds, userId: '999' }, photos, 7);
     assert.equal(env.sideEffects.filter((effect) => effect === 'transaction').length, 1);
     assert.equal(env.rows[0].userId, 7);
     assert.equal(env.rows[0].city, undefined);
     assert.equal(env.rows[0].tagIds, undefined);
     assert.equal(env.locations.length, 1);
-    assert.equal(env.locations[0].advertId, 42);
+    assert.equal(env.locations[0].listingId, 42);
     assert.equal(env.locations[0].city, 'Казань');
     assert.equal(env.locations[0].address, 'Улица, 1');
     if (tagIds === '[]') {
@@ -272,8 +272,8 @@ test('publication uses one transaction for all related queries and skips empty t
     } else {
       assert.equal(env.tagBatches.length, 1);
       assert.deepEqual(
-        Array.from(env.tagBatches[0], ({ tagId, advertId }) => ({ tagId, advertId })),
-        [{ tagId: 1, advertId: 42 }, { tagId: 2, advertId: 42 }],
+        Array.from(env.tagBatches[0], ({ tagId, listingId }) => ({ tagId, listingId })),
+        [{ tagId: 1, listingId: 42 }, { tagId: 2, listingId: 42 }],
       );
     }
   }
@@ -283,7 +283,7 @@ test('publication rolls back related records and preserves location and tag-link
     const failure = new Error(operation);
     const env = publication({ [operation]: failure });
     await assert.rejects(
-      env.service.publishAdvert(fields, photos, 7),
+      env.service.publishListing(fields, photos, 7),
       (error) => error === failure,
     );
     assert.deepEqual(env.rows, []);
@@ -294,7 +294,7 @@ test('publication rolls back related records and preserves location and tag-link
 });
 test('a second-photo disk failure rolls back database records and removes request-owned files', async () => {
   const { service, rows, images, files, sideEffects } = publication({ failSecond: true });
-  await assert.rejects(service.publishAdvert(fields, photos, 7), /disk full/);
+  await assert.rejects(service.publishListing(fields, photos, 7), /disk full/);
   assert.equal(rows.length, 0);
   assert.equal(images.length, 0);
   assert.equal(files.size, 0);
@@ -307,10 +307,10 @@ test('publication cleans up only its directory after mkdir, photo-record and fin
   for (const operation of ['mkdirError', 'photoError', 'readError']) {
     const failure = new Error(operation);
     const env = publication({ [operation]: failure });
-    const otherFile = './public/images/adverts/advert-99/photo-0.webp';
+    const otherFile = './public/images/listings/listing-99/photo-0.webp';
     env.files.add(otherFile);
     await assert.rejects(
-      env.service.publishAdvert(fields, photos, 7),
+      env.service.publishListing(fields, photos, 7),
       (error) => error === failure,
     );
     assert.deepEqual(env.rows, []);
@@ -327,15 +327,15 @@ test('publication logs cleanup failures without replacing the original photo-rec
   const cleanupError = new Error('cannot remove files');
   const env = publication({ photoError: failure, cleanupError });
   await assert.rejects(
-    env.service.publishAdvert(fields, photos, 7),
+    env.service.publishListing(fields, photos, 7),
     (error) => error === failure,
   );
   assert.deepEqual(env.rows, []);
   assert.deepEqual(env.images, []);
   assert.deepEqual(env.sideEffects.slice(-2), ['rollback', 'rm']);
-  assert.deepEqual([...env.files], ['./public/images/adverts/advert-42/photo-0.webp']);
+  assert.deepEqual([...env.files], ['./public/images/listings/listing-42/photo-0.webp']);
   assert.deepEqual(env.logs, [
-    ['Cannot remove advert photos after rollback:', cleanupError],
+    ['Cannot remove listing photos after rollback:', cleanupError],
   ]);
 });
 test('profile allowlist preserves omitted fields and rejects malformed habits and incompatible photo modes', async () => {

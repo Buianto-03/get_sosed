@@ -9,9 +9,9 @@ class LikeService {
     private readonly userProfile: typeof db.UserProfile,
   ) {}
 
-  async getLikesByAdvertId(advertId: string | number) {
+  async getLikesByListingId(listingId: string | number) {
     return this.like.findAll({
-      where: { advertId },
+      where: { listingId },
       include: {
         model: this.user,
         attributes: { exclude: ['hashpass'] },
@@ -24,15 +24,15 @@ class LikeService {
     });
   }
 
-  async postLike(advertId: string | number, userId: number) {
+  async postLike(listingId: string | number, userId: number) {
     const [newLike, created] = await this.like.findOrCreate({
       where: {
-        advertId,
+        listingId,
         userId,
       },
     });
     const like = await this.like.findByPk(newLike.get().id, {
-      attributes: ['id', 'userId', 'advertId'],
+      attributes: ['id', 'userId', 'listingId'],
       include: {
         model: this.user,
         attributes: ['id', 'name'],
@@ -42,9 +42,9 @@ class LikeService {
     return { like, created };
   }
 
-  async deleteLike(advertId: string | number, userId: number) {
-    const count = await this.like.destroy({ where: { advertId, userId } });
-    return { advertId: Number(advertId), deleted: count > 0 };
+  async deleteLike(listingId: string | number, userId: number) {
+    const count = await this.like.destroy({ where: { listingId, userId } });
+    return { listingId: Number(listingId), deleted: count > 0 };
   }
 }
 

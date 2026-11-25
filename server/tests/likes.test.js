@@ -30,7 +30,7 @@ test('like reads exclude password hashes in the query and preserve the returned 
   const row = {
     id: 9,
     userId: 2,
-    advertId: 7,
+    listingId: 7,
     User: {
       id: 2,
       name: 'Анна',
@@ -42,7 +42,7 @@ test('like reads exclude password hashes in the query and preserve the returned 
   let rows = [row];
   const like = {
     findAll: async (query) => {
-      assert.equal(query.where.advertId, '7');
+      assert.equal(query.where.listingId, '7');
       assert.equal(query.include.model, user);
       assert.deepEqual(Array.from(query.include.attributes.exclude), ['hashpass']);
       assert.equal(query.include.include[0].model, userProfile);
@@ -50,11 +50,11 @@ test('like reads exclude password hashes in the query and preserve the returned 
     },
   };
   const service = new exported.constructor(like, user, userProfile);
-  const result = await service.getLikesByAdvertId('7');
+  const result = await service.getLikesByListingId('7');
   assert.deepEqual(JSON.parse(JSON.stringify(result)), [{
     id: 9,
     userId: 2,
-    advertId: 7,
+    listingId: 7,
     User: {
       id: 2,
       name: 'Анна',
@@ -65,7 +65,7 @@ test('like reads exclude password hashes in the query and preserve the returned 
   }]);
   assert.equal(result, rows);
   rows = [];
-  assert.equal((await service.getLikesByAdvertId('7')).length, 0);
+  assert.equal((await service.getLikesByListingId('7')).length, 0);
 });
 
 test('Sequelize like reads generate SQL without selecting password hashes', async (t) => {
@@ -76,7 +76,7 @@ test('Sequelize like reads generate SQL without selecting password hashes', asyn
     queries.push(sql);
     return [];
   });
-  assert.deepEqual(await service.getLikesByAdvertId(7), []);
+  assert.deepEqual(await service.getLikesByListingId(7), []);
   assert.equal(queries.length, 1);
   assert.doesNotMatch(queries[0], /hashpass/);
   assert.match(queries[0], /"User"\."email"/);
@@ -84,11 +84,11 @@ test('Sequelize like reads generate SQL without selecting password hashes', asyn
 });
 
 test('POST returns the same like with 201 then 200, without exposing credentials', async () => {
-  const row = { id: 9, userId: 2, advertId: 7 };
+  const row = { id: 9, userId: 2, listingId: 7 };
   let exists = false;
   const Like = {
     async findOrCreate({ where }) {
-      assert.equal(where.advertId, '7');
+      assert.equal(where.listingId, '7');
       assert.equal(where.userId, 2);
       const created = !exists;
       exists = true;
@@ -110,10 +110,10 @@ test('POST returns the same like with 201 then 200, without exposing credentials
   }
 });
 
-test('DELETE scopes to current user and consistently returns advertId/deleted', async () => {
+test('DELETE scopes to current user and consistently returns listingId/deleted', async () => {
   let exists = true;
   const Like = { async destroy({ where }) {
-    assert.equal(where.advertId, '7');
+    assert.equal(where.listingId, '7');
     assert.equal(where.userId, 2);
     const count = exists ? 1 : 0;
     exists = false;
@@ -125,7 +125,7 @@ test('DELETE scopes to current user and consistently returns advertId/deleted', 
     const res = response();
     await controller.deleteLike({ params: { listingId: '7' } }, res);
     assert.equal(res.code, 200);
-    assert.equal(JSON.stringify(res.body), JSON.stringify({ advertId: 7, deleted }));
+    assert.equal(JSON.stringify(res.body), JSON.stringify({ listingId: 7, deleted }));
   }
 });
 

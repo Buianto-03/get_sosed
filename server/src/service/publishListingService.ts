@@ -4,13 +4,13 @@ import fs = require('fs/promises');
 import sharp = require('sharp');
 
 import db = require('../../db/models');
-import readAdvertService = require('./advertService');
+import readListingService = require('./listingService');
 import AppError = require('../utils/appError');
 
-const { sequelize, Advert, Location, Tags, AdvertTags, AdvertPhoto } = db;
+const { sequelize, Listing, Location, Tags, ListingTags, ListingPhoto } = db;
 const MAX_POSTGRES_INTEGER = 2 ** 31 - 1;
 
-interface AdvertValues {
+interface ListingValues {
   title: string;
   body: string;
   city: string;
@@ -26,7 +26,7 @@ interface AdvertValues {
 }
 
 const invalid = (message: string) =>
-  new AppError(400, 'INVALID_ADVERT_DATA', message);
+  new AppError(400, 'INVALID_LISTING_DATA', message);
 
 function parseText(
   value: unknown,
@@ -57,18 +57,18 @@ function parsePositiveInteger(value: unknown, field: string): number {
   return number;
 }
 
-class PublishAdvertService {
+class PublishListingService {
   constructor(
     private readonly sequelize: typeof db.sequelize,
-    private readonly advert: typeof db.Advert,
+    private readonly listing: typeof db.Listing,
     private readonly location: typeof db.Location,
     private readonly tags: typeof db.Tags,
-    private readonly advertTags: typeof db.AdvertTags,
-    private readonly advertPhoto: typeof db.AdvertPhoto,
-    private readonly advertService: typeof readAdvertService,
+    private readonly listingTags: typeof db.ListingTags,
+    private readonly listingPhoto: typeof db.ListingPhoto,
+    private readonly listingService: typeof readListingService,
   ) {}
 
-  parseAdvert(body: Record<string, unknown>): AdvertValues {
+  parseListing(body: Record<string, unknown>): ListingValues {
     const title = parseText(body.title, 'title', 100, true);
     const description = parseText(body.body, 'body', 10000, true);
     const city = parseText(body.city, 'city', 100, true);
@@ -162,59 +162,59 @@ class PublishAdvertService {
     }
   }
 
-  async createAdvertWithRelations(
-    values: AdvertValues,
+  async createListingWithRelations(
+    values: ListingValues,
     userId: number,
     transaction: Transaction,
   ) {
     const { city, address, district, metro, coordinates, tagIds, ...fields } =
       values;
-    const advert = await this.advert.create(
+    const listing = await this.listing.create(
       { ...fields, userId },
       { transaction },
     );
     await this.location.create(
-      { city, address, district, metro, coordinates, advertId: advert.id },
+      { city, address, district, metro, coordinates, listingId: listing.id },
       { transaction },
     );
     if (tagIds.length) {
-      await this.advertTags.bulkCreate(
-        tagIds.map((tagId) => ({ tagId, advertId: advert.id })),
+      await this.listingTags.bulkCreate(
+        tagIds.map((tagId) => ({ tagId, listingId: listing.id })),
         { transaction },
       );
     }
-    return advert;
+    return listing;
   }
 
-  getPublishedAdvert(advertId: number, transaction: Transaction) {
-    return this.advert.findByPk(advertId, {
-      include: this.advertService.getReadIncludes(),
+  getPublishedListing(listingId: number, transaction: Transaction) {
+    return this.listing.findByPk(listingId, {
+      include: this.listingService.getReadIncludes(),
       transaction,
     });
   }
 
-  createPhotoPaths(advertId: number, index: number) {
-    const directory = `./public/images/adverts/advert-${advertId}`;
+  createPhotoPaths(listingId: number, index: number) {
+    const directory = `./public/images/listings/listing-${listingId}`;
     const fileName = `photo-${index}.webp`;
     return {
       directory,
       filePath: `${directory}/${fileName}`,
-      url: `/images/adverts/advert-${advertId}/${fileName}`,
+      url: `/images/listings/listing-${listingId}/${fileName}`,
     };
   }
 
-  async saveAdvertPhotos(
-    advertId: number,
+  async saveListingPhotos(
+    listingId: number,
     images: Buffer[],
     directory: string,
     transaction: Transaction,
   ) {
     await fs.mkdir(directory, { recursive: true });
     for (let index = 0; index < images.length; index += 1) {
-      const photo = this.createPhotoPaths(advertId, index);
+      const photo = this.createPhotoPaths(listingId, index);
       await fs.writeFile(photo.filePath, images[index]);
-      await this.advertPhoto.create(
-        { advertId, photo: photo.url },
+      await this.listingPhoto.create(
+        { listingId, photo: photo.url },
         { transaction },
       );
     }
@@ -227,29 +227,29 @@ class PublishAdvertService {
     try {
       await fs.rm(directory, { recursive: true, force: true });
     } catch (error) {
-      console.error('Cannot remove advert photos after rollback:', error);
+      console.error('Cannot remove listing photos after rollback:', error);
     }
   }
 
-  async publishAdvert(
+  async publishListing(
     body: Record<string, unknown>,
     files: Express.Multer.File[] | undefined,
     userId: number,
   ) {
-    const values = this.parseAdvert(body);
+    const values = this.parseListing(body);
     const images = await this.preparePhotos(files);
     let directory: string | undefined;
     try {
       return await this.sequelize.transaction(async (transaction) => {
         await this.validateTagIds(values.tagIds, transaction);
-        const advert = await this.createAdvertWithRelations(
+        const listing = await this.createListingWithRelations(
           values,
           userId,
           transaction,
         );
-        directory = this.createPhotoPaths(advert.id, 0).directory;
-        await this.saveAdvertPhotos(advert.id, images, directory, transaction);
-        return this.getPublishedAdvert(advert.id, transaction);
+        directory = this.createPhotoPaths(listing.id, 0).directory;
+        await this.saveListingPhotos(listing.id, images, directory, transaction);
+        return this.getPublishedListing(listing.id, transaction);
       });
     } catch (error) {
       await this.removeCreatedPhotos(directory);
@@ -258,12 +258,12 @@ class PublishAdvertService {
   }
 }
 
-export = new PublishAdvertService(
+export = new PublishListingService(
   sequelize,
-  Advert,
+  Listing,
   Location,
   Tags,
-  AdvertTags,
-  AdvertPhoto,
-  readAdvertService,
+  ListingTags,
+  ListingPhoto,
+  readListingService,
 );
