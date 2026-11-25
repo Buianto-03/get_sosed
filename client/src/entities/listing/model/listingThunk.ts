@@ -1,23 +1,23 @@
 import { isAxiosError } from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { isRequestCanceled } from '@shared/api/cancellation';
-import advertService from '../api/advertService';
-import type { AdvertPageType, AdvertSearchRequest, AdvertSliceT, AdvertType } from './advertsModel';
+import { listingService } from '../api/listingService';
+import type { ListingPage, ListingSearchRequest, ListingState, Listing } from './listingModel';
 
-export const getFilteredAdvertsThunk = createAsyncThunk<
-  AdvertPageType,
-  AdvertSearchRequest,
-  { state: { advert: AdvertSliceT } }
+export const getFilteredListingsThunk = createAsyncThunk<
+  ListingPage,
+  ListingSearchRequest,
+  { state: { listing: ListingState } }
 >(
-  'adverts/getFilteredAdverts',
+  'listings/getFilteredListings',
   async ({ filters, page, limit }, { signal }) =>
-    advertService.getFilteredAdvertsPage(filters, page, limit, { signal }),
+    listingService.getFilteredListingsPage(filters, page, limit, { signal }),
   {
     condition: ({ searchKey, page, limit }, { getState }) => {
       if (page === 1) {
         return true;
       }
-      const { search } = getState().advert;
+      const { search } = getState().listing;
       return (
         search.searchKey === searchKey &&
         search.requestId === null &&
@@ -32,11 +32,11 @@ export const getFilteredAdvertsThunk = createAsyncThunk<
   },
 );
 
-export const getAdvertByIdThunk = createAsyncThunk<AdvertType, number, { rejectValue: number }>(
-  'adverts/getAdvertByIdThunk',
+export const getListingByIdThunk = createAsyncThunk<Listing, number, { rejectValue: number }>(
+  'listings/getListingByIdThunk',
   async (id, { rejectWithValue, signal }) => {
     try {
-      return await advertService.getAdvertById(id, { signal });
+      return await listingService.getListingById(id, { signal });
     } catch (error) {
       if (isRequestCanceled(error)) {
         throw error;
@@ -46,6 +46,6 @@ export const getAdvertByIdThunk = createAsyncThunk<AdvertType, number, { rejectV
   },
 );
 
-export const getTopAdvertsThunk = createAsyncThunk('adverts/getTopAdverts', async (_, { signal }) =>
-  advertService.getTopAdverts({ signal }),
+export const getTopListingsThunk = createAsyncThunk('listings/getTopListings', async (_, { signal }) =>
+  listingService.getTopListings({ signal }),
 );

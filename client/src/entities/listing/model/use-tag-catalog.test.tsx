@@ -4,8 +4,8 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import advertService from '../api/advertService';
-import type { TagType } from './advertsModel';
+import { listingService } from '../api/listingService';
+import type { TagType } from './listingModel';
 import { getTagCatalogView, getTagLabel, ListingCondition, TagCatalogState } from './tag-catalog';
 import tagCatalogReducer from './tagCatalogSlice';
 import { useTagCatalog } from './use-tag-catalog';
@@ -32,7 +32,7 @@ function setup(strict = false): { wrapper: (props: WrapperProps) => ReactElement
 
 describe('useTagCatalog', () => {
   it('loads the complete catalog and lets explicit reload bypass TTL', async () => {
-    const get = vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue(tags);
+    const get = vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue(tags);
     const { result } = renderHook(useTagCatalog, setup());
     expect(result.current.state).toBe(TagCatalogState.Loading);
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
@@ -48,7 +48,7 @@ describe('useTagCatalog', () => {
   });
 
   it('keeps the last successful catalog on refresh failure and supports retry', async () => {
-    vi.spyOn(advertService, 'getTagsBySearch')
+    vi.spyOn(listingService, 'getTagsBySearch')
       .mockResolvedValueOnce(tags)
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValueOnce(tags);
@@ -65,7 +65,7 @@ describe('useTagCatalog', () => {
   });
 
   it('reports invalid catalogs without caching them as success and preserves duplicate names', async () => {
-    vi.spyOn(advertService, 'getTagsBySearch')
+    vi.spyOn(listingService, 'getTagsBySearch')
       .mockResolvedValueOnce(tags.filter(({ id }) => id !== 418))
       .mockResolvedValueOnce([...tags, { id: 888, name: ListingCondition.Workspace }]);
     const { result } = renderHook(useTagCatalog, setup());
@@ -80,7 +80,7 @@ describe('useTagCatalog', () => {
 
   it('shares one in-flight read, including reloads, and unmount does not cancel another consumer', async () => {
     let finish!: (value: TagType[]) => void;
-    const get = vi.spyOn(advertService, 'getTagsBySearch').mockImplementation(
+    const get = vi.spyOn(listingService, 'getTagsBySearch').mockImplementation(
       () =>
         new Promise((resolve) => {
           finish = resolve;
@@ -109,7 +109,7 @@ describe('useTagCatalog', () => {
 
   it('finishes an unobserved public read into the cache and reuses it on return', async () => {
     let finish!: (value: TagType[]) => void;
-    const get = vi.spyOn(advertService, 'getTagsBySearch').mockImplementation(
+    const get = vi.spyOn(listingService, 'getTagsBySearch').mockImplementation(
       () =>
         new Promise((resolve) => {
           finish = resolve;
@@ -128,7 +128,7 @@ describe('useTagCatalog', () => {
   });
 
   it('does not duplicate the read during StrictMode effect replay', async () => {
-    const get = vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue(tags);
+    const get = vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue(tags);
     const { result } = renderHook(useTagCatalog, setup(true));
     await waitFor(() => expect(result.current.state).toBe(TagCatalogState.Ready));
     expect(get).toHaveBeenCalledOnce();

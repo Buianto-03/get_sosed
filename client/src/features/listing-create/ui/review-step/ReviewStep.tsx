@@ -1,6 +1,5 @@
 import React from 'react';
-import { getTagCatalogView, getTagLabel } from '@entities/advert/model/tag-catalog';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import { getTagCatalogView, getTagLabel, type TagCatalog } from '@entities/listing/model';
 import { ListingCard, ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';

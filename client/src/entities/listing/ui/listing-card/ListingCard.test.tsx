@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { ListingCard, ListingCardVariant, type ListingCardData } from './ListingCard';
+import type { ListingCardData } from '../../model/listing-card';
+import { ListingCard, ListingCardVariant } from './ListingCard';
 
 const listing: ListingCardData = {
   title: 'Светлая квартира рядом с парком',

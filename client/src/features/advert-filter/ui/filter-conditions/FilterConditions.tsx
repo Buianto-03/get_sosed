@@ -3,9 +3,9 @@ import {
   getTagCatalogView,
   getTagLabel,
   TagCatalogState,
-} from '@entities/advert/model/tag-catalog';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
-import { TagCatalogFeedback } from '@entities/advert/ui/tag-catalog-feedback/TagCatalogFeedback';
+  type TagCatalog,
+} from '@entities/listing/model';
+import { TagCatalogFeedback } from '@entities/listing/ui/tag-catalog-feedback/TagCatalogFeedback';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Checkbox } from '@shared/ui/selection/checkbox/Checkbox';
 import styles from './FilterConditions.module.scss';

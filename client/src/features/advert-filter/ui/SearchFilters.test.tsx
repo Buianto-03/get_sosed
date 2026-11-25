@@ -1,8 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { ListingCondition, TagCatalogState } from '@entities/advert/model/tag-catalog';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import { ListingCondition, TagCatalogState, type TagCatalog } from '@entities/listing/model';
 import type { CheckboxProps } from '@shared/ui/selection/checkbox/Checkbox';
 import { SearchFilters, emptySearchFilters } from './SearchFilters';
 

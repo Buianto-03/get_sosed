@@ -1,4 +1,4 @@
-import type { TagType } from './advertsModel';
+import type { TagType } from './listingModel';
 
 export enum ListingCondition {
   NonSmoking = 'Для некурящих',

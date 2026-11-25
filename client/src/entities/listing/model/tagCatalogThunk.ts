@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { isRequestCanceled } from '@shared/api/cancellation';
-import advertService from '../api/advertService';
+import { listingService } from '../api/listingService';
 import { getTagCatalogView } from './tag-catalog';
 import { getTagCatalogOrigin } from './tagCatalogModel';
 import type { TagCatalogRequest, TagCatalogRoot, TagCatalogSuccess } from './tagCatalogModel';
@@ -14,7 +14,7 @@ export const getTagCatalogThunk = createAsyncThunk<
   'tagCatalog/get',
   async (_, { signal, rejectWithValue }) => {
     try {
-      const tags = await advertService.getTagsBySearch('', { signal });
+      const tags = await listingService.getTagsBySearch('', { signal });
       const { error } = getTagCatalogView(tags);
       if (error) {
         return rejectWithValue(error);

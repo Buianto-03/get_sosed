@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { useFocusAfterUpdate } from '@shared/lib/focus/use-focus-after-update';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Spinner } from '@shared/ui/feedback/Spinner';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import type { Listing } from '@entities/listing/model';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
@@ -13,7 +13,7 @@ import { getCollectionFocusTarget } from './helper';
 import styles from './ProfileListingsSection.module.scss';
 
 export interface ProfileCollection {
-  items: readonly AdvertType[];
+  items: readonly Listing[];
   total: number;
   loading: boolean;
   error: string | null;

@@ -5,15 +5,14 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import HomeRoute from '@pages/welcome/ui/home-route/HomeRoute';
 import AboutPage from '@pages/about/ui/about-page/AboutPage';
-import advertService from '@entities/advert/api/advertService';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import { listingService } from '@entities/listing/api/listingService';
+import { type Listing, SavedStatus } from '@entities/listing/model';
 import { clearAuth, setSession } from '@entities/session/model/authSlice';
-import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
 import axiosInstance from '@shared/api/client';
 import likeService from '@entities/like/api/likeService';
 import { store } from '../store/store';
 
-const advert = (id: number): AdvertType => ({
+const advert = (id: number): Listing => ({
   id,
   title: `Квартира ${id}`,
   body: null,
@@ -54,9 +53,9 @@ afterEach(() => {
 
 it('shows only the three freshest real adverts, leaves search state alone and opens the actual ID', async () => {
   const get = vi
-    .spyOn(advertService, 'getFreshAdverts')
+    .spyOn(listingService, 'getFreshListings')
     .mockResolvedValue([advert(4), advert(3), advert(2)]);
-  const previousSearch = store.getState().advert.search;
+  const previousSearch = store.getState().listing.search;
   open();
   const titles = await screen.findAllByRole('heading', { level: 3, name: /Квартира/ });
   expect(titles.map((item) => item.textContent)).toEqual([
@@ -66,7 +65,7 @@ it('shows only the three freshest real adverts, leaves search state alone and op
   ]);
   expect(get.mock.calls[0][0]).toBe(3);
   expect(get.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
-  expect(store.getState().advert.search).toBe(previousSearch);
+  expect(store.getState().listing.search).toBe(previousSearch);
   expect(screen.getAllByText('Цена не указана')).toHaveLength(3);
   expect(screen.getAllByText('Фото не добавлено')).toHaveLength(3);
   fireEvent.click(screen.getByRole('button', { name: 'Открыть объявление: Квартира 4' }));
@@ -76,7 +75,7 @@ it('shows only the three freshest real adverts, leaves search state alone and op
 it('shows loading/error/retry/empty without hiding banner or explanation', async () => {
   let reject!: (error: Error) => void;
   const get = vi
-    .spyOn(advertService, 'getFreshAdverts')
+    .spyOn(listingService, 'getFreshListings')
     .mockReturnValueOnce(
       new Promise((_, fail) => {
         reject = fail;
@@ -102,7 +101,7 @@ it('shows loading/error/retry/empty without hiding banner or explanation', async
 });
 
 it('sends guest saving to sign-in and does not post a like', async () => {
-  vi.spyOn(advertService, 'getFreshAdverts').mockResolvedValue([advert(7)]);
+  vi.spyOn(listingService, 'getFreshListings').mockResolvedValue([advert(7)]);
   const post = vi.spyOn(likeService, 'setLike');
   open();
   fireEvent.click(await screen.findByRole('button', { name: 'Сохранить объявление' }));
@@ -118,8 +117,8 @@ it('uses the shared saved state, blocks repeated save and preserves the heart on
       accessToken: 'token',
     }),
   );
-  await waitFor(() => expect(store.getState().likedAdverts.status).toBe(SavedStatus.Ready));
-  vi.spyOn(advertService, 'getFreshAdverts').mockResolvedValue([advert(7)]);
+  await waitFor(() => expect(store.getState().likedListings.status).toBe(SavedStatus.Ready));
+  vi.spyOn(listingService, 'getFreshListings').mockResolvedValue([advert(7)]);
   let resolve!: (like: { id: number; userId: number; advertId: number }) => void;
   const post = vi.spyOn(likeService, 'setLike').mockReturnValue(
     new Promise((done) => {
@@ -138,7 +137,7 @@ it('uses the shared saved state, blocks repeated save and preserves the heart on
   });
   const remove = await screen.findByRole('button', { name: 'Убрать из избранного' });
   expect(remove).toHaveAttribute('aria-pressed', 'true');
-  expect(store.getState().likedAdverts.items[0].Advert.id).toBe(7);
+  expect(store.getState().likedListings.items[0].Advert.id).toBe(7);
   fireEvent.click(remove);
   expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить');
   expect(remove).toHaveAttribute('aria-pressed', 'true');
@@ -154,7 +153,7 @@ it('about opens listings through the real navigation callback', () => {
 });
 
 it('aborts its own loading request when the home page unmounts', () => {
-  const get = vi.spyOn(advertService, 'getFreshAdverts').mockImplementation(
+  const get = vi.spyOn(listingService, 'getFreshListings').mockImplementation(
     () =>
       new Promise(() => {
         /* Pending until its owner cancels. */

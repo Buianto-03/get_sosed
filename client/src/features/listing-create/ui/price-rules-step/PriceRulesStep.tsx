@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input, InputType } from '@shared/ui/input/Input';
 import { Textarea } from '@shared/ui/textarea/Textarea';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/listing/model';
 import { validatePrice, type ListingDraft } from '../../model';
 import { ListingRules } from '../listing-rules/ListingRules';
 import styles from './PriceRulesStep.module.scss';

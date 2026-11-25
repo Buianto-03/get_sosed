@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { getTagCatalogView, TagCatalogState } from '@entities/advert/model/tag-catalog';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import { getTagCatalogView, TagCatalogState, type TagCatalog } from '@entities/listing/model';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreateForm } from '@features/listing-create/ui/listing-create-form/ListingCreateForm';
 import { ListingCreateStep } from '@features/listing-create/ui/listing-create-step/ListingCreateStep';

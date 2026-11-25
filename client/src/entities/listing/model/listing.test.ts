@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advertSchema } from './advertsModel';
+import { listingSchema } from './listingModel';
 
 const advert = {
   id: 1,
@@ -21,16 +21,16 @@ const advert = {
   AdvertPhotos: [],
 };
 
-describe('advertSchema', () => {
+describe('listingSchema', () => {
   it('retains real tag IDs and accepts nullable location fields and no photos', () => {
-    const parsed = advertSchema.parse(advert);
+    const parsed = listingSchema.parse(advert);
     expect(parsed.tags).toEqual(advert.tags);
     expect(parsed.location?.coordinates).toBeNull();
     expect(parsed.AdvertPhotos).toEqual([]);
   });
 
   it('accepts legacy nullable values and absent relationships', () => {
-    const parsed = advertSchema.parse({
+    const parsed = listingSchema.parse({
       ...advert, title: null, body: null, price: null, floor: null,
       rooms: null, square: null, userId: null, user: null, location: null,
       tags: undefined, AdvertPhotos: null,
@@ -40,7 +40,7 @@ describe('advertSchema', () => {
   });
 
   it('normalizes multiple photo URLs without changing their order', () => {
-    const parsed = advertSchema.parse({
+    const parsed = listingSchema.parse({
       ...advert,
       AdvertPhotos: [
         { id: 3, advertId: 1, photo: '/images/first.webp' },
@@ -56,9 +56,9 @@ describe('advertSchema', () => {
   });
 
   it('still rejects invalid field types, photo IDs and tag IDs', () => {
-    expect(advertSchema.safeParse({ ...advert, price: '30000' }).success).toBe(false);
-    expect(advertSchema.safeParse({ ...advert, tags: [{ id: '8', name: 'Тег' }] }).success).toBe(false);
-    expect(advertSchema.safeParse({
+    expect(listingSchema.safeParse({ ...advert, price: '30000' }).success).toBe(false);
+    expect(listingSchema.safeParse({ ...advert, tags: [{ id: '8', name: 'Тег' }] }).success).toBe(false);
+    expect(listingSchema.safeParse({
       ...advert, AdvertPhotos: [{ id: '3', advertId: 1, photo: '/images/a.webp' }],
     }).success).toBe(false);
   });

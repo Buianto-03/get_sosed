@@ -1,8 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { expect, it, vi } from 'vitest';
-import advertService from '../api/advertService';
+import { listingService } from '../api/listingService';
 import { ListingCondition, TagCatalogState } from './tag-catalog';
-import type { TagType } from './advertsModel';
+import type { TagType } from './listingModel';
 import { getTagCatalogOrigin, TAG_CATALOG_TTL_MS } from './tagCatalogModel';
 import tagCatalogReducer from './tagCatalogSlice';
 import { getTagCatalogThunk } from './tagCatalogThunk';
@@ -17,7 +17,7 @@ const request = { origin };
 it('uses the five-minute TTL from successful completion and reload bypasses it', async () => {
   let now = 1000;
   vi.spyOn(Date, 'now').mockImplementation(() => now);
-  const get = vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue(tags);
+  const get = vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue(tags);
   const store = configureStore({ reducer: { tagCatalog: tagCatalogReducer } });
   await store.dispatch(getTagCatalogThunk(request));
   now += TAG_CATALOG_TTL_MS - 1;
@@ -35,7 +35,7 @@ it('timestamps a slow successful response at completion rather than dispatch', a
   let now = 1000;
   vi.spyOn(Date, 'now').mockImplementation(() => now);
   let finish!: (value: TagType[]) => void;
-  vi.spyOn(advertService, 'getTagsBySearch').mockImplementation(
+  vi.spyOn(listingService, 'getTagsBySearch').mockImplementation(
     () =>
       new Promise((resolve) => {
         finish = resolve;
@@ -53,7 +53,7 @@ it('timestamps a slow successful response at completion rather than dispatch', a
 
 it('keeps the last success on network and validation failures and retries without waiting for TTL', async () => {
   const get = vi
-    .spyOn(advertService, 'getTagsBySearch')
+    .spyOn(listingService, 'getTagsBySearch')
     .mockResolvedValueOnce(tags)
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce([])
@@ -81,7 +81,7 @@ it('keeps the last success on network and validation failures and retries withou
 it('does not cache cancellation as success and rejects the late response after a newer load', async () => {
   let finishOld!: (value: TagType[]) => void;
   const get = vi
-    .spyOn(advertService, 'getTagsBySearch')
+    .spyOn(listingService, 'getTagsBySearch')
     .mockResolvedValueOnce(tags)
     .mockImplementationOnce(
       () =>
@@ -124,7 +124,7 @@ it('keeps API origins isolated and does not fetch under a mismatched origin key'
     reducer: { tagCatalog: tagCatalogReducer },
     preloadedState: { tagCatalog: state },
   });
-  const get = vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue(tags);
+  const get = vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue(tags);
   await store.dispatch(getTagCatalogThunk(other));
   expect(get).not.toHaveBeenCalled();
   await store.dispatch(getTagCatalogThunk(request));
@@ -158,7 +158,7 @@ it('ignores stale success, error and cancellation without disturbing a newer req
 
 it('keeps an aborted first load stale and allows an immediate retry', async () => {
   const get = vi
-    .spyOn(advertService, 'getTagsBySearch')
+    .spyOn(listingService, 'getTagsBySearch')
     .mockImplementationOnce(
       () =>
         new Promise(() => {

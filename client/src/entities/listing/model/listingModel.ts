@@ -6,7 +6,7 @@ export const tagSchema = z.object({
   name: z.string().min(1),
 });
 
-export const advertSchema = z.object({
+export const listingSchema = z.object({
   id: z.number(),
   title: z.string().nullable(),
   body: z.string().nullable(),
@@ -39,25 +39,25 @@ export const advertSchema = z.object({
   AdvertPhotos: z.array(photoSchema).nullable().optional(),
 });
 
-export const collectionAdvertSchema = advertSchema.extend({
+export const collectionListingSchema = listingSchema.extend({
   tags: tagSchema.array(),
   AdvertPhotos: photoSchema.array(),
 });
 
-export type AdvertType = z.infer<typeof advertSchema>;
+export type Listing = z.infer<typeof listingSchema>;
 
-export const advertPageSchema = z.object({
-  items: advertSchema.array(),
+export const listingPageSchema = z.object({
+  items: listingSchema.array(),
   total: z.number().int().nonnegative(),
   page: z.number().int().positive(),
   limit: z.number().int().positive().max(50),
 });
 
-export const filteredAdvertPageSchema = advertPageSchema
+export const filteredListingPageSchema = listingPageSchema
   .extend({
-    items: collectionAdvertSchema.array(),
-    total: advertPageSchema.shape.total.safe(),
-    page: advertPageSchema.shape.page.safe(),
+    items: collectionListingSchema.array(),
+    total: listingPageSchema.shape.total.safe(),
+    page: listingPageSchema.shape.page.safe(),
   })
   .strict()
   .refine(({ items, limit }) => items.length <= limit, {
@@ -65,22 +65,21 @@ export const filteredAdvertPageSchema = advertPageSchema
     message: 'Page exceeds limit',
   });
 
-export type AdvertPageType = z.infer<typeof advertPageSchema>;
+export type ListingPage = z.infer<typeof listingPageSchema>;
 
-export type FilterType = {
+export type ListingFilters = {
   priceFrom: number;
   priceTo: number;
   city: string;
   district: string;
   metro: string;
-  // category: string;
   roomsFrom: number;
   roomsTo: number;
 };
 
 export type TagType = z.infer<typeof tagSchema>;
 
-export enum AdvertDetailStatus {
+export enum ListingDetailStatus {
   Idle = 'idle',
   Loading = 'loading',
   Ready = 'ready',
@@ -88,15 +87,15 @@ export enum AdvertDetailStatus {
   Error = 'error',
 }
 
-export interface AdvertSearchRequest {
-  filters: FilterType & { tags: TagType[] };
+export interface ListingSearchRequest {
+  filters: ListingFilters & { tags: TagType[] };
   searchKey: string;
   page: number;
   limit: number;
 }
 
-export interface AdvertSearchState {
-  items: AdvertType[];
+export interface ListingSearchState {
+  items: Listing[];
   total: number;
   page: number;
   limit: number;
@@ -108,15 +107,15 @@ export interface AdvertSearchState {
   requestId: string | null;
 }
 
-export type AdvertSliceT = {
-  search: AdvertSearchState;
-  chosenAdvert: AdvertType | null;
-  populars: AdvertType[];
-  detailStatus: AdvertDetailStatus;
+export type ListingState = {
+  search: ListingSearchState;
+  chosenListing: Listing | null;
+  populars: Listing[];
+  detailStatus: ListingDetailStatus;
   detailRequestId: string | null;
 };
 
-export type PostAdvertType = {
+export type PostListingType = {
   title: string;
   body: string;
   price: string;

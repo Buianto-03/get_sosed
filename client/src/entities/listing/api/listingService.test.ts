@@ -2,7 +2,7 @@ import { CanceledError } from 'axios';
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { afterEach, expect, it, vi } from 'vitest';
 import axiosInstance from '@shared/api/client';
-import advertService from './advertService';
+import { listingService } from './listingService';
 
 const originalAdapter = axiosInstance.defaults.adapter;
 
@@ -45,9 +45,9 @@ it('requests default and explicit own-advert pages and parses pagination metadat
     .spyOn(axiosInstance, 'get')
     .mockResolvedValueOnce({ data: { items: [], total: 0, page: 1, limit: 12 } })
     .mockResolvedValueOnce({ data: { items: [], total: 5, page: 2, limit: 5 } });
-  expect(await advertService.getMine()).toEqual({ items: [], total: 0, page: 1, limit: 12 });
+  expect(await listingService.getMine()).toEqual({ items: [], total: 0, page: 1, limit: 12 });
   expect(get).toHaveBeenNthCalledWith(1, '/adverts/mine', { params: { page: 1, limit: 12 } });
-  expect(await advertService.getMine(2, 5)).toEqual({ items: [], total: 5, page: 2, limit: 5 });
+  expect(await listingService.getMine(2, 5)).toEqual({ items: [], total: 5, page: 2, limit: 5 });
   expect(get).toHaveBeenNthCalledWith(2, '/adverts/mine', { params: { page: 2, limit: 5 } });
 });
 
@@ -58,7 +58,7 @@ it.each([
   { data: { items: [], total: 0, page: 1, limit: 51 } },
 ])('rejects malformed pagination response %#', async ({ data }) => {
   vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({ data });
-  await expect(advertService.getMine()).rejects.toThrow();
+  await expect(listingService.getMine()).rejects.toThrow();
 });
 
 it('requests filtered pages with default and explicit pagination and preserves filters', async () => {
@@ -67,11 +67,11 @@ it('requests filtered pages with default and explicit pagination and preserves f
     .mockResolvedValueOnce({ data: advertPage })
     .mockResolvedValueOnce({ data: { ...advertPage, page: 3, limit: 4 } });
 
-  expect(await advertService.getFilteredAdvertsPage(filters)).toEqual(advertPage);
+  expect(await listingService.getFilteredListingsPage(filters)).toEqual(advertPage);
   expect(post).toHaveBeenNthCalledWith(1, '/adverts/filters/page', filters, {
     params: { page: 1, limit: 8 },
   });
-  expect(await advertService.getFilteredAdvertsPage(filters, 3, 4)).toEqual({
+  expect(await listingService.getFilteredListingsPage(filters, 3, 4)).toEqual({
     ...advertPage,
     page: 3,
     limit: 4,
@@ -94,7 +94,7 @@ it.each([
   { ...advertPage, items: [{ ...advert, tags: undefined }] },
 ])('rejects malformed filtered page response %#', async (data) => {
   vi.spyOn(axiosInstance, 'post').mockResolvedValueOnce({ data });
-  await expect(advertService.getFilteredAdvertsPage(filters)).rejects.toThrow();
+  await expect(listingService.getFilteredListingsPage(filters)).rejects.toThrow();
 });
 
 it('requests fresh adverts with default and explicit limits and accepts only an array', async () => {
@@ -103,18 +103,18 @@ it('requests fresh adverts with default and explicit limits and accepts only an 
     .mockResolvedValueOnce({ data: [] })
     .mockResolvedValueOnce({ data: [] });
 
-  expect(await advertService.getFreshAdverts()).toEqual([]);
+  expect(await listingService.getFreshListings()).toEqual([]);
   expect(get).toHaveBeenNthCalledWith(1, '/adverts/fresh', { params: { limit: 3 } });
-  expect(await advertService.getFreshAdverts(2)).toEqual([]);
+  expect(await listingService.getFreshListings(2)).toEqual([]);
   expect(get).toHaveBeenNthCalledWith(2, '/adverts/fresh', { params: { limit: 2 } });
 
   vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({ data: { items: [] } });
-  await expect(advertService.getFreshAdverts()).rejects.toThrow();
+  await expect(listingService.getFreshListings()).rejects.toThrow();
 });
 
 it.each([
-  (options: { signal: AbortSignal }) => advertService.getFilteredAdvertsPage(filters, 1, 8, options),
-  (options: { signal: AbortSignal }) => advertService.getFreshAdverts(3, options),
+  (options: { signal: AbortSignal }) => listingService.getFilteredListingsPage(filters, 1, 8, options),
+  (options: { signal: AbortSignal }) => listingService.getFreshListings(3, options),
 ])('passes request cancellation through to the Axios adapter', async (read) => {
   const controller = new AbortController();
   const adapter = vi.fn(

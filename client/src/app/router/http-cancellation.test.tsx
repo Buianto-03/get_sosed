@@ -5,13 +5,13 @@ import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
 import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
-import advertService from '@entities/advert/api/advertService';
-import type { AdvertPageType, AdvertType } from '@entities/advert/model/advertsModel';
+import { listingService } from '@entities/listing/api/listingService';
+import type { ListingPage, Listing } from '@entities/listing/model';
 import likeService from '@entities/like/api/likeService';
 import { clearAuth } from '@entities/session/model/authSlice';
 import { store } from '../store/store';
 
-const advert: AdvertType = {
+const advert: Listing = {
   id: 7,
   title: 'Актуальная комната',
   body: 'Описание',
@@ -51,7 +51,7 @@ function open(path: string): ReturnType<typeof render> {
 }
 beforeEach(() => {
   store.dispatch(clearAuth());
-  vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue([
+  vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue([
     { id: 1, name: 'Для некурящих' },
     { id: 2, name: 'Питомцы разрешены' },
     { id: 3, name: 'Тихие вечера' },
@@ -66,11 +66,11 @@ afterEach(() => {
 });
 
 it('aborts superseded search requests and keeps the latest result after late responses', async () => {
-  const first = deferred<AdvertPageType>();
-  const second = deferred<AdvertPageType>();
-  const latest = deferred<AdvertPageType>();
+  const first = deferred<ListingPage>();
+  const second = deferred<ListingPage>();
+  const latest = deferred<ListingPage>();
   const get = vi
-    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .spyOn(listingService, 'getFilteredListingsPage')
     .mockReturnValueOnce(first.promise)
     .mockReturnValueOnce(second.promise)
     .mockReturnValueOnce(latest.promise);
@@ -91,17 +91,17 @@ it('aborts superseded search requests and keeps the latest result after late res
     second.resolve({ items: [], total: 0, page: 1, limit: 8 });
   });
   expect(screen.getByRole('heading', { name: advert.title ?? '' })).toBeInTheDocument();
-  expect(store.getState().advert.search.error).toBeNull();
+  expect(store.getState().listing.search.error).toBeNull();
   view.unmount();
   // Completed requests are released by the route; only in-flight work needs abort.
   expect(get.mock.calls[2][3]?.signal?.aborted).toBe(false);
 });
 
 it('aborts detail and interested-people reads when the ID changes and the page unmounts', async () => {
-  const first = deferred<AdvertType>();
-  const latest = deferred<AdvertType>();
+  const first = deferred<Listing>();
+  const latest = deferred<Listing>();
   const get = vi
-    .spyOn(advertService, 'getAdvertById')
+    .spyOn(listingService, 'getListingById')
     .mockReturnValueOnce(first.promise)
     .mockReturnValueOnce(latest.promise);
   const likes = vi.spyOn(likeService, 'getLikesByAdvertId').mockImplementation(
@@ -127,5 +127,5 @@ it('aborts detail and interested-people reads when the ID changes and the page u
   expect(get.mock.calls[1][1]?.signal?.aborted).toBe(true);
   expect(likes.mock.calls[1][1]?.signal?.aborted).toBe(true);
   expect(await screen.findByText('Другая страница')).toBeInTheDocument();
-  expect(store.getState().advert.detailRequestId).toBeNull();
+  expect(store.getState().listing.detailRequestId).toBeNull();
 });

@@ -4,12 +4,12 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { clearAuth } from '@entities/session/model/authSlice';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import type { Listing } from '@entities/listing/model';
 import likeService from '@entities/like/api/likeService';
 import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
 import { store } from './store';
 
-const advert: AdvertType = {
+const advert: Listing = {
   id: 7,
   title: null,
   body: null,

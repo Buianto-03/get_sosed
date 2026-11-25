@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/listing/model';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import type { ListingCreatePublishState, ListingDraft } from '../../model';
 import { PhotosStep } from '../photos-step/PhotosStep';

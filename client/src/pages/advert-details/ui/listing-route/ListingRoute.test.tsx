@@ -4,18 +4,20 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
-import advertService from '@entities/advert/api/advertService';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
-import advertReducer from '@entities/advert/model/advertsSlice';
-import likedAdvertsReducer from '@entities/advert/model/likedAdvertsSlice';
-import { getLikedAdvertsThunk } from '@entities/advert/model/likedAdvertsThunk';
+import { listingService } from '@entities/listing/api/listingService';
+import {
+  type Listing,
+  listingReducer,
+  likedListingsReducer,
+  getLikedListingsThunk,
+} from '@entities/listing/model';
 import likeService from '@entities/like/api/likeService';
 import likesReducer from '@entities/like/model/likesSlice';
 import authReducer, { setSession } from '@entities/session/model/authSlice';
 import { removeSavedAdvertThunk } from '@features/liked-adverts/model';
 import ListingRoute from './ListingRoute';
 
-const advert: AdvertType = {
+const advert: Listing = {
   id: 7,
   title: 'Комната',
   price: 20000,
@@ -38,8 +40,8 @@ it('keeps a listing focused on its own saved state and displays interested peopl
   const store = configureStore({
     reducer: {
       auth: authReducer,
-      likedAdverts: likedAdvertsReducer,
-      advert: advertReducer,
+      likedListings: likedListingsReducer,
+      listing: listingReducer,
       likes: likesReducer,
     },
   });
@@ -47,12 +49,12 @@ it('keeps a listing focused on its own saved state and displays interested peopl
   store.dispatch(
     setSession({ accessToken: 'token', user: { id: 1, name: 'User', email: 'a@b.c', roleId: 1 } }),
   );
-  vi.spyOn(advertService, 'getLikedAdverts').mockResolvedValue([
+  vi.spyOn(listingService, 'getLikedListings').mockResolvedValue([
     { id: 15, advertId: advert.id, userId: 1, Advert: advert },
     { id: 16, advertId: anotherAdvert.id, userId: 1, Advert: anotherAdvert },
   ]);
-  await store.dispatch(getLikedAdvertsThunk()).unwrap();
-  vi.spyOn(advertService, 'getAdvertById').mockResolvedValue(advert);
+  await store.dispatch(getLikedListingsThunk()).unwrap();
+  vi.spyOn(listingService, 'getListingById').mockResolvedValue(advert);
   vi.spyOn(likeService, 'getLikesByAdvertId').mockResolvedValue([
     {
       id: 17,

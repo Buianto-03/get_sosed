@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { isRequestCanceled } from '@shared/api/cancellation';
-import { getAdvertByIdThunk, getFilteredAdvertsThunk, getTopAdvertsThunk } from './advertsThunk';
-import { AdvertDetailStatus, type AdvertSliceT } from './advertsModel';
+import { getListingByIdThunk, getFilteredListingsThunk, getTopListingsThunk } from './listingThunk';
+import { ListingDetailStatus, type ListingState } from './listingModel';
 
-const initialState: AdvertSliceT = {
+const initialState: ListingState = {
   search: {
     items: [],
     total: 0,
@@ -16,19 +16,19 @@ const initialState: AdvertSliceT = {
     loadMoreError: null,
     requestId: null,
   },
-  chosenAdvert: null,
+  chosenListing: null,
   populars: [],
-  detailStatus: AdvertDetailStatus.Idle,
+  detailStatus: ListingDetailStatus.Idle,
   detailRequestId: null,
 };
 
-export const advertSlice = createSlice({
-  name: 'advert',
+export const listingSlice = createSlice({
+  name: 'listing',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(getFilteredAdvertsThunk.pending, (state, action) => {
+      .addCase(getFilteredListingsThunk.pending, (state, action) => {
         const { search } = state;
         const { searchKey, page, limit } = action.meta.arg;
         if (search.searchKey !== searchKey) {
@@ -44,7 +44,7 @@ export const advertSlice = createSlice({
         search.loadMoreError = null;
         search.requestId = action.meta.requestId;
       })
-      .addCase(getFilteredAdvertsThunk.fulfilled, (state, action) => {
+      .addCase(getFilteredListingsThunk.fulfilled, (state, action) => {
         const { search } = state;
         if (
           search.requestId !== action.meta.requestId ||
@@ -64,7 +64,7 @@ export const advertSlice = createSlice({
         search.loadingMore = false;
         search.requestId = null;
       })
-      .addCase(getFilteredAdvertsThunk.rejected, (state, action) => {
+      .addCase(getFilteredListingsThunk.rejected, (state, action) => {
         const { search } = state;
         if (
           search.requestId !== action.meta.requestId ||
@@ -83,38 +83,38 @@ export const advertSlice = createSlice({
           }
         }
       })
-      .addCase(getAdvertByIdThunk.pending, (state, action) => {
-        if (state.chosenAdvert?.id !== action.meta.arg) {
-          state.chosenAdvert = null;
+      .addCase(getListingByIdThunk.pending, (state, action) => {
+        if (state.chosenListing?.id !== action.meta.arg) {
+          state.chosenListing = null;
         }
-        state.detailStatus = AdvertDetailStatus.Loading;
+        state.detailStatus = ListingDetailStatus.Loading;
         state.detailRequestId = action.meta.requestId;
       })
-      .addCase(getAdvertByIdThunk.fulfilled, (state, action) => {
+      .addCase(getListingByIdThunk.fulfilled, (state, action) => {
         if (state.detailRequestId !== action.meta.requestId) {
           return;
         }
         state.detailRequestId = null;
-        state.chosenAdvert = action.payload;
-        state.detailStatus = AdvertDetailStatus.Ready;
+        state.chosenListing = action.payload;
+        state.detailStatus = ListingDetailStatus.Ready;
       })
-      .addCase(getAdvertByIdThunk.rejected, (state, action) => {
+      .addCase(getListingByIdThunk.rejected, (state, action) => {
         if (state.detailRequestId !== action.meta.requestId) {
           return;
         }
         state.detailRequestId = null;
         if (action.meta.aborted || isRequestCanceled(action.error)) {
-          state.detailStatus = state.chosenAdvert
-            ? AdvertDetailStatus.Ready
-            : AdvertDetailStatus.Idle;
+          state.detailStatus = state.chosenListing
+            ? ListingDetailStatus.Ready
+            : ListingDetailStatus.Idle;
         } else {
           state.detailStatus =
-            action.payload === 404 ? AdvertDetailStatus.NotFound : AdvertDetailStatus.Error;
+            action.payload === 404 ? ListingDetailStatus.NotFound : ListingDetailStatus.Error;
         }
       })
-      .addCase(getTopAdvertsThunk.fulfilled, (state, action) => {
+      .addCase(getTopListingsThunk.fulfilled, (state, action) => {
         state.populars = action.payload;
       });
   },
 });
-export default advertSlice.reducer;
+export default listingSlice.reducer;

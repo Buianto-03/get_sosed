@@ -1,11 +1,10 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
-import type { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
+import { savedLoadRequested, type SavedStatus } from '@entities/listing/model';
 import {
   selectSavedCollectionError,
   selectSavedStatus,
-} from '@entities/advert/model/likedAdvertsSelectors';
-import { savedLoadRequested } from '@entities/advert/model/likedAdvertsSlice';
+} from '@entities/listing/model/likedListingsSelectors';
 
 interface SavedCollectionStatus {
   status: SavedStatus;

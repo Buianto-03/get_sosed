@@ -3,9 +3,8 @@ import { configureStore, type EnhancedStore } from '@reduxjs/toolkit';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { afterEach, expect, it, vi } from 'vitest';
-import advertReducer from '@entities/advert/model/advertsSlice';
-import advertService from '@entities/advert/api/advertService';
-import type { AdvertPageType, AdvertSliceT } from '@entities/advert/model/advertsModel';
+import { listingReducer, type ListingPage, type ListingState } from '@entities/listing/model';
+import { listingService } from '@entities/listing/api/listingService';
 import { readFilters } from '@features/advert-filter/model/filters';
 import { useSearchAdverts } from './use-search-adverts';
 
@@ -13,8 +12,8 @@ interface WrapperProps {
   children: ReactNode;
 }
 
-function createSearchStore(): EnhancedStore<{ advert: AdvertSliceT }> {
-  return configureStore({ reducer: { advert: advertReducer } });
+function createSearchStore(): EnhancedStore<{ listing: ListingState }> {
+  return configureStore({ reducer: { listing: listingReducer } });
 }
 
 function setup(strict = false): {
@@ -30,7 +29,7 @@ function setup(strict = false): {
   return { store, wrapper };
 }
 
-const empty: AdvertPageType = { items: [], total: 0, page: 1, limit: 8 };
+const empty: ListingPage = { items: [], total: 0, page: 1, limit: 8 };
 const initial = { filters: readFilters(new URLSearchParams()), searchKey: '' };
 
 afterEach(() => {
@@ -39,9 +38,9 @@ afterEach(() => {
 
 it('cancels a pending next page on URL change and unmount, keeping the new query visible', async () => {
   const { wrapper, store } = setup();
-  let resolveNext!: (value: AdvertPageType) => void;
+  let resolveNext!: (value: ListingPage) => void;
   const get = vi
-    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .spyOn(listingService, 'getFilteredListingsPage')
     .mockResolvedValueOnce({ ...empty, total: 16 })
     .mockReturnValueOnce(
       new Promise((resolve) => {
@@ -70,21 +69,21 @@ it('cancels a pending next page on URL change and unmount, keeping the new query
   await act(async () => {
     resolveNext({ ...empty, total: 16, page: 2 });
   });
-  expect(store.getState().advert.search).toMatchObject({ searchKey: 'city=Казань', total: 0 });
+  expect(store.getState().listing.search).toMatchObject({ searchKey: 'city=Казань', total: 0 });
   expect(result.current.hasMore).toBe(false);
   act(() => {
     result.current.retry();
   });
   unmount();
-  await waitFor(() => expect(store.getState().advert.search.requestId).toBeNull());
+  await waitFor(() => expect(store.getState().listing.search.requestId).toBeNull());
   expect(get.mock.calls[3][3]?.signal?.aborted).toBe(true);
-  expect(store.getState().advert.search.error).toBeNull();
+  expect(store.getState().listing.search.error).toBeNull();
 });
 
 it('retries the same first page and filters after failure, including unknown tag IDs', async () => {
   const { wrapper } = setup();
   const get = vi
-    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .spyOn(listingService, 'getFilteredListingsPage')
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce(empty);
   const filters = readFilters(new URLSearchParams('city=Казань&tags=99&priceFrom=10'));
@@ -118,7 +117,7 @@ it('retries the same first page and filters after failure, including unknown tag
 it('survives StrictMode cleanup and starts a live replacement first-page request', async () => {
   const { wrapper } = setup(true);
   const get = vi
-    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .spyOn(listingService, 'getFilteredListingsPage')
     .mockReturnValueOnce(
       new Promise(() => {
         /* StrictMode cancels the first mount. */

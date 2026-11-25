@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
-import { getTagCatalogView, TagCatalogState } from '@entities/advert/model/tag-catalog';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
-import { TagCatalogFeedback } from '@entities/advert/ui/tag-catalog-feedback/TagCatalogFeedback';
+import { getTagCatalogView, TagCatalogState, type TagCatalog } from '@entities/listing/model';
+import { TagCatalogFeedback } from '@entities/listing/ui/tag-catalog-feedback/TagCatalogFeedback';
 import { Checkbox } from '@shared/ui/selection/checkbox/Checkbox';
 import styles from './ListingRules.module.scss';
 

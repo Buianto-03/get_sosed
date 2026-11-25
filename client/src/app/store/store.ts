@@ -1,20 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '@entities/session/model/authSlice';
-import advertReducer from '@entities/advert/model/advertsSlice';
+import { listingReducer, likedListingsReducer, tagCatalogReducer } from '@entities/listing/model';
 import likeReducer from '@entities/like/model/likesSlice';
 import chatListReducer from '@entities/chat/model/chatListSlice';
-import likedAdvertsReducer from '@entities/advert/model/likedAdvertsSlice';
-import tagCatalogReducer from '@entities/advert/model/tagCatalogSlice';
 import { chatHistoryListener } from './chat-history-listener';
 import { sessionListener } from './session-listener';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    advert: advertReducer,
+    listing: listingReducer,
     likes: likeReducer,
     chatList: chatListReducer,
-    likedAdverts: likedAdvertsReducer,
+    likedListings: likedListingsReducer,
     tagCatalog: tagCatalogReducer,
   },
   middleware: (getDefaultMiddleware) =>

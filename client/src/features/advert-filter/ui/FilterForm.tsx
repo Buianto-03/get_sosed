@@ -3,7 +3,7 @@ import { useFormFeedback } from '@shared/lib/forms/use-form-feedback';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonType, ButtonVariant } from '@shared/ui/button/Button';
 import { Input } from '@shared/ui/input/Input';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/listing/model';
 import type { SearchFilterValues } from '../model/searchFilterValues';
 import { FilterConditions } from './filter-conditions/FilterConditions';
 import { inputFields } from './inputFields';

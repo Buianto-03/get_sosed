@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import advertService from '@entities/advert/api/advertService';
+import { listingService } from '@entities/listing/api/listingService';
 import { isRequestCanceled } from '@shared/api/cancellation';
 import { initialMyAdverts, mergeAdverts } from './helper';
 import type { MyAdvertsState } from './helper';
@@ -25,7 +25,7 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
     inFlight.current = userId !== null;
     async function loadFirstPage(): Promise<void> {
       try {
-        const result = await advertService.getMine(1, 12, { signal: controller.signal });
+        const result = await listingService.getMine(1, 12, { signal: controller.signal });
         if (generation.current !== requestGeneration) {
           return;
         }
@@ -79,7 +79,7 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
     inFlight.current = true;
     setState((previous) => ({ ...previous, loadingMore: true, loadMoreError: '' }));
     try {
-      const result = await advertService.getMine(state.page + 1, 12, { signal });
+      const result = await listingService.getMine(state.page + 1, 12, { signal });
       if (generation.current !== requestGeneration) {
         return;
       }

@@ -1,6 +1,6 @@
-import type { FilterType } from '@entities/advert/model/advertsModel';
+import type { ListingFilters } from '@entities/listing/model';
 
-export type AppliedFilters = FilterType & { tagIds: number[] };
+export type AppliedFilters = ListingFilters & { tagIds: number[] };
 
 const numberParam = (params: URLSearchParams, name: string): number => {
   const value = Number(params.get(name));

@@ -1,15 +1,14 @@
 import React, { memo } from 'react';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import type { Listing, ListingCardData } from '@entities/listing/model';
 import {
   ListingCard,
-  type ListingCardData,
   type ListingCardVariant,
 } from '@entities/listing/ui/listing-card/ListingCard';
 import { useSavedAdvert } from '../../model/use-saved-advert';
 
 interface ListingCardWithSaveProps {
-  advert: AdvertType;
-  toListing: (advert: AdvertType) => ListingCardData;
+  advert: Listing;
+  toListing: (advert: Listing) => ListingCardData;
   variant: ListingCardVariant;
   onOpen: (id: string) => void;
 }

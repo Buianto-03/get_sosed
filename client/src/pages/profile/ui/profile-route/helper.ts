@@ -1,8 +1,8 @@
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import type { Listing } from '@entities/listing/model';
 
 export interface MyAdvertsState {
   ownerId: number | null;
-  items: AdvertType[];
+  items: Listing[];
   total: number;
   page: number;
   hasMore: boolean;
@@ -26,6 +26,6 @@ export function initialMyAdverts(ownerId: number | null): MyAdvertsState {
   };
 }
 
-export function mergeAdverts(current: AdvertType[], incoming: AdvertType[]): AdvertType[] {
+export function mergeAdverts(current: Listing[], incoming: Listing[]): Listing[] {
   return [...new Map([...current, ...incoming].map((advert) => [advert.id, advert])).values()];
 }

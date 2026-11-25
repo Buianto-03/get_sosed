@@ -5,7 +5,7 @@ import { readFilters, writeFilters } from '@features/advert-filter/model/filters
 import { toSearchValues, toAppliedFilters } from '@features/advert-filter/model/searchFilterValues';
 import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
 import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
-import { useTagCatalog } from '@entities/advert/model/use-tag-catalog';
+import { useTagCatalog } from '@entities/listing/model/use-tag-catalog';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { SearchResults, SearchResultsState } from '@widgets/search-results/SearchResults';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';

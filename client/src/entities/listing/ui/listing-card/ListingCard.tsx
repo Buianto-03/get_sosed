@@ -4,6 +4,7 @@ import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { IconButton } from '@shared/ui/button/IconButton';
 import { Chip, ChipSize, ChipVariant } from '@shared/ui/chip/Chip';
 import { Carousel } from '@shared/ui/carousel/Carousel';
+import type { ListingCardData } from '../../model/listing-card';
 import styles from './ListingCard.module.scss';
 
 export enum ListingCardVariant {
@@ -11,18 +12,6 @@ export enum ListingCardVariant {
   Search = 'search',
   Profile = 'profile',
 }
-
-export type ListingCardData = {
-  title: string;
-  price: number | null;
-  imageUrl?: string;
-  photos?: readonly string[];
-  imageAlt?: string;
-  city?: string;
-  district?: string;
-  metro?: string;
-  tags?: readonly string[];
-};
 
 export interface ListingCardProps {
   listing: ListingCardData;

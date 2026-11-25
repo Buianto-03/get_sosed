@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import advertService from '@entities/advert/api/advertService';
+import { listingService } from '@entities/listing/api/listingService';
 import type { ChatListingContext } from '../chat-thread/ChatThread';
 import { toListingContext } from './helper';
 
@@ -23,8 +23,8 @@ export function useListingContext(
     }
     let active = true;
     const controller = new AbortController();
-    void advertService
-      .getAdvertById(listingId, { signal: controller.signal })
+    void listingService
+      .getListingById(listingId, { signal: controller.signal })
       .then((advert) => {
         if (active && advert.id === listingId && advert.userId === receiverId) {
           setResult({ ownerId, receiverId, listingId, listing: toListingContext(advert) });

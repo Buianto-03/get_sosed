@@ -7,15 +7,18 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { SearchFilters, emptySearchFilters } from '@features/advert-filter/ui/SearchFilters';
 import type { SearchFilterValues } from '@features/advert-filter/model/searchFilterValues';
 import { ListingCreatePage } from '@pages/listing-create/ui/listing-create-page/ListingCreatePage';
-import advertService from '@entities/advert/api/advertService';
-import { ListingCondition, TagCatalogState } from '@entities/advert/model/tag-catalog';
-import { useTagCatalog } from '@entities/advert/model/use-tag-catalog';
-import tagCatalogReducer from '@entities/advert/model/tagCatalogSlice';
-import { getTagCatalogThunk } from '@entities/advert/model/tagCatalogThunk';
-import { getTagCatalogOrigin } from '@entities/advert/model/tagCatalogModel';
-import type { TagCatalogRoot } from '@entities/advert/model/tagCatalogModel';
+import { listingService } from '@entities/listing/api/listingService';
+import {
+  ListingCondition,
+  TagCatalogState,
+  tagCatalogReducer,
+  getTagCatalogThunk,
+  getTagCatalogOrigin,
+  type TagCatalogRoot,
+  SavedStatus,
+} from '@entities/listing/model';
+import { useTagCatalog } from '@entities/listing/model/use-tag-catalog';
 import { clearAuth, setSession } from '@entities/session/model/authSlice';
-import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
 import { store as appStore } from './store';
 
 const tags = Object.values(ListingCondition).map((name, index) => ({ id: index + 1, name }));
@@ -57,7 +60,7 @@ afterEach(() => {
 
 it('preserves the search draft and unknown IDs through a real cache refresh failure and retry', async () => {
   const get = vi
-    .spyOn(advertService, 'getTagsBySearch')
+    .spyOn(listingService, 'getTagsBySearch')
     .mockResolvedValueOnce(tags)
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce([...tags, { id: 999, name: 'Рядом с парком' }]);
@@ -100,7 +103,7 @@ it('preserves the search draft and unknown IDs through a real cache refresh fail
 });
 
 it('preserves publication fields, selected conditions and unknown draft IDs across cache retry', async () => {
-  vi.spyOn(advertService, 'getTagsBySearch')
+  vi.spyOn(listingService, 'getTagsBySearch')
     .mockResolvedValueOnce(tags)
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce(tags);
@@ -140,8 +143,8 @@ it('preserves publication fields, selected conditions and unknown draft IDs acro
 });
 
 it('keeps the public catalog across a real session change', async () => {
-  const get = vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue(tags);
-  vi.spyOn(advertService, 'getLikedAdverts').mockResolvedValue([]);
+  const get = vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue(tags);
+  vi.spyOn(listingService, 'getLikedListings').mockResolvedValue([]);
   await appStore.dispatch(getTagCatalogThunk({ origin, force: true }));
   const cache = appStore.getState().tagCatalog;
   appStore.dispatch(
@@ -150,7 +153,7 @@ it('keeps the public catalog across a real session change', async () => {
       user: { id: 101, name: 'User', email: 'a@b.c', roleId: 1 },
     }),
   );
-  await waitFor(() => expect(appStore.getState().likedAdverts.status).toBe(SavedStatus.Ready));
+  await waitFor(() => expect(appStore.getState().likedListings.status).toBe(SavedStatus.Ready));
   appStore.dispatch(clearAuth());
   await appStore.dispatch(getTagCatalogThunk({ origin }));
   expect(get).toHaveBeenCalledOnce();

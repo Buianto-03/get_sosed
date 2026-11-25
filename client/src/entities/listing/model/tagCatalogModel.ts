@@ -1,5 +1,5 @@
 import { API_URL } from '@shared/config/env';
-import type { TagType } from './advertsModel';
+import type { TagType } from './listingModel';
 import { TagCatalogState } from './tag-catalog';
 
 export const TAG_CATALOG_TTL_MS = 5 * 60 * 1000;

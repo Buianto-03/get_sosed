@@ -1,13 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
-import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
+import { SavedStatus, type Listing } from '@entities/listing/model';
 import {
   selectIsSaved,
   selectSavedStatus,
   selectSaveError,
   selectSavePending,
-} from '@entities/advert/model/likedAdvertsSelectors';
+} from '@entities/listing/model/likedListingsSelectors';
 import { selectIsLoggedIn } from '@entities/session/model/authSelectors';
 import { routes } from '@shared/config/routes';
 import { removeSavedAdvertThunk, saveAdvertThunk } from '../model';
@@ -16,7 +15,7 @@ interface SavedAdvertControls {
   saved: boolean;
   disabled: boolean;
   error: string | undefined;
-  toggle: (advert: AdvertType) => void;
+  toggle: (advert: Listing) => void;
 }
 
 export function useSavedAdvert(id: number): SavedAdvertControls {
@@ -32,7 +31,7 @@ export function useSavedAdvert(id: number): SavedAdvertControls {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const toggle = (advert: AdvertType): void => {
+  const toggle = (advert: Listing): void => {
     if (advert.id !== id || disabled) {
       return;
     }

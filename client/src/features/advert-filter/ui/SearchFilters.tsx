@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useId, useState, type FormEvent } from '
 import { LuSlidersHorizontal } from 'react-icons/lu';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Drawer } from '@shared/ui/overlay/Drawer';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import type { TagCatalog } from '@entities/listing/model';
 import {
   emptySearchFilters,
   validateSearch,

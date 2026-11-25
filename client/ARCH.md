@@ -22,8 +22,16 @@
 импортируют их для доступа к store. `shared` не импортирует `app` даже как тип.
 Это проверяет `npm run check:architecture`, который входит в `npm run lint`.
 
+`entities/listing` объединяет модель объявления, HTTP-клиент, поиск, избранное,
+каталог условий, карточки и галерею. Потребители подключают модель через
+`@entities/listing/model`, клиент API через `@entities/listing/api/listingService`,
+селекторы избранного, `useTagCatalog` и UI через их отдельные модули.
+Так селекторы избранного и UI загружаются вместе с потребляющими маршрутами.
+Браузерные маршруты используют `/listings`, серверный контракт — `/api/adverts`
+и поля DTO `advertId`, `Advert` и `AdvertPhotos`.
+
 Контракт избранного объявления расположен в
-`entities/advert/model/likedAdvertsModel.ts`: это полное объявление и идентификаторы
+`entities/listing/model/likedListingsModel.ts`: это полное объявление и идентификаторы
 связи сохранения. Он использует схему объявления своего слайса и не импортирует
 `entities/like`. Схема объявления содержит только нужные поля автора, поэтому
 не зависит от схемы сессии.
@@ -41,7 +49,7 @@ Nullable-поля отражают существующие миграции; о
 
 ## Каталог условий проживания
 
-`entities/advert/model/tag-catalog.ts` задаёт `ListingCondition` и состояния
+`entities/listing/model/tag-catalog.ts` задаёт `ListingCondition` и состояния
 `TagCatalogState` обычными enum. Названия основных условий сопоставляются
 точно; ID берутся из ответа `GET /api/adverts/tags?query=`. Каталог сохраняет
 также остальные теги, нужные произвольному поиску. Отсутствующие основные названия и повтор одного ID считаются ошибкой каталога.
@@ -49,7 +57,7 @@ Nullable-поля отражают существующие миграции; о
 минимальный ID, остальные доступны в дополнительных фильтрах с подписью (#ID).
 Существующие URL и связи не переписываются и не удаляются.
 
-`useTagCatalog` читает общий Redux-кеш публичного каталога из entities/advert.
+`useTagCatalog` читает общий Redux-кеш публичного каталога из entities/listing.
 Состояние, thunks, типы и селекторы разделены на tagCatalogSlice,
 tagCatalogThunk, tagCatalogModel и tagCatalogSelectors. Ключ — origin
 настроенного API, значение — полный каталог для пустого query. API origin
@@ -94,8 +102,8 @@ preview продолжает получать собственный катал�
 - `{name}Model.ts`: интерфейсы/типы состояния и payload, enum и схемы валидации.
 - `{name}Selectors.ts`: чтение состояния и вычисление производных значений.
 
-Например, избранное использует `likedAdvertsSlice.ts`, `likedAdvertsThunk.ts`
-`likedAdvertsModel.ts` и `likedAdvertsSelectors.ts` в `entities/advert/model/`. Суффикс файла `Thunk`
+Например, избранное использует `likedListingsSlice.ts`, `likedListingsThunk.ts`
+`likedListingsModel.ts` и `likedListingsSelectors.ts` в `entities/listing/model/`. Суффикс файла `Thunk`
 остаётся в единственном числе при нескольких экспортируемых thunks.
 Model не импортирует Slice/Thunk; Thunk зависит от Model и API,
 Slice — от Model и lifecycle actions из Thunk. Selectors зависит только от
@@ -104,22 +112,22 @@ Slice — от Model и lifecycle actions из Thunk. Selectors зависит �
 
 ## Общее избранное
 
-`entities/advert/model/likedAdvertsSlice.ts` хранит список карточек, savedIds, статус
+`entities/listing/model/likedListingsSlice.ts` хранит список карточек, savedIds, статус
 загрузки, общую ошибку и pending/errors по ID объявления. Это единственный
 источник признака сохранения для поиска, популярных карточек, деталей и
 профиля. `likes.likes` содержит заинтересованных в открытом объявлении;
 его нельзя использовать как список избранного текущего пользователя.
 
 Избранное — коллекция объявлений, поэтому его состояние, контракт ответа,
-селекторы и загрузка находятся в существующем слайсе `entities/advert`.
-`likedAdvertsSelectors.ts` содержит селекторы,
-`likedAdvertsThunk.ts` — загрузку; контракт и типы находятся в
-`likedAdvertsModel.ts`. `advertService.getLikedAdverts` разбирает GET `/adverts/liked` общей схемой
-объявления. Это позволяет обойтись без отдельной сущности и копии Advert DTO.
+селекторы и загрузка находятся в существующем слайсе `entities/listing`.
+`likedListingsSelectors.ts` содержит селекторы,
+`likedListingsThunk.ts` — загрузку; контракт и типы находятся в
+`likedListingsModel.ts`. `listingService.getLikedListings` разбирает GET `/adverts/liked` общей схемой
+объявления. Это позволяет обойтись без отдельной сущности и копии схемы объявления.
 
 `features/liked-adverts/model.ts` содержит только сценарии сохранения и
 удаления: вызывает thunks `entities/like` и отправляет события начала,
-подтверждения или ошибки в `entities/advert`. Reducer принимает подтверждение
+подтверждения или ошибки в `entities/listing`. Reducer принимает подтверждение
 по действующему requestId. Feature-hook связывает это действие с сессией и
 навигацией гостя. Между соседними entities нет импортов.
 
@@ -184,12 +192,12 @@ requestId, generation, active и проверка владельца сохра�
 
 Отмена отличается от сетевой/предметной ошибки: loading завершается,
 подтверждённые данные сохраняются, Error/NotFound не показываются. Флаг
-likedAdverts.initialized отличает успешную пустую коллекцию от ещё не
+likedListings.initialized отличает успешную пустую коллекцию от ещё не
 загруженной, чтобы отменённый reload восстанавливал Ready и для пустого списка.
 
 Общая загрузка избранного принадлежит app/store/session-listener.ts.
 Первичная загрузка и UI retry отправляют savedLoadRequested; listener
-запускает getLikedAdvertsThunk и хранит его abort handle вне Redux. Смена
+запускает getLikedListingsThunk и хранит его abort handle вне Redux. Смена
 владельца отменяет этот запрос перед синхронным сбросом состояний. Уход
 одного экрана не отменяет коллекцию остальных потребителей. Мутации остаются
 отдельными операциями и не наследуют политику отмены чтения. С O05 загрузкой
@@ -252,9 +260,8 @@ Q01 выполнена 1 ноября 2026 года, результаты — в
   `shared/lib/navigation/safe-return-to.ts`. Она разрешает только локальный
   адрес и запрещает циклы на формы входа/регистрации. ProtectedRoute и обе
   auth-формы используют одну функцию выбора назначения после авторизации.
-- До отдельного обоснованного объединения `entities/advert` хранит существующие
-  API/модели, а `entities/listing` — подготовленный UI. Они не импортируют друг
-  друга. Преобразования DTO в props выполняются в потребляющем верхнем слое.
+- `entities/listing` формирует общие данные карточек через `toListingCardData`.
+  Страницы выбирают заголовок, вариант карточки и действия в контексте экрана.
 - Общие стили, шрифт и CSS-переменные находятся в `shared/styles`
   и подключаются в `main.tsx`. Контейнерные запросы рабочих компонентов
   получают предка в SiteLayout.
@@ -330,11 +337,11 @@ loading/error и отправкой через прежние thunks. SignInCard
 Правило имён Redux-файлов выше относится только к entities.
 
 Главная `pages/welcome/ui/home-route` получает до трёх свежих объявлений через
-`advertService.getFreshAdverts(3)` (`GET /api/adverts/fresh?limit=3`) в локальное
+`listingService.getFreshListings(3)` (`GET /api/adverts/fresh?limit=3`) в локальное
 состояние. Сортировка `createdAt DESC, id DESC` и ограничение выполняются сервером.
 Состояние поисковой выдачи не используется для этой подборки и не меняется.
-Effect отменяет HTTP-запрос и игнорирует поздний ответ после cleanup; helper
-страницы только преобразует Advert DTO в ListingCardData.
+Effect отменяет HTTP-запрос и игнорирует поздний ответ после cleanup. Helper
+страницы задаёт заголовок и использует общую модель `ListingCardData`.
 Избранное и его pending/errors приходят из общего M09 hook через props
 FreshListings/ListingCard. Нулевая цена и отсутствующая цена различаются.
 Рабочие страницы используют данные API. AboutPage использует только
@@ -349,13 +356,13 @@ ListingCreateRoute и MessagesRoute вместе с уже подключённ�
 URL собираются шаблонными строками в builders.
 
 Redux-модули, изменённые интеграцией, приведены к соглашению файлов:
-`advertsModel/advertsThunk/advertsSlice/advertsSelectors`,
+`listingModel/listingThunk/listingSlice/listingSelectors`,
 `chatListModel/chatListThunk/chatListSlice/chatListSelectors`,
 `authModel/authThunk/authSlice`. Это не правило для feature/model.ts.
 
-Поиск и детали имеют независимые статусы/requestId в состоянии advert.
-Новый detail request очищает chosenAdvert; поздние success/error игнорируются.
-Поисковая коллекция выделена в `advert.search`; её селектор сохраняет ссылку
+Поиск и детали имеют независимые статусы/requestId в состоянии `listing`.
+Новый detail request очищает chosenListing; поздние success/error игнорируются.
+Поисковая коллекция выделена в `listing.search`; её селектор сохраняет ссылку
 при изменении деталей. `useSearchAdverts` в SearchRoute владеет HTTP-запросом
 первой страницы, догрузки и retry, отменяет активный запрос при смене URL
 и unmount. Общий builder в helper переводит URL-фильтры в тело запроса.
@@ -377,14 +384,15 @@ Redux-модули, изменённые интеграцией, приведе�
 фокус на первую добавленную карточку. Если последняя страница не добавила новых
 ID, фокус переходит в сетку; при ошибке остаётся на кнопке повтора. Back/Forward
 и возврат из деталей восстанавливают URL-фильтры и загружают первую страницу.
-Преобразования Advert DTO в UI остаются в helper потребляющей страницы. Кнопка возврата деталей
-принимает только безопасный локальный /listings с query, иначе /listings.
+Преобразования для конкретного экрана остаются в helper потребляющей страницы.
+Кнопка возврата деталей принимает только безопасный локальный /listings с query,
+иначе /listings.
 Карта и заинтересованные передаются в ListingInformation слотами; YMap нового
 адаптера не зависит от Chakra. Карта недоступна без ключа/координат.
 
 Профиль читает сессию, /adverts/mine и общее избранное с независимыми статусами.
 Свои объявления загружаются по 12 через `GET /api/adverts/mine?page=1&limit=12`.
-Ответ `{ items, total, page, limit }` разбирается `advertPageSchema`; `total`
+Ответ `{ items, total, page, limit }` разбирается `listingPageSchema`; `total`
 задаёт счётчик коллекции. Кнопка «Показать ещё» добавляет следующую страницу
 без повторов по ID. `useMyAdverts` в profile-route хранит локальную коллекцию,
 отдельные состояния первой загрузки и догрузки, блокирует параллельные запросы

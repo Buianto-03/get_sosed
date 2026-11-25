@@ -5,16 +5,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
-import advertService from '@entities/advert/api/advertService';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
-import likedAdvertsReducer from '@entities/advert/model/likedAdvertsSlice';
-import { getLikedAdvertsThunk } from '@entities/advert/model/likedAdvertsThunk';
+import { listingService } from '@entities/listing/api/listingService';
+import { type Listing, likedListingsReducer, getLikedListingsThunk } from '@entities/listing/model';
 import likeService from '@entities/like/api/likeService';
 import likesReducer from '@entities/like/model/likesSlice';
 import authReducer, { setSession } from '@entities/session/model/authSlice';
 import { ProfileListingsSection } from './ProfileListingsSection';
 
-const advert: AdvertType = {
+const advert: Listing = {
   id: 1,
   title: 'Комната',
   price: 20000,
@@ -44,15 +42,15 @@ const collection = {
 
 async function prepareStore(): Promise<(props: PropsWithChildren) => JSX.Element> {
   const store = configureStore({
-    reducer: { auth: authReducer, likedAdverts: likedAdvertsReducer, likes: likesReducer },
+    reducer: { auth: authReducer, likedListings: likedListingsReducer, likes: likesReducer },
   });
   store.dispatch(
     setSession({ accessToken: 'token', user: { id: 1, name: 'User', email: 'a@b.c', roleId: 1 } }),
   );
-  vi.spyOn(advertService, 'getLikedAdverts').mockResolvedValue([
+  vi.spyOn(listingService, 'getLikedListings').mockResolvedValue([
     { id: 2, advertId: advert.id, userId: 1, Advert: advert },
   ]);
-  await store.dispatch(getLikedAdvertsThunk()).unwrap();
+  await store.dispatch(getLikedListingsThunk()).unwrap();
 
   return function Wrapper({ children }: PropsWithChildren): JSX.Element {
     return (

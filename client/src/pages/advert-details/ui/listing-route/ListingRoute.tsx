@@ -5,9 +5,11 @@ import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { ListingHeader } from '@widgets/listing-header/ListingHeader';
 import { ListingDetails } from '@widgets/listing-details/listing-details/ListingDetails';
 import { PersonSummary } from '@entities/person/ui/PersonSummary';
-import { getAdvertByIdThunk } from '@entities/advert/model/advertsThunk';
-import { AdvertDetailStatus } from '@entities/advert/model/advertsModel';
-import { selectAdverts } from '@entities/advert/model/advertsSelectors';
+import {
+  getListingByIdThunk,
+  ListingDetailStatus,
+  selectListingState,
+} from '@entities/listing/model';
 import { getLikesThunk } from '@entities/like/model/likesThunk';
 import { UserStatus } from '@entities/session/model/authModel';
 import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
@@ -30,7 +32,7 @@ export default function ListingRoute(): JSX.Element {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const data = useAppSelector(selectAdverts);
+  const data = useAppSelector(selectListingState);
   const user = useAppSelector((state) => state.auth.user);
   const interestedPeople = useAppSelector(
     (state) => (state.likes.advertId === id ? state.likes.likes : []),
@@ -47,7 +49,7 @@ export default function ListingRoute(): JSX.Element {
     if (!valid) {
       return undefined;
     }
-    const request = dispatch(getAdvertByIdThunk(id));
+    const request = dispatch(getListingByIdThunk(id));
     return () => request.abort();
   }, [dispatch, id, valid, attempt]);
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function ListingRoute(): JSX.Element {
     const to = routes.messageThread(receiverId) + (withListing ? `?listingId=${id}` : '');
     navigate(user.status === UserStatus.Logged ? to : getAuthenticationPath(routes.signIn, to));
   };
-  if (!valid || data.detailStatus === AdvertDetailStatus.NotFound) {
+  if (!valid || data.detailStatus === ListingDetailStatus.NotFound) {
     return (
       <main className={styles.listing__page}>
         <h1>Объявление не найдено</h1>
@@ -87,7 +89,7 @@ export default function ListingRoute(): JSX.Element {
       </main>
     );
   }
-  if (data.detailStatus === AdvertDetailStatus.Error) {
+  if (data.detailStatus === ListingDetailStatus.Error) {
     return (
       <main className={styles.listing__page}>
         <Alert variant={AlertVariant.Error}>Не удалось загрузить объявление.</Alert>
@@ -95,8 +97,8 @@ export default function ListingRoute(): JSX.Element {
       </main>
     );
   }
-  const advert = data.chosenAdvert;
-  if (!advert || advert.id !== id || data.detailStatus !== AdvertDetailStatus.Ready) {
+  const advert = data.chosenListing;
+  if (!advert || advert.id !== id || data.detailStatus !== ListingDetailStatus.Ready) {
     return <Spinner label="Загрузка объявления" />;
   }
   const authorId = advert.userId;

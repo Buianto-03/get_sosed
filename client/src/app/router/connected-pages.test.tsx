@@ -8,7 +8,7 @@ import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
 import ProfileRoute from '@pages/profile/ui/profile-route/ProfileRoute';
 import ProfileEditRoute from '@pages/profile/ui/profile-edit-route/ProfileEditRoute';
 import MessagesRoute from '@pages/chat/ui/messages-route/MessagesRoute';
-import advertService from '@entities/advert/api/advertService';
+import { listingService } from '@entities/listing/api/listingService';
 import likeService from '@entities/like/api/likeService';
 import chatService from '@entities/chat/api/chatListService';
 import profileService from '@features/edit-profile/userProfileService';
@@ -20,7 +20,7 @@ import {
   historyFailed,
   setChatConnection,
 } from '@entities/chat/model/chatListSlice';
-import { advertSchema, type AdvertPageType } from '@entities/advert/model/advertsModel';
+import { listingSchema, type ListingPage } from '@entities/listing/model';
 import { clearAuth, setSession } from '@entities/session/model/authSlice';
 import axiosInstance from '@shared/api/client';
 import { store } from '../store/store';
@@ -41,7 +41,7 @@ const user = {
     phoneNumber: '+70000000000',
   },
 };
-const advert = advertSchema.parse({
+const advert = listingSchema.parse({
   id: 42,
   title: 'Квартира',
   body: 'Реальное описание',
@@ -103,8 +103,8 @@ function open(
 beforeEach(() => {
   store.dispatch(clearAuth());
   vi.spyOn(axiosInstance, 'get').mockResolvedValue({ data: [] });
-  vi.spyOn(advertService, 'getMine').mockResolvedValue({ items: [], total: 0, page: 1, limit: 12 });
-  vi.spyOn(advertService, 'getTagsBySearch').mockResolvedValue([
+  vi.spyOn(listingService, 'getMine').mockResolvedValue({ items: [], total: 0, page: 1, limit: 12 });
+  vi.spyOn(listingService, 'getTagsBySearch').mockResolvedValue([
     { id: 1, name: 'Для некурящих' },
     { id: 2, name: 'Питомцы разрешены' },
     { id: 3, name: 'Тихие вечера' },
@@ -142,7 +142,7 @@ it('loads search pages on demand, retains cards on failure and retries the same 
     title: `Результат ${index + 1}`,
   }));
   const get = vi
-    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .spyOn(listingService, 'getFilteredListingsPage')
     .mockResolvedValueOnce({ items: first, total: 10, page: 1, limit: 8 })
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce({
@@ -186,7 +186,7 @@ it('loads search pages on demand, retains cards on failure and retries the same 
 
 it('starts at page one with the URL filters on Back and Forward', async () => {
   const get = vi
-    .spyOn(advertService, 'getFilteredAdvertsPage')
+    .spyOn(listingService, 'getFilteredListingsPage')
     .mockImplementation((filters, page = 1) =>
       Promise.resolve({ items: [{ ...advert, title: filters.city }], total: 1, page, limit: 8 }),
     );
@@ -217,13 +217,13 @@ it('starts at page one with the URL filters on Back and Forward', async () => {
 });
 
 it('loads search from the URL only, keeps unknown tags and returns from details to the complete filter query', async () => {
-  const get = vi.spyOn(advertService, 'getFilteredAdvertsPage').mockResolvedValue({
+  const get = vi.spyOn(listingService, 'getFilteredListingsPage').mockResolvedValue({
     items: [advert],
     total: 1,
     page: 1,
     limit: 8,
   });
-  vi.spyOn(advertService, 'getAdvertById').mockResolvedValue(advert);
+  vi.spyOn(listingService, 'getListingById').mockResolvedValue(advert);
   open('/listings?city=Казань&priceFrom=10&roomsTo=4&tags=99');
   expect(await screen.findByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
   expect(get.mock.calls[0][0]).toMatchObject({
@@ -247,7 +247,7 @@ it('loads search from the URL only, keeps unknown tags and returns from details 
 
 it('does not request invalid IDs and offers retry for failed detail reads', async () => {
   const get = vi
-    .spyOn(advertService, 'getAdvertById')
+    .spyOn(listingService, 'getListingById')
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValue(advert);
   const invalid = open('/listings/invalid');
@@ -262,7 +262,7 @@ it('does not request invalid IDs and offers retry for failed detail reads', asyn
 
 it('shows own-list errors independently from empty favorites and retries the profile collection', async () => {
   login();
-  vi.spyOn(advertService, 'getMine')
+  vi.spyOn(listingService, 'getMine')
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValue({ items: [advert], total: 1, page: 1, limit: 12 });
   open('/profile');
@@ -288,7 +288,7 @@ it('loads more own adverts without duplicate requests or cards and retains the f
     { ...advert, id: 113, title: 'Моё объявление 14' },
   ];
   const get = vi
-    .spyOn(advertService, 'getMine')
+    .spyOn(listingService, 'getMine')
     .mockResolvedValueOnce({ items: first, total: 14, page: 1, limit: 12 })
     .mockRejectedValueOnce(new Error('offline'))
     .mockResolvedValueOnce({ items: second, total: 14, page: 2, limit: 12 });
@@ -318,12 +318,12 @@ it('ignores a late next-page response after the profile owner changes', async ()
     id: 100 + index,
     title: `Старое объявление ${index + 1}`,
   }));
-  let resolveNext!: (page: AdvertPageType) => void;
-  const pending = new Promise<AdvertPageType>((resolve) => {
+  let resolveNext!: (page: ListingPage) => void;
+  const pending = new Promise<ListingPage>((resolve) => {
     resolveNext = resolve;
   });
   const get = vi
-    .spyOn(advertService, 'getMine')
+    .spyOn(listingService, 'getMine')
     .mockResolvedValueOnce({ items: first, total: 13, page: 1, limit: 12 })
     .mockReturnValueOnce(pending)
     .mockResolvedValueOnce({
@@ -451,7 +451,7 @@ it('changes listing context without reopening the dialog or refetching the summa
     resolveAdvert = resolve;
   });
   const readAdvert = vi
-    .spyOn(advertService, 'getAdvertById')
+    .spyOn(listingService, 'getListingById')
     .mockReturnValueOnce(pending)
     .mockResolvedValueOnce({ ...advert, id: 43, title: 'Действующее объявление' });
 

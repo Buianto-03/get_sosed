@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { advertSchema } from './advertsModel';
+import { listingSchema } from './listingModel';
 
-export const likedAdvertSchema = z.object({
+export const likedListingSchema = z.object({
   id: z.number(),
   advertId: z.number(),
   userId: z.number(),
-  Advert: advertSchema,
+  Advert: listingSchema,
 });
-export type LikedAdvert = z.infer<typeof likedAdvertSchema>;
+export type LikedListing = z.infer<typeof likedListingSchema>;
 
 export enum SavedStatus {
   Idle = 'idle',
@@ -16,7 +16,7 @@ export enum SavedStatus {
   Error = 'error',
 }
 export interface SavedState {
-  items: LikedAdvert[];
+  items: LikedListing[];
   savedIds: number[];
   status: SavedStatus;
   initialized: boolean;
@@ -26,15 +26,15 @@ export interface SavedState {
   requestId: string | null;
 }
 export interface SavedRoot {
-  likedAdverts: SavedState;
+  likedListings: SavedState;
 }
 
 export interface SaveRequest {
-  advertId: number;
+  listingId: number;
   requestId: string;
 }
 export interface SaveSuccess extends SaveRequest {
-  item: LikedAdvert;
+  item: LikedListing;
 }
 export interface SaveFailure extends SaveRequest {
   error: string;

@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import type { AppliedFilters } from '@features/advert-filter/model/filters';
-import type { AdvertSearchState } from '@entities/advert/model/advertsModel';
-import { getFilteredAdvertsThunk } from '@entities/advert/model/advertsThunk';
-import { selectAdvertSearch, selectSearchHasMore } from '@entities/advert/model/advertsSelectors';
+import {
+  type ListingSearchState,
+  getFilteredListingsThunk,
+  selectListingSearch,
+  selectSearchHasMore,
+} from '@entities/listing/model';
 import { buildSearchRequest } from './helper';
 
-interface SearchAdvertsResult extends AdvertSearchState {
+interface SearchAdvertsResult extends ListingSearchState {
   hasMore: boolean;
   retry: () => void;
   loadMore: () => void;
@@ -14,13 +17,13 @@ interface SearchAdvertsResult extends AdvertSearchState {
 
 export function useSearchAdverts(filters: AppliedFilters, searchKey: string): SearchAdvertsResult {
   const dispatch = useAppDispatch();
-  const result = useAppSelector(selectAdvertSearch);
+  const result = useAppSelector(selectListingSearch);
   const hasMore = useAppSelector(selectSearchHasMore);
-  const request = useRef<ReturnType<ReturnType<typeof getFilteredAdvertsThunk>>>();
+  const request = useRef<ReturnType<ReturnType<typeof getFilteredListingsThunk>>>();
   const start = useCallback(
     (page: number): void => {
       const pending = dispatch(
-        getFilteredAdvertsThunk(buildSearchRequest(filters, searchKey, page)),
+        getFilteredListingsThunk(buildSearchRequest(filters, searchKey, page)),
       );
       request.current = pending;
       void pending.then(() => {

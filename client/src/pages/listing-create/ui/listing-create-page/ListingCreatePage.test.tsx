@@ -1,8 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ListingCondition, TagCatalogState } from '@entities/advert/model/tag-catalog';
-import type { TagCatalog } from '@entities/advert/model/tag-catalog';
+import { ListingCondition, TagCatalogState, type TagCatalog } from '@entities/listing/model';
 import type { ListingDraft } from '@features/listing-create/model';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreatePage } from './ListingCreatePage';

@@ -3,7 +3,7 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { afterEach, expect, it, vi } from 'vitest';
 import axiosInstance from '@shared/api/client';
 import type { ReadOptions } from '@shared/api/cancellation';
-import advertService from '@entities/advert/api/advertService';
+import { listingService } from '@entities/listing/api/listingService';
 import chatService from '@entities/chat/api/chatListService';
 import likeService from '@entities/like/api/likeService';
 
@@ -14,11 +14,11 @@ afterEach(() => {
 });
 
 it.each([
-  ['adverts', (options: ReadOptions) => advertService.getAdverts(options)],
+  ['adverts', (options: ReadOptions) => listingService.getListings(options)],
   [
     'search',
     (options: ReadOptions) =>
-      advertService.getFilteredAdverts(
+      listingService.getFilteredListings(
         {
           city: '',
           district: '',
@@ -32,11 +32,11 @@ it.each([
         options,
       ),
   ],
-  ['detail', (options: ReadOptions) => advertService.getAdvertById(7, options)],
-  ['tags', (options: ReadOptions) => advertService.getTagsBySearch('', options)],
-  ['own adverts', (options: ReadOptions) => advertService.getMine(1, 12, options)],
-  ['saved adverts', (options: ReadOptions) => advertService.getLikedAdverts(options)],
-  ['top adverts', (options: ReadOptions) => advertService.getTopAdverts(options)],
+  ['detail', (options: ReadOptions) => listingService.getListingById(7, options)],
+  ['tags', (options: ReadOptions) => listingService.getTagsBySearch('', options)],
+  ['own adverts', (options: ReadOptions) => listingService.getMine(1, 12, options)],
+  ['saved adverts', (options: ReadOptions) => listingService.getLikedListings(options)],
+  ['top adverts', (options: ReadOptions) => listingService.getTopListings(options)],
   ['dialog list', (options: ReadOptions) => chatService.getChatList(1, options)],
   ['summary', (options: ReadOptions) => chatService.getSummary(2, options)],
   ['interested people', (options: ReadOptions) => likeService.getLikesByAdvertId(7, options)],

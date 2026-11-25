@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import type { ChatListType } from '@entities/chat/model/chatListModel';
 import type { ChatType } from '@entities/chat/model/chat';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
+import type { Listing } from '@entities/listing/model';
 import { getMediaUrl } from '@shared/config/media';
 import type { ChatConversationRow } from '../chat-page/ChatPage';
 import type { ChatListingContext, ChatMessage } from '../chat-thread/ChatThread';
@@ -35,7 +35,7 @@ export const toConversationRow = createSelector(
   },
 );
 
-export function toListingContext(advert: AdvertType): ChatListingContext {
+export function toListingContext(advert: Listing): ChatListingContext {
   return {
     id: String(advert.id),
     title: advert.title || 'Объявление',

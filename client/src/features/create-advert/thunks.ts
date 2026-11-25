@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import advertService from '@entities/advert/api/advertService';
+import { listingService } from '@entities/listing/api/listingService';
 
 export const postAdvertThunk = createAsyncThunk('adverts/postAdvert', (data: FormData) =>
-  advertService.createAdvert(data),
+  listingService.createListing(data),
 );

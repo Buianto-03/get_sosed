@@ -1,41 +1,48 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { SavedStatus, type LikedAdvert, type SavedRoot, type SavedState } from '@entities/advert/model/likedAdvertsModel';
-import type { AdvertType } from '@entities/advert/model/advertsModel';
 import {
-  savedMutationStarted, savedAdvertConfirmed, savedRemovalConfirmed,
+  SavedStatus,
+  type LikedListing,
+  type SavedRoot,
+  type SavedState,
+  type Listing,
+  savedMutationStarted,
+  savedListingConfirmed,
+  savedRemovalConfirmed,
   savedMutationFailed,
-} from '@entities/advert/model/likedAdvertsSlice';
+} from '@entities/listing/model';
 import { deleteLikeThunk, setLikeThunk } from '@entities/like/model/likesThunk';
 
 const canMutate = (state: SavedState, id: number): boolean =>
   state.status === SavedStatus.Ready && !state.pending[id];
 
-export const saveAdvertThunk = createAsyncThunk<LikedAdvert, AdvertType, { state: SavedRoot }>(
-  'likedAdverts/save',
-  async (advert, { dispatch, requestId }) => {
-    const request = { advertId: advert.id, requestId };
+export const saveAdvertThunk = createAsyncThunk<LikedListing, Listing, { state: SavedRoot }>(
+  'likedListings/save',
+  async (listing, { dispatch, requestId }) => {
+    const request = { listingId: listing.id, requestId };
     dispatch(savedMutationStarted(request));
     try {
-      const like = await dispatch(setLikeThunk(advert.id)).unwrap();
-      const item = { ...like, Advert: advert };
-      dispatch(savedAdvertConfirmed({ ...request, item }));
+      const like = await dispatch(setLikeThunk(listing.id)).unwrap();
+      const item = { ...like, Advert: listing };
+      dispatch(savedListingConfirmed({ ...request, item }));
       return item;
     } catch (error) {
       dispatch(savedMutationFailed({ ...request, error: 'Не удалось сохранить объявление.' }));
       throw error;
     }
   },
-  { condition: (advert, { getState }) => canMutate(getState().likedAdverts, advert.id) },
+  { condition: (listing, { getState }) => canMutate(getState().likedListings, listing.id) },
 );
 
 export const removeSavedAdvertThunk = createAsyncThunk<number, number, { state: SavedRoot }>(
-  'likedAdverts/remove',
-  async (advertId, { dispatch, requestId }) => {
-    const request = { advertId, requestId };
+  'likedListings/remove',
+  async (listingId, { dispatch, requestId }) => {
+    const request = { listingId, requestId };
     dispatch(savedMutationStarted(request));
     try {
-      const result = await dispatch(deleteLikeThunk(advertId)).unwrap();
-      if (result.advertId !== advertId) throw new Error('Unexpected advert ID');
+      const result = await dispatch(deleteLikeThunk(listingId)).unwrap();
+      if (result.advertId !== listingId) {
+        throw new Error('Unexpected listing ID');
+      }
       dispatch(savedRemovalConfirmed(request));
       return result.advertId;
     } catch (error) {
@@ -43,5 +50,5 @@ export const removeSavedAdvertThunk = createAsyncThunk<number, number, { state: 
       throw error;
     }
   },
-  { condition: (id, { getState }) => canMutate(getState().likedAdverts, id) },
+  { condition: (id, { getState }) => canMutate(getState().likedListings, id) },
 );

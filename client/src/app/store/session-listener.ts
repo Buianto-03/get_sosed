@@ -3,28 +3,31 @@ import { clearChat } from '@entities/chat/model/chatListSlice';
 import { createListenerMiddleware } from '@reduxjs/toolkit';
 import { UserStatus, type UserT } from '@entities/session/model/authModel';
 import { resetLikes } from '@entities/like/model/likesSlice';
-import { resetSavedAdverts, savedLoadRequested } from '@entities/advert/model/likedAdvertsSlice';
-import { SavedStatus } from '@entities/advert/model/likedAdvertsModel';
-import { getLikedAdvertsThunk } from '@entities/advert/model/likedAdvertsThunk';
+import {
+  resetSavedListings,
+  savedLoadRequested,
+  SavedStatus,
+  getLikedListingsThunk,
+} from '@entities/listing/model';
 import type { AppDispatch, RootState } from './store';
 
 const userId = (user: UserT): number | null => (user.status === UserStatus.Logged ? user.id : null);
 
 export const sessionListener = createListenerMiddleware();
-let savedRequest: ReturnType<ReturnType<typeof getLikedAdvertsThunk>> | undefined;
+let savedRequest: ReturnType<ReturnType<typeof getLikedListingsThunk>> | undefined;
 
 sessionListener.startListening.withTypes<RootState, AppDispatch>()({
   actionCreator: savedLoadRequested,
   effect: (_, api) => {
-    const { auth, likedAdverts } = api.getState();
+    const { auth, likedListings } = api.getState();
     if (
       userId(auth.user) === null ||
-      likedAdverts.status === SavedStatus.Loading ||
-      Object.keys(likedAdverts.pending).length > 0
+      likedListings.status === SavedStatus.Loading ||
+      Object.keys(likedListings.pending).length > 0
     ) {
       return;
     }
-    const request = api.dispatch(getLikedAdvertsThunk());
+    const request = api.dispatch(getLikedListingsThunk());
     savedRequest = request;
     void request.then(() => {
       if (savedRequest === request) {
@@ -43,7 +46,7 @@ sessionListener.startListening.withTypes<RootState, AppDispatch>()({
     savedRequest = undefined;
     chatSocket.disconnect();
     api.dispatch(clearChat());
-    api.dispatch(resetSavedAdverts());
+    api.dispatch(resetSavedListings());
     api.dispatch(resetLikes(id));
     if (id !== null) {
       api.dispatch(savedLoadRequested());
