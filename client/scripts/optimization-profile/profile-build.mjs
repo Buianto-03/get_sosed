@@ -1,5 +1,9 @@
 import { build } from 'vite';
 import { execFileSync } from 'node:child_process';
+import { mkdtemp, realpath, rm, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Transform only the disposable profiling build. Match known call sites exactly so a
 // changed implementation cannot silently register a bogus zero in the baseline.
@@ -86,37 +90,37 @@ function profilingPlugin() {
 }
 
 export async function buildClient(outDir, profile, revision) {
-  const originalSources = revision
-    ? {
-        name: 'optimization-original-revision',
-        enforce: 'pre',
-        transform(_code, id) {
-          const relative = id.split('/client/src/')[1]?.split('?')[0];
-          if (relative) {
-            return execFileSync('git', ['show', `${revision}:client/src/${relative}`], {
-              encoding: 'utf8',
-            });
-          }
-        },
-      }
-    : null;
-  await build({
-    logLevel: 'error',
-    // The benchmark must never use the developer's configured API or WebSocket.
-    define: {
-      'import.meta.env.VITE_API_URL': JSON.stringify('/api'),
-      'import.meta.env.VITE_WS_URL': JSON.stringify(''),
-      'import.meta.env.VITE_YANDEX_API_KEY': 'undefined',
-    },
-    resolve: {
-      alias: profile
-        ? [{ find: /^react-dom(?:\/client)?$/, replacement: 'react-dom/profiling' }]
-        : [],
-    },
-    plugins: [
-      ...(originalSources ? [originalSources] : []),
-      ...(profile ? [profilingPlugin()] : []),
-    ],
-    build: { outDir, emptyOutDir: false },
-  });
+  const archiveDir = revision ? await mkdtemp(join(tmpdir(), 'get-sosed-baseline-')) : undefined;
+  try {
+    if (archiveDir) {
+      const clientRoot = fileURLToPath(new URL('../../', import.meta.url));
+      const archive = execFileSync('git', ['archive', `${revision}:client`], {
+        cwd: resolve(clientRoot, '..'),
+        maxBuffer: 64 * 1024 * 1024,
+      });
+      execFileSync('tar', ['-xf', '-', '-C', archiveDir], { input: archive });
+      await symlink(join(clientRoot, 'node_modules'), join(archiveDir, 'node_modules'), 'dir');
+    }
+    await build({
+      root: archiveDir ? await realpath(archiveDir) : undefined,
+      logLevel: 'error',
+      // The benchmark must never use the developer's configured API or WebSocket.
+      define: {
+        'import.meta.env.VITE_API_URL': JSON.stringify('/api'),
+        'import.meta.env.VITE_WS_URL': JSON.stringify(''),
+        'import.meta.env.VITE_YANDEX_API_KEY': 'undefined',
+      },
+      resolve: {
+        alias: profile
+          ? [{ find: /^react-dom(?:\/client)?$/, replacement: 'react-dom/profiling' }]
+          : [],
+      },
+      plugins: profile ? [profilingPlugin()] : [],
+      build: { outDir: resolve(outDir), emptyOutDir: false },
+    });
+  } finally {
+    if (archiveDir) {
+      await rm(archiveDir, { recursive: true, force: true });
+    }
+  }
 }

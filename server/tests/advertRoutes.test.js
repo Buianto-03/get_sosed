@@ -44,7 +44,7 @@ function request(app, method, url) {
   });
 }
 
-test('advert DELETE reaches API fallback while advert GET and like DELETE remain available', async () => {
+test('listing DELETE reaches API fallback while listing GET and like DELETE remain available', async () => {
   const noop = (req, res, next) => next();
   const advertController = {
     getAdverts: noop, createAdvert: noop, getFilteredAdverts: noop,
@@ -52,11 +52,11 @@ test('advert DELETE reaches API fallback while advert GET and like DELETE remain
     getFreshAdverts: (req, res) => res.json({ limit: Number(req.query.limit || 3) }),
     likedAdvertsHandler: noop, getTopAdvertsByLikes: noop, getTagsBySearch: noop,
     getMine: noop,
-    getAdvertById: (req, res) => res.json({ advertId: req.params.advertId }),
+    getAdvertById: (req, res) => res.json({ advertId: req.params.listingId }),
   };
   const likeController = {
     getLikes: noop, setLike: noop,
-    deleteLike: (req, res) => res.json({ advertId: Number(req.params.advertId), deleted: true }),
+    deleteLike: (req, res) => res.json({ advertId: Number(req.params.listingId), deleted: true }),
   };
   const advertRouter = load('../build/src/router/advertRouter.js', {
     express,
@@ -88,20 +88,24 @@ test('advert DELETE reaches API fallback while advert GET and like DELETE remain
     './ws/connection': noop,
   });
 
-  assert.deepEqual(await request(app, 'DELETE', '/api/adverts/42'), {
+  assert.deepEqual(await request(app, 'DELETE', '/api/listings/42'), {
     status: 404,
     body: { code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' },
   });
-  assert.deepEqual(await request(app, 'GET', '/api/adverts/42'), {
+  assert.deepEqual(await request(app, 'GET', '/api/listings/42'), {
     status: 200, body: { advertId: '42' },
   });
-  assert.deepEqual(await request(app, 'POST', '/api/adverts/filters/page?page=2'), {
+  assert.deepEqual(await request(app, 'POST', '/api/listings/filters/page?page=2'), {
     status: 200, body: { page: 2 },
   });
-  assert.deepEqual(await request(app, 'GET', '/api/adverts/fresh?limit=2'), {
+  assert.deepEqual(await request(app, 'GET', '/api/listings/fresh?limit=2'), {
     status: 200, body: { limit: 2 },
   });
   assert.deepEqual(await request(app, 'DELETE', '/api/likes/42'), {
     status: 200, body: { advertId: 42, deleted: true },
+  });
+  assert.deepEqual(await request(app, 'GET', '/api/adverts/42'), {
+    status: 404,
+    body: { code: 'API_ROUTE_NOT_FOUND', message: 'API route not found' },
   });
 });

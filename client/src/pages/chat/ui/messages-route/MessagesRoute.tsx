@@ -58,7 +58,7 @@ export default function MessagesRoute(): JSX.Element | null {
     [navigate],
   );
   const openListing = useCallback(
-    (advert: string) => navigate(routes.listingDetails(advert)),
+    (listingToOpen: string) => navigate(routes.listingDetails(listingToOpen)),
     [navigate],
   );
   const sendMessage = useCallback(

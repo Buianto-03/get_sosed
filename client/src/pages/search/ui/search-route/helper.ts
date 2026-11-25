@@ -4,7 +4,7 @@ import {
   type ListingCardData,
   type ListingSearchRequest,
 } from '@entities/listing/model';
-import type { AppliedFilters } from '@features/advert-filter/model/filters';
+import type { AppliedFilters } from '@features/listing-filter/model/filters';
 
 export function buildSearchRequest(
   { tagIds, ...filters }: AppliedFilters,

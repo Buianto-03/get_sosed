@@ -32,16 +32,16 @@ export const listingSchema = z.object({
       address: z.string().nullable(),
       metro: z.string().nullable(),
       coordinates: z.string().nullable(),
-      advertId: z.number(),
+      listingId: z.number(),
     })
     .nullable(),
   tags: z.array(tagSchema).optional(),
-  AdvertPhotos: z.array(photoSchema).nullable().optional(),
+  photos: z.array(photoSchema).nullable().optional(),
 });
 
 export const collectionListingSchema = listingSchema.extend({
   tags: tagSchema.array(),
-  AdvertPhotos: photoSchema.array(),
+  photos: photoSchema.array(),
 });
 
 export type Listing = z.infer<typeof listingSchema>;

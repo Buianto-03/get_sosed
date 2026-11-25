@@ -1,10 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { SearchFilters } from '@features/advert-filter/ui/SearchFilters';
-import { readFilters, writeFilters } from '@features/advert-filter/model/filters';
-import { toSearchValues, toAppliedFilters } from '@features/advert-filter/model/searchFilterValues';
-import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
-import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
+import { SearchFilters } from '@features/listing-filter/ui/SearchFilters';
+import { readFilters, writeFilters } from '@features/listing-filter/model/filters';
+import { toSearchValues, toAppliedFilters } from '@features/listing-filter/model/searchFilterValues';
+import { useSavedCollectionStatus } from '@features/liked-listings/model/use-saved-collection-status';
+import { ListingCardWithSave } from '@features/liked-listings/ui/listing-card-with-save/ListingCardWithSave';
 import { useTagCatalog } from '@entities/listing/model/use-tag-catalog';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
 import { SearchResults, SearchResultsState } from '@widgets/search-results/SearchResults';
@@ -12,7 +12,7 @@ import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button } from '@shared/ui/button/Button';
 import { routes } from '@shared/config/routes';
 import { toSearchCard } from './helper';
-import { useSearchAdverts } from './use-search-adverts';
+import { useSearchListings } from './use-search-listings';
 import styles from './SearchRoute.module.scss';
 
 export default function SearchRoute(): JSX.Element {
@@ -24,7 +24,7 @@ export default function SearchRoute(): JSX.Element {
   const applied = useMemo(() => toSearchValues(filters), [filters]);
   const catalog = useTagCatalog();
   const { error: savedError, reload: reloadSaved } = useSavedCollectionStatus();
-  const result = useSearchAdverts(filters, query);
+  const result = useSearchListings(filters, query);
   const returnTo = location.pathname + location.search;
   const openListing = useCallback(
     (id: string) => navigate(routes.listingDetails(id), { state: { searchReturnTo: returnTo } }),
@@ -56,10 +56,10 @@ export default function SearchRoute(): JSX.Element {
       <SearchResults
         state={state}
         totalCount={result.total}
-        cards={result.items.map((advert) => (
+        cards={result.items.map((listing) => (
           <ListingCardWithSave
-            key={advert.id}
-            advert={advert}
+            key={listing.id}
+            listing={listing}
             toListing={toSearchCard}
             variant={ListingCardVariant.Search}
             onOpen={openListing}

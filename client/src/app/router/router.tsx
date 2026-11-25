@@ -14,7 +14,7 @@ const SignInPage = React.lazy(() => import('@pages/sign-in/ui/sign-in-route/Sign
 const SignUpPage = React.lazy(() => import('@pages/sign-up/ui/sign-up-route/SignUpRoute'));
 const SearchRoute = React.lazy(() => import('@pages/search/ui/search-route/SearchRoute'));
 const ListingRoute = React.lazy(
-  () => import('@pages/advert-details/ui/listing-route/ListingRoute'),
+  () => import('@pages/listing-details/ui/listing-route/ListingRoute'),
 );
 const MessagesRoute = React.lazy(() => import('@pages/chat/ui/messages-route/MessagesRoute'));
 const ListingCreateRoute = React.lazy(

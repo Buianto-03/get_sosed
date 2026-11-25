@@ -31,7 +31,7 @@ export function toListingDetails(listing: Listing): ListingDetailsView {
   const { location } = listing;
   return {
     title: listing.title || 'Объявление',
-    photos: listing.AdvertPhotos?.flatMap(({ id, photo }) =>
+    photos: listing.photos?.flatMap(({ id, photo }) =>
       photo ? [{ id: String(id), src: photo, alt: listing.title || 'Фото жилья' }] : [],
     ) ?? [],
     information: {

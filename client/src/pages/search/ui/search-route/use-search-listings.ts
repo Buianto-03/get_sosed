@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
-import type { AppliedFilters } from '@features/advert-filter/model/filters';
+import type { AppliedFilters } from '@features/listing-filter/model/filters';
 import {
   type ListingSearchState,
   getFilteredListingsThunk,
@@ -9,13 +9,13 @@ import {
 } from '@entities/listing/model';
 import { buildSearchRequest } from './helper';
 
-interface SearchAdvertsResult extends ListingSearchState {
+interface SearchListingsResult extends ListingSearchState {
   hasMore: boolean;
   retry: () => void;
   loadMore: () => void;
 }
 
-export function useSearchAdverts(filters: AppliedFilters, searchKey: string): SearchAdvertsResult {
+export function useSearchListings(filters: AppliedFilters, searchKey: string): SearchListingsResult {
   const dispatch = useAppDispatch();
   const result = useAppSelector(selectListingSearch);
   const hasMore = useAppSelector(selectSearchHasMore);

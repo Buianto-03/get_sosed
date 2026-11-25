@@ -8,7 +8,7 @@ import { parseArgs } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { buildClient } from './profile-build.mjs';
 import { openChrome } from './chrome.mjs';
-import { serve } from './local-server.mjs';
+import { normalizeListingApiPath, serve } from './local-server.mjs';
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -93,11 +93,11 @@ try {
                 page
                   .network()
                   .requests.some(
-                    (r) => r.path === '/api/adverts/liked' && Number.isFinite(r.transfer),
+                    (r) => normalizeListingApiPath(r.path) === '/api/listings/liked' && Number.isFinite(r.transfer),
                   ),
               );
               if (scenario === 'search') {
-                server.holdReads(['/api/adverts/filters', '/api/adverts/filters/page']);
+                server.holdReads(['/api/listings/filters', '/api/listings/filters/page']);
                 await navigate(page, '/listings');
                 await page.wait(
                   `document.querySelectorAll('input[type=checkbox]:enabled').length === ${size === 'large' ? 200 : 20}`,
@@ -108,7 +108,7 @@ try {
                 await applyCity(page, 'Казань');
                 await until(() => server.reads.length === 3);
               } else {
-                server.holdReads(['/api/adverts/1', '/api/likes/1']);
+                server.holdReads(['/api/listings/1', '/api/likes/1']);
                 await navigate(page, '/listings/1');
                 await until(() => server.reads.length === 2);
                 await navigate(page, '/about');

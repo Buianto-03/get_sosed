@@ -310,7 +310,7 @@ paths:
                 type: string
                 enum:
                   - Not Implemented
-  /api/adverts:
+  /api/listings:
     get:
       tags:
         - Adverts
@@ -318,7 +318,7 @@ paths:
       summary: Получить все объявления
       description:
         GET не применяет фильтры. Для фильтрации используйте POST
-        /api/adverts/filters.
+        /api/listings/filters.
       responses:
         '200':
           description: Объявления по id ASC, без пагинации.
@@ -405,7 +405,7 @@ paths:
                 code: ADVERT_PUBLISH_FAILED
         '403':
           $ref: '#/components/responses/InvalidAccessToken'
-  /api/adverts/filters:
+  /api/listings/filters:
     post:
       tags:
         - Adverts
@@ -445,7 +445,7 @@ paths:
                     type: string
               example:
                 error: Ошибка на сервере при фильтрации объявлений
-  /api/adverts/filters/page:
+  /api/listings/filters/page:
     post:
       tags:
         - Adverts
@@ -499,7 +499,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FilteredAdvertsLoadError'
-  /api/adverts/fresh:
+  /api/listings/fresh:
     get:
       tags:
         - Adverts
@@ -539,7 +539,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FreshAdvertsLoadError'
-  /api/adverts/liked:
+  /api/listings/liked:
     get:
       tags:
         - Adverts
@@ -571,7 +571,7 @@ paths:
                 error: Ошибка при получении избранных объявлений
         '403':
           $ref: '#/components/responses/InvalidAccessToken'
-  /api/adverts/top:
+  /api/listings/top:
     get:
       tags:
         - Adverts
@@ -601,7 +601,7 @@ paths:
                     type: string
               example:
                 error: Ошибка при получении топ-объявлений
-  /api/adverts/tags:
+  /api/listings/tags:
     get:
       tags:
         - Adverts
@@ -651,7 +651,7 @@ paths:
                     type: string
               example:
                 error: Ошибка при поиске тегов
-  /api/adverts/mine:
+  /api/listings/mine:
     get:
       tags:
         - Adverts
@@ -726,9 +726,9 @@ paths:
                 code: OWN_ADVERTS_LOAD_FAILED
         '403':
           $ref: '#/components/responses/InvalidAccessToken'
-  /api/adverts/{advertId}:
+  /api/listings/{listingId}:
     parameters:
-      - name: advertId
+      - name: listingId
         in: path
         required: true
         schema:
@@ -1053,9 +1053,9 @@ paths:
                 type: string
                 enum:
                   - Invalid access token
-  /api/likes/{advertId}:
+  /api/likes/{listingId}:
     parameters:
-      - name: advertId
+      - name: listingId
         in: path
         required: true
         schema:

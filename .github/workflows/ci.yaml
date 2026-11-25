@@ -118,11 +118,11 @@ jobs:
           curl --fail --silent --show-error \
             --retry 10 --retry-delay 2 --retry-all-errors \
             --max-time 5 \
-            --output "$RUNNER_TEMP/api-adverts.json" \
-            http://127.0.0.1:8082/api/adverts
+            --output "$RUNNER_TEMP/api-listings.json" \
+            http://127.0.0.1:8082/api/listings
 
           python3 -c 'import json, sys; data = json.load(open(sys.argv[1])); assert data == [], f"Ожидался пустой список, получено: {data}"; print("API вернул пустой JSON-массив")' \
-            "$RUNNER_TEMP/api-adverts.json"
+            "$RUNNER_TEMP/api-listings.json"
 
       - name: Посмотреть запуск сервера и клиента
         run: |
@@ -250,7 +250,7 @@ jobs:
             --retry 10 --retry-delay 2 --retry-all-errors \
             --max-time 5 \
             --output "$RUNNER_TEMP/publish-api.json" \
-            http://127.0.0.1:8082/api/adverts
+            http://127.0.0.1:8082/api/listings
 
           python3 -c 'import json, sys; data = json.load(open(sys.argv[1])); assert data == [], f"Ожидался пустой список, получено: {data}"; print("API вернул пустой JSON-массив")' \
             "$RUNNER_TEMP/publish-api.json"

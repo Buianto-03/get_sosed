@@ -6,10 +6,10 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { clearAuth } from '@entities/session/model/authSlice';
 import type { Listing } from '@entities/listing/model';
 import likeService from '@entities/like/api/likeService';
-import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
+import { useSavedListing } from '@features/liked-listings/model/use-saved-listing';
 import { store } from './store';
 
-const advert: Listing = {
+const listing: Listing = {
   id: 7,
   title: null,
   body: null,
@@ -24,11 +24,11 @@ const advert: Listing = {
   location: null,
 };
 function GuestSave(): JSX.Element {
-  const saved = useSavedAdvert(advert.id);
+  const saved = useSavedListing(listing.id);
   const location = useLocation();
   return (
     <>
-      <button type="button" onClick={() => saved.toggle(advert)}>
+      <button type="button" onClick={() => saved.toggle(listing)}>
         Сохранить
       </button>
       <output>{location.pathname + location.search}</output>

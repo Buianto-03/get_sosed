@@ -1,6 +1,6 @@
 const fixtureSizes = {
-  small: { adverts: 100, tags: 20, saved: 50, history: 100 },
-  large: { adverts: 1000, tags: 200, saved: 500, history: 5000 },
+  small: { listings: 100, tags: 20, saved: 50, history: 100 },
+  large: { listings: 1000, tags: 200, saved: 500, history: 5000 },
 };
 const signedInUserId = 1;
 const activeReceiverId = 2;
@@ -22,8 +22,34 @@ function result(data, status = 200) {
   return { status, data };
 }
 
-function matchesFilters(advert, filters) {
-  const { location, price, rooms, tags } = advert;
+const listingWireFields = new Map([
+  ['listingId', 'advertId'],
+  ['photos', 'AdvertPhotos'],
+  ['listing', 'Advert'],
+]);
+
+function toListingWireData(value) {
+  if (Array.isArray(value)) {
+    return value.map(toListingWireData);
+  }
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [
+      listingWireFields.get(key) ?? key,
+      toListingWireData(nestedValue),
+    ]),
+  );
+}
+
+function listingResult(data, status = 200) {
+  return result(toListingWireData(data), status);
+}
+
+function matchesFilters(listing, filters) {
+  const { location, price, rooms, tags } = listing;
   return (
     (!filters.city || filters.city === location.city) &&
     (!filters.district || filters.district === location.district) &&
@@ -75,7 +101,7 @@ export function createFixture(size, { photos = false } = {}) {
     id,
     name: primaryTags[id - 1] ?? `Тестовое условие ${id}`,
   }));
-  const adverts = numbered(counts.adverts, (id) => {
+  const listings = numbered(counts.listings, (id) => {
     const ownerId = id % 4 === 0 ? signedInUserId : 2 + ((id - 1) % conversationCount);
     return {
       id,
@@ -100,21 +126,21 @@ export function createFixture(size, { photos = false } = {}) {
         address: `Тестовый адрес ${id}`,
         metro: `Тестовая станция ${1 + (id % 12)}`,
         coordinates: null,
-        advertId: id,
+        listingId: id,
       },
       tags: [tags[id % primaryTags.length], tags[(id + primaryTags.length) % tags.length]],
-      AdvertPhotos: photos
+      photos: photos
         ? numbered(6, (index) => ({
             id: id * 10 + index,
-            advertId: id,
+            listingId: id,
             photo: `/fixture-photos/${id}/${index}.webp`,
           }))
         : [],
     };
   });
-  const myAdverts = adverts.filter(({ userId }) => userId === signedInUserId).reverse();
+  const myListings = listings.filter(({ userId }) => userId === signedInUserId).reverse();
   const liked = new Map(
-    numbered(counts.saved, (id) => [id * 2, { id, advertId: id * 2, userId: signedInUserId }]),
+    numbered(counts.saved, (id) => [id * 2, { id, listingId: id * 2, userId: signedInUserId }]),
   );
   let nextLikeId = counts.saved + 1;
 
@@ -278,46 +304,46 @@ export function createFixture(size, { photos = false } = {}) {
     switch (`${method} ${pathname}`) {
       case 'GET /api/tokens/refresh':
         return result({ accessToken: 'synthetic-profile-token', user: signedInUser });
-      case 'GET /api/adverts':
-        return result(adverts);
-      case 'GET /api/adverts/fresh': {
+      case 'GET /api/listings':
+        return listingResult(listings);
+      case 'GET /api/listings/fresh': {
         const limit = readPageNumber(searchParams, 'limit', 3, 3);
-        return result([...adverts].reverse().slice(0, limit));
+        return listingResult([...listings].reverse().slice(0, limit));
       }
-      case 'GET /api/adverts/top':
-        return result([...liked.keys()].slice(0, 4).map((id) => adverts[id - 1]));
-      case 'POST /api/adverts/filters':
-        return result(adverts.filter((advert) => matchesFilters(advert, body)));
-      case 'POST /api/adverts/filters/page': {
+      case 'GET /api/listings/top':
+        return listingResult([...liked.keys()].slice(0, 4).map((id) => listings[id - 1]));
+      case 'POST /api/listings/filters':
+        return listingResult(listings.filter((listing) => matchesFilters(listing, body)));
+      case 'POST /api/listings/filters/page': {
         const page = readPageNumber(searchParams, 'page', 1);
         const limit = readPageNumber(searchParams, 'limit', 8, 50);
-        const matches = [...adverts].reverse().filter((advert) => matchesFilters(advert, body));
+        const matches = [...listings].reverse().filter((listing) => matchesFilters(listing, body));
         const offset = (page - 1) * limit;
-        return result({
+        return listingResult({
           items: matches.slice(offset, offset + limit),
           total: matches.length,
           page,
           limit,
         });
       }
-      case 'GET /api/adverts/tags': {
+      case 'GET /api/listings/tags': {
         const query = (searchParams.get('query') ?? '').toLowerCase();
         return result(tags.filter(({ name }) => name.toLowerCase().includes(query)));
       }
-      case 'GET /api/adverts/mine': {
+      case 'GET /api/listings/mine': {
         const page = readPageNumber(searchParams, 'page', 1);
         const limit = readPageNumber(searchParams, 'limit', 12, 50);
         const offset = (page - 1) * limit;
-        return result({
-          items: myAdverts.slice(offset, offset + limit),
-          total: myAdverts.length,
+        return listingResult({
+          items: myListings.slice(offset, offset + limit),
+          total: myListings.length,
           page,
           limit,
         });
       }
-      case 'GET /api/adverts/liked':
-        return result(
-          [...liked.values()].map((like) => ({ ...like, Advert: adverts[like.advertId - 1] })),
+      case 'GET /api/listings/liked':
+        return listingResult(
+          [...liked.values()].map((like) => ({ ...like, listing: listings[like.listingId - 1] })),
         );
       case `GET /api/users/${signedInUserId}`:
         return result(
@@ -335,30 +361,30 @@ export function createFixture(size, { photos = false } = {}) {
       return participant ? result(participant) : result({ error: 'Fixture user not found' }, 404);
     }
 
-    const advertMatch = pathname.match(/^\/api\/adverts\/([1-9]\d*)$/);
-    if (method === 'GET' && advertMatch) {
-      const advert = adverts[Number(advertMatch[1]) - 1];
-      return advert ? result(advert) : result({ error: 'Fixture advert not found' }, 404);
+    const listingMatch = pathname.match(/^\/api\/listings\/([1-9]\d*)$/);
+    if (method === 'GET' && listingMatch) {
+      const listing = listings[Number(listingMatch[1]) - 1];
+      return listing ? listingResult(listing) : result({ error: 'Fixture listing not found' }, 404);
     }
 
     const likeMatch = pathname.match(/^\/api\/likes\/([1-9]\d*)$/);
     if (likeMatch) {
-      const advertId = Number(likeMatch[1]);
-      const existing = liked.get(advertId);
-      if (!adverts[advertId - 1]) {
-        return result({ error: 'Fixture advert not found' }, 404);
+      const listingId = Number(likeMatch[1]);
+      const existing = liked.get(listingId);
+      if (!listings[listingId - 1]) {
+        return result({ error: 'Fixture listing not found' }, 404);
       }
       if (method === 'GET') {
-        return result(existing ? [existing] : []);
+        return listingResult(existing ? [existing] : []);
       }
       if (method === 'POST') {
-        const like = existing ?? { id: nextLikeId++, advertId, userId: signedInUserId };
-        liked.set(advertId, like);
-        return { ...result(like, existing ? 200 : 201), delayMs: likeDelayMs };
+        const like = existing ?? { id: nextLikeId++, listingId, userId: signedInUserId };
+        liked.set(listingId, like);
+        return { ...listingResult(like, existing ? 200 : 201), delayMs: likeDelayMs };
       }
       if (method === 'DELETE') {
         return {
-          ...result({ advertId, deleted: liked.delete(advertId) }),
+          ...listingResult({ listingId, deleted: liked.delete(listingId) }),
           delayMs: likeDelayMs,
         };
       }

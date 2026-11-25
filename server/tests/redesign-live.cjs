@@ -70,7 +70,7 @@ async function run() {
       socket.on('message', listener);
     });
   try {
-    const tags = (await request('/api/adverts/tags')).data;
+    const tags = (await request('/api/listings/tags')).data;
     for (const name of [
       'Для некурящих',
       'Питомцы разрешены',
@@ -187,10 +187,10 @@ async function run() {
       tagIds: JSON.stringify(tags.slice(0, 2).map((tag) => tag.id)),
     };
     const before = await db.Advert.count({ where: { userId: a.id } });
-    await request('/api/adverts', 'POST', form(fields), a, 400);
+    await request('/api/listings', 'POST', form(fields), a, 400);
     const bad = form(fields);
     bad.append('files', new Blob(['broken'], { type: 'image/png' }), 'bad.png');
-    await request('/api/adverts', 'POST', bad, a, 400);
+    await request('/api/listings', 'POST', bad, a, 400);
     assert.equal(await db.Advert.count({ where: { userId: a.id } }), before);
     const publication = form(fields);
     for (const name of ['main.png', 'second.png'])
@@ -199,7 +199,7 @@ async function run() {
         new Blob([image], { type: 'image/png' }),
         name,
       );
-    const advert = (await request('/api/adverts', 'POST', publication, a, 201))
+    const advert = (await request('/api/listings', 'POST', publication, a, 201))
       .data;
     saved.adverts.push(advert.id);
     await fs.writeFile(
@@ -212,21 +212,21 @@ async function run() {
     assert.equal(advert.location.metro, null);
     assert.ok(advert.AdvertPhotos[0].photo.endsWith('photo-0.webp'));
     assert.deepEqual(
-      (await request(`/api/adverts/${advert.id}`)).data.AdvertPhotos,
+      (await request(`/api/listings/${advert.id}`)).data.AdvertPhotos,
       advert.AdvertPhotos,
     );
     assert.ok(
-      (await request('/api/adverts/mine', 'GET', undefined, a)).data.items.some(
+      (await request('/api/listings/mine', 'GET', undefined, a)).data.items.some(
         (item) => item.id === advert.id,
       ),
     );
     assert.equal(
-      (await request('/api/adverts/mine', 'GET', undefined, b)).data.total,
+      (await request('/api/listings/mine', 'GET', undefined, b)).data.total,
       0,
     );
     assert.ok(
       (
-        await request('/api/adverts/filters', 'POST', {
+        await request('/api/listings/filters', 'POST', {
           city: 'Казань',
           tags: tags.slice(0, 2),
         })
@@ -235,7 +235,7 @@ async function run() {
     await request(`/api/likes/${advert.id}`, 'POST', undefined, b, 201);
     await request(`/api/likes/${advert.id}`, 'POST', undefined, b);
     assert.ok(
-      (await request('/api/adverts/liked', 'GET', undefined, b)).data.some(
+      (await request('/api/listings/liked', 'GET', undefined, b)).data.some(
         (item) => item.advertId === advert.id,
       ),
     );

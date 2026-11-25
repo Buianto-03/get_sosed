@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@app/store/hooks';
-import { postAdvertThunk } from '@features/create-advert/thunks';
-import { geocodeAddress } from '@features/create-advert/model/geocode-address';
+import { postListingThunk } from '@features/create-listing/thunks';
+import { geocodeAddress } from '@features/create-listing/model/geocode-address';
 import { useTagCatalog } from '@entities/listing/model/use-tag-catalog';
 import { routes } from '@shared/config/routes';
 import { ListingCreatePage } from '../listing-create-page/ListingCreatePage';
@@ -19,10 +19,10 @@ export default function ListingCreateRoute(): JSX.Element {
         tagCatalog={catalog}
         onPublish={async (draft, photos) => {
           const coordinates = await geocodeAddress(draft.city, draft.address);
-          const advert = await dispatch(
-            postAdvertThunk(publicationData(draft, photos, coordinates)),
+          const listing = await dispatch(
+            postListingThunk(publicationData(draft, photos, coordinates)),
           ).unwrap();
-          navigate(routes.listingDetails(advert.id), { replace: true });
+          navigate(routes.listingDetails(listing.id), { replace: true });
         }}
       />
     </div>

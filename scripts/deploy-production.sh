@@ -90,7 +90,13 @@ compose=(docker compose --env-file "$production_dir/production.env" --file compo
 
 echo 'Проверяем API.'
 for attempt in {1..30}; do
-  if curl --fail --silent --show-error --max-time 5 --output /dev/null http://127.0.0.1:8082/api/adverts; then
+  listing_status="$(curl --silent --show-error --max-time 5 --output /dev/null \
+    --write-out '%{http_code}' http://127.0.0.1:8082/api/listings)" || listing_status=''
+  if [[ "$listing_status" == 2?? ]] || {
+    [[ "$listing_status" == 404 ]] &&
+      curl --fail --silent --show-error --max-time 5 --output /dev/null \
+        http://127.0.0.1:8082/api/adverts
+  }; then
     echo 'Деплой завершён, API отвечает.'
     exit 0
   fi

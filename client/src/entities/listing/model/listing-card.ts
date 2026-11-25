@@ -16,7 +16,7 @@ export function toListingCardData(listing: Listing, title: string): ListingCardD
   return {
     title,
     price: listing.price,
-    photos: (listing.AdvertPhotos ?? [])
+    photos: (listing.photos ?? [])
       .map((photo) => photo.photo)
       .filter((src): src is string => Boolean(src)),
     city: listing.location?.city ?? undefined,

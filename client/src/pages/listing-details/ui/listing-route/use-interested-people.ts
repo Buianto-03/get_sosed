@@ -24,7 +24,7 @@ export function useInterestedPeople(
 ): InterestedPeopleResult {
   const dispatch = useAppDispatch();
   const people = useAppSelector(
-    (state) => (state.likes.advertId === listingId ? state.likes.likes : []),
+    (state) => (state.likes.listingId === listingId ? state.likes.likes : []),
     shallowEqual,
   );
   const [status, setStatus] = useState(InterestedPeopleStatus.Loading);

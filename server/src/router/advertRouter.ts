@@ -28,6 +28,6 @@ advertRouter.route('/top').get(advertController.getTopAdvertsByLikes);
 
 advertRouter.route('/tags').get(advertController.getTagsBySearch);
 advertRouter.get('/mine', verifyAccessToken, advertController.getMine);
-advertRouter.route('/:advertId').get(advertController.getAdvertById);
+advertRouter.route('/:listingId').get(advertController.getAdvertById);
 
 export = advertRouter;

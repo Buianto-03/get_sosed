@@ -28,7 +28,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-app.use('/api/adverts', advertRouter);
+app.use('/api/listings', advertRouter);
 app.use('/api/users', userRouter);
 app.use('/api/tokens', tokensRouter);
 app.use('/api/auth', authRouter);

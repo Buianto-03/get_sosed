@@ -12,7 +12,7 @@ import likesReducer from '@entities/like/model/likesSlice';
 import authReducer, { setSession } from '@entities/session/model/authSlice';
 import { ProfileListingsSection } from './ProfileListingsSection';
 
-const advert: Listing = {
+const listing: Listing = {
   id: 1,
   title: 'Комната',
   price: 20000,
@@ -33,7 +33,7 @@ const props = {
   onOpenListing: vi.fn(),
 };
 const collection = {
-  items: [advert],
+  items: [listing],
   total: 1,
   loading: false,
   error: null,
@@ -48,7 +48,7 @@ async function prepareStore(): Promise<(props: PropsWithChildren) => JSX.Element
     setSession({ accessToken: 'token', user: { id: 1, name: 'User', email: 'a@b.c', roleId: 1 } }),
   );
   vi.spyOn(listingService, 'getLikedListings').mockResolvedValue([
-    { id: 2, advertId: advert.id, userId: 1, Advert: advert },
+    { id: 2, listingId: listing.id, userId: 1, listing },
   ]);
   await store.dispatch(getLikedListingsThunk()).unwrap();
 
@@ -125,7 +125,7 @@ it('shares pending and error states between matching cards in both collections',
   expect(favoriteSave).toBeDisabled();
   expect(mySave).toBeDisabled();
   expect(deleteLike).toHaveBeenCalledTimes(1);
-  expect(deleteLike).toHaveBeenCalledWith(advert.id);
+  expect(deleteLike).toHaveBeenCalledWith(listing.id);
   expect(await favorites.findByRole('alert')).toHaveTextContent('Не удалось удалить объявление');
   expect(mine.getByRole('alert')).toHaveTextContent('Не удалось удалить объявление');
   expect(favoriteSave).toBeEnabled();

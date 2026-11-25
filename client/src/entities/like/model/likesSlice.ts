@@ -6,7 +6,7 @@ const initialState: LikeSliceType = {
   likes: [],
   requests: {},
   readRequestId: null,
-  advertId: null,
+  listingId: null,
   userId: null,
 };
 
@@ -23,10 +23,10 @@ export const likesSlice = createSlice({
     builder
       .addCase(getLikesThunk.pending, (state, action) => {
         state.readRequestId = action.meta.requestId;
-        if (state.advertId !== action.meta.arg) {
+        if (state.listingId !== action.meta.arg) {
           state.likes = [];
         }
-        state.advertId = action.meta.arg;
+        state.listingId = action.meta.arg;
       })
       .addCase(getLikesThunk.fulfilled, (state, action) => {
         if (state.readRequestId !== action.meta.requestId) {
@@ -57,7 +57,7 @@ export const likesSlice = createSlice({
           return;
         }
         delete state.requests[action.meta.requestId];
-        if (state.advertId !== action.payload.advertId) {
+        if (state.listingId !== action.payload.listingId) {
           return;
         }
         if (!state.likes.some((like) => like.id === action.payload.id)) {
@@ -70,7 +70,7 @@ export const likesSlice = createSlice({
         }
         delete state.requests[action.meta.requestId];
         state.likes = state.likes.filter(
-          (like) => like.advertId !== action.payload.advertId || like.userId !== state.userId,
+          (like) => like.listingId !== action.payload.listingId || like.userId !== state.userId,
         );
       });
   },

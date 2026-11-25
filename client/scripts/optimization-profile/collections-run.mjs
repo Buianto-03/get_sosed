@@ -59,7 +59,7 @@ async function openRoute(page, server, route) {
     `Array.from(document.querySelectorAll('article button[aria-pressed]')).every(b => !b.disabled)`,
   );
   await page.wait(
-    `performance.getEntriesByType('resource').filter(r => new URL(r.name).pathname.startsWith('/api/adverts')).every(r => r.responseEnd > 0)`,
+    `performance.getEntriesByType('resource').filter(r => new URL(r.name).pathname.startsWith('/api/')).every(r => r.responseEnd > 0)`,
   );
 }
 function checkErrors(page, server) {
@@ -150,15 +150,15 @@ try {
               mobile: width < 500,
             });
             await openRoute(page, server, '/listings');
-            server.failNextRead('/api/adverts/filters/page');
+            server.failNextRead('/api/listings/filters/page');
             await page.evaluate(`${more}.focus(); ${more}.click()`);
             await page.wait(
               `document.querySelector('[role=alert]')?.textContent.includes('Не удалось загрузить следующие')`,
             );
             await page.wait(`document.activeElement?.textContent === 'Повторить загрузку'`);
             assert.equal(await page.evaluate(cards), 8);
-            assert.deepEqual(server.failures.splice(0), ['POST /api/adverts/filters/page 503']);
-            server.holdReads(['/api/adverts/filters/page']);
+            assert.deepEqual(server.failures.splice(0), ['POST /api/listings/filters/page 503']);
+            server.holdReads(['/api/listings/filters/page']);
             await page.evaluate(`document.activeElement.click()`);
             await page.wait(
               `Array.from(document.querySelectorAll('button')).some(b => b.textContent.includes('Загрузка') && b.disabled)`,

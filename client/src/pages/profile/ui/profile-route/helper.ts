@@ -1,6 +1,6 @@
 import type { Listing } from '@entities/listing/model';
 
-export interface MyAdvertsState {
+export interface MyListingsState {
   ownerId: number | null;
   items: Listing[];
   total: number;
@@ -12,7 +12,7 @@ export interface MyAdvertsState {
   loadMoreError: string;
 }
 
-export function initialMyAdverts(ownerId: number | null): MyAdvertsState {
+export function initialMyListings(ownerId: number | null): MyListingsState {
   return {
     ownerId,
     items: [],
@@ -26,6 +26,6 @@ export function initialMyAdverts(ownerId: number | null): MyAdvertsState {
   };
 }
 
-export function mergeAdverts(current: Listing[], incoming: Listing[]): Listing[] {
-  return [...new Map([...current, ...incoming].map((advert) => [advert.id, advert])).values()];
+export function mergeListings(current: Listing[], incoming: Listing[]): Listing[] {
+  return [...new Map([...current, ...incoming].map((listing) => [listing.id, listing])).values()];
 }

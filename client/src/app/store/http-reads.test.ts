@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 it.each([
-  ['adverts', (options: ReadOptions) => listingService.getListings(options)],
+  ['listings', (options: ReadOptions) => listingService.getListings(options)],
   [
     'search',
     (options: ReadOptions) =>
@@ -34,12 +34,12 @@ it.each([
   ],
   ['detail', (options: ReadOptions) => listingService.getListingById(7, options)],
   ['tags', (options: ReadOptions) => listingService.getTagsBySearch('', options)],
-  ['own adverts', (options: ReadOptions) => listingService.getMine(1, 12, options)],
-  ['saved adverts', (options: ReadOptions) => listingService.getLikedListings(options)],
-  ['top adverts', (options: ReadOptions) => listingService.getTopListings(options)],
+  ['own listings', (options: ReadOptions) => listingService.getMine(1, 12, options)],
+  ['saved listings', (options: ReadOptions) => listingService.getLikedListings(options)],
+  ['top listings', (options: ReadOptions) => listingService.getTopListings(options)],
   ['dialog list', (options: ReadOptions) => chatService.getChatList(1, options)],
   ['summary', (options: ReadOptions) => chatService.getSummary(2, options)],
-  ['interested people', (options: ReadOptions) => likeService.getLikesByAdvertId(7, options)],
+  ['interested people', (options: ReadOptions) => likeService.getLikesByListingId(7, options)],
 ] as const)('propagates cancellation to the Axios transport for %s', async (_, read) => {
   const controller = new AbortController();
   const adapter = vi.fn(

@@ -23,7 +23,7 @@ class AdvertController {
 
   getAdvertById = async (req: Request, res: Response) => {
     try {
-      const advertId = Number(req.params.advertId);
+      const advertId = Number(req.params.listingId);
       if (!Number.isSafeInteger(advertId) || advertId <= 0) {
         return res.status(404).json({ message: 'Advert not found' });
       }

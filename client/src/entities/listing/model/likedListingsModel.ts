@@ -3,9 +3,9 @@ import { listingSchema } from './listingModel';
 
 export const likedListingSchema = z.object({
   id: z.number(),
-  advertId: z.number(),
+  listingId: z.number(),
   userId: z.number(),
-  Advert: listingSchema,
+  listing: listingSchema,
 });
 export type LikedListing = z.infer<typeof likedListingSchema>;
 

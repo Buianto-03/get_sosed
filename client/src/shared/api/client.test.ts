@@ -14,7 +14,7 @@ describe('HTTP client authentication', () => {
     axiosInstance.defaults.adapter = async (config) => {
       const status = config.headers.Authorization === 'Bearer fresh' ? 400 : 403;
       const response = {
-        data: { code: 'INVALID_ADVERT_DATA' },
+        data: { code: 'INVALID_DATA' },
         status,
         statusText: 'Rejected',
         headers: {},
@@ -23,7 +23,7 @@ describe('HTTP client authentication', () => {
       throw new AxiosError('Rejected', 'ERR_BAD_REQUEST', config, undefined, response);
     };
     try {
-      await expect(axiosInstance.post('/adverts', new FormData())).rejects.toMatchObject({
+      await expect(axiosInstance.post('/listings', new FormData())).rejects.toMatchObject({
         response: { status: 400 },
       });
       expect(unauthorized).not.toHaveBeenCalled();

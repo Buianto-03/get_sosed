@@ -9,16 +9,16 @@ import {
 } from '@entities/listing/model/likedListingsSelectors';
 import { selectIsLoggedIn } from '@entities/session/model/authSelectors';
 import { routes } from '@shared/config/routes';
-import { removeSavedAdvertThunk, saveAdvertThunk } from '../model';
+import { removeSavedListingThunk, saveListingThunk } from '../model';
 
-interface SavedAdvertControls {
+interface SavedListingControls {
   saved: boolean;
   disabled: boolean;
   error: string | undefined;
-  toggle: (advert: Listing) => void;
+  toggle: (listing: Listing) => void;
 }
 
-export function useSavedAdvert(id: number): SavedAdvertControls {
+export function useSavedListing(id: number): SavedListingControls {
   const dispatch = useAppDispatch();
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
   const saved = useAppSelector((state) => selectIsSaved(state, id));
@@ -31,8 +31,8 @@ export function useSavedAdvert(id: number): SavedAdvertControls {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const toggle = (advert: Listing): void => {
-    if (advert.id !== id || disabled) {
+  const toggle = (listing: Listing): void => {
+    if (listing.id !== id || disabled) {
       return;
     }
     if (!isLoggedIn) {
@@ -41,9 +41,9 @@ export function useSavedAdvert(id: number): SavedAdvertControls {
       return;
     }
     const request = saved
-      ? dispatch(removeSavedAdvertThunk(id))
-      : dispatch(saveAdvertThunk(advert));
-    // Errors are recorded in the shared state beside the affected advert ID.
+      ? dispatch(removeSavedListingThunk(id))
+      : dispatch(saveListingThunk(listing));
+    // Errors are recorded in the shared state beside the affected listing ID.
     void request.unwrap().catch(() => undefined);
   };
 

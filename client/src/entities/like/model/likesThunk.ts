@@ -4,15 +4,15 @@ import type { LikeType } from './like';
 
 export const getLikesThunk = createAsyncThunk(
   'likes/getLikesThunk',
-  (id: LikeType['advertId'], { signal }) => likeService.getLikesByAdvertId(id, { signal }),
+  (id: LikeType['listingId'], { signal }) => likeService.getLikesByListingId(id, { signal }),
 );
 
 export const setLikeThunk = createAsyncThunk(
   'likes/setLikeThunk',
-  (advertId: LikeType['advertId']) => likeService.setLike(advertId),
+  (listingId: LikeType['listingId']) => likeService.setLike(listingId),
 );
 
 export const deleteLikeThunk = createAsyncThunk(
   'likes/deleteLikeThunk',
-  (advertId: LikeType['advertId']) => likeService.deleteLike(advertId),
+  (listingId: LikeType['listingId']) => likeService.deleteLike(listingId),
 );

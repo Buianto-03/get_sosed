@@ -104,7 +104,7 @@ test('POST returns the same like with 201 then 200, without exposing credentials
   const controller = load('../build/src/controllers/likeController.js', '../service/likeService', service);
   for (const code of [201, 200]) {
     const res = response();
-    await controller.setLike({ params: { advertId: '7' } }, res);
+    await controller.setLike({ params: { listingId: '7' } }, res);
     assert.equal(res.code, code);
     assert.deepEqual(res.body, row);
   }
@@ -123,7 +123,7 @@ test('DELETE scopes to current user and consistently returns advertId/deleted', 
   const controller = load('../build/src/controllers/likeController.js', '../service/likeService', service);
   for (const deleted of [true, false]) {
     const res = response();
-    await controller.deleteLike({ params: { advertId: '7' } }, res);
+    await controller.deleteLike({ params: { listingId: '7' } }, res);
     assert.equal(res.code, 200);
     assert.equal(JSON.stringify(res.body), JSON.stringify({ advertId: 7, deleted }));
   }
@@ -136,7 +136,7 @@ test('failed mutations return 500, never a successful deletion', async () => {
   });
   for (const method of ['setLike', 'deleteLike']) {
     const res = response();
-    await controller[method]({ params: { advertId: '7' } }, res);
+    await controller[method]({ params: { listingId: '7' } }, res);
     assert.equal(res.code, 500);
   }
 });

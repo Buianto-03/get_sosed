@@ -14,10 +14,10 @@ import {
 import likeService from '@entities/like/api/likeService';
 import likesReducer from '@entities/like/model/likesSlice';
 import authReducer, { setSession } from '@entities/session/model/authSlice';
-import { removeSavedAdvertThunk } from '@features/liked-adverts/model';
+import { removeSavedListingThunk } from '@features/liked-listings/model';
 import ListingRoute from './ListingRoute';
 
-const advert: Listing = {
+const listing: Listing = {
   id: 7,
   title: 'Комната',
   price: 20000,
@@ -45,26 +45,26 @@ it('keeps a listing focused on its own saved state and displays interested peopl
       likes: likesReducer,
     },
   });
-  const anotherAdvert = { ...advert, id: 8 };
+  const anotherListing = { ...listing, id: 8 };
   store.dispatch(
     setSession({ accessToken: 'token', user: { id: 1, name: 'User', email: 'a@b.c', roleId: 1 } }),
   );
   vi.spyOn(listingService, 'getLikedListings').mockResolvedValue([
-    { id: 15, advertId: advert.id, userId: 1, Advert: advert },
-    { id: 16, advertId: anotherAdvert.id, userId: 1, Advert: anotherAdvert },
+    { id: 15, listingId: listing.id, userId: 1, listing },
+    { id: 16, listingId: anotherListing.id, userId: 1, listing: anotherListing },
   ]);
   await store.dispatch(getLikedListingsThunk()).unwrap();
-  vi.spyOn(listingService, 'getListingById').mockResolvedValue(advert);
-  vi.spyOn(likeService, 'getLikesByAdvertId').mockResolvedValue([
+  vi.spyOn(listingService, 'getListingById').mockResolvedValue(listing);
+  vi.spyOn(likeService, 'getLikesByListingId').mockResolvedValue([
     {
       id: 17,
-      advertId: advert.id,
+      listingId: listing.id,
       userId: 3,
       User: { id: 3, name: 'Сосед', UserProfile: { photo: null, about: null, age: null } },
     },
   ]);
   vi.spyOn(likeService, 'deleteLike')
-    .mockResolvedValueOnce({ advertId: anotherAdvert.id, deleted: true })
+    .mockResolvedValueOnce({ listingId: anotherListing.id, deleted: true })
     .mockRejectedValue(new Error('offline'));
   const onRender = vi.fn();
   render(
@@ -87,7 +87,7 @@ it('keeps a listing focused on its own saved state and displays interested peopl
   const save = screen.getByRole('button', { name: 'В избранном' });
   onRender.mockClear();
   await act(async () => {
-    await store.dispatch(removeSavedAdvertThunk(anotherAdvert.id)).unwrap();
+    await store.dispatch(removeSavedListingThunk(anotherListing.id)).unwrap();
   });
   expect(onRender).not.toHaveBeenCalled();
   expect(save).toBeEnabled();

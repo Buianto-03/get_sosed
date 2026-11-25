@@ -8,7 +8,7 @@ import { parseArgs } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import { buildClient } from './profile-build.mjs';
 import { openChrome } from './chrome.mjs';
-import { serve } from './local-server.mjs';
+import { normalizeListingApiPath, serve } from './local-server.mjs';
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -100,11 +100,11 @@ try {
                 page
                   .network()
                   .requests.some(
-                    (r) => r.path === '/api/adverts/liked' && Number.isFinite(r.transfer),
+                    (r) => normalizeListingApiPath(r.path) === '/api/listings/liked' && Number.isFinite(r.transfer),
                   ),
               );
               if (scenario === 'in-flight-navigation') {
-                server.holdReads(['/api/adverts/tags']);
+                server.holdReads(['/api/listings/tags']);
               }
               await navigate(page, '/listings');
               if (scenario === 'navigation') {
@@ -140,21 +140,17 @@ try {
               await page.evaluate(
                 'new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))',
               );
-              await until(() =>
-                page
-                  .network()
-                  .requests.filter((r) => r.path.startsWith('/api/adverts/tags'))
-                  .every(
-                    (r) =>
-                      Number.isFinite(r.transfer) ||
-                      (scenario === 'in-flight-navigation' && variant === 'before' && !r.status),
-                  ),
+              const readTagRequests = () => page.network().requests.filter(
+                ({ path }) => normalizeListingApiPath(path).startsWith('/api/listings/tags'),
               );
-              const requests = page
-                .network()
-                .requests.filter((r) => r.path.startsWith('/api/adverts/tags'));
+              await until(() => readTagRequests().every(
+                (r) => Number.isFinite(r.transfer) ||
+                  (scenario === 'in-flight-navigation' && variant === 'before' && !r.status),
+              ));
+              const requests = readTagRequests();
+              const tagPaths = requests.map(({ path }) => path);
               const resources = await page.evaluate(`performance.getEntriesByType('resource')
-                .filter(r => new URL(r.name).pathname === '/api/adverts/tags')
+                .filter(r => ${JSON.stringify(tagPaths)}.includes(new URL(r.name).pathname + new URL(r.name).search))
                 .map(r => ({ encoded: r.encodedBodySize, decoded: r.decodedBodySize, transfer: r.transferSize }))`);
               const expected = variant === 'before' ? (scenario === 'navigation' ? 3 : 2) : 1;
               assert.equal(requests.length, expected);

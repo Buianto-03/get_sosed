@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { Link, MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
-import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
+import ListingRoute from '@pages/listing-details/ui/listing-route/ListingRoute';
 import ProfileRoute from '@pages/profile/ui/profile-route/ProfileRoute';
 import ProfileEditRoute from '@pages/profile/ui/profile-edit-route/ProfileEditRoute';
 import MessagesRoute from '@pages/chat/ui/messages-route/MessagesRoute';
@@ -41,7 +41,7 @@ const user = {
     phoneNumber: '+70000000000',
   },
 };
-const advert = listingSchema.parse({
+const listing = listingSchema.parse({
   id: 42,
   title: 'Квартира',
   body: 'Реальное описание',
@@ -50,7 +50,7 @@ const advert = listingSchema.parse({
   user: { id: 2, name: 'Михаил', email: 'm@example.com' },
   location: {
     id: 1,
-    advertId: 42,
+    listingId: 42,
     city: 'Казань',
     district: null,
     address: 'Улица, 1',
@@ -62,7 +62,7 @@ const advert = listingSchema.parse({
   floor: 3,
   createdAt: '2026-10-18T00:00:00Z',
   updatedAt: '',
-  AdvertPhotos: [],
+  photos: [],
   tags: [],
 });
 function Location(): JSX.Element {
@@ -110,7 +110,7 @@ beforeEach(() => {
     { id: 3, name: 'Тихие вечера' },
     { id: 4, name: 'С рабочим местом' },
   ]);
-  vi.spyOn(likeService, 'getLikesByAdvertId').mockResolvedValue([]);
+  vi.spyOn(likeService, 'getLikesByListingId').mockResolvedValue([]);
 });
 afterEach(() => {
   cleanup();
@@ -137,7 +137,7 @@ function HistoryNavigation(): JSX.Element {
 
 it('loads search pages on demand, retains cards on failure and retries the same page without duplicates', async () => {
   const first = Array.from({ length: 8 }, (_, index) => ({
-    ...advert,
+    ...listing,
     id: 100 + index,
     title: `Результат ${index + 1}`,
   }));
@@ -148,8 +148,8 @@ it('loads search pages on demand, retains cards on failure and retries the same 
     .mockResolvedValueOnce({
       items: [
         first[7],
-        { ...advert, id: 108, title: 'Результат 9' },
-        { ...advert, id: 109, title: 'Результат 10' },
+        { ...listing, id: 108, title: 'Результат 9' },
+        { ...listing, id: 109, title: 'Результат 10' },
       ],
       total: 10,
       page: 2,
@@ -188,7 +188,7 @@ it('starts at page one with the URL filters on Back and Forward', async () => {
   const get = vi
     .spyOn(listingService, 'getFilteredListingsPage')
     .mockImplementation((filters, page = 1) =>
-      Promise.resolve({ items: [{ ...advert, title: filters.city }], total: 1, page, limit: 8 }),
+      Promise.resolve({ items: [{ ...listing, title: filters.city }], total: 1, page, limit: 8 }),
     );
   open(
     '/listings?city=Казань&tags=99',
@@ -218,12 +218,12 @@ it('starts at page one with the URL filters on Back and Forward', async () => {
 
 it('loads search from the URL only, keeps unknown tags and returns from details to the complete filter query', async () => {
   const get = vi.spyOn(listingService, 'getFilteredListingsPage').mockResolvedValue({
-    items: [advert],
+    items: [listing],
     total: 1,
     page: 1,
     limit: 8,
   });
-  vi.spyOn(listingService, 'getListingById').mockResolvedValue(advert);
+  vi.spyOn(listingService, 'getListingById').mockResolvedValue(listing);
   open('/listings?city=Казань&priceFrom=10&roomsTo=4&tags=99');
   expect(await screen.findByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
   expect(get.mock.calls[0][0]).toMatchObject({
@@ -249,7 +249,7 @@ it('does not request invalid IDs and offers retry for failed detail reads', asyn
   const get = vi
     .spyOn(listingService, 'getListingById')
     .mockRejectedValueOnce(new Error('offline'))
-    .mockResolvedValue(advert);
+    .mockResolvedValue(listing);
   const invalid = open('/listings/invalid');
   expect(screen.getByRole('heading', { name: 'Объявление не найдено' })).toBeInTheDocument();
   expect(get).not.toHaveBeenCalled();
@@ -261,10 +261,10 @@ it('does not request invalid IDs and offers retry for failed detail reads', asyn
 });
 
 it('retries interested people without reloading the listing', async () => {
-  const listing = vi.spyOn(listingService, 'getListingById').mockResolvedValue(advert);
-  const interested = vi.spyOn(likeService, 'getLikesByAdvertId')
+  const listingRequest = vi.spyOn(listingService, 'getListingById').mockResolvedValue(listing);
+  const interested = vi.spyOn(likeService, 'getLikesByListingId')
     .mockRejectedValueOnce(new Error('offline'))
-    .mockResolvedValueOnce([{ id: 1, userId: 3, advertId: advert.id }]);
+    .mockResolvedValueOnce([{ id: 1, userId: 3, listingId: listing.id }]);
   open('/listings/42');
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить заинтересованных');
@@ -273,14 +273,14 @@ it('retries interested people without reloading the listing', async () => {
 
   expect(await screen.findByText('Пользователь')).toBeInTheDocument();
   expect(interested).toHaveBeenCalledTimes(2);
-  expect(listing).toHaveBeenCalledOnce();
+  expect(listingRequest).toHaveBeenCalledOnce();
 });
 
 it('shows own-list errors independently from empty favorites and retries the profile collection', async () => {
   login();
   vi.spyOn(listingService, 'getMine')
     .mockRejectedValueOnce(new Error('offline'))
-    .mockResolvedValue({ items: [advert], total: 1, page: 1, limit: 12 });
+    .mockResolvedValue({ items: [listing], total: 1, page: 1, limit: 12 });
   open('/profile');
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'Не удалось загрузить ваши объявления',
@@ -291,17 +291,17 @@ it('shows own-list errors independently from empty favorites and retries the pro
   expect(await screen.findByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
 });
 
-it('loads more own adverts without duplicate requests or cards and retains the first page after an error', async () => {
+it('loads more own listings without duplicate requests or cards and retains the first page after an error', async () => {
   login();
   const first = Array.from({ length: 12 }, (_, index) => ({
-    ...advert,
+    ...listing,
     id: 100 + index,
     title: `Моё объявление ${index + 1}`,
   }));
   const second = [
     first[11],
-    { ...advert, id: 112, title: 'Моё объявление 13' },
-    { ...advert, id: 113, title: 'Моё объявление 14' },
+    { ...listing, id: 112, title: 'Моё объявление 13' },
+    { ...listing, id: 113, title: 'Моё объявление 14' },
   ];
   const get = vi
     .spyOn(listingService, 'getMine')
@@ -330,7 +330,7 @@ it('loads more own adverts without duplicate requests or cards and retains the f
 it('ignores a late next-page response after the profile owner changes', async () => {
   login();
   const first = Array.from({ length: 12 }, (_, index) => ({
-    ...advert,
+    ...listing,
     id: 100 + index,
     title: `Старое объявление ${index + 1}`,
   }));
@@ -343,7 +343,7 @@ it('ignores a late next-page response after the profile owner changes', async ()
     .mockResolvedValueOnce({ items: first, total: 13, page: 1, limit: 12 })
     .mockReturnValueOnce(pending)
     .mockResolvedValueOnce({
-      items: [{ ...advert, id: 901, title: 'Объявление нового пользователя' }],
+      items: [{ ...listing, id: 901, title: 'Объявление нового пользователя' }],
       total: 1,
       page: 1,
       limit: 12,
@@ -360,7 +360,7 @@ it('ignores a late next-page response after the profile owner changes', async ()
   expect(screen.queryByRole('heading', { name: 'Старое объявление 1' })).not.toBeInTheDocument();
   await act(async () => {
     resolveNext({
-      items: [{ ...advert, id: 113, title: 'Позднее объявление' }],
+      items: [{ ...listing, id: 113, title: 'Позднее объявление' }],
       total: 13,
       page: 2,
       limit: 12,
@@ -464,14 +464,14 @@ it('changes listing context without reopening the dialog or refetching the summa
   const list = vi.spyOn(chatService, 'getChatList').mockResolvedValue([]);
   const summary = vi.spyOn(chatService, 'getSummary').mockResolvedValue({ id: 2, name: 'Михаил' });
   const enter = connectChat();
-  let resolveAdvert!: (value: typeof advert) => void;
-  const pending = new Promise<typeof advert>((resolve) => {
-    resolveAdvert = resolve;
+  let resolveListing!: (value: typeof listing) => void;
+  const pending = new Promise<typeof listing>((resolve) => {
+    resolveListing = resolve;
   });
-  const readAdvert = vi
+  const readListing = vi
     .spyOn(listingService, 'getListingById')
     .mockReturnValueOnce(pending)
-    .mockResolvedValueOnce({ ...advert, id: 43, title: 'Действующее объявление' });
+    .mockResolvedValueOnce({ ...listing, id: 43, title: 'Действующее объявление' });
 
   const view = open(
     '/messages/2?listingId=42',
@@ -490,7 +490,7 @@ it('changes listing context without reopening the dialog or refetching the summa
   const thread = within(screen.getByRole('region', { name: 'Переписка' }));
   expect(await thread.findByRole('button', { name: /Действующее объявление/ })).toBeInTheDocument();
   await act(async () => {
-    resolveAdvert({ ...advert, title: 'Устаревшее объявление' });
+    resolveListing({ ...listing, title: 'Устаревшее объявление' });
     await pending;
   });
   expect(thread.queryByText('Устаревшее объявление')).not.toBeInTheDocument();
@@ -507,12 +507,12 @@ it('changes listing context without reopening the dialog or refetching the summa
   expect(enter).toHaveBeenCalledTimes(3);
   expect(enter.mock.calls[2][0].beforeId).toBe(15);
   expect(summary).toHaveBeenCalledTimes(1);
-  expect(readAdvert.mock.calls.map(([id]) => id)).toEqual([42, 43]);
-  expect(readAdvert.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  expect(readListing.mock.calls.map(([id]) => id)).toEqual([42, 43]);
+  expect(readListing.mock.calls[0][1]?.signal?.aborted).toBe(true);
   expect(input).toHaveValue('Черновик');
   view.unmount();
   expect(summary.mock.calls[0][1]?.signal?.aborted).toBe(true);
-  expect(readAdvert.mock.calls[1][1]?.signal?.aborted).toBe(true);
+  expect(readListing.mock.calls[1][1]?.signal?.aborted).toBe(true);
   expect(list.mock.calls[0][1]?.signal?.aborted).toBe(true);
 });
 

@@ -2,6 +2,7 @@ import { CanceledError } from 'axios';
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { afterEach, expect, it, vi } from 'vitest';
 import axiosInstance from '@shared/api/client';
+import { listingWireFieldNames } from '@shared/api/listing-wire';
 import { listingService } from './listingService';
 
 const originalAdapter = axiosInstance.defaults.adapter;
@@ -22,8 +23,8 @@ const filters = {
   tags: [],
 };
 
-const advertPage = { items: [], total: 0, page: 1, limit: 8 };
-const advert = {
+const listingPage = { items: [], total: 0, page: 1, limit: 8 };
+const listing = {
   id: 1,
   title: null,
   body: null,
@@ -37,18 +38,18 @@ const advert = {
   user: null,
   location: null,
   tags: [],
-  AdvertPhotos: [],
+  photos: [],
 };
 
-it('requests default and explicit own-advert pages and parses pagination metadata', async () => {
+it('requests default and explicit own-listing pages and parses pagination metadata', async () => {
   const get = vi
     .spyOn(axiosInstance, 'get')
     .mockResolvedValueOnce({ data: { items: [], total: 0, page: 1, limit: 12 } })
     .mockResolvedValueOnce({ data: { items: [], total: 5, page: 2, limit: 5 } });
   expect(await listingService.getMine()).toEqual({ items: [], total: 0, page: 1, limit: 12 });
-  expect(get).toHaveBeenNthCalledWith(1, '/adverts/mine', { params: { page: 1, limit: 12 } });
+  expect(get).toHaveBeenNthCalledWith(1, '/listings/mine', { params: { page: 1, limit: 12 } });
   expect(await listingService.getMine(2, 5)).toEqual({ items: [], total: 5, page: 2, limit: 5 });
-  expect(get).toHaveBeenNthCalledWith(2, '/adverts/mine', { params: { page: 2, limit: 5 } });
+  expect(get).toHaveBeenNthCalledWith(2, '/listings/mine', { params: { page: 2, limit: 5 } });
 });
 
 it.each([
@@ -64,52 +65,77 @@ it.each([
 it('requests filtered pages with default and explicit pagination and preserves filters', async () => {
   const post = vi
     .spyOn(axiosInstance, 'post')
-    .mockResolvedValueOnce({ data: advertPage })
-    .mockResolvedValueOnce({ data: { ...advertPage, page: 3, limit: 4 } });
+    .mockResolvedValueOnce({ data: listingPage })
+    .mockResolvedValueOnce({ data: { ...listingPage, page: 3, limit: 4 } });
 
-  expect(await listingService.getFilteredListingsPage(filters)).toEqual(advertPage);
-  expect(post).toHaveBeenNthCalledWith(1, '/adverts/filters/page', filters, {
+  expect(await listingService.getFilteredListingsPage(filters)).toEqual(listingPage);
+  expect(post).toHaveBeenNthCalledWith(1, '/listings/filters/page', filters, {
     params: { page: 1, limit: 8 },
   });
   expect(await listingService.getFilteredListingsPage(filters, 3, 4)).toEqual({
-    ...advertPage,
+    ...listingPage,
     page: 3,
     limit: 4,
   });
-  expect(post).toHaveBeenNthCalledWith(2, '/adverts/filters/page', filters, {
+  expect(post).toHaveBeenNthCalledWith(2, '/listings/filters/page', filters, {
     params: { page: 3, limit: 4 },
   });
 });
 
 it.each([
   [],
-  { ...advertPage, extra: true },
-  { ...advertPage, items: 'invalid' },
-  { ...advertPage, total: -1 },
-  { ...advertPage, total: Number.MAX_SAFE_INTEGER + 1 },
-  { ...advertPage, page: 0 },
-  { ...advertPage, page: Number.MAX_SAFE_INTEGER + 1 },
-  { ...advertPage, limit: 51 },
-  { ...advertPage, items: Array.from({ length: 9 }, () => advert) },
-  { ...advertPage, items: [{ ...advert, tags: undefined }] },
+  { ...listingPage, extra: true },
+  { ...listingPage, items: 'invalid' },
+  { ...listingPage, total: -1 },
+  { ...listingPage, total: Number.MAX_SAFE_INTEGER + 1 },
+  { ...listingPage, page: 0 },
+  { ...listingPage, page: Number.MAX_SAFE_INTEGER + 1 },
+  { ...listingPage, limit: 51 },
+  { ...listingPage, items: Array.from({ length: 9 }, () => listing) },
+  { ...listingPage, items: [{ ...listing, tags: undefined }] },
 ])('rejects malformed filtered page response %#', async (data) => {
   vi.spyOn(axiosInstance, 'post').mockResolvedValueOnce({ data });
   await expect(listingService.getFilteredListingsPage(filters)).rejects.toThrow();
 });
 
-it('requests fresh adverts with default and explicit limits and accepts only an array', async () => {
+it('requests fresh listings with default and explicit limits and accepts only an array', async () => {
   const get = vi
     .spyOn(axiosInstance, 'get')
     .mockResolvedValueOnce({ data: [] })
     .mockResolvedValueOnce({ data: [] });
 
   expect(await listingService.getFreshListings()).toEqual([]);
-  expect(get).toHaveBeenNthCalledWith(1, '/adverts/fresh', { params: { limit: 3 } });
+  expect(get).toHaveBeenNthCalledWith(1, '/listings/fresh', { params: { limit: 3 } });
   expect(await listingService.getFreshListings(2)).toEqual([]);
-  expect(get).toHaveBeenNthCalledWith(2, '/adverts/fresh', { params: { limit: 2 } });
+  expect(get).toHaveBeenNthCalledWith(2, '/listings/fresh', { params: { limit: 2 } });
 
   vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({ data: { items: [] } });
   await expect(listingService.getFreshListings()).rejects.toThrow();
+});
+
+it('normalizes the existing listing response fields before exposing a listing', async () => {
+  vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({
+    data: {
+      ...listing,
+      location: {
+        id: 1,
+        [listingWireFieldNames.listingId]: listing.id,
+        city: null,
+        district: null,
+        address: null,
+        metro: null,
+        coordinates: null,
+      },
+      [listingWireFieldNames.listingPhotos]: [
+        { id: 2, [listingWireFieldNames.listingId]: listing.id, photo: null },
+      ],
+    },
+  });
+
+  await expect(listingService.getListingById(listing.id)).resolves.toMatchObject({
+    location: { listingId: listing.id },
+    photos: [{ id: 2, listingId: listing.id }],
+  });
 });
 
 it.each([

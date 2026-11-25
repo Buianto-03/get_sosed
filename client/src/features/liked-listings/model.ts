@@ -15,14 +15,14 @@ import { deleteLikeThunk, setLikeThunk } from '@entities/like/model/likesThunk';
 const canMutate = (state: SavedState, id: number): boolean =>
   state.status === SavedStatus.Ready && !state.pending[id];
 
-export const saveAdvertThunk = createAsyncThunk<LikedListing, Listing, { state: SavedRoot }>(
+export const saveListingThunk = createAsyncThunk<LikedListing, Listing, { state: SavedRoot }>(
   'likedListings/save',
   async (listing, { dispatch, requestId }) => {
     const request = { listingId: listing.id, requestId };
     dispatch(savedMutationStarted(request));
     try {
       const like = await dispatch(setLikeThunk(listing.id)).unwrap();
-      const item = { ...like, Advert: listing };
+      const item = { ...like, listing };
       dispatch(savedListingConfirmed({ ...request, item }));
       return item;
     } catch (error) {
@@ -33,18 +33,18 @@ export const saveAdvertThunk = createAsyncThunk<LikedListing, Listing, { state: 
   { condition: (listing, { getState }) => canMutate(getState().likedListings, listing.id) },
 );
 
-export const removeSavedAdvertThunk = createAsyncThunk<number, number, { state: SavedRoot }>(
+export const removeSavedListingThunk = createAsyncThunk<number, number, { state: SavedRoot }>(
   'likedListings/remove',
   async (listingId, { dispatch, requestId }) => {
     const request = { listingId, requestId };
     dispatch(savedMutationStarted(request));
     try {
       const result = await dispatch(deleteLikeThunk(listingId)).unwrap();
-      if (result.advertId !== listingId) {
+      if (result.listingId !== listingId) {
         throw new Error('Unexpected listing ID');
       }
       dispatch(savedRemovalConfirmed(request));
-      return result.advertId;
+      return result.listingId;
     } catch (error) {
       dispatch(savedMutationFailed({ ...request, error: 'Не удалось удалить объявление из избранного.' }));
       throw error;

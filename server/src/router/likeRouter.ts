@@ -5,7 +5,7 @@ import likeController = require('../controllers/likeController');
 const router = Router();
 
 router
-  .route('/:advertId')
+  .route('/:listingId')
   .get(likeController.getLikes)
   .post(verifyAccessToken, likeController.setLike)
   .delete(verifyAccessToken, likeController.deleteLike);

@@ -139,12 +139,12 @@ test('details return 200, 404 for absent/invalid IDs, and 500 on rejected reads'
   });
   for (const [id, status] of [['1', 200], ['2', 404], ['abc', 404], ['0', 404]]) {
     const res = response();
-    await controller.getAdvertById({ params: { advertId: id } }, res);
+    await controller.getAdvertById({ params: { listingId: id } }, res);
     assert.equal(res.code, status);
   }
   service.getAdvertById = async () => { throw new Error('database unavailable'); };
   const res = response();
-  await controller.getAdvertById({ params: { advertId: '1' } }, res);
+  await controller.getAdvertById({ params: { listingId: '1' } }, res);
   assert.equal(res.code, 500);
   service.getAdverts = async () => { throw new Error('database unavailable'); };
   await controller.getAdverts({}, res);

@@ -4,7 +4,7 @@ import listingReducer from './listingSlice';
 import { getFilteredListingsThunk, getListingByIdThunk } from './listingThunk';
 
 describe('listingSlice', () => {
-  it('ignores older filtered advert responses', () => {
+  it('ignores older filtered listing responses', () => {
     const request: ListingSearchRequest = {
       searchKey: '',
       page: 1,

@@ -5,8 +5,8 @@ import { Provider } from 'react-redux';
 import { afterEach, expect, it, vi } from 'vitest';
 import { listingReducer, type ListingPage, type ListingState } from '@entities/listing/model';
 import { listingService } from '@entities/listing/api/listingService';
-import { readFilters } from '@features/advert-filter/model/filters';
-import { useSearchAdverts } from './use-search-adverts';
+import { readFilters } from '@features/listing-filter/model/filters';
+import { useSearchListings } from './use-search-listings';
 
 interface WrapperProps {
   children: ReactNode;
@@ -54,7 +54,7 @@ it('cancels a pending next page on URL change and unmount, keeping the new query
       }),
     );
   const { result, rerender, unmount } = renderHook(
-    ({ filters, searchKey }) => useSearchAdverts(filters, searchKey),
+    ({ filters, searchKey }) => useSearchListings(filters, searchKey),
     { initialProps: initial, wrapper },
   );
   await waitFor(() => expect(result.current.loading).toBe(false));
@@ -88,7 +88,7 @@ it('retries the same first page and filters after failure, including unknown tag
     .mockResolvedValueOnce(empty);
   const filters = readFilters(new URLSearchParams('city=Казань&tags=99&priceFrom=10'));
   const { result } = renderHook(
-    () => useSearchAdverts(filters, 'city=Казань&tags=99&priceFrom=10'),
+    () => useSearchListings(filters, 'city=Казань&tags=99&priceFrom=10'),
     { wrapper },
   );
   await waitFor(() => expect(result.current.error).toBeTruthy());
@@ -124,7 +124,7 @@ it('survives StrictMode cleanup and starts a live replacement first-page request
       }),
     )
     .mockResolvedValueOnce(empty);
-  const { result } = renderHook(() => useSearchAdverts(initial.filters, ''), { wrapper });
+  const { result } = renderHook(() => useSearchListings(initial.filters, ''), { wrapper });
   await waitFor(() => expect(result.current.loading).toBe(false));
   expect(get).toHaveBeenCalledTimes(2);
   expect(get.mock.calls[0][3]?.signal?.aborted).toBe(true);

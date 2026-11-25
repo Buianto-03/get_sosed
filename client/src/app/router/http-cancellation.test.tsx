@@ -4,14 +4,14 @@ import { Provider } from 'react-redux';
 import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import SearchRoute from '@pages/search/ui/search-route/SearchRoute';
-import ListingRoute from '@pages/advert-details/ui/listing-route/ListingRoute';
+import ListingRoute from '@pages/listing-details/ui/listing-route/ListingRoute';
 import { listingService } from '@entities/listing/api/listingService';
 import type { ListingPage, Listing } from '@entities/listing/model';
 import likeService from '@entities/like/api/likeService';
 import { clearAuth } from '@entities/session/model/authSlice';
 import { store } from '../store/store';
 
-const advert: Listing = {
+const listing: Listing = {
   id: 7,
   title: 'Актуальная комната',
   body: 'Описание',
@@ -57,7 +57,7 @@ beforeEach(() => {
     { id: 3, name: 'Тихие вечера' },
     { id: 4, name: 'С рабочим местом' },
   ]);
-  vi.spyOn(likeService, 'getLikesByAdvertId').mockResolvedValue([]);
+  vi.spyOn(likeService, 'getLikesByListingId').mockResolvedValue([]);
 });
 afterEach(() => {
   cleanup();
@@ -83,14 +83,14 @@ it('aborts superseded search requests and keeps the latest result after late res
   expect(get.mock.calls[1][3]?.signal?.aborted).toBe(true);
   expect(get.mock.calls[2][3]?.signal?.aborted).toBe(false);
   await act(async () => {
-    latest.resolve({ items: [advert], total: 1, page: 1, limit: 8 });
+    latest.resolve({ items: [listing], total: 1, page: 1, limit: 8 });
   });
-  expect(await screen.findByRole('heading', { name: advert.title ?? '' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: listing.title ?? '' })).toBeInTheDocument();
   await act(async () => {
     first.resolve({ items: [], total: 0, page: 1, limit: 8 });
     second.resolve({ items: [], total: 0, page: 1, limit: 8 });
   });
-  expect(screen.getByRole('heading', { name: advert.title ?? '' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: listing.title ?? '' })).toBeInTheDocument();
   expect(store.getState().listing.search.error).toBeNull();
   view.unmount();
   // Completed requests are released by the route; only in-flight work needs abort.
@@ -104,7 +104,7 @@ it('aborts detail and interested-people reads when the ID changes and the page u
     .spyOn(listingService, 'getListingById')
     .mockReturnValueOnce(first.promise)
     .mockReturnValueOnce(latest.promise);
-  const likes = vi.spyOn(likeService, 'getLikesByAdvertId').mockImplementation(
+  const likes = vi.spyOn(likeService, 'getLikesByListingId').mockImplementation(
     () =>
       new Promise(() => {
         /* Pending until its owner cancels. */
@@ -116,11 +116,11 @@ it('aborts detail and interested-people reads when the ID changes and the page u
   expect(get.mock.calls[0][1]?.signal?.aborted).toBe(true);
   expect(likes.mock.calls[0][1]?.signal?.aborted).toBe(true);
   await act(async () => {
-    latest.resolve({ ...advert, id: 8 });
+    latest.resolve({ ...listing, id: 8 });
   });
-  expect(await screen.findByRole('heading', { name: advert.title ?? '' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: listing.title ?? '' })).toBeInTheDocument();
   await act(async () => {
-    first.resolve({ ...advert, title: 'Старое объявление' });
+    first.resolve({ ...listing, title: 'Старое объявление' });
   });
   expect(screen.queryByRole('heading', { name: 'Старое объявление' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('link', { name: 'Уйти' }));

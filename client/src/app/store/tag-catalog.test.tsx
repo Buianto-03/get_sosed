@@ -4,8 +4,8 @@ import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { SearchFilters, emptySearchFilters } from '@features/advert-filter/ui/SearchFilters';
-import type { SearchFilterValues } from '@features/advert-filter/model/searchFilterValues';
+import { SearchFilters, emptySearchFilters } from '@features/listing-filter/ui/SearchFilters';
+import type { SearchFilterValues } from '@features/listing-filter/model/searchFilterValues';
 import { ListingCreatePage } from '@pages/listing-create/ui/listing-create-page/ListingCreatePage';
 import { listingService } from '@entities/listing/api/listingService';
 import {

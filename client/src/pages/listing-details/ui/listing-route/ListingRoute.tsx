@@ -10,8 +10,8 @@ import {
   selectListingState,
 } from '@entities/listing/model';
 import { UserStatus } from '@entities/session/model/authModel';
-import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
-import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
+import { useSavedListing } from '@features/liked-listings/model/use-saved-listing';
+import { useSavedCollectionStatus } from '@features/liked-listings/model/use-saved-collection-status';
 import { Button } from '@shared/ui/button/Button';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Spinner } from '@shared/ui/feedback/Spinner';
@@ -32,7 +32,7 @@ export default function ListingRoute(): JSX.Element {
   const location = useLocation();
   const data = useAppSelector(selectListingState);
   const user = useAppSelector((state) => state.auth.user);
-  const saved = useSavedAdvert(id);
+  const saved = useSavedListing(id);
   const savedCollection = useSavedCollectionStatus();
   const [attempt, setAttempt] = useState(0);
   const ownerId = user.status === UserStatus.Logged ? user.id : null;
@@ -64,12 +64,12 @@ export default function ListingRoute(): JSX.Element {
       </main>
     );
   }
-  const advert = data.chosenListing;
-  if (!advert || advert.id !== id || data.detailStatus !== ListingDetailStatus.Ready) {
+  const listing = data.chosenListing;
+  if (!listing || listing.id !== id || data.detailStatus !== ListingDetailStatus.Ready) {
     return <Spinner label="Загрузка объявления" />;
   }
-  const authorId = advert.userId;
-  const details = toListingDetails(advert);
+  const authorId = listing.userId;
+  const details = toListingDetails(listing);
 
   return (
     <main className={styles.listing__page}>
@@ -94,12 +94,12 @@ export default function ListingRoute(): JSX.Element {
             message(authorId, true);
           }
         }}
-        onSavedChange={() => saved.toggle(advert)}
+        onSavedChange={() => saved.toggle(listing)}
         information={details.information}
         contact={details.contact}
         map={
-          advert.location?.coordinates ? (
-            <YMap location={advert.location.coordinates} />
+          listing.location?.coordinates ? (
+            <YMap location={listing.location.coordinates} />
           ) : (
             <p>Координаты не указаны</p>
           )

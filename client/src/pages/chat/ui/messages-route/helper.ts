@@ -55,11 +55,11 @@ export function buildConversationRows(
   return items;
 }
 
-export function toListingContext(advert: Listing): ChatListingContext {
+export function toListingContext(listing: Listing): ChatListingContext {
   return {
-    id: String(advert.id),
-    title: advert.title || 'Объявление',
-    price: advert.price,
-    imageUrl: advert.AdvertPhotos?.find((photo) => photo.photo)?.photo,
+    id: String(listing.id),
+    title: listing.title || 'Объявление',
+    price: listing.price,
+    imageUrl: listing.photos?.find((photo) => photo.photo)?.photo,
   };
 }

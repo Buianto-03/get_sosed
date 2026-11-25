@@ -17,7 +17,7 @@ const filters = {
   roomsTo: 0,
   tags: [],
 };
-const advert: Listing = {
+const listing: Listing = {
   id: 7,
   title: 'Комната',
   body: null,
@@ -40,7 +40,7 @@ it('aborts search transport and retains confirmed results without an error', asy
   const store = configureStore({ reducer: { listing: listingReducer } });
   const get = vi
     .spyOn(listingService, 'getFilteredListingsPage')
-    .mockResolvedValueOnce({ items: [advert], total: 9, page: 1, limit: 8 })
+    .mockResolvedValueOnce({ items: [listing], total: 9, page: 1, limit: 8 })
     .mockImplementationOnce(
       () =>
         new Promise(() => {
@@ -56,7 +56,7 @@ it('aborts search transport and retains confirmed results without an error', asy
   expect((await request).meta.requestStatus).toBe('rejected');
   expect(signal?.aborted).toBe(true);
   expect(store.getState().listing.search).toMatchObject({
-    items: [advert],
+    items: [listing],
     loading: false,
     loadingMore: false,
     loadMoreError: null,
@@ -71,13 +71,13 @@ it('blocks parallel pages, keeps cards on error and retries the same page', asyn
   let rejectNext!: (error: Error) => void;
   const get = vi
     .spyOn(listingService, 'getFilteredListingsPage')
-    .mockResolvedValueOnce({ items: [advert], total: 9, page: 1, limit: 8 })
+    .mockResolvedValueOnce({ items: [listing], total: 9, page: 1, limit: 8 })
     .mockReturnValueOnce(
       new Promise((_, reject) => {
         rejectNext = reject;
       }),
     )
-    .mockResolvedValueOnce({ items: [{ ...advert, id: 8 }], total: 9, page: 2, limit: 8 });
+    .mockResolvedValueOnce({ items: [{ ...listing, id: 8 }], total: 9, page: 2, limit: 8 });
   const first = { filters, searchKey: '', page: 1, limit: 8 };
   const next = { ...first, page: 2 };
   await store.dispatch(getFilteredListingsThunk(first));
@@ -85,7 +85,7 @@ it('blocks parallel pages, keeps cards on error and retries the same page', asyn
   await store.dispatch(getFilteredListingsThunk(next));
   expect(get).toHaveBeenCalledTimes(2);
   expect(store.getState().listing.search).toMatchObject({
-    items: [advert],
+    items: [listing],
     loading: false,
     loadingMore: true,
     page: 1,
@@ -94,7 +94,7 @@ it('blocks parallel pages, keeps cards on error and retries the same page', asyn
   rejectNext(new Error('offline'));
   await pending;
   expect(store.getState().listing.search).toMatchObject({
-    items: [advert],
+    items: [listing],
     page: 1,
     error: null,
     loadingMore: false,
@@ -108,12 +108,12 @@ it('blocks parallel pages, keeps cards on error and retries the same page', asyn
 
 it('advances duplicate-only pages by server metadata and stops at the final page', async () => {
   const store = configureStore({ reducer: { listing: listingReducer } });
-  const items = [advert, { ...advert, id: 8 }];
+  const items = [listing, { ...listing, id: 8 }];
   const get = vi
     .spyOn(listingService, 'getFilteredListingsPage')
     .mockResolvedValueOnce({ items, total: 5, page: 1, limit: 2 })
     .mockResolvedValueOnce({ items, total: 5, page: 2, limit: 2 })
-    .mockResolvedValueOnce({ items: [{ ...advert, id: 9 }], total: 5, page: 3, limit: 2 });
+    .mockResolvedValueOnce({ items: [{ ...listing, id: 9 }], total: 5, page: 3, limit: 2 });
   const request = { filters, searchKey: '', page: 1, limit: 2 };
   await store.dispatch(getFilteredListingsThunk(request));
   await store.dispatch(getFilteredListingsThunk({ ...request, page: 2 }));
@@ -136,7 +136,7 @@ it('ignores a late page and failure from the previous filters, even without tran
   }) => void;
   const get = vi
     .spyOn(listingService, 'getFilteredListingsPage')
-    .mockResolvedValueOnce({ items: [advert], total: 9, page: 1, limit: 8 })
+    .mockResolvedValueOnce({ items: [listing], total: 9, page: 1, limit: 8 })
     .mockReturnValueOnce(
       new Promise((resolve) => {
         resolveNext = resolve;
@@ -154,7 +154,7 @@ it('ignores a late page and failure from the previous filters, even without tran
       filters: { ...filters, city: 'Казань' },
     }),
   );
-  resolveNext({ items: [advert], total: 9, page: 2, limit: 8 });
+  resolveNext({ items: [listing], total: 9, page: 2, limit: 8 });
   await pending;
   store.dispatch(getFilteredListingsThunk.rejected(new Error('offline'), pending.requestId, next));
   expect(store.getState().listing.search).toMatchObject({
@@ -172,7 +172,7 @@ it('ignores a late page and failure from the previous filters, even without tran
 it('keeps a confirmed detail on a canceled reload and never treats cancel as NotFound', async () => {
   const store = configureStore({ reducer: { listing: listingReducer } });
   vi.spyOn(listingService, 'getListingById')
-    .mockResolvedValueOnce(advert)
+    .mockResolvedValueOnce(listing)
     .mockRejectedValueOnce(new CanceledError('canceled'))
     .mockImplementationOnce(
       () =>
@@ -180,10 +180,10 @@ it('keeps a confirmed detail on a canceled reload and never treats cancel as Not
           /* Pending until its owner cancels. */
         }),
     );
-  await store.dispatch(getListingByIdThunk(advert.id));
-  await store.dispatch(getListingByIdThunk(advert.id));
+  await store.dispatch(getListingByIdThunk(listing.id));
+  await store.dispatch(getListingByIdThunk(listing.id));
   expect(store.getState().listing).toMatchObject({
-    chosenListing: advert,
+    chosenListing: listing,
     detailStatus: ListingDetailStatus.Ready,
   });
   const request = store.dispatch(getListingByIdThunk(8));

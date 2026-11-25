@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFilters, writeFilters } from './filters';
 
-describe('advert filter URL helpers', () => {
+describe('listing filter URL helpers', () => {
   it('round trips filter values and preserves unrelated query params', () => {
     const initial = new URLSearchParams('sort=new&city=Белград&tags=2,4&priceFrom=100');
     const filters = readFilters(initial);

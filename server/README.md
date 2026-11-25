@@ -45,12 +45,12 @@ npm run dev
 The server restarts when source files change. From another terminal, query the public listings endpoint. A JSON array confirms the API can read from PostgreSQL.
 
 ```sh
-curl --fail http://localhost:3000/api/adverts
+curl --fail http://localhost:3000/api/listings
 ```
 
 ## API and file storage
 
-- `/api/adverts` and `/api/likes` handle listing search, publishing, a user's own listings, and favorites.
+- `/api/listings` and `/api/likes` handle listing search, publishing, a user's own listings, and favorites.
 - `/api/users` serves profiles and conversation lists. Chat messages are sent over WebSocket at `/ws`.
 - `/api/auth` and `/api/tokens` handle registration, sign-in, sign-out, and session refresh. Send `Authorization: Bearer <accessToken>` with protected HTTP requests. Session refresh and WebSocket connections use the HttpOnly `refreshToken` cookie.
 - `/images/` serves photos from `server/public/images/`. The server saves new uploads as WebP files. Docker stores this directory on a separate volume.

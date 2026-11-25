@@ -35,7 +35,7 @@ const likedListingsSlice = createSlice({
       if (state.pending[listingId] !== requestId) {
         return;
       }
-      state.items = state.items.filter((entry) => entry.advertId !== listingId);
+      state.items = state.items.filter((entry) => entry.listingId !== listingId);
       state.items.push(item);
       if (!state.savedIds.includes(listingId)) {
         state.savedIds.push(listingId);
@@ -47,7 +47,7 @@ const likedListingsSlice = createSlice({
       if (state.pending[listingId] !== requestId) {
         return;
       }
-      state.items = state.items.filter((item) => item.advertId !== listingId);
+      state.items = state.items.filter((item) => item.listingId !== listingId);
       state.savedIds = state.savedIds.filter((id) => id !== listingId);
       delete state.pending[listingId];
     },
@@ -72,7 +72,7 @@ const likedListingsSlice = createSlice({
           return;
         }
         state.items = action.payload;
-        state.savedIds = [...new Set(action.payload.map((item) => item.advertId))];
+        state.savedIds = [...new Set(action.payload.map((item) => item.listingId))];
         state.status = SavedStatus.Ready;
         state.initialized = true;
         state.requestId = null;

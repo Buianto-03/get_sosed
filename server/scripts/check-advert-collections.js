@@ -85,7 +85,7 @@ async function run() {
   });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
-  const origin = `http://127.0.0.1:${server.address().port}/api/adverts`;
+  const origin = `http://127.0.0.1:${server.address().port}/api/listings`;
   const ids = (rows) => rows.map(({ id }) => id);
 
   async function request(path, filters) {

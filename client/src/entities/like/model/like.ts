@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const likeSchema = z.object({
   id: z.number(),
   userId: z.number(),
-  advertId: z.number(),
+  listingId: z.number(),
   User: z
     .object({
       id: z.number(),
@@ -18,7 +18,7 @@ export const likeSchema = z.object({
 });
 
 export const deleteLikeSchema = z.object({
-  advertId: z.number().int().positive(),
+  listingId: z.number().int().positive(),
   deleted: z.boolean(),
 });
 
@@ -30,6 +30,6 @@ export type LikeSliceType = {
   likes: LikeType[];
   requests: Record<string, boolean>;
   readRequestId: string | null;
-  advertId: number | null;
+  listingId: number | null;
   userId: number | null;
 };

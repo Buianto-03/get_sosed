@@ -14,10 +14,10 @@ import {
   selectSaveError,
   selectSavePending,
 } from '@entities/listing/model/likedListingsSelectors';
-import { removeSavedAdvertThunk, saveAdvertThunk } from '@features/liked-adverts/model';
+import { removeSavedListingThunk, saveListingThunk } from '@features/liked-listings/model';
 import { store } from './store';
 
-const advert: Listing = {
+const listing: Listing = {
   id: 7,
   title: 'Комната',
   body: null,
@@ -30,9 +30,9 @@ const advert: Listing = {
   updatedAt: '',
   user: null,
   location: null,
-  AdvertPhotos: [],
+  photos: [],
 };
-const like = { id: 15, advertId: 7, userId: 1 };
+const like = { id: 15, listingId: 7, userId: 1 };
 function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((done) => {
@@ -55,23 +55,23 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('shared saved adverts', () => {
+describe('shared saved listings', () => {
   it('confirms save/delete once and updates both IDs and profile cards', async () => {
     await ready();
     const response = deferred<typeof like>();
     const post = vi.spyOn(likeService, 'setLike').mockReturnValue(response.promise);
-    const request = store.dispatch(saveAdvertThunk(advert));
+    const request = store.dispatch(saveListingThunk(listing));
     expect(selectIsSaved(store.getState(), 7)).toBe(false);
-    expect((await store.dispatch(saveAdvertThunk(advert))).meta.requestStatus).toBe('rejected');
+    expect((await store.dispatch(saveListingThunk(listing))).meta.requestStatus).toBe('rejected');
     expect(post).toHaveBeenCalledTimes(1);
     // A profile reload cannot overwrite an in-flight mutation.
     expect((await store.dispatch(getLikedListingsThunk())).meta.requestStatus).toBe('rejected');
     response.resolve(like);
     await request.unwrap();
     expect(selectIsSaved(store.getState(), 7)).toBe(true);
-    expect(store.getState().likedListings.items[0].Advert).toEqual(advert);
-    vi.spyOn(likeService, 'deleteLike').mockResolvedValue({ advertId: 7, deleted: false });
-    await store.dispatch(removeSavedAdvertThunk(7)).unwrap();
+    expect(store.getState().likedListings.items[0].listing).toEqual(listing);
+    vi.spyOn(likeService, 'deleteLike').mockResolvedValue({ listingId: 7, deleted: false });
+    await store.dispatch(removeSavedListingThunk(7)).unwrap();
     expect(selectIsSaved(store.getState(), 7)).toBe(false);
     expect(store.getState().likedListings.items).toEqual([]);
   });
@@ -85,12 +85,12 @@ describe('shared saved adverts', () => {
     vi.spyOn(likeService, 'setLike')
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValue(like);
-    await store.dispatch(saveAdvertThunk(advert));
+    await store.dispatch(saveListingThunk(listing));
     expect(selectIsSaved(store.getState(), 7)).toBe(false);
     expect(store.getState().likedListings.errors[7]).toBeTruthy();
-    await store.dispatch(saveAdvertThunk(advert)).unwrap();
+    await store.dispatch(saveListingThunk(listing)).unwrap();
     vi.spyOn(likeService, 'deleteLike').mockRejectedValue(new Error('offline'));
-    await store.dispatch(removeSavedAdvertThunk(7));
+    await store.dispatch(removeSavedListingThunk(7));
     expect(selectIsSaved(store.getState(), 7)).toBe(true);
     expect(store.getState().likedListings.items).toHaveLength(1);
   });
@@ -98,33 +98,33 @@ describe('shared saved adverts', () => {
   it('keeps independent pending, error and confirmed values for concurrent IDs', async () => {
     await ready();
     const response = deferred<typeof like>();
-    const otherAdvert = { ...advert, id: 8 };
-    const otherLike = { ...like, id: 16, advertId: otherAdvert.id };
+    const otherListing = { ...listing, id: 8 };
+    const otherLike = { ...like, id: 16, listingId: otherListing.id };
     const setLike = vi
       .spyOn(likeService, 'setLike')
       .mockReturnValueOnce(response.promise)
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValueOnce(otherLike);
-    const first = store.dispatch(saveAdvertThunk(advert));
-    const second = store.dispatch(saveAdvertThunk(otherAdvert));
+    const first = store.dispatch(saveListingThunk(listing));
+    const second = store.dispatch(saveListingThunk(otherListing));
 
-    expect(selectSavePending(store.getState(), advert.id)).toBe(true);
-    expect(selectSavePending(store.getState(), otherAdvert.id)).toBe(true);
+    expect(selectSavePending(store.getState(), listing.id)).toBe(true);
+    expect(selectSavePending(store.getState(), otherListing.id)).toBe(true);
     expect((await second).meta.requestStatus).toBe('rejected');
-    expect(selectSavePending(store.getState(), advert.id)).toBe(true);
-    expect(selectSaveError(store.getState(), advert.id)).toBeUndefined();
-    expect(selectSavePending(store.getState(), otherAdvert.id)).toBe(false);
-    expect(selectSaveError(store.getState(), otherAdvert.id)).toBeTruthy();
+    expect(selectSavePending(store.getState(), listing.id)).toBe(true);
+    expect(selectSaveError(store.getState(), listing.id)).toBeUndefined();
+    expect(selectSavePending(store.getState(), otherListing.id)).toBe(false);
+    expect(selectSaveError(store.getState(), otherListing.id)).toBeTruthy();
 
-    await store.dispatch(saveAdvertThunk(otherAdvert)).unwrap();
-    expect(selectIsSaved(store.getState(), otherAdvert.id)).toBe(true);
-    expect(selectIsSaved(store.getState(), advert.id)).toBe(false);
-    expect(selectSaveError(store.getState(), otherAdvert.id)).toBeUndefined();
+    await store.dispatch(saveListingThunk(otherListing)).unwrap();
+    expect(selectIsSaved(store.getState(), otherListing.id)).toBe(true);
+    expect(selectIsSaved(store.getState(), listing.id)).toBe(false);
+    expect(selectSaveError(store.getState(), otherListing.id)).toBeUndefined();
     response.resolve(like);
     await first.unwrap();
-    expect(selectIsSaved(store.getState(), advert.id)).toBe(true);
-    expect(selectIsSaved(store.getState(), otherAdvert.id)).toBe(true);
-    expect(setLike.mock.calls).toEqual([[advert.id], [otherAdvert.id], [otherAdvert.id]]);
+    expect(selectIsSaved(store.getState(), listing.id)).toBe(true);
+    expect(selectIsSaved(store.getState(), otherListing.id)).toBe(true);
+    expect(setLike.mock.calls).toEqual([[listing.id], [otherListing.id], [otherListing.id]]);
   });
   it('clears on account change and ignores the old list, including same-user re-login', async () => {
     const old = deferred<{ data: unknown }>();
@@ -134,7 +134,7 @@ describe('shared saved adverts', () => {
     expect(store.getState().likedListings.items).toEqual([]);
     login(1);
     await vi.waitFor(() => expect(store.getState().likedListings.status).toBe(SavedStatus.Ready));
-    old.resolve({ data: [{ ...like, Advert: advert }] });
+    old.resolve({ data: [{ ...like, listing }] });
     await old.promise;
     await new Promise((done) => {
       setTimeout(done, 0);
@@ -146,7 +146,7 @@ describe('shared saved adverts', () => {
     login(1);
     await vi.waitFor(() => expect(store.getState().likedListings.status).toBe(SavedStatus.Ready));
     vi.spyOn(likeService, 'setLike').mockResolvedValue(like);
-    await store.dispatch(saveAdvertThunk(advert)).unwrap();
+    await store.dispatch(saveListingThunk(listing)).unwrap();
     store.dispatch(setAccessToken('refreshed-token'));
     login(1);
     expect(selectIsSaved(store.getState(), 7)).toBe(true);
@@ -175,7 +175,7 @@ describe('shared saved adverts', () => {
     await ready();
     const old = deferred<typeof like>();
     vi.spyOn(likeService, 'setLike').mockReturnValue(old.promise);
-    const request = store.dispatch(saveAdvertThunk(advert));
+    const request = store.dispatch(saveListingThunk(listing));
     login(2);
     await vi.waitFor(() => expect(store.getState().likedListings.status).toBe(SavedStatus.Ready));
     old.resolve(like);

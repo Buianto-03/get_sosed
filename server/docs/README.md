@@ -62,7 +62,7 @@ curl -b /tmp/get-sosed-cookies.txt -c /tmp/get-sosed-cookies.txt \
   http://localhost:3000/api/tokens/refresh
 
 curl -H "Authorization: Bearer $ACCESS_TOKEN" \
-  'http://localhost:3000/api/adverts/mine?page=1&limit=12'
+  'http://localhost:3000/api/listings/mine?page=1&limit=12'
 ```
 
 `$ACCESS_TOKEN` в последнем примере нужно заполнить токеном из ответа входа или
@@ -94,15 +94,15 @@ origin API, например `/images/users/user-1/avatar.webp`.
   Ошибка обработчика обновления токенов возвращает **501**.
 - Форматы ошибок отличаются: `{ code, message }`, `{ message }`, `{ error }` и
   текстовые ответы. Спецификация сохраняет эти различия.
-- `GET /api/adverts` возвращает все объявления. Фильтры принимаются через
-  `POST /api/adverts/filters`; второй GET-обработчик в цепочке корневого
+- `GET /api/listings` возвращает все объявления. Фильтры принимаются через
+  `POST /api/listings/filters`; второй GET-обработчик в цепочке корневого
   маршрута не достигается после отправки ответа первым.
-- `GET /api/adverts/liked` возвращает записи лайков с вложенным `Advert`, а не
-  плоский массив объявлений. Только `/api/adverts/mine` поддерживает пагинацию.
+- `GET /api/listings/liked` возвращает записи лайков с вложенным `Advert`, а не
+  плоский массив объявлений. Только `/api/listings/mine` поддерживает пагинацию.
 - `GET /api/users/{userId}` возвращает последние сообщения диалогов текущего
   пользователя; краткий профиль доступен через
   `GET /api/users/{userId}/summary`.
-- Удаление объявления не реализовано. `DELETE /api/adverts/{advertId}` возвращает
+- Удаление объявления не реализовано. `DELETE /api/listings/{listingId}` возвращает
   **404** `{ "code": "API_ROUTE_NOT_FOUND", "message": "API route not found" }`.
 - Неизвестные `/api/*` возвращают **404**
   `{ "code": "API_ROUTE_NOT_FOUND", "message": "API route not found" }`.

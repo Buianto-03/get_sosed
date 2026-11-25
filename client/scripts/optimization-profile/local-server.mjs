@@ -8,6 +8,11 @@ import { createFixture } from './fixtures.mjs';
 
 const photoSources = ['photo-0', 'photo-1', 'photo-2', 'photo-3', 'advert3-0', 'advert3-1'];
 
+// Historical client bundles still request the former API prefix.
+export function normalizeListingApiPath(path) {
+  return path.replace(/^\/api\/adverts(?=\/|\?|$)/, '/api/listings');
+}
+
 const mime = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -60,6 +65,7 @@ export async function serve(root, { photos = false } = {}) {
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://127.0.0.1');
+      const fixturePath = normalizeListingApiPath(url.pathname);
       let type, compressed, body;
       let status = 200;
       let cache = 'no-store';
@@ -69,7 +75,7 @@ export async function serve(root, { photos = false } = {}) {
         for await (const chunk of req) {
           input += chunk;
         }
-        const hold = heldReads.get(url.pathname);
+        const hold = heldReads.get(fixturePath);
         if (hold) {
           read = {
             path: url.pathname,
@@ -89,11 +95,11 @@ export async function serve(root, { photos = false } = {}) {
             return;
           }
         }
-        const answer = failedReads.delete(url.pathname)
+        const answer = failedReads.delete(fixturePath)
           ? { status: 503, data: { error: 'Synthetic temporary failure' } }
           : fixture.request(
               req.method,
-              url.pathname,
+              fixturePath,
               url.searchParams,
               input ? JSON.parse(input) : undefined,
             );
@@ -111,11 +117,11 @@ export async function serve(root, { photos = false } = {}) {
         body = gzipSync(json);
         if (
           [
-            '/api/adverts',
-            '/api/adverts/filters',
-            '/api/adverts/filters/page',
-            '/api/adverts/fresh',
-          ].includes(url.pathname)
+            '/api/listings',
+            '/api/listings/filters',
+            '/api/listings/filters/page',
+            '/api/listings/fresh',
+          ].includes(fixturePath)
         ) {
           collections.push({
             path: url.pathname + url.search,

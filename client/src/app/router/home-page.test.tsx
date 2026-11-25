@@ -12,7 +12,7 @@ import axiosInstance from '@shared/api/client';
 import likeService from '@entities/like/api/likeService';
 import { store } from '../store/store';
 
-const advert = (id: number): Listing => ({
+const listing = (id: number): Listing => ({
   id,
   title: `Квартира ${id}`,
   body: null,
@@ -23,7 +23,7 @@ const advert = (id: number): Listing => ({
   floor: null,
   rooms: null,
   square: null,
-  AdvertPhotos: [],
+  photos: [],
   tags: [],
   createdAt: `2026-10-${10 + id}T00:00:00Z`,
   updatedAt: '',
@@ -51,10 +51,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it('shows only the three freshest real adverts, leaves search state alone and opens the actual ID', async () => {
+it('shows only the three freshest real listings, leaves search state alone and opens the actual ID', async () => {
   const get = vi
     .spyOn(listingService, 'getFreshListings')
-    .mockResolvedValue([advert(4), advert(3), advert(2)]);
+    .mockResolvedValue([listing(4), listing(3), listing(2)]);
   const previousSearch = store.getState().listing.search;
   open();
   const titles = await screen.findAllByRole('heading', { level: 3, name: /Квартира/ });
@@ -101,7 +101,7 @@ it('shows loading/error/retry/empty without hiding banner or explanation', async
 });
 
 it('sends guest saving to sign-in and does not post a like', async () => {
-  vi.spyOn(listingService, 'getFreshListings').mockResolvedValue([advert(7)]);
+  vi.spyOn(listingService, 'getFreshListings').mockResolvedValue([listing(7)]);
   const post = vi.spyOn(likeService, 'setLike');
   open();
   fireEvent.click(await screen.findByRole('button', { name: 'Сохранить объявление' }));
@@ -118,8 +118,8 @@ it('uses the shared saved state, blocks repeated save and preserves the heart on
     }),
   );
   await waitFor(() => expect(store.getState().likedListings.status).toBe(SavedStatus.Ready));
-  vi.spyOn(listingService, 'getFreshListings').mockResolvedValue([advert(7)]);
-  let resolve!: (like: { id: number; userId: number; advertId: number }) => void;
+  vi.spyOn(listingService, 'getFreshListings').mockResolvedValue([listing(7)]);
+  let resolve!: (like: { id: number; userId: number; listingId: number }) => void;
   const post = vi.spyOn(likeService, 'setLike').mockReturnValue(
     new Promise((done) => {
       resolve = done;
@@ -133,11 +133,11 @@ it('uses the shared saved state, blocks repeated save and preserves the heart on
   expect(save).toBeDisabled();
   expect(post).toHaveBeenCalledTimes(1);
   await act(async () => {
-    resolve({ id: 1, userId: 2, advertId: 7 });
+    resolve({ id: 1, userId: 2, listingId: 7 });
   });
   const remove = await screen.findByRole('button', { name: 'Убрать из избранного' });
   expect(remove).toHaveAttribute('aria-pressed', 'true');
-  expect(store.getState().likedListings.items[0].Advert.id).toBe(7);
+  expect(store.getState().likedListings.items[0].listing.id).toBe(7);
   fireEvent.click(remove);
   expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось удалить');
   expect(remove).toHaveAttribute('aria-pressed', 'true');

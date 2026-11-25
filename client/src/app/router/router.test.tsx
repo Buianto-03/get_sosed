@@ -27,7 +27,7 @@ describe('application routes', () => {
 
   it.each([
     '/home',
-    '/advert/42',
+    '/listing/42',
     '/post',
     '/account',
     '/chat/7',

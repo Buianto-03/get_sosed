@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { listingService } from '@entities/listing/api/listingService';
 import { isRequestCanceled } from '@shared/api/cancellation';
-import { initialMyAdverts, mergeAdverts } from './helper';
-import type { MyAdvertsState } from './helper';
+import { initialMyListings, mergeListings } from './helper';
+import type { MyListingsState } from './helper';
 
-interface MyAdvertsResult extends MyAdvertsState {
+interface MyListingsResult extends MyListingsState {
   loadMore: () => Promise<void>;
   retry: () => void;
 }
 
-export function useMyAdverts(userId: number | null): MyAdvertsResult {
-  const [state, setState] = useState(() => initialMyAdverts(userId));
+export function useMyListings(userId: number | null): MyListingsResult {
+  const [state, setState] = useState(() => initialMyListings(userId));
   const [attempt, setAttempt] = useState(0);
   const generation = useRef(0);
   const inFlight = useRef(false);
@@ -21,7 +21,7 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
     const requestGeneration = generation.current;
     const controller = new AbortController();
     controllerRef.current = controller;
-    setState(initialMyAdverts(userId));
+    setState(initialMyListings(userId));
     inFlight.current = userId !== null;
     async function loadFirstPage(): Promise<void> {
       try {
@@ -85,7 +85,7 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
       }
       setState((previous) => ({
         ...previous,
-        items: mergeAdverts(previous.items, result.items),
+        items: mergeListings(previous.items, result.items),
         total: result.total,
         page: result.page,
         hasMore: result.page * result.limit < result.total,
@@ -107,6 +107,6 @@ export function useMyAdverts(userId: number | null): MyAdvertsResult {
     }
   }
 
-  const visibleState = state.ownerId === userId ? state : initialMyAdverts(userId);
+  const visibleState = state.ownerId === userId ? state : initialMyListings(userId);
   return { ...visibleState, loadMore, retry: () => setAttempt((value) => value + 1) };
 }

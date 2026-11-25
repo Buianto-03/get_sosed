@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { MainBanner } from '@widgets/main-banner/MainBanner';
 import { FreshListings, FreshListingsState } from '@widgets/fresh-listings/FreshListings';
 import { HowItWorks } from '@widgets/how-it-works/HowItWorks';
-import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
-import { ListingCardWithSave } from '@features/liked-adverts/ui/listing-card-with-save/ListingCardWithSave';
+import { useSavedCollectionStatus } from '@features/liked-listings/model/use-saved-collection-status';
+import { ListingCardWithSave } from '@features/liked-listings/ui/listing-card-with-save/ListingCardWithSave';
 import { listingService } from '@entities/listing/api/listingService';
 import { type Listing, SavedStatus } from '@entities/listing/model';
 import { ListingCardVariant } from '@entities/listing/ui/listing-card/ListingCard';
@@ -18,7 +18,7 @@ import styles from './HomeRoute.module.scss';
 export default function HomeRoute(): JSX.Element {
   const navigate = useNavigate();
   const { status: savedStatus, reload: reloadSaved } = useSavedCollectionStatus();
-  const [adverts, setAdverts] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [state, setState] = useState(FreshListingsState.Loading);
   const [attempt, setAttempt] = useState(0);
   const openListing = useCallback((id: string) => navigate(routes.listingDetails(id)), [navigate]);
@@ -33,7 +33,7 @@ export default function HomeRoute(): JSX.Element {
         if (!active) {
           return;
         }
-        setAdverts(items);
+        setListings(items);
         setState(FreshListingsState.Ready);
       })
       .catch((error: unknown) => {
@@ -60,10 +60,10 @@ export default function HomeRoute(): JSX.Element {
       )}
       <FreshListings
         state={state}
-        cards={adverts.map((advert) => (
+        cards={listings.map((listing) => (
           <ListingCardWithSave
-            key={advert.id}
-            advert={advert}
+            key={listing.id}
+            listing={listing}
             toListing={toHomeCard}
             variant={ListingCardVariant.Home}
             onOpen={openListing}
