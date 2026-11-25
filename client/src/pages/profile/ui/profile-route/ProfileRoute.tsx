@@ -1,11 +1,10 @@
-import React, { useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppSelector } from '@app/store/hooks';
 import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
 import { SavedStatus } from '@entities/listing/model';
 import { selectSavedItems } from '@entities/listing/model/likedListingsSelectors';
 import { UserStatus } from '@entities/session/model/authModel';
-import { routes } from '@shared/config/routes';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { ProfilePage } from '../profile-page/ProfilePage';
 import { toProfile } from '../../helper';
@@ -16,12 +15,10 @@ export default function ProfileRoute(): JSX.Element | null {
   const user = useAppSelector((state) => state.auth.user);
   const savedItems = useAppSelector(selectSavedItems);
   const saved = useSavedCollectionStatus();
-  const navigate = useNavigate();
   const location = useLocation();
   const profileSaved = (location.state as { profileSaved?: boolean } | null)?.profileSaved;
   const userId = user.status === UserStatus.Logged ? user.id : null;
   const mine = useMyAdverts(userId);
-  const openListing = useCallback((id: string) => navigate(routes.listingDetails(id)), [navigate]);
   if (user.status !== UserStatus.Logged) {
     return null;
   }
@@ -52,12 +49,6 @@ export default function ProfileRoute(): JSX.Element | null {
             },
           },
         }}
-        navigation={{
-          onMessages: () => navigate(routes.messages),
-          onEditProfile: () => navigate(routes.profileEdit),
-          onFindListings: () => navigate(routes.listings),
-        }}
-        onOpenListing={openListing}
       />
     </div>
   );

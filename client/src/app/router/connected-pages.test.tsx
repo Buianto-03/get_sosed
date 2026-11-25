@@ -260,6 +260,22 @@ it('does not request invalid IDs and offers retry for failed detail reads', asyn
   expect(await screen.findByText('Реальное описание')).toBeInTheDocument();
 });
 
+it('retries interested people without reloading the listing', async () => {
+  const listing = vi.spyOn(listingService, 'getListingById').mockResolvedValue(advert);
+  const interested = vi.spyOn(likeService, 'getLikesByAdvertId')
+    .mockRejectedValueOnce(new Error('offline'))
+    .mockResolvedValueOnce([{ id: 1, userId: 3, advertId: advert.id }]);
+  open('/listings/42');
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось загрузить заинтересованных');
+  expect(screen.getByRole('heading', { name: 'Квартира' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+
+  expect(await screen.findByText('Пользователь')).toBeInTheDocument();
+  expect(interested).toHaveBeenCalledTimes(2);
+  expect(listing).toHaveBeenCalledOnce();
+});
+
 it('shows own-list errors independently from empty favorites and retries the profile collection', async () => {
   login();
   vi.spyOn(listingService, 'getMine')
@@ -437,8 +453,10 @@ it('opens a first conversation without a fake listing and sends through the sock
     );
   });
   expect(screen.getAllByText('Здравствуйте')).toHaveLength(1);
-  view.unmount();
+  fireEvent.click(screen.getByRole('button', { name: 'К диалогам' }));
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/messages$/);
   expect(store.getState().chatList.history).toBeNull();
+  view.unmount();
 });
 
 it('changes listing context without reopening the dialog or refetching the summary on history retry', async () => {

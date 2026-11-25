@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LuHeart, LuPlus, LuUser } from 'react-icons/lu';
 import { PersonSummary, PersonSummaryVariant } from '@entities/person/ui/PersonSummary';
 import { CreateListingButton } from '@features/listing-create/ui/create-listing-button/CreateListingButton';
+import { routes } from '@shared/config/routes';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
@@ -20,27 +22,19 @@ export type ProfileDetails = {
   avatarUrl?: string;
 };
 
-export interface ProfileNavigation {
-  onEditProfile: () => void;
-  onFindListings: () => void;
-  onMessages?: () => void;
-}
-
 export interface ProfilePageProps {
   profile: ProfileDetails | null;
   favorites: ProfileCollection;
   myListings: ProfileCollection;
-  navigation: ProfileNavigation;
-  onOpenListing: (id: string) => void;
 }
 
 export function ProfilePage({
   profile,
   favorites,
   myListings,
-  navigation,
-  onOpenListing,
 }: ProfilePageProps): JSX.Element {
+  const navigate = useNavigate();
+  const openListing = useCallback((id: string) => navigate(routes.listingDetails(id)), [navigate]);
   const collections = [
     {
       id: 'favorites',
@@ -49,7 +43,7 @@ export function ProfilePage({
       emptyTitle: 'Пока нет сохранённых объявлений',
       emptyDescription: 'Сохраняйте понравившиеся объявления, чтобы вернуться к ним позже.',
       emptyAction: (
-        <Button variant={ButtonVariant.Secondary} onClick={navigation.onFindListings}>
+        <Button variant={ButtonVariant.Secondary} onClick={() => navigate(routes.listings)}>
           Найти объявления
         </Button>
       ),
@@ -76,11 +70,9 @@ export function ProfilePage({
           </Heading>
         </div>
         <div className={styles.profile__actions}>
-          {navigation.onMessages && (
-            <Button variant={ButtonVariant.Secondary} onClick={navigation.onMessages}>
-              Сообщения
-            </Button>
-          )}
+          <Button variant={ButtonVariant.Secondary} onClick={() => navigate(routes.messages)}>
+            Сообщения
+          </Button>
           <CreateListingButton className={styles.profile__create} withIcon />
         </div>
       </div>
@@ -94,7 +86,7 @@ export function ProfilePage({
           tags={profile.habits ? [...profile.habits] : []}
           variant={PersonSummaryVariant.Profile}
           action={
-            <Button variant={ButtonVariant.Secondary} onClick={navigation.onEditProfile}>
+            <Button variant={ButtonVariant.Secondary} onClick={() => navigate(routes.profileEdit)}>
               Изменить профиль
             </Button>
           }
@@ -105,7 +97,7 @@ export function ProfilePage({
           description="Добавьте город, пару слов о себе и привычки, чтобы будущим соседям было проще познакомиться с вами."
           icon={<LuUser />}
           action={
-            <Button variant={ButtonVariant.Secondary} onClick={navigation.onEditProfile}>
+            <Button variant={ButtonVariant.Secondary} onClick={() => navigate(routes.profileEdit)}>
               Заполнить профиль
             </Button>
           }
@@ -125,7 +117,7 @@ export function ProfilePage({
               action: collection.emptyAction,
               icon: collection.icon,
             }}
-            onOpenListing={onOpenListing}
+            onOpenListing={openListing}
           />
         ))}
       </div>

@@ -47,6 +47,10 @@
   background: tokens.$color-surface;
 }
 
+.listing_create_form__step {
+  min-width: 0;
+}
+
 .listing_create_form__actions {
   display: flex;
   justify-content: space-between;

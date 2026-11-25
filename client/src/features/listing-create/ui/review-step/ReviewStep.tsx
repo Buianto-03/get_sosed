@@ -11,8 +11,6 @@ export interface ReviewStepProps {
   tagCatalog: TagCatalog;
   photos: UploadAreaPhoto[];
   publishState: ListingCreatePublishState;
-  saved: boolean;
-  onSavedChange: (saved: boolean) => void;
 }
 
 export function ReviewStep({
@@ -20,8 +18,6 @@ export function ReviewStep({
   tagCatalog,
   photos,
   publishState,
-  saved,
-  onSavedChange,
 }: ReviewStepProps): JSX.Element {
   const mainPhoto = photos.find(({ isMain }) => isMain);
   const catalogView = getTagCatalogView(tagCatalog.tags);
@@ -40,9 +36,9 @@ export function ReviewStep({
           tags: draft.tagIds.map((id) => getTagLabel(catalogView, id)),
         }}
         variant={ListingCardVariant.Profile}
-        saved={saved}
+        saved={false}
         saveDisabled
-        onSavedChange={onSavedChange}
+        onSavedChange={() => undefined}
         onOpen={() => undefined}
       />
       <dl className={styles.review_step__details}>

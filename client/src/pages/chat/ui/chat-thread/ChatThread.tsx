@@ -1,11 +1,11 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
-import { LuArrowLeft } from 'react-icons/lu';
 import { MessageComposer } from '@features/send-message/ui/message-composer/MessageComposer';
 import { ListingContextCard } from '@entities/listing/ui/listing-context-card/ListingContextCard';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Avatar } from '@shared/ui/avatar/Avatar';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Spinner } from '@shared/ui/feedback/Spinner';
+import { ChatListButton } from '../chat-list-button/ChatListButton';
 import { MessageViewport } from '../message-viewport/MessageViewport';
 import styles from './ChatThread.module.scss';
 
@@ -38,7 +38,6 @@ interface ChatThreadProps {
   lastOlderPageId?: string | null;
   onLoadOlder?: () => void;
   onRetry?: () => void;
-  onBackToList: () => void;
   onOpenListing?: (id: string) => void;
   onSendMessage: (conversationId: string, message: string) => boolean;
 }
@@ -59,7 +58,6 @@ function ChatThreadView({
   lastOlderPageId,
   onLoadOlder,
   onRetry,
-  onBackToList,
   onOpenListing,
   onSendMessage,
 }: ChatThreadProps): JSX.Element {
@@ -98,9 +96,7 @@ function ChatThreadView({
         {announcement}
       </span>
       <header className={styles.thread__header}>
-        <Button className={styles.thread__back} variant={ButtonVariant.Text} onClick={onBackToList}>
-          <LuArrowLeft aria-hidden="true" />К диалогам
-        </Button>
+        <ChatListButton className={styles.thread__back} withIcon />
         <Avatar name={name} src={avatarUrl} />
         <strong title={name}>{name}</strong>
       </header>

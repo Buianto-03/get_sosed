@@ -2,21 +2,26 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { getTagCatalogView, TagCatalogState, type TagCatalog } from '@entities/listing/model';
 import type { UploadAreaPhoto } from '@shared/ui/upload-area/UploadArea';
 import { ListingCreateForm } from '@features/listing-create/ui/listing-create-form/ListingCreateForm';
-import { ListingCreateStep } from '@features/listing-create/ui/listing-create-step/ListingCreateStep';
+import { PhotosStep } from '@features/listing-create/ui/photos-step/PhotosStep';
+import { PriceRulesStep } from '@features/listing-create/ui/price-rules-step/PriceRulesStep';
+import { ReviewStep } from '@features/listing-create/ui/review-step/ReviewStep';
+import { RoomStep } from '@features/listing-create/ui/room-step/RoomStep';
 import {
   ListingCreatePublishState,
+  ListingCreateStep,
   validateRoom,
   validatePrice,
   type ListingDraft,
 } from '@features/listing-create/model';
+import { hasValidPhotos } from './helper';
 import styles from './ListingCreatePage.module.scss';
 
 export interface ListingCreatePageProps {
   tagCatalog: TagCatalog;
-  initialStep?: number;
+  initialStep?: ListingCreateStep;
   initialDraft?: Partial<ListingDraft>;
   initialPhotos?: UploadAreaPhoto[];
-  initialAttemptedSteps?: number[];
+  initialAttemptedSteps?: ListingCreateStep[];
   initialPublishState?: ListingCreatePublishState;
   onPublish?: (draft: ListingDraft, photos: UploadAreaPhoto[]) => Promise<void> | void;
 }
@@ -37,7 +42,7 @@ const emptyDraft: ListingDraft = {
 
 export function ListingCreatePage({
   tagCatalog,
-  initialStep = 1,
+  initialStep = ListingCreateStep.Room,
   initialDraft,
   initialPhotos = [],
   initialAttemptedSteps = [],
@@ -45,10 +50,9 @@ export function ListingCreatePage({
   onPublish,
 }: ListingCreatePageProps): JSX.Element {
   const [draft, setDraft] = useState<ListingDraft>(() => ({ ...emptyDraft, ...initialDraft }));
-  const [attemptedSteps, setAttemptedSteps] = useState<number[]>(initialAttemptedSteps);
+  const [attemptedSteps, setAttemptedSteps] = useState(initialAttemptedSteps);
   const [photos, setPhotos] = useState<UploadAreaPhoto[]>(initialPhotos);
   const [publishState, setPublishState] = useState(initialPublishState);
-  const [reviewSaved, setReviewSaved] = useState(false);
   const [validationError, setValidationError] = useState('');
   const publishing = useRef(false);
   const photosRef = useRef<UploadAreaPhoto[]>(initialPhotos);
@@ -71,12 +75,12 @@ export function ListingCreatePage({
     setPhotos(nextPhotos);
   };
 
-  const canContinue = (step: number): boolean => {
+  const canContinue = (step: ListingCreateStep): boolean => {
     setAttemptedSteps((current) => (current.includes(step) ? current : [...current, step]));
-    if (step === 1) {
+    if (step === ListingCreateStep.Room) {
       return Object.keys(validateRoom(draft)).length === 0;
     }
-    if (step === 2) {
+    if (step === ListingCreateStep.PriceRules) {
       const { byId } = getTagCatalogView(tagCatalog.tags);
       return (
         tagCatalog.state === TagCatalogState.Ready &&
@@ -84,15 +88,8 @@ export function ListingCreatePage({
         draft.tagIds.every((id) => byId.has(id))
       );
     }
-    if (step === 3) {
-      const valid =
-        photos.length >= 1 &&
-        photos.length <= 10 &&
-        photos.every(
-          (photo) =>
-            photo.file.size <= 10 * 1024 * 1024 &&
-            ['image/jpeg', 'image/png', 'image/webp'].includes(photo.file.type),
-        );
+    if (step === ListingCreateStep.Photos) {
+      const valid = hasValidPhotos(photos);
       setValidationError(valid ? '' : 'Добавьте от 1 до 10 фото JPG/PNG/WebP до 10 МБ каждое.');
       return valid;
     }
@@ -116,7 +113,9 @@ export function ListingCreatePage({
     if (publishing.current || !onPublish) {
       return;
     }
-    const valid = [1, 2, 3].map(canContinue).every(Boolean);
+    const valid = [ListingCreateStep.Room, ListingCreateStep.PriceRules, ListingCreateStep.Photos]
+      .map(canContinue)
+      .every(Boolean);
     if (!valid) {
       setValidationError('Проверьте все шаги: обязательные поля, числа, условия и фотографии.');
       return;
@@ -134,6 +133,45 @@ export function ListingCreatePage({
     }
   };
 
+  const renderStep = (step: ListingCreateStep): JSX.Element | null => {
+    switch (step) {
+      case ListingCreateStep.Room: {
+        const { title, city, district, address, metro, area, rooms, floor } = draft;
+        return (
+          <RoomStep
+            fields={{ title, city, district, address, metro, area, rooms, floor }}
+            showErrors={attemptedSteps.includes(step)}
+            onFieldChange={updateDraft}
+          />
+        );
+      }
+      case ListingCreateStep.PriceRules:
+        return (
+          <PriceRulesStep
+            fields={{ price: draft.price, description: draft.description }}
+            tagIds={draft.tagIds}
+            tagCatalog={tagCatalog}
+            showErrors={attemptedSteps.includes(step)}
+            onFieldChange={updateDraft}
+            onRuleChange={updateRule}
+          />
+        );
+      case ListingCreateStep.Photos:
+        return <PhotosStep photos={photos} onPhotosChange={handlePhotosChange} />;
+      case ListingCreateStep.Review:
+        return (
+          <ReviewStep
+            draft={draft}
+            tagCatalog={tagCatalog}
+            photos={photos}
+            publishState={publishState}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <main className={styles.listing_create_page}>
       <ListingCreateForm
@@ -144,23 +182,7 @@ export function ListingCreatePage({
         canContinue={canContinue}
         onPublish={onPublish ? publishListing : undefined}
       >
-        {(step) => (
-          <ListingCreateStep
-            tagCatalog={tagCatalog}
-            step={step}
-            draft={draft}
-            photos={photos}
-            publishState={publishState}
-            showRoomErrors={attemptedSteps.includes(1)}
-            showPriceErrors={attemptedSteps.includes(2)}
-            saved={reviewSaved}
-            onFieldChange={updateDraft}
-            onCityChange={(city) => setDraft((current) => ({ ...current, city }))}
-            onRuleChange={updateRule}
-            onPhotosChange={handlePhotosChange}
-            onSavedChange={setReviewSaved}
-          />
-        )}
+        {renderStep}
       </ListingCreateForm>
     </main>
   );

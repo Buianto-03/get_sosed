@@ -1,11 +1,12 @@
 import React from 'react';
 import { LuMessagesSquare } from 'react-icons/lu';
 import { ConversationRow } from '@entities/chat/ui/conversation-row/ConversationRow';
-import { Button, ButtonVariant } from '@shared/ui/button/Button';
+import { Button } from '@shared/ui/button/Button';
 import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { EmptyState } from '@shared/ui/feedback/EmptyState';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import { Spinner } from '@shared/ui/feedback/Spinner';
+import { ChatListButton } from '../chat-list-button/ChatListButton';
 import { ChatThread, type ChatListingContext, type ChatMessage } from '../chat-thread/ChatThread';
 import styles from './ChatPage.module.scss';
 
@@ -36,7 +37,6 @@ export interface ChatPageProps {
   onRetryList?: () => void;
   onRetryHistory?: () => void;
   onSelectConversation: (id: string) => void;
-  onBackToList: () => void;
   onOpenListing?: (id: string) => void;
   onSendMessage: (conversationId: string, message: string) => boolean;
 }
@@ -60,7 +60,6 @@ export function ChatPage({
   onRetryList,
   onRetryHistory,
   onSelectConversation,
-  onBackToList,
   onOpenListing,
   onSendMessage,
 }: ChatPageProps): JSX.Element {
@@ -137,16 +136,13 @@ export function ChatPage({
               lastPageId={lastPageId}
               lastOlderPageId={lastOlderPageId}
               onLoadOlder={onLoadOlder}
-              onBackToList={onBackToList}
               onOpenListing={onOpenListing}
               onSendMessage={onSendMessage}
             />
           )}
           {!activeConversation && selectedConversationId && (
             <>
-              <Button variant={ButtonVariant.Text} onClick={onBackToList}>
-                К диалогам
-              </Button>
+              <ChatListButton />
               {historyLoading && <Spinner label="Загрузка собеседника" />}
               {!historyLoading && (
                 <Alert variant={AlertVariant.Error}>

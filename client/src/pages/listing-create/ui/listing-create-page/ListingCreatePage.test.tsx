@@ -116,6 +116,7 @@ describe('ListingCreatePage', () => {
     expect(screen.getByRole('textbox', { name: 'Название объявления' })).toHaveValue(
       'Светлая комната',
     );
+    expect(screen.getByRole('textbox', { name: 'Город' })).toHaveValue('Москва');
   });
 
   it('keeps selected photos across steps and revokes their URLs when removed or closed', () => {

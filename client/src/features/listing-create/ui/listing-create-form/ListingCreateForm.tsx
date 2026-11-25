@@ -3,28 +3,29 @@ import { Alert, AlertVariant } from '@shared/ui/feedback/Alert';
 import { Button, ButtonVariant } from '@shared/ui/button/Button';
 import { Heading, HeadingLevel, HeadingSize } from '@shared/ui/heading/Heading';
 import { Stepper } from '@shared/ui/stepper/Stepper';
+import { ListingCreateStep } from '../../model';
 import { useListingCreateFormFocus } from './use-listing-create-form-focus';
 import styles from './ListingCreateForm.module.scss';
 
 const steps = [
-  { id: 'room', label: 'Комната' },
-  { id: 'price', label: 'Цена и правила' },
-  { id: 'photos', label: 'Фотографии' },
-  { id: 'publish', label: 'Публикация' },
+  { step: ListingCreateStep.Room, id: 'room', label: 'Комната' },
+  { step: ListingCreateStep.PriceRules, id: 'price', label: 'Цена и правила' },
+  { step: ListingCreateStep.Photos, id: 'photos', label: 'Фотографии' },
+  { step: ListingCreateStep.Review, id: 'publish', label: 'Публикация' },
 ];
 
 export interface ListingCreateFormProps {
-  initialStep?: number;
+  initialStep?: ListingCreateStep;
   isPublishing?: boolean;
   isPublished?: boolean;
-  canContinue?: (step: number) => boolean;
+  canContinue?: (step: ListingCreateStep) => boolean;
   onPublish?: () => void;
   validationError?: string;
-  children: (step: number) => ReactNode;
+  children: (step: ListingCreateStep) => ReactNode;
 }
 
 export function ListingCreateForm({
-  initialStep = 1,
+  initialStep = ListingCreateStep.Room,
   isPublishing = false,
   isPublished = false,
   canContinue,
@@ -34,7 +35,7 @@ export function ListingCreateForm({
 }: ListingCreateFormProps): JSX.Element {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const { formRef, requestFeedbackFocus, requestStepErrorFocus } = useListingCreateFormFocus(currentStep, isPublishing);
-  const validateStep = (step: number): boolean => {
+  const validateStep = (step: ListingCreateStep): boolean => {
     const valid = !canContinue || canContinue(step);
     if (!valid) {
       requestStepErrorFocus();
@@ -42,33 +43,25 @@ export function ListingCreateForm({
     return valid;
   };
   let actionLabel = 'Продолжить';
-  if (currentStep === steps.length) {
+  if (currentStep === ListingCreateStep.Review) {
     actionLabel = isPublished ? 'Опубликовано' : 'Опубликовать';
   }
 
-  const navigateToStep = (targetStep: number): void => {
-    if (isPublishing || isPublished) {
+  const navigateToStep = (position: number): void => {
+    const target = steps[position - 1];
+    if (isPublishing || isPublished || !target) {
       return;
     }
-    if (targetStep <= currentStep) {
-      setCurrentStep(targetStep);
-      return;
-    }
-
-    for (let step = currentStep; step < targetStep; step += 1) {
-      if (!validateStep(step)) {
-        setCurrentStep(step);
-        return;
-      }
-    }
-    setCurrentStep(targetStep);
+    const firstInvalid = steps.slice(currentStep - 1, position - 1)
+      .find(({ step }) => !validateStep(step));
+    setCurrentStep(firstInvalid?.step ?? target.step);
   };
 
   const continueToNextStep = (): void => {
     if (!validateStep(currentStep)) {
       return;
     }
-    setCurrentStep((step) => Math.min(steps.length, step + 1));
+    setCurrentStep((step) => steps[step]?.step ?? step);
   };
 
   return (
@@ -98,20 +91,22 @@ export function ListingCreateForm({
       >
         {validationError && <Alert variant={AlertVariant.Error}>{validationError}</Alert>}
         {isPublishing && <p role="status">Публикуем объявление…</p>}
-        {children(currentStep)}
+        <div className={styles.listing_create_form__step}>{children(currentStep)}</div>
         <div className={styles.listing_create_form__actions}>
           <Button
             variant={ButtonVariant.Secondary}
-            disabled={currentStep === 1 || isPublishing || isPublished}
-            onClick={() => setCurrentStep((step) => Math.max(1, step - 1))}
+            disabled={currentStep === ListingCreateStep.Room || isPublishing || isPublished}
+            onClick={() => setCurrentStep((step) => steps[step - 2]?.step ?? step)}
           >
             Назад
           </Button>
           <Button
-            disabled={isPublishing || isPublished || (currentStep === steps.length && !onPublish)}
+            disabled={
+              isPublishing || isPublished || (currentStep === ListingCreateStep.Review && !onPublish)
+            }
             loading={isPublishing}
             onClick={() => {
-              if (currentStep === steps.length) {
+              if (currentStep === ListingCreateStep.Review) {
                 requestFeedbackFocus();
                 onPublish?.();
                 return;

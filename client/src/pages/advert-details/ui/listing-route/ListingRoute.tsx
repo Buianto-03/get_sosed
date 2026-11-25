@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { shallowEqual } from 'react-redux';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@app/store/hooks';
 import { ListingHeader } from '@widgets/listing-header/ListingHeader';
@@ -10,7 +9,6 @@ import {
   ListingDetailStatus,
   selectListingState,
 } from '@entities/listing/model';
-import { getLikesThunk } from '@entities/like/model/likesThunk';
 import { UserStatus } from '@entities/session/model/authModel';
 import { useSavedAdvert } from '@features/liked-adverts/model/use-saved-advert';
 import { useSavedCollectionStatus } from '@features/liked-adverts/model/use-saved-collection-status';
@@ -20,9 +18,9 @@ import { Spinner } from '@shared/ui/feedback/Spinner';
 import { YMap } from '@shared/ui/y-map/YMap';
 import { getMediaUrl } from '@shared/config/media';
 import { routes } from '@shared/config/routes';
-import { isRequestCanceled } from '@shared/api/cancellation';
 import { getAuthenticationPath } from '@shared/lib/navigation/safe-return-to';
-import { searchDestination } from './helper';
+import { searchDestination, toListingDetails } from './helper';
+import { useInterestedPeople } from './use-interested-people';
 import styles from './ListingRoute.module.scss';
 
 export default function ListingRoute(): JSX.Element {
@@ -34,17 +32,11 @@ export default function ListingRoute(): JSX.Element {
   const location = useLocation();
   const data = useAppSelector(selectListingState);
   const user = useAppSelector((state) => state.auth.user);
-  const interestedPeople = useAppSelector(
-    (state) => (state.likes.advertId === id ? state.likes.likes : []),
-    shallowEqual,
-  );
   const saved = useSavedAdvert(id);
   const savedCollection = useSavedCollectionStatus();
   const [attempt, setAttempt] = useState(0);
-  const [likesLoading, setLikesLoading] = useState(true);
-  const [likesError, setLikesError] = useState(false);
-  const [likesAttempt, setLikesAttempt] = useState(0);
   const ownerId = user.status === UserStatus.Logged ? user.id : null;
+  const interested = useInterestedPeople(valid ? id : null, ownerId);
   useEffect(() => {
     if (!valid) {
       return undefined;
@@ -52,31 +44,6 @@ export default function ListingRoute(): JSX.Element {
     const request = dispatch(getListingByIdThunk(id));
     return () => request.abort();
   }, [dispatch, id, valid, attempt]);
-  useEffect(() => {
-    if (!valid) {
-      return undefined;
-    }
-    let active = true;
-    setLikesLoading(true);
-    setLikesError(false);
-    const request = dispatch(getLikesThunk(id));
-    void request
-      .unwrap()
-      .catch((error: unknown) => {
-        if (active && !isRequestCanceled(error)) {
-          setLikesError(true);
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setLikesLoading(false);
-        }
-      });
-    return () => {
-      active = false;
-      request.abort();
-    };
-  }, [dispatch, id, valid, likesAttempt, ownerId]);
   const message = (receiverId: number, withListing = false): void => {
     const to = routes.messageThread(receiverId) + (withListing ? `?listingId=${id}` : '');
     navigate(user.status === UserStatus.Logged ? to : getAuthenticationPath(routes.signIn, to));
@@ -102,18 +69,13 @@ export default function ListingRoute(): JSX.Element {
     return <Spinner label="Загрузка объявления" />;
   }
   const authorId = advert.userId;
+  const details = toListingDetails(advert);
 
   return (
     <main className={styles.listing__page}>
       <ListingHeader
-        title={advert.title || 'Объявление'}
-        photos={
-          advert.AdvertPhotos?.flatMap((photo) =>
-            photo.photo
-              ? [{ id: String(photo.id), src: photo.photo, alt: advert.title || 'Фото жилья' }]
-              : [],
-          ) ?? []
-        }
+        title={details.title}
+        photos={details.photos}
         onBack={() => navigate(searchDestination(location.state))}
       />
       {savedCollection.error && (
@@ -133,24 +95,8 @@ export default function ListingRoute(): JSX.Element {
           }
         }}
         onSavedChange={() => saved.toggle(advert)}
-        information={{
-          rooms: advert.rooms ?? undefined,
-          floor: advert.floor ?? undefined,
-          area: advert.square ?? undefined,
-          description: advert.body || 'Описание не добавлено',
-          tags: advert.tags?.map((tag) => tag.name) ?? [],
-          location: {
-            city: advert.location?.city ?? undefined,
-            district: advert.location?.district ?? undefined,
-            metro: advert.location?.metro ?? undefined,
-            address: advert.location?.address ?? undefined,
-          },
-        }}
-        contact={{
-          price: advert.price,
-          author: advert.user?.name || 'Автор',
-          authorCity: advert.location?.city ?? undefined,
-        }}
+        information={details.information}
+        contact={details.contact}
         map={
           advert.location?.coordinates ? (
             <YMap location={advert.location.coordinates} />
@@ -160,16 +106,16 @@ export default function ListingRoute(): JSX.Element {
         }
         interested={
           <>
-            {likesLoading && <Spinner label="Загрузка заинтересованных" />}
-            {!likesLoading && likesError && (
+            {interested.loading && <Spinner label="Загрузка заинтересованных" />}
+            {interested.error && (
               <>
                 <Alert variant={AlertVariant.Error}>Не удалось загрузить заинтересованных.</Alert>
-                <Button onClick={() => setLikesAttempt((value) => value + 1)}>Повторить</Button>
+                <Button onClick={interested.retry}>Повторить</Button>
               </>
             )}
-            {!likesLoading && !likesError && (
+            {!interested.loading && !interested.error && (
               <div className={styles.listing__people}>
-                {interestedPeople.map((like) => (
+                {interested.people.map((like) => (
                   <PersonSummary
                     key={like.id}
                     name={like.User?.name || 'Пользователь'}
@@ -182,7 +128,7 @@ export default function ListingRoute(): JSX.Element {
                     }
                   />
                 ))}
-                {interestedPeople.length === 0 && <p>Пока никто не сохранил объявление</p>}
+                {interested.people.length === 0 && <p>Пока никто не сохранил объявление</p>}
               </div>
             )}
           </>

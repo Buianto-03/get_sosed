@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render as renderInDom, screen, type RenderResult } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import type { ChatMessage } from '../chat-thread/ChatThread';
 import { ChatPage, type ChatConversationRow } from './ChatPage';
@@ -11,7 +12,11 @@ const conversation: ChatConversationRow = {
   lastMessage: 'Привет',
 };
 const messages: ChatMessage[] = [{ id: '1', from: 'them', text: 'Старая история' }];
-const actions = { messages, onSelectConversation: vi.fn(), onBackToList: vi.fn() };
+const actions = { messages, onSelectConversation: vi.fn() };
+
+function render(ui: JSX.Element): RenderResult {
+  return renderInDom(ui, { wrapper: MemoryRouter });
+}
 
 describe('ChatPage accessibility', () => {
   it('retains a failed draft and clears it only when the socket accepts a retry', () => {

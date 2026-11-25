@@ -11,9 +11,8 @@ import {
 import { getReceiverListThunk } from '@entities/chat/model/chatListThunk';
 import { chatSocket } from '@entities/chat/model/socket';
 import { routes } from '@shared/config/routes';
-import { getMediaUrl } from '@shared/config/media';
 import { ChatPage } from '../chat-page/ChatPage';
-import { parseId, toConversationRow, toMessages } from './helper';
+import { buildConversationRows, parseId, toMessages } from './helper';
 import { useDialogHistory } from './use-dialog-history';
 import { useDialogSummary } from './use-dialog-summary';
 import { useListingContext } from './use-listing-context';
@@ -58,7 +57,6 @@ export default function MessagesRoute(): JSX.Element | null {
     (other: string) => navigate(routes.messageThread(other)),
     [navigate],
   );
-  const backToList = useCallback(() => navigate(routes.messages), [navigate]);
   const openListing = useCallback(
     (advert: string) => navigate(routes.listingDetails(advert)),
     [navigate],
@@ -74,21 +72,10 @@ export default function MessagesRoute(): JSX.Element | null {
     () => (userId !== null && historyMessages ? toMessages(historyMessages, userId) : []),
     [historyMessages, userId],
   );
-  const conversations = useMemo(() => {
-    if (userId === null) {
-      return [];
-    }
-    const items = rows.map((row) => toConversationRow(row, userId));
-    if (summary && !items.some((entry) => entry.id === String(summary.id))) {
-      items.push({
-        id: String(summary.id),
-        name: summary.name,
-        avatarUrl: getMediaUrl(summary.UserProfile?.photo),
-        lastMessage: '',
-      });
-    }
-    return items;
-  }, [rows, summary, userId]);
+  const conversations = useMemo(
+    () => buildConversationRows(rows, summary, userId),
+    [rows, summary, userId],
+  );
 
   if (userId === null) {
     return null;
@@ -121,7 +108,6 @@ export default function MessagesRoute(): JSX.Element | null {
         lastPageId={history?.lastPageId}
         lastOlderPageId={history?.lastOlderPageId}
         onSelectConversation={selectConversation}
-        onBackToList={backToList}
         onOpenListing={openListing}
         onSendMessage={sendMessage}
       />
