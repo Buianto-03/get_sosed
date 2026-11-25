@@ -8,7 +8,6 @@ permissions:
 
 jobs:
   check:
-    if: github.ref == 'refs/heads/release/initial'
     runs-on: ubuntu-latest
     steps:
       - name: Проверить идентификатор OIDC
