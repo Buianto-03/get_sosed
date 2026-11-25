@@ -6,7 +6,7 @@ import { tmpdir, cpus } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
-import { buildClient } from './profile-build.mjs';
+import { buildClient, usesLegacyListingWire } from './profile-build.mjs';
 import { openChrome } from './chrome.mjs';
 import { normalizeListingApiPath, serve } from './local-server.mjs';
 
@@ -25,6 +25,7 @@ const baseline = values.baseline
   ? execFileSync('git', ['rev-parse', values.baseline], { encoding: 'utf8' }).trim()
   : null;
 const variants = baseline ? ['before', 'after'] : ['current'];
+const legacyWire = usesLegacyListingWire(baseline);
 const temporary = await mkdtemp(join(tmpdir(), 'get-sosed-o05-'));
 const result = {
   commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
@@ -83,7 +84,9 @@ try {
   );
   result.chrome = browser.version;
   for (const variant of variants) {
-    const server = await serve(join(temporary, variant));
+    const server = await serve(join(temporary, variant), {
+      legacyWire: variant === 'before' && legacyWire,
+    });
     try {
       for (let trial = 1; trial <= trials; trial++) {
         for (const size of ['small', 'large']) {

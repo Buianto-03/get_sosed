@@ -44,10 +44,6 @@ function toListingWireData(value) {
   );
 }
 
-function listingResult(data, status = 200) {
-  return result(toListingWireData(data), status);
-}
-
 function matchesFilters(listing, filters) {
   const { location, price, rooms, tags } = listing;
   return (
@@ -67,12 +63,14 @@ function readPageNumber(searchParams, key, fallback, max = Number.MAX_SAFE_INTEG
   return Number.isSafeInteger(value) && value > 0 ? Math.min(value, max) : fallback;
 }
 
-export function createFixture(size, { photos = false } = {}) {
+export function createFixture(size, { photos = false, legacyWire = false } = {}) {
   if (size !== 'small' && size !== 'large') {
     throw new Error(`Unknown optimization fixture size: ${size}`);
   }
 
   const counts = fixtureSizes[size];
+  const listingResult = (data, status = 200) =>
+    result(legacyWire ? toListingWireData(data) : data, status);
   const signedInUser = {
     id: signedInUserId,
     name: 'Тестовый пользователь',

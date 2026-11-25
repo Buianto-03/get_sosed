@@ -2,7 +2,6 @@ import { CanceledError } from 'axios';
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { afterEach, expect, it, vi } from 'vitest';
 import axiosInstance from '@shared/api/client';
-import { listingWireFieldNames } from '@shared/api/listing-wire';
 import { listingService } from './listingService';
 
 const originalAdapter = axiosInstance.defaults.adapter;
@@ -113,21 +112,21 @@ it('requests fresh listings with default and explicit limits and accepts only an
   await expect(listingService.getFreshListings()).rejects.toThrow();
 });
 
-it('normalizes the existing listing response fields before exposing a listing', async () => {
+it('parses the canonical listing response fields directly', async () => {
   vi.spyOn(axiosInstance, 'get').mockResolvedValueOnce({
     data: {
       ...listing,
       location: {
         id: 1,
-        [listingWireFieldNames.listingId]: listing.id,
+        listingId: listing.id,
         city: null,
         district: null,
         address: null,
         metro: null,
         coordinates: null,
       },
-      [listingWireFieldNames.listingPhotos]: [
-        { id: 2, [listingWireFieldNames.listingId]: listing.id, photo: null },
+      photos: [
+        { id: 2, listingId: listing.id, photo: null },
       ],
     },
   });

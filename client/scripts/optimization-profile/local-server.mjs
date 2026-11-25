@@ -6,7 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { WebSocketServer } from 'ws';
 import { createFixture } from './fixtures.mjs';
 
-const photoSources = ['photo-0', 'photo-1', 'photo-2', 'photo-3', 'advert3-0', 'advert3-1'];
+const photoSources = ['photo-0', 'photo-1', 'photo-2', 'photo-3', 'listing3-0', 'listing3-1'];
 
 // Historical client bundles still request the former API prefix.
 export function normalizeListingApiPath(path) {
@@ -43,13 +43,13 @@ async function readAssets(root) {
   return assets;
 }
 
-export async function serve(root, { photos = false } = {}) {
+export async function serve(root, { photos = false, legacyWire = false } = {}) {
   const assets = await readAssets(root);
   const photoBodies = photos
     ? await Promise.all(
         photoSources.map((name) =>
           readFile(
-            new URL(`../../../server/public/images/adverts/advert-3/${name}.webp`, import.meta.url),
+            new URL(`../../../server/public/images/listings/listing-3/${name}.webp`, import.meta.url),
           ),
         ),
       )
@@ -204,7 +204,7 @@ export async function serve(root, { photos = false } = {}) {
       reads.length = 0;
       collections.length = 0;
       failedReads.clear();
-      fixture = createFixture(size, { photos });
+      fixture = createFixture(size, { photos, legacyWire });
     },
     neighbor() {
       fixture.neighbor();

@@ -124,3 +124,18 @@ export async function buildClient(outDir, profile, revision) {
     }
   }
 }
+
+export function usesLegacyListingWire(revision) {
+  if (!revision) {
+    return false;
+  }
+
+  const modelPaths = execFileSync(
+    'git',
+    ['ls-tree', '-r', '--full-tree', '--name-only', revision, '--', 'server/db/models'],
+    { encoding: 'utf8' },
+  )
+    .split('\n')
+    .filter(Boolean);
+  return modelPaths.some((path) => /\/advert\.(?:js|ts)$/.test(path));
+}
